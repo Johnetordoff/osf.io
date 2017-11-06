@@ -70,6 +70,7 @@ CSRF_COOKIE_HTTPONLY = osf_settings.SECURE_MODE
 
 ALLOWED_HOSTS = [
     '.osf.io'
+    u'192.168.168.167'
 ]
 
 
