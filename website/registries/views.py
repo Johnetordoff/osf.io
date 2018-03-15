@@ -57,3 +57,8 @@ def draft_registrations(auth, **kwargs):
             for draft in drafts
         ],
     }
+
+
+def registries_landing_page(**kwargs):
+    # A placeholder for developers who have not set up the registries ember app.
+    return {}
