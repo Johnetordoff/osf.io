@@ -35,7 +35,7 @@ from addons.base.utils import format_last_known_metadata
 from osf.models import (BaseFileNode, TrashedFileNode,
                         OSFUser, AbstractNode,
                         NodeLog, DraftRegistration, MetaSchema,
-                        Guid)
+                        Guid, FileVersionUserMetadata)
 from website.profile.utils import get_profile_image_url
 from website.project import decorators
 from website.project.decorators import must_be_contributor_or_public, must_be_valid_project, check_contributor_auth
@@ -309,6 +309,13 @@ DOWNLOAD_ACTIONS = set([
 ])
 
 
+def mark_file_version_as_seen(user, path):
+    file_to_update = OsfStorageFile.objects.get(_id=path)
+    # TODO - once the version is available in the waterbutler callback, update a specific version
+    version = file_to_update.versions.order_by('created').last()
+    FileVersionUserMetadata.objects.get_or_create(user=user, file_version=version)
+
+
 @must_be_signed
 @no_auto_transaction
 @must_be_valid_project(quickfiles_valid=True)
@@ -316,15 +323,17 @@ def create_waterbutler_log(payload, **kwargs):
     with transaction.atomic():
         try:
             auth = payload['auth']
+            user = OSFUser.load(auth['id'])
+            if user is None:
+                raise HTTPError(httplib.BAD_REQUEST)
+
             # Don't log download actions
             if payload['action'] in DOWNLOAD_ACTIONS:
+                path = payload['metadata']['path'].lstrip('/')
+                mark_file_version_as_seen(user, path)
                 return {'status': 'success'}
             action = LOG_ACTION_MAP[payload['action']]
         except KeyError:
-            raise HTTPError(httplib.BAD_REQUEST)
-
-        user = OSFUser.load(auth['id'])
-        if user is None:
             raise HTTPError(httplib.BAD_REQUEST)
 
         auth = Auth(user=user)
