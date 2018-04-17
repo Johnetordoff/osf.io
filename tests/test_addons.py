@@ -19,6 +19,7 @@ from framework.exceptions import HTTPError
 from nose.tools import *  # noqa
 from osf_tests import factories
 from tests.base import OsfTestCase, get_default_metaschema
+from api_tests.utils import create_test_file
 from osf_tests.factories import (AuthUserFactory, ProjectFactory,
                              RegistrationFactory)
 from website import settings
@@ -26,9 +27,10 @@ from addons.base import views
 from addons.github.exceptions import ApiError
 from addons.github.models import GithubFolder, GithubFile, GithubFileNode
 from addons.github.tests.factories import GitHubAccountFactory
+from addons.osfstorage.tests.factories import FileVersionFactory
 from osf.models import Session, MetaSchema, QuickFilesNode
 from osf.models import files as file_models
-from osf.models.files import BaseFileNode, TrashedFileNode
+from osf.models.files import BaseFileNode, TrashedFileNode, FileVersion
 from website.project import new_private_link
 from website.project.views.node import _view_project as serialize_node
 from website.project.views.node import serialize_addons, collect_node_config_js
@@ -305,7 +307,8 @@ class TestAddonLogs(OsfTestCase):
             'github_addon_file_renamed',
         )
 
-    def test_action_downloads(self):
+    @mock.patch('addons.base.views.mark_file_version_as_seen')
+    def test_action_downloads(self, mock_mark_version):
         url = self.node.api_url_for('create_waterbutler_log')
         download_actions=('download_file', 'download_zip')
         for action in download_actions:
@@ -321,6 +324,28 @@ class TestAddonLogs(OsfTestCase):
 
         self.node.reload()
         assert_equal(self.node.logs.count(), nlogs)
+
+    def test_action_downloads_marks_version_as_seen(self):
+        test_file = create_test_file(self.node, self.user)
+        url = self.node.api_url_for('create_waterbutler_log')
+        payload = self.build_payload(metadata={'path': test_file._id}, action='download_file')
+        res = self.app.put_json(
+            url,
+            payload,
+            headers={'Content-Type': 'application/json'},
+            expect_errors=False,
+        )
+        assert_equal(res.status_code, 200)
+
+        # Add a new version, make sure that does not have a record
+        version = FileVersionFactory()
+        test_file.versions.add(version)
+        test_file.save()
+
+        versions = test_file.versions.order_by('created')
+
+        assert versions.first().seen_by.filter(guids___id=self.user._id).exists()
+        assert not versions.last().seen_by.filter(guids___id=self.user._id).exists()
 
     def test_add_file_osfstorage_log(self):
         self.configure_osf_addon()
