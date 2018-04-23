@@ -152,10 +152,12 @@ class RequestMachine(BaseMachine):
         """ Handles contributorship changes and state transitions
         """
         if ev.event.name == DefaultTriggers.ACCEPT.value:
+            contributor_permissions = ev.kwargs.get('permissions', permissions.READ)
             self.machineable.target.add_contributor(
                 self.machineable.creator,
                 auth=Auth(ev.kwargs['user']),
-                permissions=permissions.READ,
+                permissions=permissions.expand_permissions(contributor_permissions),
+                visible=ev.kwargs.get('visible', True),
                 send_email='{}_request'.format(self.machineable.request_type))
         elif ev.event.name == DefaultTriggers.EDIT_COMMENT.value and self.action is not None:
             self.machineable.comment = self.action.comment
@@ -171,11 +173,12 @@ class RequestMachine(BaseMachine):
         context = self.get_context()
         context['contributors_url'] = '{}contributors/'.format(self.machineable.target.absolute_url)
         context['project_settings_url'] = '{}settings/'.format(self.machineable.target.absolute_url)
-        for admin in self.machineable.target.admin_contributors:
+        for admin in self.machineable.target.contributors.filter(contributor__admin=True, contributor__node=self.machineable.target):
             mails.send_mail(
                 admin.username,
                 mails.ACCESS_REQUEST_SUBMITTED,
                 admin=admin,
+                mimetype='html',
                 **context
             )
 
@@ -193,6 +196,7 @@ class RequestMachine(BaseMachine):
             mails.send_mail(
                 self.machineable.creator.username,
                 mails.ACCESS_REQUEST_DENIED,
+                mimetype='html',
                 **context
             )
         else:
