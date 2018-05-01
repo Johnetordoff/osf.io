@@ -97,7 +97,4 @@ NEW_AND_NOTEWORTHY_LINKS_NODE = 'helloo'
 POPULAR_LINKS_NODE = 'hiyah'
 POPULAR_LINKS_REGISTRATIONS = 'woooo'
 
-EZID_USERNAME = 'testfortravisnotreal'
-EZID_PASSWORD = 'testfortravisnotreal'
-
 logging.getLogger('celery.app.trace').setLevel(logging.FATAL)
