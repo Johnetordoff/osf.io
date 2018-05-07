@@ -298,8 +298,9 @@
 				"description": "Choose one or more categories that describe your study methodology.",
 				"options": [
 					"Experimental Design",
+					"Field Experiments",
 					"Lab Experiments",
-					"Experimental Design",
+					"Mixed Method",
 					"Statistics",
 					"Survey Methodology"
 				]
