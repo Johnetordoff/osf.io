@@ -1,77 +1,13 @@
 # -*- coding: utf-8 -*-
-
 import furl
 import lxml
 import time
-import datetime
 import requests
 from framework.exceptions import HTTPError
 
 from website.identifiers.metadata import remove_control_characters
 from website.util.client import BaseClient
 from website import settings
-from datacite import DataCiteMDSClient, errors, schema40
-
-from . import utils
-
-
-class EzidClient(BaseClient):
-
-    BASE_URL = 'https://ezid.cdlib.org'
-
-    def __init__(self, username, password):
-        self.username = username
-        self.password = password
-
-    def _build_url(self, *segments, **query):
-        url = furl.furl(self.BASE_URL)
-        url.path.segments.extend(segments)
-        url.args.update(query)
-        return url.url
-
-    @property
-    def _auth(self):
-        return (self.username, self.password)
-
-    @property
-    def _default_headers(self):
-        return {'Content-Type': 'text/plain; charset=UTF-8'}
-
-    def get_identifier(self, identifier):
-        resp = self._make_request(
-            'GET',
-            self._build_url('id', identifier),
-            expects=(200, ),
-        )
-        return utils.from_anvl(resp.content.strip('\n'))
-
-    def create_identifier(self, identifier, metadata=None):
-        resp = self._make_request(
-            'PUT',
-            self._build_url('id', identifier),
-            data=utils.to_anvl(metadata or {}),
-            expects=(201, ),
-        )
-        return utils.from_anvl(resp.content)
-
-    def mint_identifier(self, shoulder, metadata=None):
-        resp = self._make_request(
-            'POST',
-            self._build_url('shoulder', shoulder),
-            data=utils.to_anvl(metadata or {}),
-            expects=(201, ),
-        )
-        return utils.from_anvl(resp.content)
-
-    def change_status_identifier(self, status, identifier, metadata=None):
-        metadata['_status'] = status
-        resp = self._make_request(
-            'POST',
-            self._build_url('id', identifier),
-            data=utils.to_anvl(metadata or {}),
-            expects=(200, ),
-        )
-        return utils.from_anvl(resp.content)
 
 
 class CrossRefClient(BaseClient):
@@ -83,11 +19,8 @@ class CrossRefClient(BaseClient):
 
         namespace = settings.EZID_DOI_NAMESPACE
         if isinstance(node, PreprintService):
-            doi_prefix = node.provider.doi_prefix
-            if not doi_prefix:
-                doi_prefix = PreprintProvider.objects.get(_id='osf').doi_prefix
-            namespace = doi_prefix
-        return settings.DOI_FORMAT.format(namespace=namespace, guid=node._id)
+            namespace = node.provider.doi_prefix or PreprintProvider.objects.get(_id='osf').doi_prefix
+        return settings.CROSSREF_DOI_FORMAT.format(namespace=namespace, guid=node._id)
 
     def build_metadata(self, preprint, **kwargs):
         """Return the crossref metadata XML document for a given preprint as a string for DOI minting purposes
@@ -119,7 +52,7 @@ class CrossRefClient(BaseClient):
             element.group_title(preprint.provider.name),
             element.contributors(*self._crossref_format_contributors(element, preprint)),
             element.titles(element.title(preprint.node.title)),
-            element.posted_date(*self._format_date_crossref(element, preprint.date_published)),
+            element.posted_date(*self._crossref_format_date(element, preprint.date_published)),
             element.item_number('osf.io/{}'.format(preprint._id)),
             type='preprint'
         )
@@ -163,8 +96,7 @@ class CrossRefClient(BaseClient):
         )
         # set xsi:schemaLocation
         root.attrib['{%s}schemaLocation' % settings.XSI] = settings.CROSSREF_SCHEMA_LOCATION
-        return '<?xml version="1.0" encoding="UTF-8"?>\r\n' \
-               + lxml.etree.tostring(root, pretty_print=kwargs.get('pretty_print', True))
+        return lxml.etree.tostring(root, pretty_print=kwargs.get('pretty_print', True))
 
     def _crossref_format_contributors(self, element, preprint):
         contributors = []
@@ -187,7 +119,7 @@ class CrossRefClient(BaseClient):
 
         return contributors
 
-    def _format_date_crossref(self, element, date):
+    def _crossref_format_date(self, element, date):
         elements = [
             element.month(date.strftime('%m')),
             element.day(date.strftime('%d')),
@@ -210,10 +142,14 @@ class CrossRefClient(BaseClient):
         url.args.update(query)
         return url.url
 
-    def create_identifier(self, doi, metadata):
+    def create_identifier(self, metadata, doi):
         filename = doi.split('/')[-1]
-        print(metadata)
-        res = self._make_request(
+
+        # When this request is made in production Crossref sends an email our mailgun account at
+        # CROSSREF_DEPOSITOR_EMAIL, to test locally create your own mailgun account and forward the
+        # message to the 'crossref' endpoint. You use ngrok to tunnel out so your local enviroment
+        # can replicate the whole process.
+        self._make_request(
             'POST',
             self._build_url(
                 operation='doMDUpload',
@@ -225,87 +161,8 @@ class CrossRefClient(BaseClient):
             expects=(200, )
         )
 
-        return res
+        # Don't wait for response to confirm doi because it arrives via email.
+        return {'doi': doi}
 
-    def change_status_identifier(self, status, identifier, metadata=None):
-        return self.create_identifier(identifier, metadata=metadata)
-
-
-class DataCiteClient(BaseClient):
-
-    BASE_URL = settings.DATACITE_URL
-    FORMAT = settings.DATACITE_FORMAT
-    DOI_NAMESPACE = settings.DATACITE_DOI_NAMESPACE
-
-    def __init__(self, username, password):
-        self.username = username
-        self.password = password
-
-    @property
-    def _client(self):
-        return DataCiteMDSClient(
-            url=settings.DATACITE_URL,
-            username=settings.DATACITE_USERNAME,
-            password=settings.DATACITE_PASSWORD,
-            prefix=settings.DATACITE_PREFIX
-        )
-
-    def build_doi(self, node):
-        return self.FORMAT.format(namespace=self.DOI_NAMESPACE, guid=node._id)
-
-    def build_metadata(self, node):
-        """Return the formatted datacite metadata XML as a string.
-         """
-
-        data = {
-            'identifier': {
-                'identifier': self.build_doi(node),
-                'identifierType': 'DOI',
-            },
-            'creators': [
-                {'creatorName': user.fullname,
-                 'givenName': user.given_name,
-                 'familyName': user.family_name} for user in node.contributors
-            ],
-            'titles': [
-                {'title': node.title}
-            ],
-            'publisher': 'Open Science Framework',
-            'publicationYear': str(datetime.datetime.now().year),
-            'resourceType': {
-                'resourceTypeGeneral': 'Dataset'
-            }
-        }
-
-        if node.description:
-            data['descriptions'] = [{
-                'descriptionType': 'Abstract',
-                'description': node.description
-            }]
-
-        if node.node_license:
-            data['rightsList'] = [{
-                'rights': node.node_license.name,
-                'rightsURI': node.node_license.url
-            }]
-
-        # Validate dictionary
-        assert schema40.validate(data)
-
-        # Generate DataCite XML from dictionary.
-        return schema40.tostring(data)
-
-    def get_identifier(self, identifier):
-        self._client.doi_get(identifier)
-
-    def create_identifier(self, doi, metadata):
-
-        try:
-            res = self._client.metadata_post(metadata)
-        except errors.DataCiteServerError:  # This hangs if uncaught.
-            raise HTTPError(code=503, message='Datacite is unavailable.')
-
-        return res
-
-    def change_status_identifier(self, status, identifier, metadata):
-        return self.create_identifier(identifier, metadata=metadata)
+    def change_status_identifier(self, status, metadata, identifier):
+        return self.create_identifier(metadata, identifier)

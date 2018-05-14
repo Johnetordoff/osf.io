@@ -257,40 +257,6 @@ class TestIdentifierViews(OsfTestCase):
     @mock.patch('website.settings.EZID_USERNAME', 'testfortravisnotreal')
     @mock.patch('website.settings.EZID_PASSWORD', 'testfortravisnotreal')
     @mock.patch('website.settings.NODE_DOI_CLIENT', 'ezid')
-    def test_create_identifiers_not_exists_ezid(self):
-        identifier = self.node._id
-        url = furl.furl('https://ezid.cdlib.org/id')
-        doi = settings.DOI_FORMAT.format(namespace=settings.EZID_DOI_NAMESPACE, guid=identifier)
-        url.path.segments.append(doi)
-        responses.add(
-            responses.Response(
-                responses.PUT,
-                url.url,
-                body=to_anvl({
-                    'success': '{doi}osf.io/{ident} | {ark}osf.io/{ident}'.format(
-                        doi=settings.EZID_DOI_NAMESPACE,
-                        ark=settings.EZID_ARK_NAMESPACE,
-                        ident=identifier,
-                    ),
-                }),
-                status=201,
-            )
-        )
-        res = self.app.post(
-            self.node.api_url_for('node_identifiers_post'),
-            auth=self.user.auth,
-        )
-        self.node.reload()
-        assert_equal(
-            res.json['doi'],
-            self.node.get_identifier_value('doi')
-        )
-        assert_equal(res.status_code, 201)
-
-    @responses.activate
-    @mock.patch('website.settings.EZID_USERNAME', 'testfortravisnotreal')
-    @mock.patch('website.settings.EZID_PASSWORD', 'testfortravisnotreal')
-    @mock.patch('website.settings.NODE_DOI_CLIENT', 'ezid')
     def test_create_identifiers_exists_ezid(self):
         identifier = self.node._id
         doi = settings.DOI_FORMAT.format(namespace=settings.EZID_DOI_NAMESPACE, guid=identifier)
@@ -363,27 +329,3 @@ class TestIdentifierViews(OsfTestCase):
             expect_errors=True,
         )
         assert_equal(res.status_code, 404)
-
-    @responses.activate
-    @mock.patch('website.settings.CROSSREF_USERNAME', 'thisisatest')
-    @mock.patch('website.settings.CROSSREF_PASSWORD', 'thisisatest')
-    @mock.patch('website.identifiers.client.CrossRefClient.BASE_URL', 'https://test.test.osf.io')
-    def test_create_identifiers_crossref(self):
-
-        responses.add(
-            responses.Response(
-                responses.POST,
-                'https://test.test.osf.io',
-                body=self.mock_crossref_response,
-                content_type='text/html;charset=ISO-8859-1',
-                status=200
-            )
-        )
-
-        preprint = PreprintFactory(doi=None)
-        doi, preprint_metadata = build_doi_metadata(preprint)
-        client = CrossRefClient(settings.CROSSREF_USERNAME, settings.CROSSREF_PASSWORD)
-        res = client.create_identifier(identifier=doi, metadata=preprint_metadata)
-
-        assert res['response'].status_code == 200
-        assert 'SUCCESS' in res['response'].content
