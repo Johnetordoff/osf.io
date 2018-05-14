@@ -5,7 +5,6 @@ import logging
 
 from framework.exceptions import HTTPError
 from website import settings
-from website.identifiers.metadata import datacite_metadata_for_node, crossref_metadata_for_preprint, datacite_metadata_for_preprint
 
 logger = logging.getLogger(__name__)
 
@@ -56,39 +55,6 @@ def merge_dicts(*dicts):
     return dict(sum((each.items() for each in dicts), []))
 
 
-def get_doi_and_metadata_for_object(target_object, **kwargs):
-    from osf.models import PreprintService, PreprintProvider
-
-    metadata_function = datacite_metadata_for_node
-    namespace = settings.EZID_DOI_NAMESPACE
-    if isinstance(target_object, PreprintService):
-        doi_prefix = target_object.provider.doi_prefix
-        if settings.PREPRINT_DOI_CLIENT == 'crossref':
-            metadata_function = crossref_metadata_for_preprint
-        else:
-            metadata_function = datacite_metadata_for_preprint
-        if not doi_prefix:
-            doi_prefix = PreprintProvider.objects.get(_id='osf').doi_prefix
-        namespace = doi_prefix
-    doi = settings.EZID_DOI_FORMAT.format(namespace=namespace, guid=target_object._id)
-
-    metadata = metadata_function(target_object, doi, **kwargs)
-
-    return doi, metadata
-
-
-def build_doi_metadata(target_object, **kwargs):
-    """Build metadata for DOI submission to a DOI client.
-    Moved from website/project/views/register.py for use by other modules
-    """
-    doi, doi_metadata = get_doi_and_metadata_for_object(target_object, **kwargs)
-    metadata = {
-        '_target': target_object.absolute_url,
-        'doi_metadata': doi_metadata
-    }
-    return doi, metadata
-
-
 def get_doi_client(target_object):
     """ Get the approprite DOI creation client for the target object requested.
     :param target_object: object to request a DOI for.
@@ -98,9 +64,9 @@ def get_doi_client(target_object):
     from website.identifiers.clients import DataCiteClient, CrossRefClient
     from osf.models import PreprintService, AbstractNode
 
-    if isinstance(target_object, PreprintService):
+    if isinstance(target_object, PreprintService) and settings.CROSSREF_DEPOSIT_URL:
         return CrossRefClient()
-    if isinstance(target_object, AbstractNode):
+    if isinstance(target_object, AbstractNode) and settings.DATACITE_URL:
         return DataCiteClient()
 
 

@@ -9,7 +9,7 @@ class EzidClient(DataCiteClient):
 
     BASE_URL = 'https://ezid.cdlib.org'
     DOI_NAMESPACE = settings.EZID_DOI_NAMESPACE
-    FORMAT = settings.DOI_FORMAT
+    FORMAT = settings.EZID_DOI_FORMAT
 
     def _build_url(self, *segments, **query):
         url = furl.furl(self.BASE_URL)

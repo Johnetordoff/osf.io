@@ -36,6 +36,7 @@ class TestDataCiteClient:
 
     @responses.activate
     @mock.patch('website.identifiers.clients.datacite_client.DataCiteMDSClient', MockDataciteClient)
+    @mock.patch('website.settings.DATACITE_URL', 'https://mds.fake.datacite.org')
     def test_datacite_create_identifiers(self, datacite_client, datacite_node_metadata):
         responses.add(
             responses.Response(
@@ -52,6 +53,7 @@ class TestDataCiteClient:
 
     @responses.activate
     @mock.patch('website.identifiers.clients.datacite_client.DataCiteMDSClient', MockDataciteClient)
+    @mock.patch('website.settings.DATACITE_URL', 'https://mds.fake.datacite.org')
     def test_datacite_change_status_identifier(self, datacite_client, datacite_node_metadata):
         responses.add(
             responses.Response(
@@ -129,6 +131,7 @@ class TestDataCiteViews(OsfTestCase):
 
     @responses.activate
     @mock.patch('website.identifiers.utils.get_doi_client', return_value=DataCiteClient())
+    @mock.patch('website.settings.DATACITE_URL', 'https://test.test.osf.io')
     def test_datacite_create_identifiers_not_exists(self, mock_client):
         responses.add(
             responses.Response(
