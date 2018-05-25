@@ -444,8 +444,6 @@ def test_travis_addons(ctx, numprocesses=None):
     """
     Run half of the tests to help travis go faster. Lints and Flakes happen everywhere to keep from wasting test time.
     """
-    flake(ctx)
-    jshint(ctx)
     test_addons(ctx, numprocesses=numprocesses)
 
 
@@ -455,15 +453,11 @@ def test_travis_else(ctx, numprocesses=None):
     Run other half of the tests to help travis go faster. Lints and Flakes happen everywhere to keep from
     wasting test time.
     """
-    flake(ctx)
-    jshint(ctx)
     test_else(ctx, numprocesses=numprocesses)
 
 
 @task
 def test_travis_api1_and_js(ctx, numprocesses=None):
-    flake(ctx)
-    jshint(ctx)
     # TODO: Uncomment when https://github.com/travis-ci/travis-ci/issues/8836 is resolved
     # karma(ctx)
     test_api1(ctx, numprocesses=numprocesses)
@@ -471,15 +465,11 @@ def test_travis_api1_and_js(ctx, numprocesses=None):
 
 @task
 def test_travis_api2(ctx, numprocesses=None):
-    flake(ctx)
-    jshint(ctx)
     test_api2(ctx, numprocesses=numprocesses)
 
 
 @task
 def test_travis_api3_and_osf(ctx, numprocesses=None):
-    flake(ctx)
-    jshint(ctx)
     test_api3(ctx, numprocesses=numprocesses)
 
 
@@ -488,8 +478,6 @@ def test_travis_varnish(ctx):
     """
     Run the fast and quirky JS tests and varnish tests in isolation
     """
-    flake(ctx)
-    jshint(ctx)
     test_js(ctx)
     test_varnish(ctx)
 

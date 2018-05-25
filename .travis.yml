@@ -139,6 +139,8 @@ install:
     - travis_retry invoke requirements --dev --addons
     # Hack to fix package conflict between uritemplate and uritemplate.py (dependency of github3.py)
     - travis_retry invoke assets --dev
+    - invoke flake
+    - invoke jshint
 
 # Run Python tests (core and addon) and JS tests
 script:
