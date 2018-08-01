@@ -983,6 +983,9 @@ class NodeFilesList(JSONAPIBaseView, generics.ListAPIView, WaterButlerMixin, Lis
     view_category = 'nodes'
     view_name = 'node-files'
 
+    # prevent us from erroring by attempting to filter on pk.
+    unfilterable_fields = ['node']
+
     @property
     def serializer_class(self):
         if self.kwargs[self.provider_lookup_url_kwarg] == 'osfstorage':

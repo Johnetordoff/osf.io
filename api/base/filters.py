@@ -92,6 +92,10 @@ class FilterMixin(object):
     LIST_FIELDS = (ser.ListField, )
     RELATIONSHIP_FIELDS = (RelationshipField, TargetField)
 
+    # Prevents filtering relationship fields outside of use case, so don't have a situation where you're filtering
+    # nodes on pks etc.
+    unfilterable_fields = []
+
     def __init__(self, *args, **kwargs):
         super(FilterMixin, self).__init__(*args, **kwargs)
         if not self.serializer_class:
@@ -115,7 +119,7 @@ class FilterMixin(object):
         :raises InvalidFilterError: If the filter field is not valid
         """
         serializer_class = self.serializer_class
-        if field_name not in serializer_class._declared_fields:
+        if field_name not in serializer_class._declared_fields or field_name in self.unfilterable_fields:
             raise InvalidFilterError(detail="'{0}' is not a valid field for this endpoint.".format(field_name))
         if field_name not in getattr(serializer_class, 'filterable_fields', set()):
             raise InvalidFilterFieldError(parameter='filter', value=field_name)

@@ -576,6 +576,19 @@ class TestNodeFilesListFiltering(ApiTestCase):
         assert_equal(res.status_code, 400)
         assert_equal(len(res.json['errors']), 1)
 
+    def test_filter_on_node_400s(self):
+        # This list is already filtering on node and the query expects the node's pk instead of guid
+        # so it's disabled.
+        url = '/{}nodes/{guid}/files/osfstorage/?filter[node]={guid}'.format(API_BASE, guid=self.project._id)
+
+        res = self.app.get(url, auth=self.user.auth, expect_errors=True)
+        assert_equal(res.status_code, 400)
+        assert_equal(len(res.json['errors']), 1)
+
+        assert res.json['errors'][0]['detail'] == "'node' is not a valid field for this endpoint."
+
+
+
 
 class TestNodeFilesListPagination(ApiTestCase):
     def setUp(self):
