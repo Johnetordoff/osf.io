@@ -90,6 +90,7 @@ INSTALLED_APPS = (
     'guardian',
     'storages',
     'waffle',
+    'elasticsearch_metrics',
 
     # OSF
     'osf',
@@ -286,3 +287,8 @@ ANONYMOUS_USER_NAME = None
 
 # If set to True, automated tests with extra queries will fail.
 NPLUSONE_RAISE = False
+
+# django-elasticsearch-metrics
+ELASTICSEARCH_DSL = {
+    'default': {'hosts': os.environ.get('ELASTICSEARCH_HOST', 'localhost:9201')}
+}
