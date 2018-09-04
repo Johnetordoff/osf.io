@@ -290,5 +290,6 @@ NPLUSONE_RAISE = False
 
 # django-elasticsearch-metrics
 ELASTICSEARCH_DSL = {
-    'default': {'hosts': os.environ.get('ELASTICSEARCH_HOST', 'localhost:9201')}
+    'default': {'hosts': os.environ.get('ELASTICSEARCH_HOST', '127.0.0.1:9201')}
 }
+ENABLE_ELASTICSEARCH_METRICS = True
