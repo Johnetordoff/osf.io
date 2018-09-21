@@ -71,7 +71,7 @@ class PageCounter(BaseModel):
     def get_all_downloads_on_date(cls, date):
         """
         Queries the total number of downloads on a date
-        :param str date: must be formatted the same as a page counter key so 'yyyy/mm/dd'
+        :param datetime date:
         :return: long sum:
         """
         formatted_date = date.strftime('%Y/%m/%d')
