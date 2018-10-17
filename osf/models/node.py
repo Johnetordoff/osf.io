@@ -196,6 +196,8 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
     primary = True
     settings_type = 'node'  # Needed for addons
 
+    ENABLE_M2M_CHECK = True
+
     FIELD_ALIASES = {
         # TODO: Find a better way
         '_id': 'guids___id',
@@ -229,6 +231,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         'is_deleted',
         'node_license',
         'preprint_file',
+        'tags'
     }
 
     # Node fields that trigger an identifier update on save
@@ -2458,7 +2461,8 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
             del kwargs['suppress_log']
         else:
             self._suppress_log = False
-        saved_fields = self.get_dirty_fields(check_relationship=True) or []
+        saved_fields = self.get_dirty_fields(check_relationship=True,
+                                             check_m2m={'tags': self.tags.values_list('id', flat=True)})
         ret = super(AbstractNode, self).save(*args, **kwargs)
         if saved_fields:
             self.on_update(first_save, saved_fields)
