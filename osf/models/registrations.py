@@ -364,13 +364,13 @@ class Registration(AbstractNode):
 
     def add_tag(self, tag, auth=None, save=True, log=True, system=False):
         if self.retraction is None:
-            super(Registration, self).add_tag(tag, auth, save, log, system)
+            return super(Registration, self).add_tag(tag, auth, save, log, system)
         else:
             raise NodeStateError('Cannot add tags to withdrawn registrations.')
 
     def add_tags(self, tags, auth=None, save=True, log=True, system=False):
         if self.retraction is None:
-            super(Registration, self).add_tags(tags, auth, save, log, system)
+            return super(Registration, self).add_tags(tags, auth, save, log, system)
         else:
             raise NodeStateError('Cannot add tags to withdrawn registrations.')
 
