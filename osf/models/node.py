@@ -196,8 +196,6 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
     primary = True
     settings_type = 'node'  # Needed for addons
 
-    ENABLE_M2M_CHECK = True
-
     FIELD_ALIASES = {
         # TODO: Find a better way
         '_id': 'guids___id',
@@ -233,6 +231,10 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         'preprint_file',
         'tags'
     }
+
+    # Override DirtyFieldsMixin
+    ENABLE_M2M_CHECK = True
+    FIELDS_TO_CHECK = SEARCH_UPDATE_FIELDS.copy()
 
     # Node fields that trigger an identifier update on save
     IDENTIFIER_UPDATE_FIELDS = {
