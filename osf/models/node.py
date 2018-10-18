@@ -2461,8 +2461,12 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
             del kwargs['suppress_log']
         else:
             self._suppress_log = False
-        saved_fields = self.get_dirty_fields(check_relationship=True,
-                                             check_m2m={'tags': self.tags.values_list('id', flat=True)})
+
+        if first_save:
+            saved_fields = self.get_dirty_fields(check_relationship=True)
+        else:
+            saved_fields = self.get_dirty_fields(check_relationship=True,
+                                                 check_m2m={'tags': self.tags.values_list('id', flat=True)})
         ret = super(AbstractNode, self).save(*args, **kwargs)
         if saved_fields:
             self.on_update(first_save, saved_fields)
