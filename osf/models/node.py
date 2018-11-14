@@ -146,24 +146,21 @@ class AbstractNodeQuerySet(GuidMixinQuerySet):
 
             sqs = Contributor.objects.filter(node=models.OuterRef('pk'), user__id=user, read=True)
             qs |= self.annotate(can_view=models.Exists(sqs)).filter(can_view=True)
-            if qs:
-                node_ids = tuple(qs.values_list('id', flat=True))
-                qs |= self.extra(where=["""
-                    "osf_abstractnode".id in (
-                        WITH RECURSIVE implicit_read AS (
-                            SELECT "osf_contributor"."node_id"
-                            FROM "osf_contributor"
-                            WHERE "osf_contributor"."user_id" = %s
-                            AND "osf_contributor"."admin" is TRUE
-                        UNION ALL
-                            SELECT "osf_noderelation"."child_id"
-                            FROM "implicit_read"
-                            LEFT JOIN "osf_noderelation" ON "osf_noderelation"."parent_id" = "implicit_read"."node_id"
-                            WHERE "osf_noderelation"."is_node_link" IS FALSE
-                            AND "osf_abstractnode"."id" in %s
-                        ) SELECT * FROM implicit_read
-                    )
-                """], params=(user, node_ids))
+            qs |= self.extra(where=["""
+                "osf_abstractnode".id in (
+                    WITH RECURSIVE implicit_read AS (
+                        SELECT "osf_contributor"."node_id"
+                        FROM "osf_contributor"
+                        WHERE "osf_contributor"."user_id" = %s
+                        AND "osf_contributor"."admin" is TRUE
+                    UNION ALL
+                        SELECT "osf_noderelation"."child_id"
+                        FROM "implicit_read"
+                        LEFT JOIN "osf_noderelation" ON "osf_noderelation"."parent_id" = "implicit_read"."node_id"
+                        WHERE "osf_noderelation"."is_node_link" IS FALSE
+                    ) SELECT * FROM implicit_read
+                )
+            """], params=(user, ))
 
         return qs
 
