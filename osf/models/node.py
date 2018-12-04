@@ -2,7 +2,7 @@ import functools
 import itertools
 import logging
 import re
-import urlparse
+import urllib
 import warnings
 import markupsafe
 
@@ -548,7 +548,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
     def absolute_url(self):
         if not self.url:
             return None
-        return urlparse.urljoin(settings.DOMAIN, self.url)
+        return urllib.parse.urljoin(settings.DOMAIN, self.url)
 
     @property
     def deep_url(self):

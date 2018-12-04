@@ -1,5 +1,5 @@
 import pytest
-from urlparse import urlparse
+import urllib
 
 from rest_framework import exceptions
 from api.base.settings.defaults import API_BASE
@@ -67,7 +67,7 @@ class TestRegistrationDetail:
         res = app.get(public_url)
         assert res.status_code == 200
         data = res.json['data']
-        registered_from = urlparse(
+        registered_from = urllib.parse.urlparse(
             data['relationships']['registered_from']['links']['related']['href']
         ).path
         assert data['attributes']['registration'] is True
@@ -80,7 +80,7 @@ class TestRegistrationDetail:
         assert res.status_code == 200
         assert res.content_type == 'application/vnd.api+json'
         data = res.json['data']
-        registered_from = urlparse(
+        registered_from = urllib.parse.urlparse(
             data['relationships']['registered_from']['links']['related']['href']).path
         assert data['attributes']['registration'] is True
         assert data['attributes']['current_user_is_contributor'] is True
@@ -97,7 +97,7 @@ class TestRegistrationDetail:
         assert res.status_code == 200
         assert res.content_type == 'application/vnd.api+json'
         data = res.json['data']
-        registered_from = urlparse(
+        registered_from = urllib.parse.urlparse(
             data['relationships']['registered_from']['links']['related']['href']).path
         assert data['attributes']['registration'] is True
         assert data['attributes']['current_user_is_contributor'] is True

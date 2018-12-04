@@ -1,5 +1,5 @@
 import pytest
-from urlparse import urlparse
+import urllib
 
 from api_tests.nodes.views.test_node_contributors_list import NodeCRUDTestCase
 from api.base.settings.defaults import API_BASE
@@ -158,7 +158,7 @@ class TestWithdrawnRegistrations(NodeCRUDTestCase):
         for attribute in expected_attributes:
             assert expected_attributes[attribute] == attributes[attribute]
 
-        contributors = urlparse(
+        contributors = urllib.parse.urlparse(
             res.json['data']['relationships']['contributors']['links']['related']['href']).path
         assert contributors == '/{}registrations/{}/contributors/'.format(
             API_BASE, registration._id)

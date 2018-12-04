@@ -1,5 +1,5 @@
 from blinker import ANY
-from urlparse import urlparse
+import urllib
 from contextlib import contextmanager
 from addons.osfstorage import settings as osfstorage_settings
 
@@ -24,7 +24,7 @@ def create_test_file(target, user, filename='test_file', create_guid=True):
 
 
 def urlparse_drop_netloc(url):
-    url = urlparse(url)
+    url = urllib.parse.urlparse(url)
     if url[4]:
         return url[2] + '?' + url[4]
     return url[2]

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-import urlparse
+import urllib
 
 import markupsafe
 from addons.base.models import (BaseOAuthNodeSettings, BaseOAuthUserSettings,
@@ -450,7 +450,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
                 self.user, self.repo,
                 'web',
                 {
-                    'url': urlparse.urljoin(
+                    'url': urllib.parse.urljoin(
                         hook_domain,
                         os.path.join(
                             self.owner.api_url, 'github', 'hook/'

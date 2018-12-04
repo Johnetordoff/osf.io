@@ -6,7 +6,7 @@ import datetime
 import gzip
 import os
 import shutil
-import urlparse
+import urllib
 import xml
 
 import django
@@ -121,7 +121,7 @@ class Sitemap(object):
 
             loc = doc.createElement('loc')
             sitemap.appendChild(loc)
-            loc_text = self.doc.createTextNode(urlparse.urljoin(settings.DOMAIN, 'sitemaps/sitemap_{}.xml'.format(str(f))))
+            loc_text = self.doc.createTextNode(urllib.parse.urljoin(settings.DOMAIN, 'sitemaps/sitemap_{}.xml'.format(str(f))))
             loc.appendChild(loc_text)
 
             datemod = doc.createElement('lastmod')
@@ -161,7 +161,7 @@ class Sitemap(object):
         # Static urls
         progress.start(len(settings.SITEMAP_STATIC_URLS), 'STAT: ')
         for config in settings.SITEMAP_STATIC_URLS:
-            config['loc'] = urlparse.urljoin(settings.DOMAIN, config['loc'])
+            config['loc'] = urllib.parse.urljoin(settings.DOMAIN, config['loc'])
             self.add_url(config)
             progress.increment()
         progress.stop()
@@ -172,7 +172,7 @@ class Sitemap(object):
         for obj in objs:
             try:
                 config = settings.SITEMAP_USER_CONFIG
-                config['loc'] = urlparse.urljoin(settings.DOMAIN, '/{}/'.format(obj))
+                config['loc'] = urllib.parse.urljoin(settings.DOMAIN, '/{}/'.format(obj))
                 self.add_url(config)
             except Exception as e:
                 self.log_errors('USER', obj, e)
@@ -188,7 +188,7 @@ class Sitemap(object):
         for obj in objs:
             try:
                 config = settings.SITEMAP_NODE_CONFIG
-                config['loc'] = urlparse.urljoin(settings.DOMAIN, '/{}/'.format(obj['guids___id']))
+                config['loc'] = urllib.parse.urljoin(settings.DOMAIN, '/{}/'.format(obj['guids___id']))
                 config['lastmod'] = obj['modified'].strftime('%Y-%m-%d')
                 self.add_url(config)
             except Exception as e:
@@ -211,14 +211,14 @@ class Sitemap(object):
                 domain = provider.domain if (provider.domain_redirect_enabled and provider.domain) else settings.DOMAIN
                 if provider == osf:
                     preprint_url = '/preprints/{}/'.format(obj._id)
-                config['loc'] = urlparse.urljoin(domain, preprint_url)
+                config['loc'] = urllib.parse.urljoin(domain, preprint_url)
                 config['lastmod'] = preprint_date
                 self.add_url(config)
 
                 # Preprint file urls
                 try:
                     file_config = settings.SITEMAP_PREPRINT_FILE_CONFIG
-                    file_config['loc'] = urlparse.urljoin(
+                    file_config['loc'] = urllib.parse.urljoin(
                         obj.provider.domain or settings.DOMAIN,
                         os.path.join(
                             obj._id,

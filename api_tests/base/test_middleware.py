@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.http import HttpResponse
 
-from urlparse import urlparse
+import urllib
 import mock
 from nose.tools import *  # noqa:
 from rest_framework.test import APIRequestFactory
@@ -30,7 +30,7 @@ class TestCorsMiddleware(MiddlewareTestCase):
     @override_settings(CORS_ORIGIN_ALLOW_ALL=False)
     def test_institutions_added_to_cors_whitelist(self):
         url = api_v2_url('users/me/')
-        domain = urlparse('https://dinosaurs.sexy')
+        domain = urllib.parse.urlparse('https://dinosaurs.sexy')
         factories.InstitutionFactory(
             domains=[domain.netloc.lower()],
             name='Institute for Sexy Lizards'
@@ -45,7 +45,7 @@ class TestCorsMiddleware(MiddlewareTestCase):
     @override_settings(CORS_ORIGIN_ALLOW_ALL=False)
     def test_preprintproviders_added_to_cors_whitelist(self):
         url = api_v2_url('users/me/')
-        domain = urlparse('https://dinoprints.sexy')
+        domain = urllib.parse.urlparse('https://dinoprints.sexy')
         factories.PreprintProviderFactory(
             domain=domain.geturl().lower(),
             _id='DinoXiv'
@@ -60,7 +60,7 @@ class TestCorsMiddleware(MiddlewareTestCase):
     @override_settings(CORS_ORIGIN_ALLOW_ALL=False)
     def test_cross_origin_request_with_cookies_does_not_get_cors_headers(self):
         url = api_v2_url('users/me/')
-        domain = urlparse('https://dinosaurs.sexy')
+        domain = urllib.parse.urlparse('https://dinosaurs.sexy')
         request = self.request_factory.get(url, HTTP_ORIGIN=domain.geturl())
         response = {}
         with mock.patch.object(request, 'COOKIES', True):
@@ -71,7 +71,7 @@ class TestCorsMiddleware(MiddlewareTestCase):
     @override_settings(CORS_ORIGIN_ALLOW_ALL=False)
     def test_cross_origin_request_with_Authorization_gets_cors_headers(self):
         url = api_v2_url('users/me/')
-        domain = urlparse('https://dinosaurs.sexy')
+        domain = urllib.parse.urlparse('https://dinosaurs.sexy')
         request = self.request_factory.get(
             url,
             HTTP_ORIGIN=domain.geturl(),
@@ -86,7 +86,7 @@ class TestCorsMiddleware(MiddlewareTestCase):
     def test_cross_origin_request_with_Authorization_and_cookie_does_not_get_cors_headers(
             self):
         url = api_v2_url('users/me/')
-        domain = urlparse('https://dinosaurs.sexy')
+        domain = urllib.parse.urlparse('https://dinosaurs.sexy')
         request = self.request_factory.get(
             url,
             HTTP_ORIGIN=domain.geturl(),
@@ -102,7 +102,7 @@ class TestCorsMiddleware(MiddlewareTestCase):
     def test_non_institution_preflight_request_requesting_authorization_header_gets_cors_headers(
             self):
         url = api_v2_url('users/me/')
-        domain = urlparse('https://dinosaurs.sexy')
+        domain = urllib.parse.urlparse('https://dinosaurs.sexy')
         request = self.request_factory.options(
             url,
             HTTP_ORIGIN=domain.geturl(),

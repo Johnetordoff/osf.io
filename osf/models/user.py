@@ -2,7 +2,6 @@ import datetime as dt
 import logging
 import re
 import urllib
-import urlparse
 import uuid
 from copy import deepcopy
 from os.path import splitext
@@ -388,7 +387,7 @@ class OSFUser(DirtyFieldsMixin, GuidMixin, BaseModel, AbstractBaseUser, Permissi
 
     @property
     def absolute_url(self):
-        return urlparse.urljoin(website_settings.DOMAIN, self.url)
+        return urllib.parse.urljoin(website_settings.DOMAIN, self.url)
 
     @property
     def absolute_api_v2_url(self):

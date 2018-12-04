@@ -5,7 +5,6 @@ from nose.tools import *  # noqa; PEP8 asserts
 from webtest_plus import TestApp as WebtestApp  # py.test tries to collect `TestApp`
 import mock
 import urllib
-import urlparse
 import httplib as http
 
 from flask import Flask
@@ -105,7 +104,7 @@ class TestAuthUtils(OsfTestCase):
         res = res.follow()
 
         assert_equal(res.status_code, 302)
-        assert_equal('/', urlparse.urlparse(res.location).path)
+        assert_equal('/', urllib.parse.urlparse(res.location).path)
         assert_equal(len(mock_mail.call_args_list), 1)
         session = Session.objects.filter(data__auth_user_id=user._id).order_by('-modified').first()
         assert_equal(len(session.data['status']), 1)

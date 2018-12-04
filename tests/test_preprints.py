@@ -2,7 +2,7 @@
 from nose.tools import *  # noqa: F403
 import mock
 import pytest
-import urlparse
+import urllib
 import pytest
 
 from django.contrib.auth.models import Group
@@ -517,7 +517,7 @@ class TestOnPreprintUpdatedTask(OsfTestCase):
         assert related_doi['creative_work'] == related_work
 
         workidentifiers = [nodes.pop(k)['uri'] for k, v in nodes.items() if v['@type'] == 'workidentifier']
-        assert workidentifiers == [urlparse.urljoin(settings.DOMAIN, self.preprint._id + '/')]
+        assert workidentifiers == [urllib.parse.urljoin(settings.DOMAIN, self.preprint._id + '/')]
 
         relation = nodes.pop(nodes.keys()[0])
         assert relation == {'@id': relation['@id'], '@type': 'workrelation', 'related': {'@id': related_work['@id'], '@type': related_work['@type']}, 'subject': {'@id': preprint['@id'], '@type': preprint['@type']}}
@@ -615,7 +615,7 @@ class TestOnPreprintUpdatedTask(OsfTestCase):
 
         workidentifiers = {nodes.pop(k)['uri'] for k, v in nodes.items() if v['@type'] == 'workidentifier'}
         # URLs should *always* be osf.io/guid/
-        assert workidentifiers == set([urlparse.urljoin(settings.DOMAIN, self.preprint._id) + '/', 'https://doi.org/{}'.format(self.preprint.get_identifier('doi').value)])
+        assert workidentifiers == set([urllib.parse.urljoin(settings.DOMAIN, self.preprint._id) + '/', 'https://doi.org/{}'.format(self.preprint.get_identifier('doi').value)])
 
         assert nodes == {}
 

@@ -1,6 +1,6 @@
 from dateutil.parser import parse as parse_date
 import pytest
-from urlparse import urlparse
+import urllib
 
 from api.base.settings.defaults import API_BASE
 from api.nodes.serializers import NodeSerializer
@@ -61,7 +61,7 @@ class TestNodeSerializer:
         assert 'registrations' in relationships
         assert 'forked_from' not in relationships
         parent_link = relationships['parent']['links']['related']['href']
-        assert urlparse(
+        assert urllib.parse.urlparse(
             parent_link).path == '/{}nodes/{}/'.format(API_BASE, parent._id)
 
     #   test_fork_serialization
@@ -74,7 +74,7 @@ class TestNodeSerializer:
         # Relationships
         relationships = data['relationships']
         forked_from = relationships['forked_from']['links']['related']['href']
-        assert urlparse(
+        assert urllib.parse.urlparse(
             forked_from).path == '/{}nodes/{}/'.format(API_BASE, node._id)
 
     #   test_template_serialization
@@ -87,7 +87,7 @@ class TestNodeSerializer:
         # Relationships
         relationships = data['relationships']
         templated_from = relationships['template_node']['links']['related']['href']
-        assert urlparse(
+        assert urllib.parse.urlparse(
             templated_from).path == '/{}nodes/{}/'.format(API_BASE, node._id)
 
 
@@ -130,11 +130,11 @@ class TestNodeRegistrationSerializer:
 
         assert 'registered_by' in relationships
         registered_by = relationships['registered_by']['links']['related']['href']
-        assert urlparse(
+        assert urllib.parse.urlparse(
             registered_by).path == '/{}users/{}/'.format(API_BASE, user._id)
         assert 'registered_from' in relationships
         registered_from = relationships['registered_from']['links']['related']['href']
-        assert urlparse(registered_from).path == '/{}nodes/{}/'.format(
+        assert urllib.parse.urlparse(registered_from).path == '/{}nodes/{}/'.format(
             API_BASE, registration.registered_from._id)
         api_registrations_url = '/{}registrations/'.format(API_BASE)
         for relationship in relationship_urls:

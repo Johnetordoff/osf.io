@@ -1,5 +1,5 @@
 import pytest
-from urlparse import urlparse
+import urllib
 
 from api.base.settings.defaults import API_BASE
 from osf_tests.factories import (
@@ -63,7 +63,7 @@ class TestNodeRegistrationList:
         assert res.content_type == 'application/vnd.api+json'
         assert res.json['data'][0]['attributes']['registration'] is True
         url = res.json['data'][0]['relationships']['registered_from']['links']['related']['href']
-        assert urlparse(
+        assert urllib.parse.urlparse(
             url).path == '/{}nodes/{}/'.format(API_BASE, public_project._id)
         assert res.json['data'][0]['type'] == 'registrations'
 
@@ -72,7 +72,7 @@ class TestNodeRegistrationList:
         assert res.status_code == 200
         assert res.json['data'][0]['attributes']['registration'] is True
         url = res.json['data'][0]['relationships']['registered_from']['links']['related']['href']
-        assert urlparse(
+        assert urllib.parse.urlparse(
             url
         ).path == '/{}nodes/{}/'.format(API_BASE, public_project._id)
         assert res.content_type == 'application/vnd.api+json'
@@ -88,7 +88,7 @@ class TestNodeRegistrationList:
         assert res.status_code == 200
         assert res.json['data'][0]['attributes']['registration'] is True
         url = res.json['data'][0]['relationships']['registered_from']['links']['related']['href']
-        assert urlparse(
+        assert urllib.parse.urlparse(
             url
         ).path == '/{}nodes/{}/'.format(API_BASE, private_project._id)
         assert res.content_type == 'application/vnd.api+json'

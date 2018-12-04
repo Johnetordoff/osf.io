@@ -1,5 +1,5 @@
 import pytest
-from urlparse import urlparse
+import urllib
 
 from api.base.settings.defaults import API_BASE
 from osf.models import Identifier
@@ -70,7 +70,7 @@ class TestRegistrationIdentifierList:
 
         # test_identifier_list_returns_correct_referent
         paths = [
-            urlparse(
+            urllib.parse.urlparse(
                 item['relationships']['referent']['links']['related']['href']
             ).path for item in data_registration_identifiers
         ]
@@ -178,7 +178,7 @@ class TestNodeIdentifierList:
 
         # test_identifier_list_returns_correct_referent
         paths = [
-            urlparse(
+            urllib.parse.urlparse(
                 item['relationships']['referent']['links']['related']['href']
             ).path for item in data_node_identifiers
         ]
@@ -272,7 +272,7 @@ class TestPreprintIdentifierList:
 
         # test_identifier_list_returns_correct_referent
         paths = [
-            urlparse(
+            urllib.parse.urlparse(
                 item['relationships']['referent']['links']['related']['href']
             ).path for item in data_preprint_identifier
         ]
