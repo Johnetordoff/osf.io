@@ -107,8 +107,8 @@ class TestDraftRegistrationViews(RegistrationsTestBase):
         self.draft.reload()
         assert_is_not_none(self.draft.approval)
         assert_equal(self.draft.approval.meta, {
-            u'registration_choice': unicode(self.embargo_payload['registrationChoice']),
-            u'embargo_end_date': unicode(self.embargo_payload['embargoEndDate'])
+            u'registration_choice': str(self.embargo_payload['registrationChoice'], 'utf-8'),
+            u'embargo_end_date': str(self.embargo_payload['embargoEndDate'], 'utf-8')
         })
 
     def test_submit_draft_for_review_invalid_registrationChoice(self):

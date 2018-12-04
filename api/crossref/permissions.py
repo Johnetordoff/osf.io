@@ -35,6 +35,6 @@ class RequestComesFromMailgun(permissions.BasePermission):
             error_message = 'Signature required in request body'
             sentry.log_message(error_message)
             raise exceptions.ParseError(error_message)
-        if not hmac.compare_digest(unicode(signature), unicode(data['signature'])):
+        if not hmac.compare_digest(str(signature, 'utf-8'), str(data['signature'], 'utf-8')):
             raise exceptions.ParseError('Invalid signature')
         return True

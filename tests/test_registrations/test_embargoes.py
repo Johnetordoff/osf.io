@@ -813,9 +813,9 @@ class RegistrationEmbargoViewsTestCase(OsfTestCase):
         })
         valid_date = timezone.now() + datetime.timedelta(days=180)
         self.valid_embargo_payload = json.dumps({
-            u'embargoEndDate': unicode(valid_date.strftime('%a, %d, %B %Y %H:%M:%S')) + u' GMT',
+            u'embargoEndDate': str(valid_date.strftime('%a, %d, %B %Y %H:%M:%S'), 'utf-8') + u' GMT',
             u'registrationChoice': 'embargo',
-            u'summary': unicode(fake.sentence())
+            u'summary': str(fake.sentence(), 'utf-8')
         })
         self.invalid_embargo_date_payload = json.dumps({
             u'embargoEndDate': u'Thu, 01 {month} {year} 05:00:00 GMT'.format(
@@ -823,7 +823,7 @@ class RegistrationEmbargoViewsTestCase(OsfTestCase):
                 year=str(int(current_year) - 1)
             ),
             u'registrationChoice': 'embargo',
-            u'summary': unicode(fake.sentence())
+            u'summary': str(fake.sentence(), 'utf-8')
         })
 
     @mock.patch('framework.celery_tasks.handlers.enqueue_task')
