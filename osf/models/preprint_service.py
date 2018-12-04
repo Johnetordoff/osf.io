@@ -247,7 +247,7 @@ class PreprintService(DirtyFieldsMixin, SpamMixin, GuidMixin, IdentifierMixin, R
                 request_headers = {
                     k: v
                     for k, v in get_headers_from_request(request).items()
-                    if isinstance(v, basestring)
+                    if isinstance(v, str)
                 }
             user = OSFUser.load(user_id)
             if user:
