@@ -35,7 +35,7 @@ def load_origins_whitelist():
 
     preprintprovider_origins = tuple(preprintprovider.domain.lower() for preprintprovider in PreprintProvider.objects.exclude(domain=''))
 
-    ORIGINS_WHITELIST = tuple(urlparse(url).geturl().lower().split('{}://'.format(urllib.parse.urlparse(url).scheme))[-1] for url in institution_origins + preprintprovider_origins)
+    ORIGINS_WHITELIST = tuple(urllib.parse.urlparse(url).geturl().lower().split('{}://'.format(urllib.parse.urlparse(url).scheme))[-1] for url in institution_origins + preprintprovider_origins)
 
 def build_latest_versions(version_data):
     """Builds a dict with greatest version keyed for each major version"""
