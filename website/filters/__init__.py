@@ -23,7 +23,7 @@ def gravatar(user, use_ssl=False, d=None, r=None, size=None):
         params.append(('s', size))
     if r:
         params.append(('r', r))
-    url = base_url + hash_code + '?' + urllib.urlencode(params)
+    url = base_url + hash_code + '?' + urllib.parse.urlencode(params)
 
     return url
 

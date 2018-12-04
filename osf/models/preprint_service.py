@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import urlparse
+import urllib
 import logging
 
 from dirtyfields import DirtyFieldsMixin
@@ -106,7 +106,7 @@ class PreprintService(DirtyFieldsMixin, SpamMixin, GuidMixin, IdentifierMixin, R
 
     @property
     def absolute_url(self):
-        return urlparse.urljoin(
+        return urllib.parse.urljoin(
             self.provider.domain if self.provider.domain_redirect_enabled else settings.DOMAIN,
             self.url
         )

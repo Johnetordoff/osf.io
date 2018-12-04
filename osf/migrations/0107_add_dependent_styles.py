@@ -5,7 +5,7 @@ from django.db import migrations
 from lxml import etree
 
 from website import settings
-from urlparse import urlparse
+import urllib
 
 logger = logging.getLogger(__file__)
 
@@ -96,7 +96,7 @@ def update_styles(state, schema):
             links = root.findall(selector + 'link')
             for link in links:
                 if link.get('rel') == 'independent-parent':
-                    parent_style_id = urlparse(link.get('href')).path.split('/')[-1]
+                    parent_style_id = urllib.parse.urlparse(link.get('href')).path.split('/')[-1]
                     parent_style = CitationStyle.objects.get(_id=parent_style_id)
 
                     if parent_style is not None:

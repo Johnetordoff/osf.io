@@ -1,5 +1,5 @@
 import pytest
-from urlparse import urlparse
+import urllib
 
 from django.utils.timezone import now
 
@@ -456,7 +456,7 @@ class TestCollectionDetail:
         assert res.json['data']['attributes']['title'] == collection.title
         node_links_url = res.json['data']['relationships']['node_links']['links']['related']['href']
         expected_url = url_collection_detail + 'node_links/'
-        assert urlparse(node_links_url).path == expected_url
+        assert urllib.parse.urlparse(node_links_url).path == expected_url
 
         # test_do_not_return_collection_details_logged_in_non_contributor
         res = app.get(

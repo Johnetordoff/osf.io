@@ -71,7 +71,7 @@ class TestUserSettingsModel(unittest.TestCase):
         assert_equal(self.user_settings.totp_secret_b32, self.TOTP_SECRET_B32)
 
     def test_otpauth_url(self):
-        url = urlparse(self.user_settings.otpauth_url)
+        url = urllib.parse.urlparse(self.user_settings.otpauth_url)
 
         assert_equal(url.scheme, 'otpauth')
         assert_equal(url.netloc, 'totp')

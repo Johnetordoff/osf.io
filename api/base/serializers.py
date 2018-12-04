@@ -1,6 +1,6 @@
 import collections
 import re
-from urlparse import urlparse
+import urllib
 
 import furl
 from django.core.urlresolvers import resolve, reverse, NoReverseMatch
@@ -812,7 +812,7 @@ class RelationshipField(ser.HyperlinkedIdentityField):
                 return {'data': None}
 
         related_url = url['related']
-        related_path = urlparse(related_url).path
+        related_path = urllib.parse.urlparse(related_url).path
         related_meta = self.get_meta_information(self.related_meta, value)
         self_url = url['self']
         self_meta = self.get_meta_information(self.self_meta, value)

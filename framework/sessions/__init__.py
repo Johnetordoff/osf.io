@@ -2,7 +2,6 @@
 import datetime as dt
 import httplib as http
 import urllib
-import urlparse
 
 from django.apps import apps
 from django.utils import timezone
@@ -29,7 +28,7 @@ def add_key_to_url(url, scheme, key):
     if scheme:
         replacements['scheme'] = scheme
 
-    parsed_url = urlparse.urlparse(url)
+    parsed_url = urllib.parse.urlparse(url)
 
     if parsed_url.fragment:
         # Fragments should exists server side so this mean some one set up a # in the url
@@ -38,7 +37,7 @@ def add_key_to_url(url, scheme, key):
         replacements['fragment'] = ''
 
     parsed_redirect_url = parsed_url._replace(**replacements)
-    return urlparse.urlunparse(parsed_redirect_url)
+    return urllib.parse.urlunparse(parsed_redirect_url)
 
 
 def prepare_private_key():
@@ -60,9 +59,9 @@ def prepare_private_key():
 
     # Grab query key from previous request for not logged-in users
     if request.referrer:
-        referrer_parsed = urlparse.urlparse(request.referrer)
+        referrer_parsed = urllib.parse.urlparse(request.referrer)
         scheme = referrer_parsed.scheme
-        key = urlparse.parse_qs(urlparse.urlparse(request.referrer).query).get('view_only')
+        key = urllib.parse.parse_qs(urllib.parse.urlparse(request.referrer).query).get('view_only')
         if key:
             key = key[0]
     else:

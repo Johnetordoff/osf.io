@@ -1,6 +1,6 @@
 from rest_framework import serializers as ser
 from website import settings
-from urlparse import urljoin
+import urllib
 
 from api.base.serializers import (
     JSONAPISerializer,
@@ -16,7 +16,7 @@ class Scope(object):
         self.is_public = scope.is_public
 
     def absolute_url(self):
-        return urljoin(settings.API_DOMAIN, '/v2/scopes/{}/'.format(self.id))
+        return urllib.parse.urljoin(settings.API_DOMAIN, '/v2/scopes/{}/'.format(self.id))
 
 class ScopeSerializer(JSONAPISerializer):
 

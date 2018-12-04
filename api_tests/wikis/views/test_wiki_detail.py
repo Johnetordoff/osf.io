@@ -3,7 +3,7 @@ import pytest
 import furl
 import pytz
 import datetime
-from urlparse import urlparse
+import urllib
 from nose.tools import *  # noqa:
 
 from addons.wiki.models import WikiPage
@@ -319,7 +319,7 @@ class TestWikiDetailView(ApiWikiTestCase):
         url = res.json['data']['relationships']['user']['links']['related']['href']
         expected_url = '/{}users/{}/'.format(API_BASE, self.user._id)
         assert_equal(res.status_code, 200)
-        assert_equal(urlparse(url).path, expected_url)
+        assert_equal(urllib.parse.urlparse(url).path, expected_url)
 
     def test_wiki_has_node_link(self):
         self._set_up_public_project_with_wiki_page()
@@ -327,7 +327,7 @@ class TestWikiDetailView(ApiWikiTestCase):
         url = res.json['data']['relationships']['node']['links']['related']['href']
         expected_url = '/{}nodes/{}/'.format(API_BASE, self.public_project._id)
         assert_equal(res.status_code, 200)
-        assert_equal(urlparse(url).path, expected_url)
+        assert_equal(urllib.parse.urlparse(url).path, expected_url)
 
     def test_wiki_has_comments_link(self):
         self._set_up_public_project_with_wiki_page()

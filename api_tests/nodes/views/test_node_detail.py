@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import mock
 import pytest
-from urlparse import urlparse
+import urllib
 
 
 from api.base.settings.defaults import API_BASE
@@ -180,7 +180,7 @@ class TestNodeDetail:
         res = app.get(public_component_url)
         assert res.status_code == 200
         url = res.json['data']['relationships']['parent']['links']['related']['href']
-        assert urlparse(url).path == url_public
+        assert urllib.parse.urlparse(url).path == url_public
 
     def test_node_has(self, app, url_public):
 
@@ -188,31 +188,31 @@ class TestNodeDetail:
         res = app.get(url_public)
         url = res.json['data']['relationships']['children']['links']['related']['href']
         expected_url = '{}children/'.format(url_public)
-        assert urlparse(url).path == expected_url
+        assert urllib.parse.urlparse(url).path == expected_url
 
     #   test_node_has_contributors_link
         res = app.get(url_public)
         url = res.json['data']['relationships']['contributors']['links']['related']['href']
         expected_url = '{}contributors/'.format(url_public)
-        assert urlparse(url).path == expected_url
+        assert urllib.parse.urlparse(url).path == expected_url
 
     #   test_node_has_node_links_link
         res = app.get(url_public)
         url = res.json['data']['relationships']['node_links']['links']['related']['href']
         expected_url = '{}node_links/'.format(url_public)
-        assert urlparse(url).path == expected_url
+        assert urllib.parse.urlparse(url).path == expected_url
 
     #   test_node_has_registrations_link
         res = app.get(url_public)
         url = res.json['data']['relationships']['registrations']['links']['related']['href']
         expected_url = '{}registrations/'.format(url_public)
-        assert urlparse(url).path == expected_url
+        assert urllib.parse.urlparse(url).path == expected_url
 
     #   test_node_has_files_link
         res = app.get(url_public)
         url = res.json['data']['relationships']['files']['links']['related']['href']
         expected_url = '{}files/'.format(url_public)
-        assert urlparse(url).path == expected_url
+        assert urllib.parse.urlparse(url).path == expected_url
 
     def test_node_has_comments_link(
             self, app, user, project_public, url_public):

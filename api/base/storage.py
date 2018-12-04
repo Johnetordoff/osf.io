@@ -1,7 +1,7 @@
 from django.core.files.storage import FileSystemStorage
 from django.utils.encoding import filepath_to_uri
 from storages.backends.gcloud import GoogleCloudStorage
-from urlparse import urljoin
+import urllib
 
 from website.settings import DOMAIN
 
@@ -14,8 +14,8 @@ class DevFileSystemStorage(FileSystemStorage):
         url = filepath_to_uri(name)
         if url is not None:
             url = url.lstrip('/')
-        url = urljoin(DOMAIN, url)
-        return urljoin(self.base_url, url)
+        url = urllib.parse.urljoin(DOMAIN, url)
+        return urllib.parse.urljoin(self.base_url, url)
 
 class RequestlessURLGoogleCloudStorage(GoogleCloudStorage):
     def url(self, name, validate=False):

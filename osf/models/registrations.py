@@ -1,6 +1,6 @@
 import logging
 import datetime
-import urlparse
+import urllib
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -494,7 +494,7 @@ class DraftRegistration(ObjectIDMixin, BaseModel):
 
     @property
     def absolute_url(self):
-        return urlparse.urljoin(settings.DOMAIN, self.url)
+        return urllib.parse.urljoin(settings.DOMAIN, self.url)
 
     @property
     def absolute_api_v2_url(self):

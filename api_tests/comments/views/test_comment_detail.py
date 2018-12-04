@@ -1,6 +1,6 @@
 import mock
 import pytest
-from urlparse import urlparse
+import urllib
 
 from addons.wiki.tests.factories import WikiFactory
 from api.base.settings.defaults import API_BASE
@@ -223,12 +223,12 @@ class CommentDetailMixin(object):
         # test_comment_has_user_link
         url_user = res.json['data']['relationships']['user']['links']['related']['href']
         expected_url = '/{}users/{}/'.format(API_BASE, user._id)
-        assert urlparse(url_user).path == expected_url
+        assert urllib.parse.urlparse(url_user).path == expected_url
 
         # test_comment_has_node_link
         url_node = res.json['data']['relationships']['node']['links']['related']['href']
         expected_url = '/{}nodes/{}/'.format(API_BASE, public_project._id)
-        assert urlparse(url_node).path == expected_url
+        assert urllib.parse.urlparse(url_node).path == expected_url
 
         # test_comment_has_replies_link
         url_replies = res.json['data']['relationships']['replies']['links']['related']['href']
@@ -241,7 +241,7 @@ class CommentDetailMixin(object):
         url_reports = res.json['data']['relationships']['reports']['links']['related']['href']
         expected_url = '/{}comments/{}/reports/'.format(
             API_BASE, public_comment._id)
-        assert urlparse(url_reports).path == expected_url
+        assert urllib.parse.urlparse(url_reports).path == expected_url
 
         # test_registration_comment_has_node_link
         res = app.get(comment_url, auth=user.auth)
@@ -249,7 +249,7 @@ class CommentDetailMixin(object):
         expected_url = '/{}registrations/{}/'.format(
             API_BASE, registration._id)
         assert res.status_code == 200
-        assert urlparse(url).path == expected_url
+        assert urllib.parse.urlparse(url).path == expected_url
 
     def test_private_node_comment_auth_misc(
             self, app, user, non_contrib, private_url, payload):
@@ -642,7 +642,7 @@ class TestCommentDetailView(CommentDetailMixin):
         target_type = res.json['data']['relationships']['target']['links']['related']['meta']['type']
         expected_type = 'nodes'
         assert res.status_code == 200
-        assert urlparse(url).path == expected_url
+        assert urllib.parse.urlparse(url).path == expected_url
         assert target_type == expected_type
 
     def test_public_node_non_contrib_commenter_can_update_comment(
@@ -810,7 +810,7 @@ class TestFileCommentDetailView(CommentDetailMixin):
         target_type = res.json['data']['relationships']['target']['links']['related']['meta']['type']
         expected_type = 'files'
         assert res.status_code == 200
-        assert urlparse(url).path == expected_url
+        assert urllib.parse.urlparse(url).path == expected_url
         assert target_type == expected_type
 
     def test_public_node_non_contrib_commenter_can_update_file_comment(

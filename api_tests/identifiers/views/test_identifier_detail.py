@@ -1,5 +1,5 @@
 import pytest
-from urlparse import urlparse
+import urllib
 
 from api.base.settings.defaults import API_BASE
 from osf_tests.factories import (
@@ -63,7 +63,7 @@ class TestIdentifierDetail:
         assert res_registration.content_type == 'application/vnd.api+json'
 
         # test_identifier_detail_returns_correct_referent_registration
-        path = urlparse(
+        path = urllib.parse.urlparse(
             data_registration['relationships']['referent']['links']['related']['href']
         ).path
         assert '/{}registrations/{}/'.format(
@@ -85,7 +85,7 @@ class TestIdentifierDetail:
         assert res_node.content_type == 'application/vnd.api+json'
 
         # test_identifier_detail_returns_correct_referent_node
-        path = urlparse(
+        path = urllib.parse.urlparse(
             data_node['relationships']['referent']['links']['related']['href']
         ).path
         assert '/{}nodes/{}/'.format(API_BASE, node._id) == path

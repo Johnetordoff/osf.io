@@ -3,7 +3,7 @@ from django.utils import timezone
 import mock
 from nose.tools import *  # noqa:
 import pytest
-from urlparse import urlparse
+import urllib
 
 from api.base.settings.defaults import API_BASE
 from api_tests.nodes.views.test_node_draft_registration_list import DraftRegistrationTestCase
@@ -50,7 +50,7 @@ class TestRegistrationList(ApiTestCase):
         assert_equal(res.content_type, 'application/vnd.api+json')
         url = res.json['data'][0]['relationships']['registered_from']['links']['related']['href']
         assert_equal(
-            urlparse(url).path,
+            urllib.parse.urlparse(url).path,
             '/{}nodes/{}/'.format(API_BASE, self.public_project._id)
         )
 
@@ -59,9 +59,9 @@ class TestRegistrationList(ApiTestCase):
         assert_equal(len(res.json['data']), 2)
         assert_equal(res.status_code, 200)
 
-        registered_from_one = urlparse(
+        registered_from_one = urllib.parse.urlparse(
             res.json['data'][0]['relationships']['registered_from']['links']['related']['href']).path
-        registered_from_two = urlparse(
+        registered_from_two = urllib.parse.urlparse(
             res.json['data'][1]['relationships']['registered_from']['links']['related']['href']).path
 
         assert_equal(res.content_type, 'application/vnd.api+json')
@@ -76,7 +76,7 @@ class TestRegistrationList(ApiTestCase):
         res = self.app.get(self.url, auth=self.user_two.auth)
         assert_equal(len(res.json['data']), 1)
         assert_equal(res.status_code, 200)
-        registered_from = urlparse(
+        registered_from = urllib.parse.urlparse(
             res.json['data'][0]['relationships']['registered_from']['links']['related']['href']).path
 
         assert_equal(res.content_type, 'application/vnd.api+json')

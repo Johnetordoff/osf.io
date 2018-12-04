@@ -2,7 +2,7 @@ import mock
 import furl
 import datetime
 import pytz
-from urlparse import urlparse
+import urllib
 from nose.tools import *  # noqa:
 
 from api.base.settings.defaults import API_BASE
@@ -155,7 +155,7 @@ class TestWikiVersionDetailView(ApiWikiTestCase):
         url = res.json['data']['relationships']['user']['links']['related']['href']
         expected_url = '/{}users/{}/'.format(API_BASE, self.user._id)
         assert_equal(res.status_code, 200)
-        assert_equal(urlparse(url).path, expected_url)
+        assert_equal(urllib.parse.urlparse(url).path, expected_url)
 
     def test_wiki_version_has_wiki_page_link(self):
         self._set_up_public_project_with_wiki_page()
@@ -163,7 +163,7 @@ class TestWikiVersionDetailView(ApiWikiTestCase):
         url = res.json['data']['relationships']['wiki_page']['links']['related']['href']
         expected_url = '/{}wikis/{}/'.format(API_BASE, self.public_wiki_version.wiki_page._id)
         assert_equal(res.status_code, 200)
-        assert_equal(urlparse(url).path, expected_url)
+        assert_equal(urllib.parse.urlparse(url).path, expected_url)
 
     def test_wiki_version_has_download_link(self):
         self._set_up_public_project_with_wiki_page()
