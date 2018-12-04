@@ -5,7 +5,7 @@ from nose.tools import *  # noqa; PEP8 asserts
 from webtest_plus import TestApp as WebtestApp  # py.test tries to collect `TestApp`
 import mock
 import urllib
-import httplib as http
+import http.client as http
 
 from flask import Flask
 from werkzeug.wrappers import BaseResponse
