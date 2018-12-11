@@ -804,26 +804,34 @@ class RegistrationEmbargoViewsTestCase(OsfTestCase):
         current_year = timezone.now().strftime('%Y')
 
         self.valid_make_public_payload = json.dumps({
-            u'embargoEndDate': u'Fri, 01, {month} {year} 00:00:00 GMT'.format(
-                month=current_month,
-                year=current_year
-            ),
-            u'registrationChoice': 'immediate',
-            u'summary': unicode(fake.sentence())
+            'data': {
+                'attributes': {
+                    u'registration_choice': 'immediate',
+                },
+                'type': 'registrations',
+            }
         })
         valid_date = timezone.now() + datetime.timedelta(days=180)
         self.valid_embargo_payload = json.dumps({
-            u'embargoEndDate': str(valid_date.strftime('%a, %d, %B %Y %H:%M:%S'), 'utf-8') + u' GMT',
-            u'registrationChoice': 'embargo',
-            u'summary': str(fake.sentence(), 'utf-8')
+            'data': {
+                'attributes': {
+                    u'lift_embargo': str(valid_date.strftime('%a, %d, %B %Y %H:%M:%S'), 'utf-8') + u' GMT',
+                    u'registration_choice': 'embargo',
+                },
+                'type': 'registrations',
+            },
         })
         self.invalid_embargo_date_payload = json.dumps({
-            u'embargoEndDate': u'Thu, 01 {month} {year} 05:00:00 GMT'.format(
-                month=current_month,
-                year=str(int(current_year) - 1)
-            ),
-            u'registrationChoice': 'embargo',
-            u'summary': str(fake.sentence(), 'utf-8')
+            'data': {
+                'attributes': {
+                    u'lift_embargo': u'Thu, 01 {month} {year} 05:00:00 GMT'.format(
+                        month=current_month,
+                        year=str(int(current_year) - 1)
+                    ),
+                    u'registration_choice': 'embargo',
+                },
+                'type': 'registrations',
+            }
         })
 
     @mock.patch('framework.celery_tasks.handlers.enqueue_task')
