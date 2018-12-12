@@ -343,7 +343,7 @@ def serialize_node(node, category):
         normalized_title = six.u(node.title)
     except TypeError:
         normalized_title = node.title
-    normalized_title = unicodedata.normalize('NFKD', normalized_title).encode('ascii', 'ignore')
+    normalized_title = str(unicodedata.normalize('NFKD', normalized_title).encode('ascii', 'ignore'), 'utf-8')
     elastic_document = {
         'id': node._id,
         'contributors': [
@@ -533,7 +533,7 @@ def update_user(user, index=None):
                 val = six.u(val)
             except TypeError:
                 pass  # This is fine, will only happen in 2.x if val is already unicode
-            normalized_names[key] = unicodedata.normalize('NFKD', val).encode('ascii', 'ignore')
+            normalized_names[key] = str(unicodedata.normalize('NFKD', val).encode('ascii', 'ignore'), 'utf-8')
 
     user_doc = {
         'id': user._id,
