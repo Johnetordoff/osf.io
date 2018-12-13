@@ -306,7 +306,7 @@ def resolve_guid(guid, suffix=None):
 
                 return send_from_directory(registries_dir, 'index.html')
 
-        url = _build_guid_url(urllib.unquote(referent.deep_url), suffix)
+        url = _build_guid_url(urllib.parse.unquote(referent.deep_url), suffix)
         return proxy_url(url)
 
     # GUID not found; try lower-cased and redirect if exists

@@ -143,7 +143,7 @@ class TestAuthUtils(OsfTestCase):
         assert_in('/login?service=', resp.location)
 
         # the valid username will be double quoted as it is furl quoted in both get_login_url and get_logout_url in order
-        username_quoted = urllib.quote(urllib.quote(user.username, safe='@'), safe='@')
+        username_quoted = urllib.parse.quote(urllib.parse.quote(user.username, safe='@'), safe='@')
         assert_in('username={}'.format(username_quoted), resp.location)
         assert_in('verification_key={}'.format(user.verification_key), resp.location)
 
