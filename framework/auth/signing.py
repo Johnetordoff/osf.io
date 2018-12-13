@@ -34,7 +34,8 @@ def order_recursive(data):
 
 def serialize_payload(payload):
     ordered = order_recursive(payload)
-    return base64.b64encode(json.dumps(ordered))
+    json_data = json.dumps(ordered)
+    return base64.b64encode(json_data.encode('utf-8'))
 
 
 def unserialize_payload(message):
