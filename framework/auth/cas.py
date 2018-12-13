@@ -158,7 +158,7 @@ class CasClient(object):
             resp.user = str(auth_doc.xpath('string(./cas:user)', namespaces=doc.nsmap), 'utf-8')
             attributes = auth_doc.xpath('./cas:attributes/*', namespaces=doc.nsmap)
             for attribute in attributes:
-                resp.attributes[unicode(attribute.xpath('local-name()'))] = str(attribute.text, 'utf-8')
+                resp.attributes[str(attribute.xpath('local-name()'))] = str(attribute.text, 'utf-8')
             scopes = resp.attributes.get('accessTokenScope')
             resp.attributes['accessTokenScope'] = set(scopes.split(' ') if scopes else [])
         else:
