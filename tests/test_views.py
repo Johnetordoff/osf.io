@@ -927,8 +927,8 @@ class TestProjectViews(OsfTestCase):
         url = registration.web_url_for('view_project')
         res = self.app.get(url, auth=self.auth)
 
-        assert_not_in('Mako Runtime Error', res.body)
-        assert_in(registration.title, res.body)
+        assert_not_in('Mako Runtime Error', res.body.decode())
+        assert_in(registration.title, res.body.decode())
         assert_equal(res.status_code, 200)
 
         for route in ['files', 'wiki/home', 'contributors', 'settings', 'withdraw', 'register', 'register/fakeid']:
@@ -936,11 +936,11 @@ class TestProjectViews(OsfTestCase):
             assert_equal(res.status_code, 302, route)
             res = res.follow()
             assert_equal(res.status_code, 200, route)
-            assert_in('This project is a withdrawn registration of', res.body, route)
+            assert_in('This project is a withdrawn registration of', res.body.decode(), route)
 
         res = self.app.get('/{}/'.format(reg_file.guids.first()._id))
         assert_equal(res.status_code, 200)
-        assert_in('This project is a withdrawn registration of', res.body)
+        assert_in('This project is a withdrawn registration of', res.body.decode())
 
 
 class TestEditableChildrenViews(OsfTestCase):

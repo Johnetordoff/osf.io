@@ -151,12 +151,12 @@ class TokenApprovableSanction(Sanction):
                     'user_id': user._id,
                     'sanction_id': self._id,
                     'action': 'approve_{}'.format(self.SHORT_NAME)
-                }),
+                }).decode(),
                 'rejection_token': tokens.encode({
                     'user_id': user._id,
                     'sanction_id': self._id,
                     'action': 'reject_{}'.format(self.SHORT_NAME)
-                }),
+                }).decode(),
             }
             if save:
                 self.save()
