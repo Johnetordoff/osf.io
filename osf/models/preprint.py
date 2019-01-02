@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import functools
-import urlparse
 import logging
 import re
 import pytz
+import urllib
 
 from dirtyfields import DirtyFieldsMixin
 from include import IncludeManager
@@ -325,7 +325,7 @@ class Preprint(DirtyFieldsMixin, GuidMixin, IdentifierMixin, ReviewableMixin, Ba
 
     @property
     def absolute_url(self):
-        return urlparse.urljoin(
+        return urllib.parse.urlparse.urljoin(
             self.provider.domain if self.provider.domain_redirect_enabled else settings.DOMAIN,
             self.url
         )
