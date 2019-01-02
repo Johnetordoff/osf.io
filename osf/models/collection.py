@@ -19,6 +19,8 @@ from osf.exceptions import NodeStateError
 from website.util import api_v2_url
 from website.search.exceptions import SearchUnavailableError
 
+from past.builtins import basestring  # TODO: Remove basestring after Py3 conversion
+
 logger = logging.getLogger(__name__)
 
 class CollectionSubmission(TaxonomizableMixin, BaseModel):

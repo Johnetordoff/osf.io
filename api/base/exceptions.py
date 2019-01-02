@@ -4,6 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import status
 from rest_framework.exceptions import APIException, AuthenticationFailed
 
+from past.builtins import basestring  # TODO: Remove basestring after Py3 conversion
 
 def get_resource_object_member(error_key, context):
     from api.base.serializers import RelationshipField

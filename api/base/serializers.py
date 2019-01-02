@@ -24,6 +24,7 @@ from osf.models import AbstractNode, MaintenanceState, Preprint
 from website import settings
 from website.project.model import has_anonymous_link
 
+from past.builtins import basestring  # TODO: Remove basestring after Py3 conversion
 
 def format_relationship_links(related_link=None, self_link=None, rel_meta=None, self_meta=None):
     """

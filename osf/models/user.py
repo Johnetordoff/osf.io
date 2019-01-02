@@ -51,6 +51,8 @@ from website import settings as website_settings
 from website import filters, mails
 from website.project import new_bookmark_collection
 
+from past.builtins import basestring  # TODO: Remove basestring after Py3 conversion
+
 logger = logging.getLogger(__name__)
 
 MAX_QUICKFILES_MERGE_RENAME_ATTEMPTS = 1000

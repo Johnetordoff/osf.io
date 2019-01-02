@@ -4,6 +4,7 @@ from nose.tools import *
 from framework.encryption import encrypt, decrypt
 from website import security
 
+from past.builtins import basestring  # TODO: Remove basestring after Py3 conversion
 
 def test_random_string():
     s = security.random_string(length=30)

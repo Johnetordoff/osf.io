@@ -23,6 +23,8 @@ from osf.utils.requests import check_select_for_update
 from website import settings as website_settings
 from website import util as website_util  # noqa
 
+from past.builtins import basestring  # TODO: Remove basestring after Py3 conversion
+
 # These values are copied from rest_framework.fields.BooleanField
 # BooleanField cannot be imported here without raising an
 # ImproperlyConfigured error

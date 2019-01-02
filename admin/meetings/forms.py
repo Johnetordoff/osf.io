@@ -7,6 +7,7 @@ from framework.auth.core import get_user
 from osf.models import Conference
 from website.conferences.exceptions import ConferenceError
 
+from past.builtins import basestring  # TODO: Remove basestring after Py3 conversion
 
 class MultiEmailField(forms.Field):
 

@@ -16,6 +16,8 @@ from invoke import Collection
 from website import settings
 from .utils import pip_install, bin_prefix
 
+from past.builtins import basestring  # TODO: Remove basestring after Py3 conversion
+
 logging.getLogger('invoke').setLevel(logging.CRITICAL)
 
 # gets the root path for all the scripts that rely on it

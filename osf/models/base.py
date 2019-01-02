@@ -20,6 +20,8 @@ from osf.utils.fields import LowercaseCharField, NonNaiveDateTimeField
 
 ALPHABET = '23456789abcdefghjkmnpqrstuvwxyz'
 
+from past.builtins import basestring  # TODO: Remove basestring after Py3 conversion
+
 logger = logging.getLogger(__name__)
 
 

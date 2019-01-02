@@ -39,6 +39,8 @@ from .exceptions import (
     NameMaximumLengthError,
 )
 
+from past.builtins import basestring  # TODO: Remove basestring after Py3 conversion
+
 logger = logging.getLogger(__name__)
 
 SHAREJS_HOST = 'localhost'

@@ -14,6 +14,7 @@ from osf_tests.factories import AuthUserFactory, ProjectFactory
 from website.files import exceptions
 from osf import models
 
+from past.builtins import basestring  # TODO: Remove basestring after Py3 conversion
 
 class TestFileNode(BaseFileNode):
     _provider = 'test'

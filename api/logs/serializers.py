@@ -15,6 +15,7 @@ from osf.models import OSFUser, AbstractNode, Preprint
 from osf.utils.names import impute_names_model
 from osf.utils import permissions as osf_permissions
 
+from past.builtins import basestring  # TODO: Remove basestring after Py3 conversion
 
 class NodeLogIdentifiersSerializer(RestrictedDictSerializer):
 

@@ -26,6 +26,8 @@ from website.util import web_url_for, api_url_for, is_json_request, conjunct, ap
 from website.project import utils as project_utils
 from website.profile import utils as profile_utils
 
+from past.builtins import basestring  # TODO: Remove basestring after Py3 conversion
+
 try:
     import magic  # noqa
     LIBMAGIC_AVAILABLE = True

@@ -51,6 +51,8 @@ from osf.exceptions import (
     PreprintStateError, InvalidTagError, TagNotFoundError
 )
 
+from past.builtins import basestring  # TODO: Remove basestring after Py3 conversion
+
 logger = logging.getLogger(__name__)
 
 

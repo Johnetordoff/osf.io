@@ -32,6 +32,7 @@ from osf.utils.requests import get_request_and_user_id
 from website.project import signals as project_signals
 from website import settings, mails, language
 
+from past.builtins import basestring  # TODO: Remove basestring after Py3 conversion
 
 logger = logging.getLogger(__name__)
 

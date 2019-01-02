@@ -63,6 +63,7 @@ from osf.utils.permissions import ADMIN, CREATOR_PERMISSIONS, DEFAULT_CONTRIBUTO
 from website.util import api_url_for, api_v2_url, web_url_for
 from .base import BaseModel, GuidMixin, GuidMixinQuerySet
 
+from past.builtins import basestring  # TODO: Remove basestring after Py3 conversion
 
 logger = logging.getLogger(__name__)
 

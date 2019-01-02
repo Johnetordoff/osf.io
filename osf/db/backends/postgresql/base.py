@@ -6,6 +6,7 @@ from django.db.backends.postgresql.base import \
     DatabaseWrapper as PostgresqlDatabaseWrapper
 from django.db.backends.postgresql.base import utc_tzinfo_factory
 
+from past.builtins import basestring  # TODO: Remove basestring after Py3 conversion
 
 class server_side_cursors(object):
     """

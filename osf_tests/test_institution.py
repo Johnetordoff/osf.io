@@ -3,6 +3,7 @@ from osf.models import Institution
 from .factories import InstitutionFactory
 import pytest
 
+from past.builtins import basestring  # TODO: Remove basestring after Py3 conversion
 
 @pytest.mark.django_db
 def test_factory():

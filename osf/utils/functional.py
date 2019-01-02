@@ -1,5 +1,7 @@
 import collections
 
+from past.builtins import basestring  # TODO: Remove basestring after Py3 conversion
+
 # Function courtesy of @brianjgeiger and @abought
 def rapply(data, func, *args, **kwargs):
     """Recursively apply a function to all values in an iterable

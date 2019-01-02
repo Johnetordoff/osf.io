@@ -3,6 +3,7 @@ import collections
 
 import bleach
 
+from past.builtins import basestring  # TODO: Remove basestring after Py3 conversion
 
 def is_iterable(obj):
     return isinstance(obj, collections.Iterable)

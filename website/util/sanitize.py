@@ -3,6 +3,7 @@ import bleach
 
 from osf.utils.sanitize import is_iterable_but_not_string
 
+from past.builtins import basestring  # TODO: Remove basestring after Py3 conversion
 
 def escape_html(data):
     """Escape HTML characters in data (as opposed to stripping them out entirely). Will ignore whitelisted tags.
