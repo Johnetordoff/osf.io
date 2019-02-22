@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 import pytest
 
-from addons.osfstorage.models import OsfStorageFolder
 from framework.auth import signing
 
 from osf_tests.factories import (
@@ -11,25 +10,11 @@ from osf_tests.factories import (
     PreprintFactory
 )
 from api_tests.utils import create_test_file, create_test_preprint_file
-from osf.models import QuickFilesNode
 
 
 @pytest.fixture()
 def user():
     return AuthUserFactory()
-
-@pytest.fixture()
-def quickfiles_node(user):
-    return QuickFilesNode.objects.get_for_user(user)
-
-@pytest.fixture()
-def quickfiles_file(user, quickfiles_node):
-    file = create_test_file(quickfiles_node, user, filename='road_dogg.mp3')
-    return file
-
-@pytest.fixture()
-def quickfiles_folder(quickfiles_node):
-    return OsfStorageFolder.objects.get_root(target=quickfiles_node)
 
 @pytest.fixture()
 def node(user):
@@ -68,16 +53,11 @@ def sign_payload(payload):
     return signing.sign_data(signing.default_signer, payload)
 
 @pytest.mark.django_db
-@pytest.mark.enable_quickfiles_creation
 @pytest.mark.enable_implicit_clean
 class TestMove():
     @pytest.fixture()
     def move_url(self, node):
         return '/_/wb/hooks/{}/move/'.format(node._id)
-
-    @pytest.fixture()
-    def quickfiles_move_url(self, quickfiles_node):
-        return '/_/wb/hooks/{}/move/'.format(quickfiles_node._id)
 
     @pytest.fixture()
     def payload(self, file, folder, root_node, user):
@@ -163,41 +143,6 @@ class TestMove():
         })
         res = app.post_json(move_url, signed_payload, expect_errors=False)
         assert res.status_code == 200
-
-    def test_can_move_file_out_of_quickfiles_node(self, app, quickfiles_move_url, quickfiles_file, quickfiles_node, quickfiles_folder, node, user):
-        dest_folder = OsfStorageFolder.objects.get_root(target=node)
-        signed_payload = sign_payload({
-            'source': quickfiles_folder._id,
-            'target': quickfiles_node._id,
-            'user': user._id,
-            'destination': {
-                'parent': dest_folder._id,
-                'target': node._id,
-                'name': quickfiles_file.name,
-            }
-        })
-        res = app.post_json(quickfiles_move_url, signed_payload, expect_errors=False)
-        assert res.status_code == 200
-
-    def test_can_rename_file_in_quickfiles_node(self, app, node, user, quickfiles_move_url, quickfiles_node, quickfiles_file, quickfiles_folder):
-        new_name = 'new_file_name.txt'
-        signed_payload = sign_payload({
-            'source': quickfiles_file._id,
-            'target': quickfiles_node._id,
-            'user': user._id,
-            'name': quickfiles_file.name,
-            'destination': {
-                'parent': quickfiles_folder._id,
-                'target': quickfiles_node._id,
-                'name': new_name,
-            }
-        })
-
-        res = app.post_json(quickfiles_move_url, signed_payload, expect_errors=False)
-        assert res.status_code == 200
-        quickfiles_file.reload()
-        assert quickfiles_file.name == new_name
-        assert res.json['name'] == new_name
 
     def test_blank_destination_file_name(self, app, move_url, user, root_node, folder, file):
         signed_payload = sign_payload(
@@ -600,16 +545,11 @@ class TestMovePreprint():
 
 
 @pytest.mark.django_db
-@pytest.mark.enable_quickfiles_creation
 @pytest.mark.enable_implicit_clean
 class TestCopy():
     @pytest.fixture()
     def copy_url(self, node):
         return '/_/wb/hooks/{}/copy/'.format(node._id)
-
-    @pytest.fixture()
-    def quickfiles_copy_url(self, quickfiles_node):
-        return '/_/wb/hooks/{}/copy/'.format(quickfiles_node._id)
 
     @pytest.fixture()
     def payload(self, file, folder, root_node, user):
@@ -725,21 +665,6 @@ class TestCopy():
             }
         })
         res = app.post_json(copy_url, signed_payload, expect_errors=False)
-        assert res.status_code == 201
-
-    def test_can_copy_file_out_of_quickfiles_node(self, app, quickfiles_copy_url, quickfiles_file, quickfiles_node, quickfiles_folder, node, user):
-        dest_folder = OsfStorageFolder.objects.get_root(target=node)
-        signed_payload = sign_payload({
-            'source': quickfiles_folder._id,
-            'target': quickfiles_node._id,
-            'user': user._id,
-            'destination': {
-                'parent': dest_folder._id,
-                'target': node._id,
-                'name': quickfiles_file.name,
-            }
-        })
-        res = app.post_json(quickfiles_copy_url, signed_payload, expect_errors=False)
         assert res.status_code == 201
 
     def test_blank_destination_file_name(self, app, copy_url, user, root_node, folder, file):
