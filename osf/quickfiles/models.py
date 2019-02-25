@@ -9,7 +9,7 @@ from osf.models.mixins import CleanMixin
 
 
 class QuickFileNode(BaseFileNode):
-    pass
+    _provider = 'osfstorage'
 
 
 class QuickFolder(QuickFileNode, Folder, CleanMixin):
@@ -27,7 +27,6 @@ class QuickFolder(QuickFileNode, Folder, CleanMixin):
     7. When a Quickfile is viewed/downloaded it only counts toward the metrics if the view/download is done by a user
     who doesn't own the Quickfolder that file was in.
     """
-    _provider = 'osfstorage'
 
     DIRTY_TARGET_MSG = 'QuickFilesNode target must be an OSFUser'
     DIRTY_PARENT_MSG = 'parent must be none'
