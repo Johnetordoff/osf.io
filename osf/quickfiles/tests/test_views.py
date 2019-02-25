@@ -249,7 +249,7 @@ class TestQuickFilesV1(V1ViewsCase):
         root_id = user.quickfolder._id
 
         url = '/api/v1/{}/osfstorage/{}/children/'.format(user._id, root_id)
-        res = app.post_json(url, default_signer({}))
+        res = app.get(url, default_signer({}))
         assert res.status_code == 200
 
         _ids = [file['id'] for file in res.json]
@@ -334,7 +334,7 @@ class TestQuickFilesV1(V1ViewsCase):
 
 @pytest.mark.django_db
 @pytest.mark.enable_quickfiles_creation
-class TestQuickFilesWaterButlerHooksV2:
+class TestQuickFilesWaterButlerHooksV2(V2ViewsCase):
 
     @pytest.fixture(autouse=True)
     def add_quickfiles(self, user):
@@ -408,6 +408,10 @@ class TestQuickFilesWaterButlerHooksV2:
 @pytest.mark.enable_quickfiles_creation
 class TestQuickFileMisc:
 
+    @pytest.fixture(autouse=True)
+    def add_quickfiles(self, user):
+        user.quickfolder.append_file('TheElderSproles.txt')
+
     def test_user_quickfiles(self, flask_app, user, user2):
         url = '/profile/{}/'.format(user._id)
         res = flask_app.get(url, auth=user.auth)
@@ -419,19 +423,22 @@ class TestQuickFileMisc:
 
         assert u'Quick files' not in res.body
 
-    def test_deleted_quick_file_gone(self, flask_app, user):
-        guid = user.quickfiles.first()._id
+    def test_resolve_guid(self, flask_app, user):
+        quickfile = user.quickfiles.first()
+        guid = quickfile.get_guid(create=True)._id
 
         url = '/{}/'.format(guid)
         res = flask_app.get(url, expect_errors=True)
 
-        assert res.status_code == 410
+        assert res.status_code == 200
         assert res.request.path == '/{}/'.format(guid)
 
+    """
     def test_addon_view_or_download_quickfile(self, flask_app, user):
         guid = user.quickfiles.first()._id
         url = '/quickfiles/{}/'.format(guid)
-        res = flask_app.get(url, default_signer({'user': user._id}), expect_errors=True)
+        res = flask_app.get(url, default_signer({}), expect_errors=True)
 
         assert res.status_code == 302
-        assert '/project/{}/files/osfstorage/{}/'.format(user._id, guid) in res.location
+        assert 'http://localhost:80/5yzvx/?payload='.format(user._id, guid) in res.location
+    """

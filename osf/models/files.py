@@ -18,6 +18,7 @@ from include import IncludeManager
 from framework.analytics import get_basic_counters
 from framework import sentry
 from osf.models.base import BaseModel, OptionalGuidMixin, ObjectIDMixin
+from osf.models import OSFUser, AbstractNode
 from osf.models.comment import CommentableMixin
 from osf.models.mixins import Taggable
 from osf.models.validators import validate_location
@@ -131,6 +132,17 @@ class BaseFileNode(TypedModel, CommentableMixin, OptionalGuidMixin, Taggable, Ob
         return isinstance(self, (File, TrashedFile))
 
     @property
+    def is_quickfile(self):
+        # old school quickfile
+        if getattr(self.target, 'type', None) == 'osf.quickfilenode':
+            return True
+
+        # new school quickfile
+        if self.type == 'osf.quickfolder' or getattr(self, 'parent') and self.parent.type == 'osf.quickfolder':
+            return True
+        return False
+
+    @property
     def path(self):
         return self._path
 
@@ -186,6 +198,11 @@ class BaseFileNode(TypedModel, CommentableMixin, OptionalGuidMixin, Taggable, Ob
     def create(cls, **kwargs):
         kwargs.update(provider=cls._provider)
         return cls(**kwargs)
+
+    @classmethod
+    def get_osfstorage_or_quickfile(cls, _id, target):
+        assert isinstance(target, (OSFUser, AbstractNode)), 'target must be OSFUser or AbstractNode'
+        return cls.objects.get(_id=_id, target_object_id=target.id, target_content_type=ContentType.objects.get_for_model(target))
 
     @classmethod
     def get_or_create(cls, target, path):
@@ -323,7 +340,11 @@ class BaseFileNode(TypedModel, CommentableMixin, OptionalGuidMixin, Taggable, Ob
         headers = {}
         if auth_header:
             headers['Authorization'] = auth_header
-
+        import logging
+        log = logging.getLogger('#@!')
+        log.info(kwargs)
+        log.info(revision)
+        log.info(headers)
         resp = requests.get(
             self.generate_waterbutler_url(revision=revision, meta=True, _internal=True, **kwargs),
             headers=headers,

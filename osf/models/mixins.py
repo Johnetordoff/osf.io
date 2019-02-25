@@ -1,3 +1,5 @@
+from abc import abstractmethod
+
 import pytz
 import markupsafe
 import logging
@@ -90,10 +92,18 @@ class Loggable(models.Model):
         params['node'] = params.get('node') or params.get('project') or self._id
         original_node = self if self._id == params['node'] else AbstractNode.load(params.get('node'))
 
-        log = NodeLog(
-            action=action, user=user, foreign_user=foreign_user,
-            params=params, node=self, original_node=original_node
-        )
+        log_params = {
+            'action': action,
+            'user': user,
+            'foreign_user': foreign_user,
+            'params': params,
+        }
+
+        if isinstance(self, AbstractNode):
+            log_params['node'] = self
+            log_params['original_node'] = original_node
+
+        log = NodeLog(**log_params)
 
         if log_date:
             log.date = log_date
@@ -106,7 +116,7 @@ class Loggable(models.Model):
 
         if save:
             self.save()
-        if user and not self.is_collection:
+        if user and not getattr(self, 'is_collection', False):
             increment_user_activity_counters(user._primary_key, action, log.date.isoformat())
 
         return log
@@ -1604,6 +1614,68 @@ class SpamOverrideMixin(SpamMixin):
             )
             log.should_hide = True
             log.save()
+
+
+class FileTargetMixin(Loggable):
+    '''
+    The purpose of this mixin to ensure models that are file `targets` (meaning a group of files are assocciated with
+    them.) Have all the methods they need to interact with BaseFileNode objects without errors or gaps in functionality
+
+    File targets must have four basic things:
+
+    1. Logs
+    2. Permissions
+    3. Resolvable urls
+    4. Spam status
+
+    Since each model is going to have different criteria for these things, so this a very abstract class, but since everything
+    that's a target needs all these things it's good to require these methods as part of a class to avoid missing any
+    aspects of targethood.
+    '''
+    class Meta:
+        abstract = True
+
+    @classmethod
+    def load_target_from_guid(cls, _id):
+        for target_class in cls.__subclasses__():
+            try:
+                target = target_class.objects.get(guids___id=_id)
+            except target_class.DoesNotExist:
+                continue
+            if target is not None:
+                return target
+
+    @abstractmethod
+    def has_permission(self, user, perm):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def api_url_for(self, view_name, _absolute=False, *args, **kwargs):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def web_url_for(self, view_name, _absolute=False, _guid=False, *args, **kwargs):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def serialize_waterbutler_settings(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def serialize_waterbutler_credentials(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def create_waterbutler_log(self, auth, action, metadata):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def counts_towards_analytics(self, user):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def is_spam(self):
+        raise NotImplementedError()
 
 
 class CleanMixin(models.Model):

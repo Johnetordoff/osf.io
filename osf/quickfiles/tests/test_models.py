@@ -27,8 +27,7 @@ def bad_file_node():
 
 
 def bad_node():
-    node = ProjectFactory()
-    return create_test_file(node, node.creator)
+    return ProjectFactory()
 
 
 @pytest.mark.django_db
@@ -82,7 +81,7 @@ class TestQuickFolder:
         with pytest.raises(ValidationError) as exc:
             quickfolder.save()
 
-        assert exc.value.messages[0] == expected.get('error_message')
+        assert expected.get('error_message') in exc.value.messages
         quickfolder.refresh_from_db()
 
         assert quickfolder.parent is None
@@ -203,10 +202,6 @@ class TestQuickFolder:
             quickfiles.save()
 
         assert 'duplicate key value violates unique constraint "one_quickfolder_per_user"' in exc.value.message
-
-    def test_quickfiles_logs(self, user):
-        assert user.quickfolder.logs.all()
-
 
 @pytest.mark.django_db
 @pytest.mark.enable_quickfiles_creation

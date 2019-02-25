@@ -2,6 +2,8 @@ from __future__ import unicode_literals
 
 import pytest
 
+from api_tests.utils import create_test_file, create_test_preprint_file
+
 from framework.auth import signing
 
 from osf_tests.factories import (
@@ -9,8 +11,6 @@ from osf_tests.factories import (
     ProjectFactory,
     PreprintFactory
 )
-from api_tests.utils import create_test_file, create_test_preprint_file
-
 
 @pytest.fixture()
 def user():

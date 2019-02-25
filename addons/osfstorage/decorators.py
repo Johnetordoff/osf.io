@@ -10,6 +10,7 @@ from framework.exceptions import HTTPError
 
 from addons.osfstorage.models import OsfStorageFileNode, OsfStorageFolder
 from osf.models import OSFUser, Guid
+from osf.models.files import BaseFileNode
 from website.files import exceptions
 from website.project.decorators import (
     must_not_be_registration,
@@ -58,8 +59,11 @@ def autoload_filenode(must_be=None, default_root=False):
         @load_guid_as_target
         @functools.wraps(func)
         def wrapped(*args, **kwargs):
+            is_quickfile = isinstance(kwargs['target'], OSFUser)
             if 'fid' not in kwargs and default_root:
                 file_node = OsfStorageFolder.objects.get_root(kwargs['target'])
+            elif is_quickfile:
+                file_node = BaseFileNode.objects.get(_id=kwargs.get('fid'))
             else:
                 file_node = OsfStorageFileNode.get(kwargs.get('fid'), kwargs['target'])
             if must_be and file_node.kind != must_be:
@@ -87,10 +91,8 @@ def waterbutler_opt_hook(func):
         try:
             user = OSFUser.load(payload['user'])
             # Waterbutler is sending back ['node'] under the destination payload - WB should change to target
-            target = payload['destination'].get('target') or payload['destination'].get('node')
-            dest_target = Guid.load(target).referent
-            source = OsfStorageFileNode.get(payload['source'], kwargs['target'])
-            dest_parent = OsfStorageFolder.get(payload['destination']['parent'], dest_target)
+            source = OsfStorageFileNode.objects.get(_id=payload['source'])
+            dest_parent = BaseFileNode.objects.get(_id=payload['destination']['parent'])
 
             kwargs.update({
                 'user': user,

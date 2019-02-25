@@ -105,3 +105,18 @@ class MigrationTestCase:
                         user.add_addon(addon.short_name)
                 user.save()
                 QuickFilesNode.objects.create_for_user(user)
+
+    def assert_joined(self, model, field_name, model2, field_name2):
+        values_set1 = set(list((model.objects.all().values_list(field_name, flat=True))))
+        values_set2 = set(list((model2.objects.all().values_list(field_name2, flat=True))))
+        assert values_set1 == values_set2, '{model}.{field_name}, didn\'t join with {model2}.{field_name2}'.format(model=model.__name__,
+                                                                                                                   field_name=field_name,
+                                                                                                                   model2=model2.__name__,
+                                                                                                                   field_name2=field_name2)
+    def assert_subset(self, model, field_name, model2, field_name2):
+        values_set1 = set(list((model.objects.all().values_list(field_name, flat=True))))
+        values_set2 = set(list((model2.objects.all().values_list(field_name2, flat=True))))
+        assert values_set1.issubset(values_set2), '{model}.{field_name}, didn\'t join with {model2}.{field_name2}'.format(model=model.__name__,
+                                                                                                                   field_name=field_name,
+                                                                                                                   model2=model2.__name__,
+                                                                                                                   field_name2=field_name2)

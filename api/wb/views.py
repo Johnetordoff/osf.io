@@ -4,7 +4,7 @@ from rest_framework.response import Response
 
 from osf.models import Guid
 from rest_framework.views import APIView
-from addons.osfstorage.models import OsfStorageFileNode, OsfStorageFolder
+from osf.models.files import BaseFileNode
 from api.base.parsers import HMACSignedParser
 from api.wb.serializers import (
     WaterbutlerMetadataSerializer,
@@ -47,13 +47,13 @@ class FileMetadataView(APIView):
             name = destination.get('name')
             dest_target = self.get_target(target_id=destination.get('target'))
             try:
-                source = OsfStorageFileNode.get(source, self.get_object())
-            except OsfStorageFileNode.DoesNotExist:
+                source = BaseFileNode.get_osfstorage_or_quickfile(source, self.get_object())
+            except BaseFileNode.DoesNotExist:
                 raise NotFound
 
             try:
-                dest_parent = OsfStorageFolder.get(destination.get('parent'), dest_target)
-            except OsfStorageFolder.DoesNotExist:
+                dest_parent = BaseFileNode.get_osfstorage_or_quickfile(destination.get('parent'), dest_target)
+            except BaseFileNode.DoesNotExist:
                 raise NotFound
             serializer.save(source=source, destination=dest_parent, name=name)
             return Response(serializer.data, status=status.HTTP_201_CREATED)

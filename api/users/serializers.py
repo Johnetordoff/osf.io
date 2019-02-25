@@ -8,12 +8,11 @@ from api.base.exceptions import InvalidModelValueError, Conflict
 from api.base.serializers import (
     BaseAPISerializer, JSONAPISerializer, JSONAPIRelationshipSerializer,
     VersionedDateTimeField, HideIfDisabled, IDField,
-    Link, LinksField, TypeField, RelationshipField, JSONAPIListField,
-    WaterbutlerLink, ShowIfCurrentUser,
+    LinksField, TypeField, RelationshipField, JSONAPIListField,
+    ShowIfCurrentUser,
 )
 from api.base.utils import absolute_reverse, get_user_auth, waterbutler_api_url_for, is_deprecated, hashids
-from api.files.serializers import QuickFilesSerializer
-from osf.models import OSFUser, QuickFilesNode, Email
+from osf.models import OSFUser, Email
 from osf.exceptions import ValidationValueError, ValidationError, BlacklistedEmailError
 from website.settings import MAILCHIMP_GENERAL_LIST, OSF_HELP_LIST, CONFIRM_REGISTRATIONS_BY_EMAIL, OSF_SUPPORT_EMAIL
 from osf.models.provider import AbstractProviderGroupObjectPermission
@@ -28,8 +27,7 @@ class QuickFilesRelationshipField(RelationshipField):
 
     def to_representation(self, value):
         relationship_links = super(QuickFilesRelationshipField, self).to_representation(value)
-        quickfiles_guid = value.nodes_created.filter(type=QuickFilesNode._typedmodels_type).values_list('guids___id', flat=True).get()
-        upload_url = waterbutler_api_url_for(quickfiles_guid, 'osfstorage')
+        upload_url = waterbutler_api_url_for(value._id, 'osfstorage')
         relationship_links['links']['upload'] = {
             'href': upload_url,
             'meta': {},
@@ -271,16 +269,6 @@ class UserDetailSerializer(UserSerializer):
     Overrides UserSerializer to make id required.
     """
     id = IDField(source='_id', required=True)
-
-
-class UserQuickFilesSerializer(QuickFilesSerializer):
-    links = LinksField({
-        'info': Link('files:file-detail', kwargs={'file_id': '<_id>'}),
-        'upload': WaterbutlerLink(),
-        'delete': WaterbutlerLink(),
-        'move': WaterbutlerLink(),
-        'download': WaterbutlerLink(must_be_file=True),
-    })
 
 
 class ReadEmailUserDetailSerializer(UserDetailSerializer):
