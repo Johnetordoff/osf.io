@@ -26,7 +26,6 @@ from website.project.model import has_anonymous_link
 from website.files import exceptions
 from addons.osfstorage import utils
 from addons.osfstorage import decorators
-from addons.osfstorage.models import OsfStorageFolder
 from addons.osfstorage import settings as osf_storage_settings
 
 
@@ -287,7 +286,7 @@ def osfstorage_create_child(file_node, payload, **kwargs):
     if not (name or user) or '/' in name:
         raise HTTPError(httplib.BAD_REQUEST)
 
-    if getattr(file_node.target, 'is_quickfiles', False) and is_folder:
+    if file_node.is_quickfile and is_folder:
         raise HTTPError(httplib.BAD_REQUEST, data={'message_long': 'You may not create a folder for QuickFiles'})
 
     try:
@@ -352,8 +351,8 @@ def osfstorage_delete(file_node, payload, target, **kwargs):
     #TODO Auth check?
     if not auth:
         raise HTTPError(httplib.BAD_REQUEST)
-    if file_node == OsfStorageFolder.objects.get_root(target=target):
-            raise HTTPError(httplib.BAD_REQUEST)
+    if file_node.is_root:
+        raise HTTPError(httplib.BAD_REQUEST)
 
     try:
         file_node.delete(user=user)

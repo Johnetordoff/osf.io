@@ -289,9 +289,7 @@ def resolve_guid(guid, suffix=None):
 
             return send_from_directory(preprints_dir, 'index.html')
 
-        if isinstance(referent, BaseFileNode) and referent.is_file and (getattr(referent.target, 'is_quickfiles', False)):
-            if referent.is_deleted:
-                raise HTTPError(http.GONE)
+        if isinstance(referent, BaseFileNode) and referent.is_file and referent.is_quickfile:
             if PROXY_EMBER_APPS:
                 resp = requests.get(EXTERNAL_EMBER_APPS['ember_osf_web']['server'], stream=True, timeout=EXTERNAL_EMBER_SERVER_TIMEOUT)
                 return Response(stream_with_context(resp.iter_content()), resp.status_code)
