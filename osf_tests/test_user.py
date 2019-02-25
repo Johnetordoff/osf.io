@@ -2059,7 +2059,7 @@ class TestUserGdprDelete:
         assert user.is_disabled
         assert user.deleted is not None
 
-    def test_can_gdpr_delete_personal_nodes(self, user):
+    def test_can_gdpr_delete_personal_nodes(self, user, project):
 
         user.gdpr_delete()
 
