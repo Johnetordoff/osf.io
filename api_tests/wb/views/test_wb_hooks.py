@@ -12,42 +12,52 @@ from osf_tests.factories import (
     PreprintFactory
 )
 
+
 @pytest.fixture()
 def user():
     return AuthUserFactory()
+
 
 @pytest.fixture()
 def node(user):
     return ProjectFactory(creator=user)
 
+
 @pytest.fixture()
 def node_two(user):
     return ProjectFactory(creator=user)
+
 
 @pytest.fixture()
 def osfstorage(node):
     return node.get_addon('osfstorage')
 
+
 @pytest.fixture()
 def root_node(osfstorage):
     return osfstorage.get_root()
+
 
 @pytest.fixture()
 def node_two_root_node(node_two):
     node_two_settings = node_two.get_addon('osfstorage')
     return node_two_settings.get_root()
 
+
 @pytest.fixture()
 def file(node, user):
     return create_test_file(node, user, 'test_file')
+
 
 @pytest.fixture()
 def folder(root_node, user):
     return root_node.append_folder('Nina Simone')
 
+
 @pytest.fixture()
 def folder_two(root_node, user):
     return root_node.append_folder('Second Folder')
+
 
 def sign_payload(payload):
     return signing.sign_data(signing.default_signer, payload)
@@ -568,7 +578,7 @@ class TestCopy():
     def signed_payload(self, payload):
         return sign_payload(payload)
 
-    def test_copy_hook(self, app, copy_url, signed_payload, folder, file):
+    def test_copy_hook(self, app, copy_url, signed_payload):
         res = app.post_json(copy_url, signed_payload, expect_errors=False)
         assert res.status_code == 201
 
@@ -614,7 +624,7 @@ class TestCopy():
         res = app.post_json(copy_url, signed_payload, expect_errors=True)
         assert res.status_code == 201
 
-    def test_copy_preprint_file_out_of_node(self, app, user, copy_url, root_node, node, node_two, node_two_root_node, folder):
+    def test_copy_preprint_file_out_of_node(self, app, user, copy_url, root_node, node, node_two_root_node, folder):
         file = folder.append_file('No I don\'t wanna go')
         node.preprint_file = file
         node.save()
@@ -633,7 +643,7 @@ class TestCopy():
         res = app.post_json(copy_url, signed_payload, expect_errors=True)
         assert res.status_code == 201
 
-    def test_copy_file_out_of_node(self, app, user, copy_url, root_node, node, node_two, node_two_root_node, folder):
+    def test_copy_file_out_of_node(self, app, user, copy_url, root_node, node, node_two_root_node, folder):
         node.preprint_file = root_node.append_file('far')
         node.save()
 
@@ -685,7 +695,7 @@ class TestCopy():
         file.reload()
         assert file.name == 'test_file'
 
-    def test_blank_source(self, app, copy_url, user, root_node, folder, file):
+    def test_blank_source(self, app, copy_url, user, root_node, folder):
         signed_payload = sign_payload(
             {
                 'source': '',
@@ -767,7 +777,7 @@ class TestCopyPreprint():
     def signed_payload(self, payload):
         return sign_payload(payload)
 
-    def test_copy_hook(self, app, copy_url, signed_payload, folder, file):
+    def test_copy_hook(self, app, copy_url, signed_payload):
         res = app.post_json(copy_url, signed_payload, expect_errors=False)
         assert res.status_code == 201
 
@@ -813,7 +823,7 @@ class TestCopyPreprint():
         res = app.post_json(copy_url, signed_payload, expect_errors=True)
         assert res.status_code == 201
 
-    def test_copy_preprint_file_out_of_preprint(self, app, user, copy_url, root_node, preprint, node_two, node_two_root_node, folder):
+    def test_copy_preprint_file_out_of_preprint(self, app, user, copy_url, root_node, preprint, node_two_root_node, folder):
         file = folder.append_file('No I don\'t wanna go')
         preprint.primary_file = file
         preprint.save()
@@ -832,7 +842,7 @@ class TestCopyPreprint():
         res = app.post_json(copy_url, signed_payload, expect_errors=True)
         assert res.status_code == 201
 
-    def test_copy_file_out_of_preprint(self, app, user, copy_url, root_node, preprint, node_two, node_two_root_node, folder):
+    def test_copy_file_out_of_preprint(self, app, user, copy_url, root_node, preprint, node_two_root_node, folder):
         preprint.primary_file = root_node.append_file('far')
         preprint.save()
 
@@ -884,7 +894,7 @@ class TestCopyPreprint():
         file.reload()
         assert file.name == 'test_file'
 
-    def test_blank_source(self, app, copy_url, user, root_node, folder, file):
+    def test_blank_source(self, app, copy_url, user, root_node, folder):
         signed_payload = sign_payload(
             {
                 'source': '',
