@@ -22,7 +22,7 @@ from framework.exceptions import PermissionsError
 from framework.analytics import increment_user_activity_counters
 from framework.auth import oauth_scopes
 
-from osf.models import Subject, Tag, OSFUser, PreprintProvider
+from osf.models import Subject, Tag, OSFUser, PreprintProvider, SpamStatus
 from osf.models.preprintlog import PreprintLog
 from osf.models.contributor import PreprintContributor
 from osf.models.mixins import ReviewableMixin, Taggable, GuardianMixin, FileTargetMixin
@@ -858,7 +858,7 @@ class Preprint(DirtyFieldsMixin, GuidMixin, IdentifierMixin, ReviewableMixin, Ba
         if auth and not self.has_permission(auth.user, 'write'):
             raise PermissionsError('Must have admin or write permissions to change privacy settings.')
         if permissions == 'public' and not self.is_public:
-            if self.is_spam or (settings.SPAM_FLAGGED_MAKE_NODE_PRIVATE and self.is_spammy):
+            if self.is_spam() or (settings.SPAM_FLAGGED_MAKE_NODE_PRIVATE and self.is_spammy):
                 # TODO: Should say will review within a certain agreed upon time period.
                 raise PreprintStateError('This preprint has been marked as spam. Please contact the help desk if you think this is in error.')
             self.is_public = True
@@ -1056,6 +1056,9 @@ class Preprint(DirtyFieldsMixin, GuidMixin, IdentifierMixin, ReviewableMixin, Ba
 
     def counts_towards_analytics(self, user):
         return not self.is_contributor(user)
+
+    def is_spam(self):
+        return self.spam_status == SpamStatus.SPAM
 
 
 @receiver(post_save, sender=Preprint)
