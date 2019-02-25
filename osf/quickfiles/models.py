@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from osf.exceptions import ValidationError
+from django.core.exceptions import ValidationError
 
 
 from django.contrib.contenttypes.models import ContentType
@@ -34,15 +34,18 @@ class QuickFolder(QuickFileNode, Folder, CleanMixin):
     DIRTY_PATH_MSG = 'path must be \'/\'/'
     DIRTY_CONTENT_TYPE_MSG = 'ContentType must be OSFUser'
 
-    def _clean_parent(self, value):
+    @CleanMixin.cleans_field('parent')
+    def __clean_parent(self, value):
         if value is not None:
             raise ValidationError(self.DIRTY_PARENT_MSG)
 
-    def _clean_target(self, value):
+    @CleanMixin.cleans_field('target')
+    def __clean_target(self, value):
         if not isinstance(value, OSFUser):
             raise ValidationError(self.DIRTY_TARGET_MSG)
 
-    def _clean_target_content_type(self, value):
+    @CleanMixin.cleans_field('target_content_type')
+    def __clean_target_content_type(self, value):
         if not ContentType.objects.get_for_model(OSFUser) == value:
             raise ValidationError(self.DIRTY_CONTENT_TYPE_MSG)
 
