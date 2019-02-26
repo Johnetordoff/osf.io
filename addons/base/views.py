@@ -348,7 +348,8 @@ def get_auth(auth, **kwargs):
     # TODO: Add a signal here?
     if waffle.switch_is_active(features.ELASTICSEARCH_METRICS):
         user = auth.user
-        if isinstance(target, Preprint) and not target.is_contributor(user):
+        #TODO: Move to a metrics mixin
+        if isinstance(target, Preprint) and target.counts_towards_analytics(user):
             metric_class = get_metric_class_for_action(action)
             if metric_class:
                 try:
@@ -696,8 +697,7 @@ def addon_view_or_download_file(auth, path, provider, **kwargs):
     if not path:
         raise HTTPError(httplib.BAD_REQUEST)
 
-    if hasattr(target, 'get_addon') and not isinstance(target, OSFUser):
-
+    if FileTargetMixin.has_node_addon(target):
         node_addon = target.get_addon(provider)
 
         if not isinstance(node_addon, BaseStorageAddon):
@@ -732,7 +732,7 @@ def addon_view_or_download_file(auth, path, provider, **kwargs):
             cookie=request.cookies.get(settings.COOKIE_NAME)
         )
     )
-    if version is None and not file_node.is_quickfile:
+    if version is None:
         # File is either deleted or unable to be found in the provider location
         # Rollback the insertion of the file_node
         transaction.savepoint_rollback(savepoint_id)

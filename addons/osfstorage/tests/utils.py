@@ -65,7 +65,8 @@ def recursively_create_folder(settings, path):
     return current.append_file(final)
 
 
-def make_payload(user, name, **kwargs):
+def make_payload(user, **kwargs):
+    name = kwargs.get('name', 'testname')
     payload = {
         'user': user._id,
         'name': name,

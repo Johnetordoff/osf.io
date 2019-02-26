@@ -1635,6 +1635,13 @@ class FileTargetMixin(Loggable):
     class Meta:
         abstract = True
 
+    @staticmethod
+    def has_node_addon(target):
+        addon = getattr(target, 'get_addon', None)
+        if addon:
+            return addon('osfstorage').type == 'osf.nodesettings'
+        return False
+
     @classmethod
     def load_target_from_guid(cls, _id):
         for target_class in cls.__subclasses__():

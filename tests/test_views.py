@@ -16,10 +16,8 @@ import mock
 import pytest
 from nose.tools import *  # noqa PEP8 asserts
 from django.utils import timezone
-from django.apps import apps
 from django.core.exceptions import ValidationError
 from django.db import connection, transaction
-from django.test import TransactionTestCase
 from django.test.utils import CaptureQueriesContext
 
 from addons.github.tests.factories import GitHubAccountFactory
@@ -67,7 +65,7 @@ from tests.base import (
 )
 from tests.base import test_app as mock_app
 from tests.test_cas_authentication import generate_external_user_with_resp
-from api_tests.utils import create_test_quickfile
+from api_tests.utils import create_test_file
 
 pytestmark = pytest.mark.django_db
 
@@ -917,7 +915,7 @@ class TestProjectViews(OsfTestCase):
         project = ProjectFactory(creator=self.user1, is_public=True)
 
         registration = RegistrationFactory(project=project, is_public=True)
-        reg_file = create_test_quickfile(registration.creator, create_guid=True)
+        reg_file = create_test_file(registration, registration.creator, create_guid=True)
         registration.retract_registration(self.user1)
 
         approval_token = registration.retraction.approval_state[self.user1._id]['approval_token']
