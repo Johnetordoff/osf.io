@@ -2072,8 +2072,9 @@ class TestUserGdprDelete:
 
         user.gdpr_delete()
 
-        # The deleted user is still associated with the node, though their name still appears as 'Deleted User'
-        assert user.nodes.all().count() == 1
+        # The deleted user is no longer associated with the node, though their name still appears in logs ect as
+        # 'Deleted User'
+        assert user.nodes.all().count() == 0
 
     def test_cant_gdpr_delete_registrations(self, user, registration):
 
