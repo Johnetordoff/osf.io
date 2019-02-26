@@ -34,17 +34,17 @@ class QuickFolder(QuickFileNode, Folder, CleanMixin):
     DIRTY_CONTENT_TYPE_MSG = 'ContentType must be OSFUser'
 
     @CleanMixin.cleans_field('parent')
-    def __clean_parent(self, value):
+    def _clean_parent(self, value):
         if value is not None:
             raise ValidationError(self.DIRTY_PARENT_MSG)
 
     @CleanMixin.cleans_field('target')
-    def __clean_target(self, value):
+    def _clean_target(self, value):
         if not isinstance(value, OSFUser):
             raise ValidationError(self.DIRTY_TARGET_MSG)
 
     @CleanMixin.cleans_field('target_content_type')
-    def __clean_target_content_type(self, value):
+    def _clean_target_content_type(self, value):
         if not ContentType.objects.get_for_model(OSFUser) == value:
             raise ValidationError(self.DIRTY_CONTENT_TYPE_MSG)
 

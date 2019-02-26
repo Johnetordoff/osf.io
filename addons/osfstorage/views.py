@@ -356,6 +356,7 @@ def osfstorage_delete(file_node, payload, target, **kwargs):
     try:
         root_node = OsfStorageFolder.objects.get_root(target=target)
     except OsfStorageFolder.DoesNotExist:
+        # is quickfile
         root_node = False
 
     if file_node == root_node:

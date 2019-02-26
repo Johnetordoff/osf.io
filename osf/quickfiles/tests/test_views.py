@@ -3,6 +3,8 @@ import pytest
 from functools import partial
 from framework.auth import signing
 
+from api.base.utils import waterbutler_api_url_for
+
 from addons.osfstorage.tests.utils import make_payload, build_payload_v1_logs
 from addons.osfstorage.models import OsfStorageFile, OsfStorageFolder
 from addons.base.signals import file_updated
@@ -114,6 +116,21 @@ class TestUserQuickFilesView:
         assert sorted(ids_returned) == sorted(ids_from_files)
         for ident in user2_file_ids:
             assert ident not in ids_returned
+
+
+@pytest.mark.django_db
+@pytest.mark.enable_quickfiles_creation
+class TestUserDetailView(V2ViewsCase):
+
+    def test_files_relationship_upload(self, app, user):
+        url = '/{}users/{}/'.format(API_BASE, user._id)
+        res = app.get(url, auth=user)
+        user_json = res.json['data']
+        upload_url = user_json['relationships']['quickfiles']['links']['upload']['href']
+        waterbutler_upload = waterbutler_api_url_for(
+            user._id, 'osfstorage')
+
+        assert upload_url == waterbutler_upload
 
 
 @pytest.mark.django_db

@@ -9,9 +9,7 @@ from django.test.utils import CaptureQueriesContext
 from django.utils.timezone import now
 
 from osf.utils.sanitize import strip_html
-from osf.quickfiles.legacy_quickfiles import QuickFilesNode
 from api.base.settings.defaults import API_BASE
-from api.base.utils import waterbutler_api_url_for
 from osf_tests.factories import (
     AuthUserFactory,
     CollectionFactory,
@@ -93,17 +91,6 @@ class TestUserDetail:
         res = app.get(url)
         user_json = res.json['data']
         assert 'profile_image' in user_json['links']
-
-    def test_files_relationship_upload(self, app, user_one):
-        url = '/{}users/{}/'.format(API_BASE, user_one._id)
-        res = app.get(url, auth=user_one)
-        quickfiles = QuickFilesNode.objects.get(creator=user_one)
-        user_json = res.json['data']
-        upload_url = user_json['relationships']['quickfiles']['links']['upload']['href']
-        waterbutler_upload = waterbutler_api_url_for(
-            quickfiles._id, 'osfstorage')
-
-        assert upload_url == waterbutler_upload
 
     def test_preprint_relationship(self, app, user_one):
         url = '/{}users/{}/'.format(API_BASE, user_one._id)
