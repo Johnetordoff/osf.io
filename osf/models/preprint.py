@@ -1057,6 +1057,7 @@ class Preprint(DirtyFieldsMixin, GuidMixin, IdentifierMixin, ReviewableMixin, Ba
     def counts_towards_analytics(self, user):
         return not self.is_contributor(user)
 
+    @property
     def is_spam(self):
         return self.spam_status == SpamStatus.SPAM
 

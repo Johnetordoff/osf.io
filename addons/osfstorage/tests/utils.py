@@ -65,8 +65,7 @@ def recursively_create_folder(settings, path):
     return current.append_file(final)
 
 
-def make_payload(user, **kwargs):
-    name = kwargs.get('name', 'testname')
+def make_payload(user, name, **kwargs):
     payload = {
         'user': user._id,
         'name': name,
@@ -80,14 +79,13 @@ def make_payload(user, **kwargs):
         },
         'metadata': {
             'size': 123,
-            'name': name,
+            'name': 'file',
             'provider': 'filesystem',
             'modified': 'Mon, 16 Feb 2015 18:45:34 GMT'
         },
     }
     payload.update(kwargs)
     return payload
-
 
 def build_payload_v1_logs(user, metadata, **kwargs):
     options = dict(
