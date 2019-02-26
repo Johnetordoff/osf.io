@@ -1639,7 +1639,8 @@ class FileTargetMixin(Loggable):
     def has_node_addon(target):
         addon = getattr(target, 'get_addon', None)
         if addon:
-            return addon('osfstorage').type == 'osf.nodesettings'
+            from addons.base.models import BaseNodeSettings
+            return isinstance(addon('osfstorage'), BaseNodeSettings)
         return False
 
     @classmethod
