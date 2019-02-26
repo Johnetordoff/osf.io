@@ -18,7 +18,6 @@ from include import IncludeManager
 from framework.analytics import get_basic_counters
 from framework import sentry
 from osf.models.base import BaseModel, OptionalGuidMixin, ObjectIDMixin
-from osf.models import OSFUser, AbstractNode
 from osf.models.comment import CommentableMixin
 from osf.models.mixins import Taggable
 from osf.models.validators import validate_location
@@ -49,6 +48,11 @@ class BaseFileNodeManager(TypedModelManager, IncludeManager):
         if hasattr(self.model, '_provider') and self.model._provider is not None:
             return qs.filter(provider=self.model._provider)
         return qs
+
+    def get_root(self, target):
+        # Get the root folder that the target file belongs to
+        content_type = ContentType.objects.get_for_model(target)
+        return self.get(target_object_id=target.id, target_content_type=content_type, is_root=True)
 
 class ActiveFileNodeManager(Manager):
     """Manager that filters out TrashedFileNodes.
@@ -133,7 +137,7 @@ class BaseFileNode(TypedModel, CommentableMixin, OptionalGuidMixin, Taggable, Ob
 
     @property
     def is_quickfile(self):
-        # old school quickfile
+        # old school quickfile delete after migration
         if getattr(self.target, 'type', None) == 'osf.quickfilenode':
             return True
 
@@ -200,9 +204,10 @@ class BaseFileNode(TypedModel, CommentableMixin, OptionalGuidMixin, Taggable, Ob
         return cls(**kwargs)
 
     @classmethod
-    def get_osfstorage_or_quickfile(cls, _id, target):
-        assert isinstance(target, (OSFUser, AbstractNode)), 'target must be OSFUser or AbstractNode'
-        return cls.objects.get(_id=_id, target_object_id=target.id, target_content_type=ContentType.objects.get_for_model(target))
+    def get_from_target(cls, _id, target):
+        return cls.active.get(_id=_id,
+                              target_object_id=target.id,
+                              target_content_type=ContentType.objects.get_for_model(target))
 
     @classmethod
     def get_or_create(cls, target, path):
@@ -638,8 +643,7 @@ class TrashedFileNode(BaseFileNode):
     _provider = None
 
     def delete(self, user=None, parent=None, save=True, deleted_on=None):
-        if isinstance(self, TrashedFileNode):  # TODO Why is this needed
-            raise UnableToDelete('You cannot delete things that are deleted.')
+        raise UnableToDelete('You cannot delete things that are deleted.')
 
     def restore(self, recursive=True, parent=None, save=True, deleted_on=None):
         """

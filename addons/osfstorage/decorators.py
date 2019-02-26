@@ -62,7 +62,7 @@ def autoload_filenode(must_be=None, default_root=False):
             if 'fid' not in kwargs and default_root:
                 file_node = OsfStorageFolder.objects.get_root(kwargs['target'])
             else:
-                file_node = BaseFileNode.get_osfstorage_or_quickfile(kwargs.get('fid'), kwargs['target'])
+                file_node = BaseFileNode.get_from_target(kwargs.get('fid'), kwargs['target'])
             if must_be and file_node.kind != must_be:
                 raise HTTPError(httplib.BAD_REQUEST, data={
                     'message_short': 'incorrect type',

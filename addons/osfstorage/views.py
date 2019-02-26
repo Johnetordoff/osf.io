@@ -16,7 +16,7 @@ from framework.exceptions import HTTPError
 from framework.auth.decorators import must_be_signed, must_be_logged_in
 
 from osf.exceptions import InvalidTagError, TagNotFoundError
-from osf.models import FileVersion, OSFUser
+from osf.models import FileVersion, OSFUser, BaseFileNode
 from osf.utils.requests import check_select_for_update
 from website.project.decorators import (
     must_not_be_registration, must_have_permission
@@ -27,7 +27,6 @@ from website.files import exceptions
 from addons.osfstorage import utils
 from addons.osfstorage import decorators
 from addons.osfstorage import settings as osf_storage_settings
-from addons.osfstorage.models import OsfStorageFolder
 
 
 logger = logging.getLogger(__name__)
@@ -353,12 +352,7 @@ def osfstorage_delete(file_node, payload, target, **kwargs):
     if not auth:
         raise HTTPError(httplib.BAD_REQUEST)
 
-    try:
-        root_node = OsfStorageFolder.objects.get_root(target=target)
-    except OsfStorageFolder.DoesNotExist:
-        # is quickfile
-        root_node = False
-
+    root_node = BaseFileNode.objects.get_root(target=target)
     if file_node == root_node:
         raise HTTPError(httplib.BAD_REQUEST)
 

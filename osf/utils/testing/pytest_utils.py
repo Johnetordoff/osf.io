@@ -79,7 +79,6 @@ class V2ViewsCase:
 @pytest.mark.django_db
 class MigrationTestCase:
 
-    states = []
     logger = logging.getLogger(__name__)
 
     def sprinkle_quickfiles(self, num_of_files):
