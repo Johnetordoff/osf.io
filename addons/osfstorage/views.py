@@ -27,6 +27,7 @@ from website.files import exceptions
 from addons.osfstorage import utils
 from addons.osfstorage import decorators
 from addons.osfstorage import settings as osf_storage_settings
+from addons.osfstorage.models import OsfStorageFolder
 
 
 logger = logging.getLogger(__name__)
@@ -351,7 +352,13 @@ def osfstorage_delete(file_node, payload, target, **kwargs):
     #TODO Auth check?
     if not auth:
         raise HTTPError(httplib.BAD_REQUEST)
-    if file_node.is_root:
+
+    try:
+        root_node = OsfStorageFolder.objects.get_root(target=target)
+    except OsfStorageFolder.DoesNotExist:
+        root_node = False
+
+    if file_node == root_node:
         raise HTTPError(httplib.BAD_REQUEST)
 
     try:
