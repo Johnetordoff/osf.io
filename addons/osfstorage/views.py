@@ -16,7 +16,7 @@ from framework.exceptions import HTTPError
 from framework.auth.decorators import must_be_signed, must_be_logged_in
 
 from osf.exceptions import InvalidTagError, TagNotFoundError
-from osf.models import FileVersion, OSFUser, BaseFileNode
+from osf.models import FileVersion, OSFUser
 from osf.utils.requests import check_select_for_update
 from website.project.decorators import (
     must_not_be_registration, must_have_permission
@@ -352,8 +352,7 @@ def osfstorage_delete(file_node, payload, target, **kwargs):
     if not auth:
         raise HTTPError(httplib.BAD_REQUEST)
 
-    root_node = BaseFileNode.objects.get_root(target=target)
-    if file_node == root_node:
+    if file_node.is_root:
         raise HTTPError(httplib.BAD_REQUEST)
 
     try:
