@@ -1654,6 +1654,10 @@ class FileTargetMixin(Loggable):
                 return target
 
     @abstractmethod
+    def get_root_folder(self, provider='osfstorage'):
+        raise NotImplementedError()
+
+    @abstractmethod
     def has_permission(self, user, perm):
         raise NotImplementedError()
 

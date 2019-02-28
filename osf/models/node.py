@@ -1230,6 +1230,9 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
     def private_link_keys_deleted(self):
         return self.private_links.filter(is_deleted=True).values_list('key', flat=True)
 
+    def get_root_folder(self, provider='osfstorage'):
+        return self.get_addon(provider).get_root()
+
     def get_root(self):
         sql = """
             WITH RECURSIVE ascendants AS (

@@ -1684,6 +1684,9 @@ class OSFUser(DirtyFieldsMixin, GuidMixin, BaseModel, AbstractBaseUser, Permissi
     def is_spam(self):
         return 'spam_confirmed' in self.system_tags
 
+    def get_root_folder(self, provider='osfstorage'):
+        return self.quickfolder
+
     class Meta:
         # custom permissions for use in the OSF Admin App
         permissions = (

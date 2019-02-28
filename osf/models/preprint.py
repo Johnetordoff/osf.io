@@ -1061,6 +1061,8 @@ class Preprint(DirtyFieldsMixin, GuidMixin, IdentifierMixin, ReviewableMixin, Ba
     def is_spam(self):
         return self.spam_status == SpamStatus.SPAM
 
+    def get_root_folder(self, provider='osfstorage'):
+        return self.root_folder
 
 @receiver(post_save, sender=Preprint)
 def create_file_node(sender, instance, **kwargs):

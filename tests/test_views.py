@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import
 
+import unittest
 import datetime as dt
 import httplib as http
 import json
@@ -1064,6 +1065,7 @@ class TestGetNodeTree(OsfTestCase):
 
 @pytest.mark.enable_enqueue_task
 @pytest.mark.enable_implicit_clean
+@pytest.mark.enable_quickfiles_creation
 class TestUserProfile(OsfTestCase):
 
     def setUp(self):
@@ -3111,6 +3113,7 @@ class TestPublicViews(OsfTestCase):
         assert_equal(res.status_code, 200)
 
 
+@pytest.mark.enable_quickfiles_creation
 class TestAuthViews(OsfTestCase):
 
     def setUp(self):
@@ -3386,6 +3389,7 @@ class TestAuthViews(OsfTestCase):
         assert_true(mock_send_confirm_email.called)
 
     @mock.patch('framework.auth.views.mails.send_mail')
+    @pytest.mark.enable_quickfiles_creation
     def test_resend_confirmation(self, send_mail):
         email = 'test@mail.com'
         token = self.user.add_unconfirmed_email(email)
@@ -3567,6 +3571,7 @@ class TestAuthViews(OsfTestCase):
         assert_equal(res.json['message_long'], 'Cannnot resend confirmation for confirmed emails')
 
     @mock.patch('framework.auth.views.mails.send_mail')
+    @pytest.mark.enable_quickfiles_creation
     def test_resend_confirmation_does_not_send_before_throttle_expires(self, send_mail):
         email = 'test@mail.com'
         self.user.save()
@@ -5077,7 +5082,3 @@ class TestConfirmationViewBlockBingPreview(OsfTestCase):
             }
         )
         assert_equal(res.status_code, 403)
-
-
-if __name__ == '__main__':
-    unittest.main()

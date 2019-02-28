@@ -575,6 +575,7 @@ class TestNodeFiltering:
         )
         assert len(res.json.get('data')) == 0
 
+    @pytest.mark.enable_bookmark_creation
     def test_get_projects(
             self, app, user_one, public_project_one,
             public_project_two, public_project_three,

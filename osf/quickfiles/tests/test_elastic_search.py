@@ -5,6 +5,7 @@ from osf.utils.testing.pytest_utils import ElasticSearchTestCase
 
 
 @pytest.mark.django_db
+@pytest.mark.enable_quickfiles_creation
 class TestQuickfilesElasticSearch(ElasticSearchTestCase):
 
     def test_quickfiles_files_appear_in_search(self, user):

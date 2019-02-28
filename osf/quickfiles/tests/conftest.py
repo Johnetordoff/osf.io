@@ -4,6 +4,10 @@ from webtest_plus import TestApp
 from tests.json_api_test_app import JSONAPITestApp
 from osf_tests.factories import AuthUserFactory, ProjectFactory
 
+@pytest.fixture()
+def flask_app():
+    return TestApp(test_app)
+
 
 @pytest.fixture()
 def django_app():
@@ -33,11 +37,6 @@ def quickfolder(user):
 @pytest.fixture()
 def project():
     return ProjectFactory()
-
-
-@pytest.fixture()
-def flask_app():
-    return TestApp(test_app)
 
 
 def pytest_generate_tests(metafunc):

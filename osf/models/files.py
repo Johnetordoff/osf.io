@@ -345,11 +345,6 @@ class BaseFileNode(TypedModel, CommentableMixin, OptionalGuidMixin, Taggable, Ob
         headers = {}
         if auth_header:
             headers['Authorization'] = auth_header
-        import logging
-        log = logging.getLogger('#@!')
-        log.info(kwargs)
-        log.info(revision)
-        log.info(headers)
         resp = requests.get(
             self.generate_waterbutler_url(revision=revision, meta=True, _internal=True, **kwargs),
             headers=headers,
