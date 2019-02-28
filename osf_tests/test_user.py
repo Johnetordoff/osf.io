@@ -73,7 +73,6 @@ def auth(user):
 
 # Tests copied from tests/test_models.py
 @pytest.mark.enable_implicit_clean
-@pytest.mark.enable_quickfiles_creation
 class TestOSFUser:
 
     def test_create(self):
@@ -198,6 +197,7 @@ class TestOSFUser:
         with pytest.raises(ValidationError):
             u.save()
 
+    @pytest.mark.enable_quickfiles_creation
     def test_merged_user_with_two_account_on_same_project_with_different_visibility_and_permissions(self, user):
         user2 = UserFactory.build()
         user2.save()
@@ -353,6 +353,7 @@ class TestOSFUser:
         assert 'foo@bar.com' not in user.unconfirmed_emails
         assert user.emails.filter(address='foo@bar.com').exists()
 
+    @pytest.mark.enable_quickfiles_creation
     def test_confirm_email_merge_select_for_update(self, user):
         mergee = UserFactory(username='foo@bar.com')
         token = user.add_unconfirmed_email('foo@bar.com')
@@ -367,6 +368,7 @@ class TestOSFUser:
         for_update_sql = connection.ops.for_update_sql()
         assert any(for_update_sql in query['sql'] for query in ctx.captured_queries)
 
+    @pytest.mark.enable_quickfiles_creation
     @mock.patch('osf.utils.requests.settings.SELECT_FOR_UPDATE_ENABLED', False)
     def test_confirm_email_merge_select_for_update_disabled(self, user):
         mergee = UserFactory(username='foo@bar.com')
@@ -1163,8 +1165,8 @@ class TestCitationProperties:
 
 # copied from tests/test_models.py
 @pytest.mark.enable_bookmark_creation
-@pytest.mark.enable_implicit_clean
 @pytest.mark.enable_quickfiles_creation
+@pytest.mark.enable_implicit_clean
 class TestMergingUsers:
 
     @pytest.yield_fixture()
@@ -1379,8 +1381,6 @@ class TestDisablingUsers(OsfTestCase):
             self.user.disable_account()
 
 # Copied from tests/modes/test_user.py
-@pytest.mark.enable_quickfiles_creation
-@pytest.mark.enable_bookmark_creation
 class TestUser(OsfTestCase):
     def setUp(self):
         super(TestUser, self).setUp()
@@ -1524,7 +1524,6 @@ class TestUser(OsfTestCase):
 # Copied from tests/models/test_user.py
 @pytest.mark.enable_implicit_clean
 @pytest.mark.enable_bookmark_creation
-@pytest.mark.enable_quickfiles_creation
 class TestUserMerging(OsfTestCase):
     def setUp(self):
         super(TestUserMerging, self).setUp()
@@ -1978,7 +1977,6 @@ class TestUserValidation(OsfTestCase):
                 self.user.save()
 
 
-@pytest.mark.enable_quickfiles_creation
 class TestUserGdprDelete:
 
     @pytest.fixture()

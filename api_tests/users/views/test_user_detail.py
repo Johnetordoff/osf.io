@@ -19,7 +19,6 @@ from website.views import find_bookmark_collection
 
 
 @pytest.mark.django_db
-@pytest.mark.enable_quickfiles_creation
 class TestUserDetail:
 
     @pytest.fixture()
@@ -161,7 +160,6 @@ class TestUserDetail:
         assert 'linkedIn' not in user_social_json.keys()
 
 @pytest.mark.django_db
-@pytest.mark.enable_quickfiles_creation
 @pytest.mark.enable_bookmark_creation
 class TestUserRoutesNodeRoutes:
 
@@ -406,7 +404,6 @@ class TestUserRoutesNodeRoutes:
 
 
 @pytest.mark.django_db
-@pytest.mark.enable_quickfiles_creation
 class TestUserUpdate:
 
     @pytest.fixture()
@@ -1039,7 +1036,6 @@ class TestUserUpdate:
         assert user_one.accepted_terms_of_service is None
 
 @pytest.mark.django_db
-@pytest.mark.enable_quickfiles_creation
 class TestDeactivatedUser:
 
     @pytest.fixture()
@@ -1093,7 +1089,6 @@ class TestDeactivatedUser:
 
 
 @pytest.mark.django_db
-@pytest.mark.enable_quickfiles_creation
 class UserProfileMixin(object):
 
     @pytest.fixture()

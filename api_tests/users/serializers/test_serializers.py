@@ -33,7 +33,6 @@ def user(mock_update_user):
 
 
 @pytest.mark.django_db
-@pytest.mark.enable_quickfiles_creation
 class TestUserSerializer:
 
     def test_user_serializer(self, user):
