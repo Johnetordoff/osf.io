@@ -26,10 +26,10 @@ def create_quickfolders():
                                       path='/')
 
             quickfolders_to_create.append(quickfolder)
-        QuickFolder.objects.bulk_create(quickfolders_to_create)
 
         total_created += 1
     logger.info('There are {} total quickfolders created'.format(total_created))
+    QuickFolder.objects.bulk_create(quickfolders_to_create)
 
     quickfiles_nodes = QuickFilesNode.objects.all()
     paginated_quickfiles_nodes = Paginator(quickfiles_nodes, 1000)
