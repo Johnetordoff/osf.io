@@ -1381,6 +1381,7 @@ class TestDisablingUsers(OsfTestCase):
             self.user.disable_account()
 
 # Copied from tests/modes/test_user.py
+@pytest.mark.enable_quickfiles_creation
 class TestUser(OsfTestCase):
     def setUp(self):
         super(TestUser, self).setUp()
@@ -1477,6 +1478,7 @@ class TestUser(OsfTestCase):
         projects_contributed_to = self.user.nodes.all()
         assert list(self.user.contributed.all()) == list(projects_contributed_to)
 
+    @pytest.mark.enable_bookmark_creation
     def test_contributor_to_property(self):
         normal_node = ProjectFactory(creator=self.user)
         normal_contributed_node = ProjectFactory()
@@ -1497,6 +1499,7 @@ class TestUser(OsfTestCase):
         assert bookmark_collection_node._id not in contributor_to_nodes
         assert collection_node._id not in contributor_to_nodes
 
+    @pytest.mark.enable_bookmark_creation
     def test_visible_contributor_to_property(self):
         invisible_contributor = UserFactory()
         normal_node = ProjectFactory(creator=invisible_contributor)
@@ -1524,6 +1527,7 @@ class TestUser(OsfTestCase):
 # Copied from tests/models/test_user.py
 @pytest.mark.enable_implicit_clean
 @pytest.mark.enable_bookmark_creation
+@pytest.mark.enable_quickfiles_creation
 class TestUserMerging(OsfTestCase):
     def setUp(self):
         super(TestUserMerging, self).setUp()
