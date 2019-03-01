@@ -1689,6 +1689,9 @@ class FileTargetMixin(Loggable):
     def is_spam(self):
         raise NotImplementedError()
 
+    @abstractmethod
+    def can_view_files(self, auth=None):
+        return self.can_view(auth)
 
 class CleanMixin(models.Model):
     """

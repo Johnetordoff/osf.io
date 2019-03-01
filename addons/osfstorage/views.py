@@ -286,8 +286,11 @@ def osfstorage_create_child(file_node, payload, **kwargs):
     if not (name or user) or '/' in name:
         raise HTTPError(httplib.BAD_REQUEST)
 
-    if file_node.is_quickfile and is_folder:
-        raise HTTPError(httplib.BAD_REQUEST, data={'message_long': 'You may not create a folder for QuickFiles'})
+    if file_node.is_quickfile:
+        if is_folder:
+            raise HTTPError(httplib.BAD_REQUEST, data={'message_long': 'You may not create a folder for QuickFiles'})
+        else:
+            payload['settings']['folder'] = user._id
 
     try:
         # Create a save point so that we can rollback and unlock
@@ -312,14 +315,14 @@ def osfstorage_create_child(file_node, payload, **kwargs):
         try:
             if file_node.checkout is None or file_node.checkout._id == user._id:
                 version = file_node.create_version(
-                    user,
-                    dict(payload['settings'], **dict(
+                    creator=user,
+                    location=dict(payload['settings'], **dict(
                         payload['worker'], **{
                             'object': payload['metadata']['name'],
                             'service': payload['metadata']['provider'],
                         })
                     ),
-                    dict(payload['metadata'], **payload['hashes'])
+                    metadata=dict(payload['metadata'], **payload['hashes'])
                 )
                 version_id = version._id
                 archive_exists = version.archive is not None

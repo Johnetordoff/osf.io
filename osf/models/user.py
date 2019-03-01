@@ -1648,10 +1648,12 @@ class OSFUser(DirtyFieldsMixin, GuidMixin, BaseModel, AbstractBaseUser, Permissi
 
     # Overrides FileTargetMixin
     def can_edit(self, auth):
-        return Auth(self) == auth
+        ''' can edit Quickfiles '''
+        return self == auth.user
 
     # Overrides FileTargetMixin
     def can_view(self, *args, **kwargs):
+        ''' can view Quickfiles '''
         return True
 
     # Overrides FileTargetMixin
