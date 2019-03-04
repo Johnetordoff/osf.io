@@ -272,7 +272,7 @@ def requirements(ctx, base=False, addons=False, release=False, dev=False, all=Fa
 
 
 @task
-def test_module(ctx, module=None, numprocesses=None, nocapture=False, params=None, coverage=False):
+def test_module(ctx, module=None, numprocesses=None, nocapture=False, params=None, coverage=False, testmon=False):
     """Helper for running tests.
     """
     os.environ['DJANGO_SETTINGS_MODULE'] = 'osf_tests.settings'
@@ -284,6 +284,10 @@ def test_module(ctx, module=None, numprocesses=None, nocapture=False, params=Non
     # NOTE: Subprocess to compensate for lack of thread safety in the httpretty module.
     # https://github.com/gabrielfalcao/HTTPretty/issues/209#issue-54090252
     args = []
+
+    if testmon:
+        args.extend(['--testmon'])
+
     if coverage:
         args.extend([
             '--cov-report', 'term-missing',
@@ -377,10 +381,10 @@ def test_website(ctx, numprocesses=None, coverage=False):
     test_module(ctx, module=WEBSITE_TESTS, numprocesses=numprocesses, coverage=coverage)
 
 @task
-def test_api1(ctx, numprocesses=None, coverage=False):
+def test_api1(ctx, numprocesses=None, coverage=False, testmon=False):
     """Run the API test suite."""
     print('Testing modules "{}"'.format(API_TESTS1 + ADMIN_TESTS))
-    test_module(ctx, module=API_TESTS1 + ADMIN_TESTS, numprocesses=numprocesses, coverage=coverage)
+    test_module(ctx, module=API_TESTS1 + ADMIN_TESTS, coverage=coverage, testmon=testmon)
 
 
 @task
@@ -463,11 +467,11 @@ def test_travis_website(ctx, numprocesses=None, coverage=False):
 
 
 @task
-def test_travis_api1_and_js(ctx, numprocesses=None, coverage=False):
+def test_travis_api1_and_js(ctx, numprocesses=None, coverage=False, testmon=False):
     # TODO: Uncomment when https://github.com/travis-ci/travis-ci/issues/8836 is resolved
     # karma(ctx)
     travis_setup(ctx)
-    test_api1(ctx, numprocesses=numprocesses, coverage=coverage)
+    test_api1(ctx, numprocesses=numprocesses, coverage=coverage, testmon=testmon)
 
 
 @task

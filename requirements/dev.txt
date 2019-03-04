@@ -42,3 +42,6 @@ nplusone==0.8.2
 
 # Profiling
 django-silk==2.0.0  # pyup: <3.0 # Remove this when we're using MIDDLEWARE
+
+# Testing
+pytest-testmon==0.9.12
