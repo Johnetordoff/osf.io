@@ -68,7 +68,8 @@ CSRF_COOKIE_HTTPONLY = osf_settings.SECURE_MODE
 ALLOWED_HOSTS = [
     '.osf.io',
 ]
-
+if DEBUG:
+    ALLOWED_HOSTS.append('localhost')
 
 # Application definition
 
@@ -270,7 +271,7 @@ DEBUG_TRANSACTIONS = DEBUG
 JWT_SECRET = 'osf_api_cas_login_jwt_secret_32b'
 JWE_SECRET = 'osf_api_cas_login_jwe_secret_32b'
 
-ENABLE_VARNISH = osf_settings.ENABLE_VARNISH
+ENABLE_VARNISH = True
 ENABLE_ESI = osf_settings.ENABLE_ESI
 VARNISH_SERVERS = osf_settings.VARNISH_SERVERS
 ESI_MEDIA_TYPES = osf_settings.ESI_MEDIA_TYPES
