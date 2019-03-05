@@ -69,6 +69,8 @@ ALLOWED_HOSTS = [
     '.osf.io',
 ]
 
+ALLOWED_HOSTS.append('localhost')
+
 
 # Application definition
 
@@ -306,3 +308,16 @@ ELASTICSEARCH_DSL = {
 }
 # Store yearly indices for time-series metrics
 ELASTICSEARCH_METRICS_DATE_FORMAT = '%Y'
+
+CORS_ORIGIN_ALLOW_ALL = True
+
+REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {
+    'user': '1000000/second',
+    'non-cookie-auth': '1000000/second',
+    'add-contributor': '1000000/second',
+    'create-guid': '1000000/second',
+    'root-anon-throttle': '1000000/second',
+    'test-user': '2/hour',
+    'test-anon': '1/hour',
+    'send-email': '2/minute',
+}
