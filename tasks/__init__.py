@@ -483,6 +483,7 @@ def test_travis_api2(ctx, numprocesses=None, coverage=False):
 
 @task
 def test_travis_api3_and_osf(ctx, numprocesses=None, coverage=False, testmon=False):
+    travis_setup(ctx)
     test_api3(ctx, numprocesses=numprocesses, coverage=coverage, testmon=testmon)
 
 @task
