@@ -300,7 +300,7 @@ def test_module(ctx, module=None, numprocesses=None, nocapture=False, params=Non
         ])
     if not nocapture:
         args += ['-s']
-    if numprocesses > 1:
+    if numprocesses > 1 and not testmon:
         args += ['-n {}'.format(numprocesses), '--max-slave-restart=0']
     modules = [module] if isinstance(module, basestring) else module
     args.extend(modules)
