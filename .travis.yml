@@ -124,7 +124,7 @@ script:
     - export COVERAGE=`if [ "$TRAVIS_BRANCH" == "master-w-coverage" ]; then echo "--coverage"; else echo ""; fi`
     - |
       if [ "$TEST_BUILD" = "api1_and_js" ]; then
-        invoke test_travis_$TEST_BUILD --testmon $COVERAGE
+        invoke test_travis_$TEST_BUILD --testmonread $COVERAGE
       else
         invoke test_travis_$TEST_BUILD -n 4 $COVERAGE
       fi

@@ -272,7 +272,7 @@ def requirements(ctx, base=False, addons=False, release=False, dev=False, all=Fa
 
 
 @task
-def test_module(ctx, module=None, numprocesses=None, nocapture=False, params=None, coverage=False, testmon=False):
+def test_module(ctx, module=None, numprocesses=None, nocapture=False, params=None, coverage=False, testmon=False, testmonread=False):
     """Helper for running tests.
     """
     os.environ['DJANGO_SETTINGS_MODULE'] = 'osf_tests.settings'
@@ -285,8 +285,10 @@ def test_module(ctx, module=None, numprocesses=None, nocapture=False, params=Non
     # https://github.com/gabrielfalcao/HTTPretty/issues/209#issue-54090252
     args = []
 
-    if testmon:
+    if testmon and not testmonread:
         args.extend(['--testmon'])
+    if testmonread:
+        args.extend(['--testmon-readonly'])
 
     if coverage:
         args.extend([
@@ -300,8 +302,8 @@ def test_module(ctx, module=None, numprocesses=None, nocapture=False, params=Non
         ])
     if not nocapture:
         args += ['-s']
-    if numprocesses > 1 and not testmon:
-        args += ['-n {}'.format(numprocesses), '--max-slave-restart=0']
+    #if numprocesses > 1 and not testmon:
+    #    args += ['-n {}'.format(numprocesses), '--max-slave-restart=0']
     modules = [module] if isinstance(module, basestring) else module
     args.extend(modules)
     if params:
@@ -381,10 +383,10 @@ def test_website(ctx, numprocesses=None, coverage=False):
     test_module(ctx, module=WEBSITE_TESTS, numprocesses=numprocesses, coverage=coverage)
 
 @task
-def test_api1(ctx, numprocesses=None, coverage=False, testmon=False):
+def test_api1(ctx, numprocesses=None, coverage=False, testmon=False, testmonread=False):
     """Run the API test suite."""
     print('Testing modules "{}"'.format(API_TESTS1 + ADMIN_TESTS))
-    test_module(ctx, module=API_TESTS1 + ADMIN_TESTS, coverage=coverage, testmon=testmon)
+    test_module(ctx, module=API_TESTS1 + ADMIN_TESTS, coverage=coverage, testmon=testmon, testmonread=testmonread)
 
 
 @task
@@ -467,11 +469,11 @@ def test_travis_website(ctx, numprocesses=None, coverage=False):
 
 
 @task
-def test_travis_api1_and_js(ctx, numprocesses=None, coverage=False, testmon=False):
+def test_travis_api1_and_js(ctx, numprocesses=None, coverage=False, testmon=False, testmonread=False):
     # TODO: Uncomment when https://github.com/travis-ci/travis-ci/issues/8836 is resolved
     # karma(ctx)
     travis_setup(ctx)
-    test_api1(ctx, numprocesses=numprocesses, coverage=coverage, testmon=testmon)
+    test_api1(ctx, numprocesses=numprocesses, coverage=coverage, testmon=testmon, testmonread=testmonread)
 
 
 @task
