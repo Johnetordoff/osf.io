@@ -397,11 +397,11 @@ def test_api2(ctx, numprocesses=None, coverage=False):
 
 
 @task
-def test_api3(ctx, numprocesses=None, coverage=False):
+def test_api3(ctx, numprocesses=None, coverage=False, testmon=False):
     """Run the API test suite."""
     print('Testing modules "{}"'.format(API_TESTS3 + OSF_TESTS))
     # NOTE: There may be some concurrency issues with ES
-    test_module(ctx, module=API_TESTS3 + OSF_TESTS, numprocesses=numprocesses, coverage=coverage)
+    test_module(ctx, module=API_TESTS3 + OSF_TESTS, numprocesses=numprocesses, testmon=testmon)
 
 
 @task
@@ -483,9 +483,9 @@ def test_travis_api2(ctx, numprocesses=None, coverage=False):
 
 
 @task
-def test_travis_api3_and_osf(ctx, numprocesses=None, coverage=False):
+def test_travis_api3_and_osf(ctx, numprocesses=None, coverage=False, testmon=False):
     travis_setup(ctx)
-    test_api3(ctx, numprocesses=numprocesses, coverage=coverage)
+    test_api3(ctx, numprocesses=numprocesses, coverage=coverage, testmon=testmon)
 
 @task
 def karma(ctx, travis=False):
