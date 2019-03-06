@@ -17,6 +17,7 @@ cache:
   directories:
     - $HOME/.cache
     - node_modules
+    - .testmondata
     - website/static/vendor/bower_components
 
 env:
