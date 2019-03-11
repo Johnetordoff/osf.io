@@ -102,6 +102,7 @@ install:
 
     - travis_retry pip install --upgrade pip
     - travis_retry pip install invoke==0.13.0
+    - travis_retry pip install flake8==2.4.0 --force-reinstall --upgrade
     - travis_retry invoke wheelhouse --dev --addons
 
     - |
@@ -113,16 +114,23 @@ install:
        travis_retry invoke assets --dev
       fi
 
-    - |
-      if [ "$TEST_BUILD" = "addons" ]; then
-        travis_retry invoke travis_addon_settings
-      fi
-
+    - travis_retry invoke travis_addon_settings
+    - travis_retry invoke requirements --dev --addons
+    # Hack to fix package conflict between uritemplate and uritemplate.py (dependency of github3.py)
+    - pip uninstall uritemplate.py --yes
+    - pip install uritemplate.py==0.3.0
 
 # Run Python tests (core and addon) and JS tests
 script:
     - export COVERAGE=`if [ "$TRAVIS_BRANCH" == "master-w-coverage" ]; then echo "--coverage"; else echo ""; fi`
-    - invoke test_travis_$TEST_BUILD --testmon $COVERAGE
+    - |
+      if [ "$TEST_BUILD" = "api3_and_osf" ]; then
+        invoke test_travis_$TEST_BUILD --testmon $COVERAGE
+      elif [ "$TEST_BUILD" = "api1_and_js" ]; then
+        invoke test_travis_$TEST_BUILD --testmon $COVERAGE
+      else
+        invoke test_travis_$TEST_BUILD -n 4 $COVERAGE
+      fi
 
 after_success:
     - if [[ "$TRAVIS_BRANCH" == "master-w-coverage" ]]; then coveralls; fi
