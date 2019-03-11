@@ -287,7 +287,7 @@ def test_module(ctx, module=None, numprocesses=None, nocapture=False, params=Non
 
     if testmon and not testmonread:
         args.extend(['--testmon'])
-    if testmonread:
+    if testmonread and not testmon:
         args.extend(['--testmon-readonly'])
 
     if coverage:
@@ -302,7 +302,7 @@ def test_module(ctx, module=None, numprocesses=None, nocapture=False, params=Non
         ])
     if not nocapture:
         args += ['-s']
-    #if numprocesses > 1 and not testmon:
+    #if numprocesses > 1 and not (testmon or testmonread):
     #    args += ['-n {}'.format(numprocesses), '--max-slave-restart=0']
     modules = [module] if isinstance(module, basestring) else module
     args.extend(modules)
@@ -396,11 +396,11 @@ def test_api2(ctx, numprocesses=None, coverage=False):
 
 
 @task
-def test_api3(ctx, numprocesses=None, coverage=False, testmon=False):
+def test_api3(ctx, numprocesses=None, coverage=False, testmon=False, testmonread=False):
     """Run the API test suite."""
     print('Testing modules "{}"'.format(API_TESTS3 + OSF_TESTS))
     # NOTE: There may be some concurrency issues with ES
-    test_module(ctx, module=API_TESTS3 + OSF_TESTS, numprocesses=numprocesses, testmon=testmon)
+    test_module(ctx, module=API_TESTS3 + OSF_TESTS, numprocesses=numprocesses, testmon=testmon, testmonread=False)
 
 
 @task
@@ -482,9 +482,9 @@ def test_travis_api2(ctx, numprocesses=None, coverage=False):
 
 
 @task
-def test_travis_api3_and_osf(ctx, numprocesses=None, coverage=False, testmon=False):
+def test_travis_api3_and_osf(ctx, numprocesses=None, coverage=False, testmon=False, testmonread=False):
     travis_setup(ctx)
-    test_api3(ctx, numprocesses=numprocesses, coverage=coverage, testmon=testmon)
+    test_api3(ctx, numprocesses=numprocesses, coverage=coverage, testmon=testmon, testmonread=False)
 
 @task
 def karma(ctx, travis=False):
