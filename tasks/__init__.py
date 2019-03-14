@@ -310,6 +310,9 @@ def test_module(ctx, module=None, numprocesses=None, nocapture=False, params=Non
         params = [params] if isinstance(params, basestring) else params
         args.extend(params)
     retcode = pytest.main(args)
+    if retcode == 5:  # 5 == no tests collected meaning nothing was changed, this is what we want from testmon.
+        sys.exit(1)
+
     sys.exit(retcode)
 
 
@@ -334,6 +337,7 @@ API_TESTS1 = [
 ]
 API_TESTS2 = [
     'api_tests/actions',
+    'api_tests/chronos',
     'api_tests/nodes',
     'api_tests/requests',
     'api_tests/subscriptions',
