@@ -114,6 +114,7 @@ install:
 
     - travis_retry invoke travis_addon_settings
     - travis_retry invoke requirements --dev --addons
+    - invoke travis_setup
     # Hack to fix package conflict between uritemplate and uritemplate.py (dependency of github3.py)
     - pip uninstall uritemplate.py --yes
     - pip install uritemplate.py==0.3.0
@@ -121,16 +122,7 @@ install:
 # Run Python tests (core and addon) and JS tests
 script:
     - export COVERAGE=`if [ "$TRAVIS_BRANCH" == "master-w-coverage" ]; then echo "--coverage"; else echo ""; fi`
-    - |
-      if [ "$TEST_BUILD" = "api" ]; then
-        invoke test_travis_$TEST_BUILD --testmon $COVERAGE
-      elif [ "$TEST_BUILD" = "admin" ]; then
-        invoke test_travis_$TEST_BUILD --testmon $COVERAGE
-      elif [ "$TEST_BUILD" = "addons" ]; then
-        invoke test_travis_$TEST_BUILD --testmon $COVERAGE
-      else
-        invoke test_travis_$TEST_BUILD -n 4 $COVERAGE
-      fi
+    - invoke test_$TEST_BUILD --testmon $COVERAGE
 
 after_success:
     - if [[ "$TRAVIS_BRANCH" == "master-w-coverage" ]]; then coveralls; fi

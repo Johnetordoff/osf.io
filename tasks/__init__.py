@@ -311,7 +311,7 @@ def test_module(ctx, module=None, numprocesses=None, nocapture=False, params=Non
         args.extend(params)
     retcode = pytest.main(args)
     if retcode == 5:  # 5 == no tests collected meaning nothing was changed, this is what we want from testmon.
-        sys.exit(1)
+        sys.exit(0)
 
     sys.exit(retcode)
 
@@ -417,6 +417,7 @@ def test_api3(ctx, numprocesses=None, coverage=False, testmon=False):
 def test_admin(ctx, numprocesses=None, coverage=False, testmon=False):
     """Run the Admin test suite."""
     print('Testing module "admin_tests"')
+
     test_module(ctx, module=ADMIN_TESTS, numprocesses=numprocesses, coverage=coverage, testmon=testmon)
 
 
@@ -464,8 +465,6 @@ def test_travis_addons(ctx, numprocesses=None, coverage=False, testmon=False):
     """
     Run half of the tests to help travis go faster.
     """
-    travis_setup(ctx)
-    syntax(ctx)
     test_addons(ctx, numprocesses=numprocesses, coverage=coverage, testmon=testmon)
 
 @task
@@ -473,19 +472,16 @@ def test_travis_website(ctx, numprocesses=None, coverage=False, testmon=False):
     """
     Run other half of the tests to help travis go faster.
     """
-    travis_setup(ctx)
     test_website(ctx, numprocesses=numprocesses, coverage=coverage, testmon=testmon)
 
 
 @task
 def test_travis_api(ctx, numprocesses=None, coverage=False, testmon=False):
-    travis_setup(ctx)
     test_api(ctx, numprocesses=numprocesses, coverage=coverage, testmon=testmon)
 
 
 @task
 def test_travis_osf(ctx, numprocesses=None, coverage=False, testmon=False):
-    travis_setup(ctx)
     test_osf(ctx, numprocesses=numprocesses, coverage=coverage, testmon=testmon)
 
 
@@ -493,25 +489,21 @@ def test_travis_osf(ctx, numprocesses=None, coverage=False, testmon=False):
 def test_travis_api1_and_js(ctx, numprocesses=None, coverage=False, testmon=False, testmonread=False):
     # TODO: Uncomment when https://github.com/travis-ci/travis-ci/issues/8836 is resolved
     # karma(ctx)
-    travis_setup(ctx)
     test_api1(ctx, numprocesses=numprocesses, coverage=coverage, testmon=testmon, testmonread=testmonread)
 
 
 @task
 def test_travis_api2(ctx, numprocesses=None, coverage=False, testmon=False):
-    travis_setup(ctx)
     test_api2(ctx, numprocesses=numprocesses, coverage=coverage, testmon=testmon)
 
 
 @task
 def test_travis_api3_and_osf(ctx, numprocesses=None, coverage=False, testmon=False, testmonread=False):
-    travis_setup(ctx)
     test_api3(ctx, numprocesses=numprocesses, coverage=coverage, testmon=testmon, testmonread=False)
 
 
 @task
 def test_travis_admin(ctx, numprocesses=None, coverage=False, testmon=False):
-    travis_setup(ctx)
     test_admin(ctx, numprocesses=numprocesses, coverage=coverage, testmon=testmon)
 
 
