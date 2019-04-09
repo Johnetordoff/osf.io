@@ -308,18 +308,13 @@ def test_module(ctx, module=None, numprocesses=None, nocapture=False, params=Non
         args += ['-s']
     if numprocesses > 1:
         args += ['-n {}'.format(numprocesses), '--max-slave-restart=0']
-        # skip testmon tests
-        params = ['testmon']
-
     modules = [module] if isinstance(module, basestring) else module
     args.extend(modules)
     if params:
         params = [params] if isinstance(params, basestring) else params
         args.extend(params)
     retcode = pytest.main(args)
-
-    # exit code of 5 means all tests were skipped, this is a good thing when using testmon
-    sys.exit(0 if retcode == 5 else retcode)
+    sys.exit(retcode)
 
 
 OSF_TESTS = [
@@ -380,47 +375,72 @@ ADMIN_TESTS = [
 
 
 @task
-def test_travis_web(ctx, numprocesses=None, coverage=False):
+def test_osf(ctx, numprocesses=None, coverage=False):
     """Run the OSF test suite."""
-    # TODO: Uncomment when https://github.com/travis-ci/travis-ci/issues/8836 is resolved
-    # karma(ctx)
-    print('Testing modules "{}"'.format(OSF_TESTS + WEBSITE_TESTS))
-    test_module(ctx, module=OSF_TESTS + WEBSITE_TESTS, numprocesses=numprocesses, coverage=coverage)
+    print('Testing modules "{}"'.format(OSF_TESTS))
+    test_module(ctx, module=OSF_TESTS, numprocesses=numprocesses, coverage=coverage)
+
+@task
+def test_website(ctx, numprocesses=None, coverage=False):
+    """Run the old test suite."""
+    print('Testing modules "{}"'.format(WEBSITE_TESTS))
+    test_module(ctx, module=WEBSITE_TESTS, numprocesses=numprocesses, coverage=coverage)
+
+@task
+def test_api1(ctx, numprocesses=None, coverage=False):
+    """Run the API test suite."""
+    print('Testing modules "{}"'.format(API_TESTS1 + ADMIN_TESTS))
+    test_module(ctx, module=API_TESTS1 + ADMIN_TESTS, numprocesses=numprocesses, coverage=coverage)
 
 
 @task
-def test_travis_api(ctx, numprocesses=None, coverage=False):
-    """Run the OSF test suite."""
-    print('Testing modules "{}"'.format(API_TESTS1 + API_TESTS2 + API_TESTS3))
-    test_module(ctx, module=API_TESTS1 + API_TESTS2 + API_TESTS3, numprocesses=numprocesses, coverage=coverage)
+def test_api2(ctx, numprocesses=None, coverage=False):
+    """Run the API test suite."""
+    print('Testing modules "{}"'.format(API_TESTS2))
+    test_module(ctx, module=API_TESTS2, numprocesses=numprocesses, coverage=coverage)
 
 
 @task
-def test_travis_admin(ctx, numprocesses=None, coverage=False):
-    """Run the OSF test suite."""
-    print('Testing modules "{}"'.format(ADMIN_TESTS))
+def test_api3(ctx, numprocesses=None, coverage=False):
+    """Run the API test suite."""
+    print('Testing modules "{}"'.format(API_TESTS3 + OSF_TESTS))
+    # NOTE: There may be some concurrency issues with ES
+    test_module(ctx, module=API_TESTS3 + OSF_TESTS, numprocesses=numprocesses, coverage=coverage)
+
+
+@task
+def test_admin(ctx, numprocesses=None, coverage=False):
+    """Run the Admin test suite."""
+    print('Testing module "admin_tests"')
     test_module(ctx, module=ADMIN_TESTS, numprocesses=numprocesses, coverage=coverage)
 
 
 @task
-def test_travis_addon(ctx, numprocesses=None, coverage=False):
-    """Run the OSF test suite."""
+def test_addons(ctx, numprocesses=None, coverage=False):
+    """Run all the tests in the addons directory.
+    """
     print('Testing modules "{}"'.format(ADDON_TESTS))
     test_module(ctx, module=ADDON_TESTS, numprocesses=numprocesses, coverage=coverage)
 
 
 @task
-def test_travis_testmon(ctx, module=None, numprocesses=None, nocapture=False, params=None, coverage=False):
+def test(ctx, all=False, lint=False):
     """
-    For consistent results testmon must be used from the same parent directory otherwise
-    skipable tests will be run, if test themselves changed they will not be re-run!!!.
-    :param ctx:
-    :return:
+    Run unit tests: OSF (always), plus addons and syntax checks (optional)
     """
-    retcode = pytest.main(['-m', 'not testmonblocker', '--testmon', '--ignore', 'scripts/', '--ignore', 'src/dataverse/', '-n', 2, '--max-slave-restart=0'])
-    sys.exit(0 if 5 == retcode else 0)
+    if lint:
+        syntax(ctx)
 
+    test_website(ctx)  # /tests
+    test_api1(ctx)
+    test_api2(ctx)
+    test_api3(ctx)  # also /osf_tests
 
+    if all:
+        test_addons(ctx)
+        # TODO: Enable admin tests
+        test_admin(ctx)
+        karma(ctx)
 @task
 def remove_failures_from_testmon(ctx):
     conn = sqlite3.connect('.cache/.testmondata')
@@ -439,6 +459,42 @@ def travis_setup(ctx):
         bower_json = json.load(fobj)
         ctx.run('bower install {}'.format(bower_json['dependencies']['styles']), echo=True)
 
+@task
+def test_travis_addons(ctx, numprocesses=None, coverage=False):
+    """
+    Run half of the tests to help travis go faster.
+    """
+    travis_setup(ctx)
+    syntax(ctx)
+    test_addons(ctx, numprocesses=numprocesses, coverage=coverage)
+
+@task
+def test_travis_website(ctx, numprocesses=None, coverage=False):
+    """
+    Run other half of the tests to help travis go faster.
+    """
+    travis_setup(ctx)
+    test_website(ctx, numprocesses=numprocesses, coverage=coverage)
+
+
+@task
+def test_travis_api1_and_js(ctx, numprocesses=None, coverage=False):
+    # TODO: Uncomment when https://github.com/travis-ci/travis-ci/issues/8836 is resolved
+    # karma(ctx)
+    travis_setup(ctx)
+    test_api1(ctx, numprocesses=numprocesses, coverage=coverage)
+
+
+@task
+def test_travis_api2(ctx, numprocesses=None, coverage=False):
+    travis_setup(ctx)
+    test_api2(ctx, numprocesses=numprocesses, coverage=coverage)
+
+
+@task
+def test_travis_api3_and_osf(ctx, numprocesses=None, coverage=False):
+    travis_setup(ctx)
+    test_api3(ctx, numprocesses=numprocesses, coverage=coverage)
 
 @task
 def karma(ctx, travis=False):
