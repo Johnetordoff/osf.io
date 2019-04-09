@@ -32,11 +32,11 @@ env:
     # Workaround for travis bug: see https://github.com/travis-ci/travis-ci/issues/7940#issuecomment-311411559
     - BOTO_CONFIG=/dev/null
   matrix:
-    - TEST_BUILD="addons"
-    - TEST_BUILD="website"
-    - TEST_BUILD="api1_and_js"
-    - TEST_BUILD="api2"
-    - TEST_BUILD="api3_and_osf"
+    - TEST_BUILD="api"
+    - TEST_BUILD="web"
+    - TEST_BUILD="addon"
+    - TEST_BUILD="admin"
+    - TEST_BUILD="testmon"
 
 before_install:
     # cache directories
@@ -44,7 +44,11 @@ before_install:
       mkdir -p $HOME/.cache/downloads
       mkdir -p $HOME/.cache/pip
       mkdir -p $HOME/.cache/wheelhouse
+      mkdir -p $HOME/.cache/testmon
       rm -rf node_modules  ## TODO remove this later
+
+    - export TESTMON_DATAFILE=$HOME/.cache/testmon/.testmondata
+
     # postgres
     - |
       cd $HOME/.cache/downloads
@@ -101,28 +105,22 @@ install:
 
     - travis_retry pip install --upgrade pip
     - travis_retry pip install invoke==0.13.0
-    - travis_retry pip install flake8==2.4.0 --force-reinstall --upgrade
-    - travis_retry invoke wheelhouse --dev --addons
-
-    - |
-      if [ "$TEST_BUILD" = "api1_and_js" ]; then
-       nvm install 8.6.0
-       nvm use 8.6.0
-       curl -o- -L https://yarnpkg.com/install.sh | bash
-       export PATH=$HOME/.yarn/bin:$PATH
-       travis_retry invoke assets --dev
-      fi
+    - travis_retry invoke wheelhouse --travis --addons
 
     - travis_retry invoke travis_addon_settings
-    - travis_retry invoke requirements --dev --addons
+    - travis_retry invoke requirements --travis
     # Hack to fix package conflict between uritemplate and uritemplate.py (dependency of github3.py)
     - pip uninstall uritemplate.py --yes
     - pip install uritemplate.py==0.3.0
 
+    - export PATH=$HOME/.yarn/bin:$PATH
+    - yarn install --frozen-lockfile
+    - travis_retry invoke travis_setup
+
 # Run Python tests (core and addon) and JS tests
 script:
     - export COVERAGE=`if [ "$TRAVIS_BRANCH" == "master-w-coverage" ]; then echo "--coverage"; else echo ""; fi`
-    - invoke test_travis_$TEST_BUILD -n 4 $COVERAGE
+    - invoke test_travis_$TEST_BUILD -n 2 $COVERAGE
 
 after_success:
     - if [[ "$TRAVIS_BRANCH" == "master-w-coverage" ]]; then coveralls; fi
@@ -139,6 +137,11 @@ before_cache:
   # kill any running processes
   - kill -9 $POSTGRES_PID
   - kill -9 $ELASTICSEARCH_PID
+
+
+after_script:
+  - inv remove_failures_from_testmon
+
 
 branches:
   except:
