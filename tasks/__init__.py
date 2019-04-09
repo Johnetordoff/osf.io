@@ -423,7 +423,7 @@ def test_travis_testmon(ctx, module=None, numprocesses=None, nocapture=False, pa
 
 @task
 def remove_failures_from_testmon(ctx):
-    conn = sqlite3.connect('code/.cache/.testmondata')
+    conn = sqlite3.connect('.cache/.testmondata')
     tests_decached = conn.execute("delete from node where result <> '{}'").rowcount
     ctx.run('echo {} failures purged from travis cache'.format(tests_decached))
 
