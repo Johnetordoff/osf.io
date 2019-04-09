@@ -314,7 +314,9 @@ def test_module(ctx, module=None, numprocesses=None, nocapture=False, params=Non
         params = [params] if isinstance(params, basestring) else params
         args.extend(params)
     retcode = pytest.main(args)
-    sys.exit(retcode)
+
+    # exit code 5 is all tests skipped which is the same as passing with testmon
+    sys.exit(0 if retcode == 5 else retcode)
 
 
 OSF_TESTS = [

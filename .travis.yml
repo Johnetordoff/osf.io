@@ -47,8 +47,6 @@ before_install:
       mkdir -p $HOME/.cache/testmon
       rm -rf node_modules  ## TODO remove this later
 
-    - export TESTMON_DATAFILE=$HOME/.cache/testmon/.testmondata
-
     # postgres
     - |
       cd $HOME/.cache/downloads
