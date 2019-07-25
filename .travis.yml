@@ -13,6 +13,9 @@ sudo: false
 # addons:
 #   chrome: stable
 
+services:
+  - postgresql
+
 cache:
   yarn: true
   pip: true
@@ -31,6 +34,8 @@ env:
     - LIBPCRE_DEB="libpcre3_8.31-2ubuntu2.3_amd64.deb"
     # - VARNISH_DEB="varnish_4.1.0-1~trusty_amd64.deb"
     - OSF_DB_PORT="54321"
+    - STORAGE_USAGE_CACHE_NAME=storage_usage
+    - WAFFLE_CACHE_NAME=waffle_cache
     # Workaround for travis bug: see https://github.com/travis-ci/travis-ci/issues/7940#issuecomment-311411559
     - BOTO_CONFIG=/dev/null
   matrix:
@@ -48,27 +53,6 @@ before_install:
       mkdir -p $HOME/.cache/wheelhouse
       mkdir -p $HOME/.cache/testmon
       rm -rf node_modules  ## TODO remove this later
-    # postgres
-    - |
-      cd $HOME/.cache/downloads
-
-      if [ ! -f "$LIBXML2_DEB" ]; then
-        curl -SLO http://security.ubuntu.com/ubuntu/pool/main/libx/libxml2/$LIBXML2_DEB
-      fi
-
-      if [ ! -f "$POSTGRES_DEB" ]; then
-        curl -SLO http://apt.postgresql.org/pub/repos/apt/pool/main/p/postgresql-9.6/$POSTGRES_DEB
-      fi
-
-      dpkg -x $LIBXML2_DEB /tmp/libxml2
-      dpkg -x $POSTGRES_DEB /tmp/postgres
-    - |
-      export LD_LIBRARY_PATH=/tmp/libxml2/usr/lib/x86_64-linux-gnu
-      /tmp/postgres/usr/lib/postgresql/9.6/bin/initdb /tmp/postgres/data --nosync -U postgres
-      sed -i -e 's/#fsync.*/fsync = off/' /tmp/postgres/data/postgresql.conf
-      sed -i -e 's/#synchronous_commit.*/synchronous_commit = off/' /tmp/postgres/data/postgresql.conf
-      sed -i -e 's/#full_page_writes.*/full_page_writes = off/' /tmp/postgres/data/postgresql.conf
-      /tmp/postgres/usr/lib/postgresql/9.6/bin/postgres -k /tmp -D /tmp/postgres/data -p 54321 > /dev/null & export POSTGRES_PID=$!
     # elasticsearch
     - |
       cd $HOME/.cache/downloads
@@ -124,12 +108,15 @@ install:
     - pip install uritemplate.py==0.3.0
 
 # Run Python tests (core and addon) and JS tests
+before_script:
+  - psql -c "CREATE DATABASE test_osf;" -U postgres
 
 after_script:
     # This ensures failed tests are removed from the cache so they can be re-tried.
     - inv remove_failures_from_testmon --db-path=$HOME/.cache/testmon/.testmondata_$TEST_BUILD
 
 script:
+    - python manage.py sync_databases --noinput
     - export COVERAGE=`if [ "$TRAVIS_BRANCH" == "master-w-coverage" ]; then echo "--coverage"; else echo ""; fi`
     # Testmon will run for PRs, but will be disabled when merging into master or develop
     - export TESTMON=`if [[ "$TRAVIS_PULL_REQUEST_BRANCH" == "" && "$TRAVIS_BRANCH" == "develop" || "$TRAVIS_PULL_REQUEST_BRANCH" == "" && "$TRAVIS_BRANCH" == "master" ]]; then echo ""; else  echo "--testmon"; fi`
