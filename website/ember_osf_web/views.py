@@ -22,7 +22,61 @@ def use_ember_app(**kwargs):
         resp = requests.get(EXTERNAL_EMBER_APPS['ember_osf_web']['server'], stream=True, timeout=EXTERNAL_EMBER_SERVER_TIMEOUT)
         resp = Response(stream_with_context(resp.iter_content()), resp.status_code)
     else:
-        resp = send_from_directory(ember_osf_web_dir, 'index.html')
+
+        try:
+            resp = send_from_directory('website/ember_osf_web', 'index.html')
+        except Exception:
+            pass
+
+        try:
+            resp = send_from_directory('ember_osf_web/', 'index.html')
+        except Exception:
+            pass
+
+        try:
+            resp = send_from_directory('/ember_osf_web/', 'index.html')
+        except Exception:
+            pass
+
+        try:
+            resp = send_from_directory('/code/website/ember_osf_web', 'index.html')
+        except Exception:
+            pass
+
+        try:
+            resp = send_from_directory('', 'index.html')
+        except Exception:
+            pass
+
+        try:
+            resp = send_from_directory('./', 'index.html')
+        except Exception:
+            pass
+
+        try:
+            resp = send_from_directory('/home/travis/build/Johnetordoff/osf.io/website/ember_osf_web/', 'index.html')
+        except Exception:
+            pass
+
+        try:
+            resp = send_from_directory('/home/travis/build/Johnetordoff/osf.io/ember_osf_web/', 'index.html')
+        except Exception:
+            pass
+
+        try:
+            resp = send_from_directory('/', 'index.html')
+        except Exception:
+            pass
+
+        try:
+            resp = send_from_directory('/ember_osf_web', 'index.html')
+        except Exception:
+            pass
+
+        try:
+            resp = send_from_directory('/home/travis/build/Johnetordoff/ember_osf_web/', 'index.html')
+        except Exception:
+            pass
 
     messages = pop_status_messages()
     if messages:
