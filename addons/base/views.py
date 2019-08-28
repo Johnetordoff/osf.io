@@ -244,6 +244,20 @@ def download_is_from_mfr(req, payload):
     )
 
 
+def is_for_revisions(payload):
+    """
+    Revisions requests use the same uri structure as download requests with the only difference being the ?revisions
+    params this checks to ensure these don't add to the metrics download count.
+
+
+    :param req:
+    :param payload:
+    :return:
+    """
+    uri = payload['metrics']['uri']
+    return 'revisions' in list(furl.furl(uri or '').query.params.keys())
+
+
 def get_metric_class_for_action(action, from_mfr):
     metric_class = None
     if action == 'render':
@@ -327,11 +341,12 @@ def get_auth(auth, **kwargs):
                     FileVersionUserMetadata.objects.get_or_create(user=auth.user, file_version=fileversion)
                 if not node.is_contributor_or_group_member(auth.user):
                     from_mfr = download_is_from_mfr(request, payload=data)
+                    for_revisions = is_for_revisions(payload=data)
                     # version index is 0 based
                     version_index = version - 1
                     if action == 'render':
                         update_analytics(node, file_id, version_index, 'view')
-                    elif action == 'download' and not from_mfr:
+                    elif action == 'download' and not from_mfr and not for_revisions:
                         update_analytics(node, file_id, version_index, 'download')
                     if waffle.switch_is_active(features.ELASTICSEARCH_METRICS):
                         if isinstance(node, Preprint):
