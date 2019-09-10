@@ -3,7 +3,6 @@ import logging
 
 from django.core.management.base import BaseCommand
 from django.db import connection, transaction
-from framework import sentry
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +57,7 @@ def run_statements(statement, page_size, table):
         cursor.execute(statement.format(table, table, page_size))
         rows = cursor.fetchall()
         if rows:
-            sentry.log_message('Table {} still has rows to populate'.format(table))
+            logger.info('Table {} still has rows to populate'.format(table))
 
 class Command(BaseCommand):
     help = '''Populates new deleted field for various models. Ensure you have run migrations
@@ -80,17 +79,17 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         script_start_time = datetime.datetime.now()
-        sentry.log_message('Script started time: {}'.format(script_start_time))
+        logger.info('Script started time: {}'.format(script_start_time))
         logger.debug(options)
 
         dry_run = options['dry_run']
         page_size = options['page_size']
 
         if dry_run:
-            sentry.log_message('DRY RUN')
+            logger.info('DRY RUN')
 
         populate_deleted(dry_run, page_size)
 
         script_finish_time = datetime.datetime.now()
-        sentry.log_message('Script finished time: {}'.format(script_finish_time))
-        sentry.log_message('Run time {}'.format(script_finish_time - script_start_time))
+        logger.info('Script finished time: {}'.format(script_finish_time))
+        logger.info('Run time {}'.format(script_finish_time - script_start_time))
