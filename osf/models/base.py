@@ -5,7 +5,6 @@ import bson
 from django.contrib.contenttypes.fields import (GenericForeignKey,
                                                 GenericRelation)
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import MultipleObjectsReturned
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import connections, models
 from django.db.models import ForeignKey
@@ -266,16 +265,10 @@ class OptionalGuidMixin(BaseIDMixin):
             logger.warn('Implicitly saving object before creating guid')
             self.save()
         if create:
-            try:
-                guid, created = Guid.objects.get_or_create(
-                    object_id=self.pk,
-                    content_type_id=ContentType.objects.get_for_model(self).pk
-                )
-            except MultipleObjectsReturned:
-                # lol, hacks
-                pass
-            else:
-                return guid
+            guid, created = Guid.objects.get_or_create(
+                object_id=self.pk,
+                content_type_id=ContentType.objects.get_for_model(self).pk
+            )
         return self.guids.first()
 
     class Meta:
