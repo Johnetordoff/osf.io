@@ -419,6 +419,7 @@ class BaseFileNode(TypedModel, CommentableMixin, OptionalGuidMixin, Taggable, Ob
         :param deleted_on:
         :return:
         """
+        deleted = deleted_on
         if not self.is_root:
             self.deleted_by = user
             self.deleted = deleted_on or timezone.now()
@@ -431,7 +432,7 @@ class BaseFileNode(TypedModel, CommentableMixin, OptionalGuidMixin, Taggable, Ob
                 self.recast(TrashedFolder._typedmodels_type)
 
             for child in BaseFileNode.objects.filter(parent=self.id).exclude(type__in=TrashedFileNode._typedmodels_subtypes):
-                child.delete(user=user, save=save, deleted_on=deleted_on)
+                child.delete(user=user, save=save, deleted_on=deleted)
         else:
             self.recast(TrashedFile._typedmodels_type)
 
