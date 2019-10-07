@@ -419,8 +419,8 @@ class BaseFileNode(TypedModel, CommentableMixin, OptionalGuidMixin, Taggable, Ob
         :param deleted_on:
         :return:
         """
-        if not self.is_root
-            self.deleted_by = user     
+        if not self.is_root:
+            self.deleted_by = user
             self.deleted = deleted_on or timezone.now()
             deleted = self.deleted
             #This will need to be removed
