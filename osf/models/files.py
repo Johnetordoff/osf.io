@@ -423,7 +423,7 @@ class BaseFileNode(TypedModel, CommentableMixin, OptionalGuidMixin, Taggable, Ob
             self.deleted_by = user
             self.deleted = deleted_on or timezone.now()
             deleted = self.deleted
-            #This will need to be removed
+            # This will need to be removed
             self.deleted_on = deleted
 
         if not self.is_file:
