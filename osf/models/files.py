@@ -431,7 +431,7 @@ class BaseFileNode(TypedModel, CommentableMixin, OptionalGuidMixin, Taggable, Ob
                 self.recast(TrashedFolder._typedmodels_type)
 
             for child in BaseFileNode.objects.filter(parent=self.id).exclude(type__in=TrashedFileNode._typedmodels_subtypes):
-                child.delete(user=user, save=save, deleted_on=deleted)
+                child.delete(user=user, save=save, deleted_on=deleted_on)
         else:
             self.recast(TrashedFile._typedmodels_type)
 
