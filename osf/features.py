@@ -8,9 +8,17 @@ STORAGE_I18N = 'storage_i18n'
 OSF_PREREGISTRATION = 'osf_preregistration'
 OSF_GROUPS = 'osf_groups'
 ENABLE_CHRONOS = 'enable_chronos'
-SLOAN_COI = 'waffle:sloan|coi'
-SLOAN_DATA = 'waffle:sloan|data'
-SLOAN_PREREG = 'waffle:sloan|prereg'
+
+
+# The SLOAN_..._INPUT values are the names of switches that allow users to input their sloan info,
+SLOAN_COI_INPUT = 'sloan_coi_input'
+SLOAN_DATA_INPUT = 'sloan_data_input'
+SLOAN_PREREG_INPUT = 'sloan_prereg_input'
+
+# The SLOAN_..._DISPLAY values are flags control when those features are visible for individual users.
+SLOAN_COI_DISPLAY = 'sloan_coi_display'
+SLOAN_DATA_DISPLAY = 'sloan_data_display'
+SLOAN_PREREG_DISPLAY = 'sloan_prereg_display'
 
 EMBER_AB_TESTING_HOME_PAGE_VERSION_B = 'ab_testing_home_page_version_b'
 EMBER_AB_TESTING_HOME_PAGE_HERO_TEXT_VERSION_B = 'ab_testing_home_page_hero_text_version_b'

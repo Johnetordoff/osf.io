@@ -329,4 +329,4 @@ CACHES = {
     },
 }
 
-SLOAN_ID = 'sloan_id'
+SLOAN_ID_COOKIE_NAME = 'sloan_id'

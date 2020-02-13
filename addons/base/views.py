@@ -17,7 +17,7 @@ from django.db import transaction
 from django.contrib.contenttypes.models import ContentType
 from elasticsearch import exceptions as es_exceptions
 
-from django.conf import settings as api_settings
+from api.base.settings.defaults import SLOAN_ID_COOKIE_NAME
 
 from addons.base.models import BaseStorageAddon
 from addons.osfstorage.models import OsfStorageFile
@@ -52,9 +52,9 @@ from website.project.utils import serialize_node
 from website.util import rubeus
 
 from osf.features import (
-    SLOAN_PREREG,
-    SLOAN_DATA,
-    SLOAN_COI
+    SLOAN_COI_DISPLAY,
+    SLOAN_DATA_DISPLAY,
+    SLOAN_PREREG_DISPLAY
 )
 
 # import so that associated listener is instantiated and gets emails
@@ -347,10 +347,10 @@ def get_auth(auth, **kwargs):
                             metric_class = get_metric_class_for_action(action, from_mfr=from_mfr)
                             if metric_class:
                                 sloan_flag = {
-                                    'sloan_coi': request.cookies.get(SLOAN_COI),
-                                    'sloan_data': request.cookies.get(SLOAN_DATA),
-                                    'sloan_prereg': request.cookies.get(SLOAN_PREREG),
-                                    api_settings.SLOAN_ID: request.cookies.get(api_settings.SLOAN_ID)
+                                    'sloan_coi': request.cookies.get(SLOAN_COI_DISPLAY),
+                                    'sloan_data': request.cookies.get(SLOAN_DATA_DISPLAY),
+                                    'sloan_prereg': request.cookies.get(SLOAN_PREREG_DISPLAY),
+                                    'sloan_id': request.cookies.get(SLOAN_ID_COOKIE_NAME)
                                 }
                                 try:
                                     metric_class.record_for_preprint(

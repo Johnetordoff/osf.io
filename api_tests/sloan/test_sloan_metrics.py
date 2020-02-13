@@ -21,9 +21,14 @@ from waffle.testutils import override_switch
 from osf.models import Session
 from osf.features import (
     ELASTICSEARCH_METRICS,
-    SLOAN_COI,
-    SLOAN_DATA
+    SLOAN_COI_DISPLAY,
+    SLOAN_DATA_DISPLAY
 )
+
+from api.base.settings.defaults import SLOAN_ID_COOKIE_NAME
+from tests.json_api_test_app import JSONAPITestApp
+
+django_app = JSONAPITestApp()
 
 
 class TestSloanMetrics(OsfTestCase):
@@ -49,17 +54,18 @@ class TestSloanMetrics(OsfTestCase):
         return api_url_for('get_auth', **options)
 
     def test_unauth_user_gets_cookie(self):
-        resp = self.app.get('/dashboard/')
-        assert 'sloan_id=' in resp.headers.get('Set-Cookie')
+        resp = django_app.get('/v2/')
+        assert f'{SLOAN_ID_COOKIE_NAME}=' in resp.headers.get('Set-Cookie')
 
     @mock.patch('osf.metrics.PreprintDownload.record_for_preprint')
     def test_unauth_user_downloads_preprint(self, mock_record):
         test_file = create_test_preprint_file(self.preprint, self.user)
-        resp = self.app.get('/dashboard/')
+        resp = django_app.get('/v2/')
         sloan_cookie_value = resp.headers['Set-Cookie'].split('=')[1].split(';')[0]
 
-        self.app.set_cookie(SLOAN_COI, 'True')
-        self.app.set_cookie(SLOAN_DATA, 'False')
+        self.app.set_cookie(SLOAN_COI_DISPLAY, 'True')
+        self.app.set_cookie(SLOAN_DATA_DISPLAY, 'False')
+        self.app.set_cookie(SLOAN_ID_COOKIE_NAME, sloan_cookie_value)
         with override_switch(ELASTICSEARCH_METRICS, active=True):
             self.app.get(self.build_url(path=test_file.path))
 
