@@ -1,4 +1,5 @@
 import gc
+import uuid
 from io import StringIO
 import cProfile
 import pstats
@@ -19,7 +20,6 @@ from framework.celery_tasks.handlers import (
     celery_teardown_request,
 )
 from .api_globals import api_globals
-from api.base import settings as api_settings
 
 
 class CeleryTaskMiddleware(MiddlewareMixin):
@@ -55,7 +55,7 @@ class DjangoGlobalMiddleware(MiddlewareMixin):
 
     def process_response(self, request, response):
         api_globals.request = None
-        if api_settings.DEBUG and len(gc.get_referents(request)) > 2:
+        if settings.DEBUG and len(gc.get_referents(request)) > 2:
             raise Exception('You wrote a memory leak. Stop it')
         return response
 
@@ -68,7 +68,7 @@ class CorsMiddleware(corsheaders.middleware.CorsMiddleware):
     _context = threading.local()
 
     def origin_found_in_white_lists(self, origin, url):
-        settings.CORS_ORIGIN_WHITELIST += api_settings.ORIGINS_WHITELIST
+        settings.CORS_ORIGIN_WHITELIST += settings.ORIGINS_WHITELIST
         # Check if origin is in the dynamic custom domain whitelist
         found = super(CorsMiddleware, self).origin_found_in_white_lists(origin, url)
         # Check if a cross-origin request using the Authorization header
@@ -138,4 +138,20 @@ class ProfileMiddleware(MiddlewareMixin):
             ps.print_stats()
             response.content = s.getvalue()
 
+        return response
+
+
+class SloanIdMiddleware(MiddlewareMixin):
+    """Sloan middleware give all users a unique id, logged in or not."""
+
+    def process_response(self, request, response):
+        """give user a Sloan ID if they don't have one already"""
+        if not request.COOKIES.get(settings.SLOAN_ID_COOKIE_NAME):
+            response.set_cookie(
+                settings.SLOAN_ID_COOKIE_NAME,
+                str(uuid.uuid4()),
+                domain=settings.CSRF_COOKIE_DOMAIN,
+                path=settings.CSRF_COOKIE_PATH,
+                httponly=settings.CSRF_COOKIE_HTTPONLY,
+            )
         return response

@@ -53,16 +53,16 @@ class TestSloanMetrics(OsfTestCase):
         }, settings.WATERBUTLER_JWT_SECRET, algorithm=settings.WATERBUTLER_JWT_ALGORITHM), self.JWE_KEY)}
         return api_url_for('get_auth', **options)
 
-    def test_unauth_user_gets_cookie(self):
-        resp = django_app.get('/v2/')
-        assert f'{SLOAN_ID_COOKIE_NAME}=' in resp.headers.get('Set-Cookie')
-
     @mock.patch('osf.metrics.PreprintDownload.record_for_preprint')
     def test_unauth_user_downloads_preprint(self, mock_record):
         test_file = create_test_preprint_file(self.preprint, self.user)
         resp = django_app.get('/v2/')
+
+        # tests unauthenticated user gets cookie.
+        assert f'{SLOAN_ID_COOKIE_NAME}=' in resp.headers.get('Set-Cookie')
         sloan_cookie_value = resp.headers['Set-Cookie'].split('=')[1].split(';')[0]
 
+        # tests cookies get sent to impact
         self.app.set_cookie(SLOAN_COI_DISPLAY, 'True')
         self.app.set_cookie(SLOAN_DATA_DISPLAY, 'False')
         self.app.set_cookie(SLOAN_ID_COOKIE_NAME, sloan_cookie_value)
