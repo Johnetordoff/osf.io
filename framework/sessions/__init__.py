@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import datetime as dt
 from rest_framework import status as http_status
 from future.moves.urllib.parse import urlparse, parse_qs, urlunparse, urlencode
 
@@ -165,14 +164,7 @@ def before_request():
         if not throttle_period_expired(user_session.created, settings.OSF_SESSION_TIMEOUT):
             # Update date last login when making non-api requests
             if user_session.data.get('auth_user_id') and 'api' not in request.url:
-                OSFUser = apps.get_model('osf.OSFUser')
-                (
-                    OSFUser.objects
-                    .filter(guids___id__isnull=False, guids___id=user_session.data['auth_user_id'])
-                    # Throttle updates
-                    .filter(Q(date_last_login__isnull=True) | Q(date_last_login__lt=timezone.now() - dt.timedelta(seconds=settings.DATE_LAST_LOGIN_THROTTLE)))
-                ).update(date_last_login=timezone.now())
-            set_session(user_session)
+                update_user_date_last_login(user_session)
         else:
             remove_session(user_session)
 
@@ -181,3 +173,14 @@ def after_request(response):
     # Disallow embedding in frames
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'
     return response
+
+
+def update_user_date_last_login(user_session):
+    OSFUser = apps.get_model('osf.OSFUser')
+    now = timezone.now()
+    OSFUser.objects.filter(
+        Q(date_last_login__isnull=True) |
+        Q(date_last_login__lt=now - settings.DATE_LAST_LOGIN_THROTTLE_DELTA),
+        username=user_session.data['auth_user_username'],
+    ).update(date_last_login=now)
+    set_session(user_session)
