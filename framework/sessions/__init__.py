@@ -182,5 +182,5 @@ def update_user_date_last_login(user_session):
         Q(date_last_login__isnull=True) |
         Q(date_last_login__lt=now - settings.DATE_LAST_LOGIN_THROTTLE_DELTA),
         username=user_session.data['auth_user_username'],
-    ).update(date_last_login=now)
+    )
     set_session(user_session)
