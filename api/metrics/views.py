@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from rest_framework.exceptions import ValidationError
 from rest_framework import permissions as drf_permissions
-from elasticsearch.exceptions import NotFoundError, RequestError
+from elasticsearch.exceptions import NotFoundError
 
 from framework.auth.oauth_scopes import CoreScopes
 from api.base.permissions import TokenHasScope
@@ -10,6 +10,7 @@ from api.metrics.permissions import IsPreprintMetricsUser
 from api.metrics.serializers import PreprintMetricSerializer
 from api.metrics.utils import parse_datetimes
 from api.base.views import JSONAPIBaseView
+from elasticsearch_dsl.connections import get_connection
 
 
 class PreprintMetricMixin(JSONAPIBaseView):
@@ -104,11 +105,15 @@ class PreprintMetricMixin(JSONAPIBaseView):
         Caution - this could be slow if a very large query is executed, so use with care!
         """
         search = self.metric.search()
-        try:
-            results = self.execute_search(search)
-        except RequestError:
-            raise ValidationError('Misformed elasticsearch query.')
-        return JsonResponse(results.to_dict())
+        query = request.data.get('query')
+
+        es = get_connection(search._using)
+        return JsonResponse(
+            es.search(
+                index=search._index,
+                body=query,
+            ),
+        )
 
 
 class PreprintViewMetrics(PreprintMetricMixin):
