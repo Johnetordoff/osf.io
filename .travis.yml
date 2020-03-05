@@ -98,6 +98,8 @@ before_install:
       done
 
     # elasticsearch6
+    - |
+      cd $HOME/.cache/downloads
     if [ ! -f "ELASTICSEARCH_ARCHIVE6" ]; then
       curl -SLO https://artifacts.elastic.co/downloads/elasticsearch/ELASTICSEARCH_ARCHIVE6
     fi
