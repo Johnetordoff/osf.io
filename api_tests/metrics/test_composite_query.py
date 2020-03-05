@@ -27,20 +27,20 @@ def user():
 TEST_INDEX = 'test'
 
 
-@pytest.fixture()
-def elastic_mock():
-    index = Index(f'{TEST_INDEX}_2020')
-    index.delete()
-    index.save()
-    PreprintDownload._template = f'{TEST_INDEX}_2020'
-    PreprintDownload._template_name = TEST_INDEX
-
 @pytest.fixture
 def base_url():
     return '/{}metrics/preprints/'.format(API_BASE)
 
 @pytest.mark.django_db
 class TestElasticSearch():
+
+    @pytest.fixture()
+    def elastic_mock(self):
+        index = Index(f'{TEST_INDEX}_2020')
+        index.save()
+        index.refresh()
+        PreprintDownload._template = f'{TEST_INDEX}_2020'
+        PreprintDownload._template_name = TEST_INDEX
 
     def test_elasticsearch(self, preprint, user, elastic_mock):
 
@@ -60,9 +60,7 @@ class TestElasticSearch():
 
         assert hit.preprint_id == preprint._id
 
-    def test_elasticsearch_agg_query(self, app, user, base_url):
-        """
-        """
+    def test_elasticsearch_agg_query(self, app, user, base_url, elastic_mock):
         post_url = '{}downloads/'.format(base_url)
 
         query = {'aggs': {'random_words': {
@@ -73,5 +71,3 @@ class TestElasticSearch():
         resp = app.post_json_api(post_url, payload, auth=user.auth)
 
         assert resp.status_code == 200
-
-        print(resp.__dict__)
