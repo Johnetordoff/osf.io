@@ -42,7 +42,7 @@ class TestElasticSearch():
         yield
         ind.delete()
 
-    @pytest.mark.skip('Try as I might I could not get to run on Travis, but this should pass against a local server.')
+    #@pytest.mark.skip('Try as I might I could not get to run on Travis, but this should pass against a local server.')
     def test_elasticsearch_agg_query(self, app, user, base_url, preprint):
         post_url = '{}downloads/'.format(base_url)
 
