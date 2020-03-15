@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from rest_framework.exceptions import ValidationError
 from rest_framework import permissions as drf_permissions
-from elasticsearch.exceptions import NotFoundError, RequestError
+from elasticsearch.exceptions import NotFoundError
 
 from framework.auth.oauth_scopes import CoreScopes
 from api.base.permissions import TokenHasScope
@@ -118,10 +118,7 @@ class PreprintMetricMixin(JSONAPIBaseView):
         search = self.metric.search()
         query = request.data.get('query')
 
-        try:
-            results = self.execute_search(search, query)
-        except RequestError:
-            raise ValidationError('Misformed elasticsearch query.')
+        results = self.execute_search(search, query)
         return JsonResponse(results.to_dict())
 
 

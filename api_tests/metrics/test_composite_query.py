@@ -33,16 +33,19 @@ def base_url():
 class TestElasticSearch():
 
     @pytest.fixture(autouse=True)
-    def mock_elastic(self):
-        ind = Index('test_2020')
+    def mock_elastic(self, es_client):
+        ind = Index('test_osf_preprintdownload_2020')
+        ind.save()
+        ind.delete()
+        ind.save()
         PreprintDownload._index = ind
-        PreprintDownload._template_name = 'test'
-        PreprintDownload._template = 'test_2020'
+        PreprintDownload._template_name = 'test_' + PreprintDownload._template_name
+        PreprintDownload._template = 'test_' + PreprintDownload._template
+        PreprintDownload.sync_index_template()
         ind.save()
         yield
         ind.delete()
 
-    @pytest.mark.skip('Try as I might I could not get to run on Travis, but this should pass against a local server.')
     def test_elasticsearch_agg_query(self, app, user, base_url, preprint):
         post_url = '{}downloads/'.format(base_url)
 
@@ -75,16 +78,26 @@ class TestElasticSearch():
         assert resp.status_code == 200
         assert resp.json['hits']['hits'] == []
 
-        PreprintDownload.record_for_preprint(
-            preprint,
-            path=preprint.primary_file.path,
+        pd = PreprintDownload(
+            count=1,
+            preprint_id=preprint._id,
+            user_id=user._id,
+            provider_id=preprint.provider._id,
             timestamp=datetime(year=2020, month=1, day=1),
         )
-        PreprintDownload.record_for_preprint(
-            preprint,
-            path=preprint.primary_file.path,
-            timestamp=datetime(year=2020, month=2, day=1)
+        pd.meta['result'] = 'created'
+        pd.save()
+
+        pd = PreprintDownload(
+            count=1,
+            preprint_id=preprint._id,
+            user_id=user._id,
+            provider_id=preprint.provider._id,
+            timestamp=datetime(year=2020, month=2, day=1),
         )
+        pd.meta['result'] = 'created'
+        pd.save()
+
         time.sleep(1)  # gives ES some time to update
 
         resp = app.post_json_api(post_url, payload, auth=user.auth)
