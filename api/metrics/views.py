@@ -71,6 +71,7 @@ class PreprintMetricMixin(JSONAPIBaseView):
         }
 
     def execute_search(self, search, query=None):
+        print(query)
         try:
             # There's a bug in the ES python library the prevents us from updating the search object, so lets just make
             # the raw query. If we have it.
@@ -118,7 +119,7 @@ class PreprintMetricMixin(JSONAPIBaseView):
         search = self.metric.search()
         query = request.data.get('query')
 
-        results = self.execute_search(search, query)
+        results = self.execute_search(search, query=query)
         return JsonResponse(results.to_dict())
 
 

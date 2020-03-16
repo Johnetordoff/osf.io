@@ -23,7 +23,7 @@ def es_client():
 
 
 @pytest.fixture(scope='function', autouse=True)
-def _es_marker(request, client):
+def _es_marker(request, es_client):
     """Clear out all indices and index templates before and after
     tests marked with ``es``.
     """
@@ -31,8 +31,8 @@ def _es_marker(request, client):
     if marker:
 
         def teardown_es():
-            client.indices.delete(index='*')
-            client.indices.delete_template('*')
+            es_client.indices.delete(index='*')
+            es_client.indices.delete_template('*')
 
         teardown_es()
         yield
