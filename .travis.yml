@@ -87,7 +87,7 @@ before_install:
       sha1sum --check $ELASTICSEARCH_ARCHIVE6.sha1.txt
 
       mkdir -p /tmp/elasticsearch6
-      tar xzf $ELASTICSEARCH_ARCHIVE -C /tmp/elasticsearch6 --strip-components=1
+      tar xzf $ELASTICSEARCH_ARCHIVE6 -C /tmp/elasticsearch6 --strip-components=1
     - /tmp/elasticsearch6/bin/elasticsearch > /dev/null & export ELASTICSEARCH6_PID=$!
     # Wait for elasticsearch to come online
     - |-
