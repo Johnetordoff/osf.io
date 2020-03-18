@@ -28,7 +28,7 @@ env:
     - POSTGRES_DEB="postgresql-9.6_9.6.3-1.pgdg12.4+1_amd64.deb"
     - ELASTICSEARCH_ARCHIVE="elasticsearch-2.4.5.tar.gz"
     - ELASTICSEARCH_ARCHIVE6="elasticsearch-6.3.1.tar.gz"
-    - ELASTICSEARCH_HOST="127.0.0.1:9200"
+    - ELASTICSEARCH_HOST="127.0.0.1:9201"
     - LIBJEMALLOC_DEB="libjemalloc1_3.5.1-2_amd64.deb"
     - LIBPCRE_DEB="libpcre3_8.31-2ubuntu2.3_amd64.deb"
     # - VARNISH_DEB="varnish_4.1.0-1~trusty_amd64.deb"
@@ -71,10 +71,35 @@ before_install:
       sed -i -e 's/#synchronous_commit.*/synchronous_commit = off/' /tmp/postgres/data/postgresql.conf
       sed -i -e 's/#full_page_writes.*/full_page_writes = off/' /tmp/postgres/data/postgresql.conf
       /tmp/postgres/usr/lib/postgresql/9.6/bin/postgres -k /tmp -D /tmp/postgres/data -p 54321 > /dev/null & export POSTGRES_PID=$!
+    # elasticsearch
+    - |
+      cd $HOME/.cache/downloads
+
+      if [ ! -f "$ELASTICSEARCH_ARCHIVE" ]; then
+        curl -SLO https://download.elasticsearch.org/elasticsearch/elasticsearch/$ELASTICSEARCH_ARCHIVE
+      fi
+
+      if [ ! -f "$ELASTICSEARCH_ARCHIVE.sha1.txt" ]; then
+        curl -SLO https://download.elasticsearch.org/elasticsearch/elasticsearch/$ELASTICSEARCH_ARCHIVE.sha1.txt
+      fi
+
+      sha1sum --check $ELASTICSEARCH_ARCHIVE.sha1.txt
+
+      mkdir -p /tmp/elasticsearch
+      tar xzf $ELASTICSEARCH_ARCHIVE -C /tmp/elasticsearch --strip-components=1
+    - /tmp/elasticsearch/bin/elasticsearch > /dev/null & export ELASTICSEARCH_PID=$!
+    # Wait for elasticsearch to come online
+    - |-
+      while true; do
+          sleep 5
+          curl -sf http://localhost:9200/_cluster/health?wait_for_status=yellow
+          if [ $? -eq 0 ]; then
+              break
+          fi
+      done
 
     # elasticsearch6
     - |
-      cd $HOME/.cache/downloads
 
       if [ ! -f "$ELASTICSEARCH_ARCHIVE6" ]; then
         curl -SLO https://artifacts.elastic.co/downloads/elasticsearch/$ELASTICSEARCH_ARCHIVE6
@@ -93,7 +118,7 @@ before_install:
     - |-
       while true; do
           sleep 5
-          curl -sf http://localhost:9200/_cluster/health?wait_for_status=yellow
+          curl -sf http://localhost:9201/_cluster/health?wait_for_status=yellow
           if [ $? -eq 0 ]; then
               break
           fi
@@ -154,6 +179,7 @@ before_cache:
   - rm -f $HOME/.cache/wheelhouse/feedparser-*.whl
   # kill any running processes
   - kill -9 $POSTGRES_PID
+  - kill -9 $ELASTICSEARCH_PID
   - kill -9 $ELASTICSEARCH6_PID
 
 branches:
