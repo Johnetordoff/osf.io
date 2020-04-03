@@ -224,7 +224,7 @@ class TestNodeSerializers(OsfTestCase):
 class TestViewProject(OsfTestCase):
 
     def setUp(self):
-        super(TestViewProject, self).setUp()
+        super().setUp()
         self.user = UserFactory()
         self.node = ProjectFactory(creator=self.user)
 
@@ -265,7 +265,7 @@ class TestViewProject(OsfTestCase):
 class TestViewProjectEmbeds(OsfTestCase):
 
     def setUp(self):
-        super(TestViewProjectEmbeds, self).setUp()
+        super().setUp()
         self.user = UserFactory()
         self.project = ProjectFactory(creator=self.user)
 
@@ -427,7 +427,7 @@ class TestNodeLogSerializers(OsfTestCase):
 class TestAddContributorJson(OsfTestCase):
 
     def setUp(self):
-        super(TestAddContributorJson, self).setUp()
+        super().setUp()
         self.user = UserFactory()
         self.profile = self.user.profile_url
         self.user_id = self.user._primary_key

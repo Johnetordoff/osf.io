@@ -28,7 +28,7 @@ class TestEventNotImplemented(OsfTestCase):
         pass
 
     def setUp(self):
-        super(TestEventNotImplemented, self).setUp()
+        super().setUp()
         self.user = factories.UserFactory()
         self.auth = Auth(user=self.user)
         self.node = factories.ProjectFactory(creator=self.user)
@@ -56,7 +56,7 @@ class TestListOfFiles(OsfTestCase):
     List files given a list
     """
     def setUp(self):
-        super(TestListOfFiles, self).setUp()
+        super().setUp()
         self.tree = {
             'kind': 'folder',
             'path': 'a',
@@ -94,7 +94,7 @@ class TestEventExists(OsfTestCase):
     # Add all possible called events here to ensure that the Event class can
     #  call them.
     def setUp(self):
-        super(TestEventExists, self).setUp()
+        super().setUp()
         self.user = factories.UserFactory()
         self.consolidate_auth = Auth(user=self.user)
         self.node = factories.ProjectFactory(creator=self.user)
@@ -142,7 +142,7 @@ class TestEventExists(OsfTestCase):
 
 class TestSignalEvent(OsfTestCase):
     def setUp(self):
-        super(TestSignalEvent, self).setUp()
+        super().setUp()
         self.user = factories.UserFactory()
         self.auth = Auth(user=self.user)
         self.node = factories.ProjectFactory(creator=self.user)
@@ -157,7 +157,7 @@ class TestSignalEvent(OsfTestCase):
 
 class TestFileUpdated(OsfTestCase):
     def setUp(self):
-        super(TestFileUpdated, self).setUp()
+        super().setUp()
         self.user_1 = factories.AuthUserFactory()
         self.auth = Auth(user=self.user_1)
         self.user_2 = factories.AuthUserFactory()
@@ -185,7 +185,7 @@ class TestFileUpdated(OsfTestCase):
 
 class TestFileAdded(NotificationTestCase):
     def setUp(self):
-        super(TestFileAdded, self).setUp()
+        super().setUp()
         self.user = factories.UserFactory()
         self.consolidate_auth = Auth(user=self.user)
         self.project = factories.ProjectFactory()
@@ -212,7 +212,7 @@ class TestFileAdded(NotificationTestCase):
 
 class TestFileRemoved(NotificationTestCase):
     def setUp(self):
-        super(TestFileRemoved, self).setUp()
+        super().setUp()
         self.user = factories.UserFactory()
         self.consolidate_auth = Auth(user=self.user)
         self.project = factories.ProjectFactory()
@@ -247,7 +247,7 @@ class TestFileRemoved(NotificationTestCase):
 
 class TestFolderCreated(NotificationTestCase):
     def setUp(self):
-        super(TestFolderCreated, self).setUp()
+        super().setUp()
         self.user = factories.UserFactory()
         self.consolidate_auth = Auth(user=self.user)
         self.project = factories.ProjectFactory()
@@ -275,7 +275,7 @@ class TestFolderCreated(NotificationTestCase):
 
 class TestFolderFileRenamed(OsfTestCase):
     def setUp(self):
-        super(TestFolderFileRenamed, self).setUp()
+        super().setUp()
         self.user_1 = factories.AuthUserFactory()
         self.auth = Auth(user=self.user_1)
         self.user_2 = factories.AuthUserFactory()
@@ -320,7 +320,7 @@ class TestFolderFileRenamed(OsfTestCase):
 
 class TestFileMoved(NotificationTestCase):
     def setUp(self):
-        super(TestFileMoved, self).setUp()
+        super().setUp()
         self.user_1 = factories.AuthUserFactory()
         self.auth = Auth(user=self.user_1)
         self.user_2 = factories.AuthUserFactory()
@@ -414,7 +414,7 @@ class TestFileMoved(NotificationTestCase):
 class TestFileCopied(NotificationTestCase):
     # Test the copying of files
     def setUp(self):
-        super(TestFileCopied, self).setUp()
+        super().setUp()
         self.user_1 = factories.AuthUserFactory()
         self.auth = Auth(user=self.user_1)
         self.user_2 = factories.AuthUserFactory()
@@ -494,7 +494,7 @@ class TestFileCopied(NotificationTestCase):
 
 class TestCategorizeUsers(NotificationTestCase):
     def setUp(self):
-        super(TestCategorizeUsers, self).setUp()
+        super().setUp()
         self.user_1 = factories.AuthUserFactory()
         self.auth = Auth(user=self.user_1)
         self.user_2 = factories.AuthUserFactory()
@@ -600,7 +600,7 @@ class TestCategorizeUsers(NotificationTestCase):
 
 class TestSubscriptionManipulations(OsfTestCase):
     def setUp(self):
-        super(TestSubscriptionManipulations, self).setUp()
+        super().setUp()
         self.emails_1 = {
             email_digest: ['a1234', 'b1234', 'c1234'],
             email_transactional: ['d1234', 'e1234', 'f1234'],

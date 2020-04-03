@@ -34,7 +34,7 @@ class FileEvent(Event):
     """File event base class, should not be called directly"""
 
     def __init__(self, user, node, event, payload=None):
-        super(FileEvent, self).__init__(user, node, event)
+        super().__init__(user, node, event)
         self.payload = payload
         self._url = None
 
@@ -117,7 +117,7 @@ class FolderCreated(FileEvent):
 class ComplexFileEvent(FileEvent):
     """ Parent class for move and copy files."""
     def __init__(self, user, node, event, payload=None):
-        super(ComplexFileEvent, self).__init__(user, node, event, payload=payload)
+        super().__init__(user, node, event, payload=payload)
 
         source_nid = self.payload['source']['node']['_id']
         self.source_node = AbstractNode.load(source_nid) or Preprint.load(source_nid)
@@ -228,7 +228,7 @@ class AddonFileMoved(ComplexFileEvent):
         """
         # Do this is the two nodes are the same, no one needs to know specifics of permissions
         if self.node == self.source_node:
-            super(AddonFileMoved, self).perform()
+            super().perform()
             return
         # File
         if self.payload['destination']['kind'] != u'folder':
@@ -286,7 +286,7 @@ class AddonFileCopied(ComplexFileEvent):
         """
         remove_message = self.html_message + ' You do not have permission in the new component.'
         if self.node == self.source_node:
-            super(AddonFileCopied, self).perform()
+            super().perform()
             return
         if self.payload['destination']['kind'] != u'folder':
             moved, warn, rm_users = event_utils.categorize_users(self.user, self.event_type, self.source_node,

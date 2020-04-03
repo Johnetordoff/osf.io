@@ -138,7 +138,7 @@ class DraftRegistrationDetailSerializer(DraftRegistrationSerializer, DraftRegist
         )
 
     def update(self, draft, validated_data):
-        draft = super(DraftRegistrationDetailSerializer, self).update(draft, validated_data)
+        draft = super().update(draft, validated_data)
         user = self.context['request'].user
         auth = get_user_auth(self.context['request'])
 

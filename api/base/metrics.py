@@ -112,7 +112,7 @@ class MetricsViewMixin(object):
 
     # Override get_default_queryset for convenience
     def get_default_queryset(self):
-        queryset = super(MetricsViewMixin, self).get_default_queryset()
+        queryset = super().get_default_queryset()
         return self.get_metrics_queryset(queryset)
 
 class MetricsSerializerMixin(object):
@@ -124,7 +124,7 @@ class MetricsSerializerMixin(object):
 
     # Override JSONAPISerializer
     def get_meta(self, obj):
-        meta = super(MetricsSerializerMixin, self).get_meta(obj)
+        meta = super().get_meta(obj)
         for metric in self.available_metrics:
             if hasattr(obj, metric):
                 meta = meta or {'metrics': {}}

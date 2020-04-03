@@ -406,7 +406,7 @@ class TestPreprintReindex:
 
 class TestPreprintDeleteView(AdminTestCase):
     def setUp(self):
-        super(TestPreprintDeleteView, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.preprint = PreprintFactory(creator=self.user)
         self.request = RequestFactory().post('/fake_path')
@@ -468,7 +468,7 @@ class TestPreprintDeleteView(AdminTestCase):
 
 class TestRemoveContributor(AdminTestCase):
     def setUp(self):
-        super(TestRemoveContributor, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.preprint = PreprintFactory(creator=self.user)
         self.user_2 = AuthUserFactory()
@@ -543,7 +543,7 @@ class TestRemoveContributor(AdminTestCase):
 
 class TestPreprintConfirmHamSpamViews(AdminTestCase):
     def setUp(self):
-        super(TestPreprintConfirmHamSpamViews, self).setUp()
+        super().setUp()
         self.request = RequestFactory().post('/fake_path')
         self.user = AuthUserFactory()
         self.preprint = PreprintFactory(creator=self.user)

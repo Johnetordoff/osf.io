@@ -13,7 +13,7 @@ class DropboxAddonTestCase(OAuthAddonTestCaseMixin, AddonTestCase):
     Provider = Provider
 
     def set_node_settings(self, settings):
-        super(DropboxAddonTestCase, self).set_node_settings(settings)
+        super().set_node_settings(settings)
         settings.folder = 'foo'
         settings.save()
 

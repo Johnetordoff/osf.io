@@ -93,7 +93,7 @@ class FakeListView(ListFilterMixin):
 class TestFilterMixin(ApiTestCase):
 
     def setUp(self):
-        super(TestFilterMixin, self).setUp()
+        super().setUp()
         self.view = FakeListView()
 
     def test_parse_query_params_default_operators(self):
@@ -328,7 +328,7 @@ class TestFilterMixin(ApiTestCase):
 class TestListFilterMixin(ApiTestCase):
 
     def setUp(self):
-        super(TestListFilterMixin, self).setUp()
+        super().setUp()
         self.view = FakeListView()
 
     def test_get_filtered_queryset_for_list_field_converts_to_lowercase(self):
@@ -509,7 +509,7 @@ class TestOSFOrderingFilter(ApiTestCase):
 class TestQueryPatternRegex(TestCase):
 
     def setUp(self):
-        super(TestQueryPatternRegex, self).setUp()
+        super().setUp()
         self.filter_regex = FakeListView.QUERY_PATTERN
         self.filter_fields = FakeListView.FILTER_FIELDS
 

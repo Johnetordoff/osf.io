@@ -94,7 +94,7 @@ class CheckoutCheckupView(PermissionRequiredMixin, DeleteView):
     def get_context_data(self, **kwargs):
         context = {}
         context.setdefault('bad_drafts_count', str(self.get_object().count()))
-        return super(CheckoutCheckupView, self).get_context_data(**context)
+        return super().get_context_data(**context)
 
     def get_object(self, queryset=None):
         self.prereg_admins = OSFUser.objects.filter(groups__name='prereg_view')
@@ -165,7 +165,7 @@ class DraftFormView(PermissionRequiredMixin, FormView):
                 self.context_object_name.title(),
                 self.kwargs.get('draft_pk')
             ))
-        return super(DraftFormView, self).dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)
 
     def get_initial(self):
         flags = self.draft.flags
@@ -175,7 +175,7 @@ class DraftFormView(PermissionRequiredMixin, FormView):
             'payment_sent': flags.get('payment_sent'),
             'proof_of_publication': flags.get('proof_of_publication'),
         }
-        return super(DraftFormView, self).get_initial()
+        return super().get_initial()
 
     def get_context_data(self, **kwargs):
         kwargs.setdefault('draft', serializers.serialize_draft_registration(
@@ -183,7 +183,7 @@ class DraftFormView(PermissionRequiredMixin, FormView):
             json_safe=False
         ))
         kwargs.setdefault('IMMEDIATE', serializers.IMMEDIATE)
-        return super(DraftFormView, self).get_context_data(**kwargs)
+        return super().get_context_data(**kwargs)
 
     def form_valid(self, form):
         if 'approve_reject' in form.changed_data:
@@ -208,7 +208,7 @@ class DraftFormView(PermissionRequiredMixin, FormView):
         del admin_settings['notes']
         self.draft.flags = admin_settings
         self.draft.save()
-        return super(DraftFormView, self).form_valid(form)
+        return super().form_valid(form)
 
     def checkin_files(self, draft):
         for item in get_metadata_files(draft):

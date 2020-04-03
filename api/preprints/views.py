@@ -193,7 +193,7 @@ class PreprintDetail(MetricsViewMixin, JSONAPIBaseView, generics.RetrieveUpdateA
         """
         Tells parser that type is required in request
         """
-        res = super(PreprintDetail, self).get_parser_context(http_request)
+        res = super().get_parser_context(http_request)
         res['legacy_type_allowed'] = True
         return res
 
@@ -559,7 +559,7 @@ class PreprintFilesList(NodeFilesList, PreprintMixin):
     def get_queryset(self):
         self.kwargs[self.path_lookup_url_kwarg] = '/'
         self.kwargs[self.provider_lookup_url_kwarg] = 'osfstorage'
-        return super(PreprintFilesList, self).get_queryset()
+        return super().get_queryset()
 
     def get_resource(self, check_object_permissions):
         return self.get_preprint(check_object_permissions=check_object_permissions)

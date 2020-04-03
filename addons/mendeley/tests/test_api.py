@@ -16,7 +16,7 @@ pytestmark = pytest.mark.django_db
 class MendeleyApiTestCase(OsfTestCase):
 
     def setUp(self):
-        super(MendeleyApiTestCase, self).setUp()
+        super().setUp()
         self.provider = models.Mendeley()
         self.mock_partial = mendeley.Mendeley(
             client_id='1234567890',

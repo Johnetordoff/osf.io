@@ -55,7 +55,7 @@ class SetEnvironMiddleware(object):
 class TestAddonAuth(OsfTestCase):
 
     def setUp(self):
-        super(TestAddonAuth, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.auth_obj = Auth(user=self.user)
         self.node = ProjectFactory(creator=self.user)
@@ -230,7 +230,7 @@ class TestAddonAuth(OsfTestCase):
 class TestAddonLogs(OsfTestCase):
 
     def setUp(self):
-        super(TestAddonLogs, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.user_non_contrib = AuthUserFactory()
         self.auth_obj = Auth(user=self.user)
@@ -457,7 +457,7 @@ class TestAddonLogs(OsfTestCase):
 class TestCheckAuth(OsfTestCase):
 
     def setUp(self):
-        super(TestCheckAuth, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.node = ProjectFactory(creator=self.user)
 
@@ -525,7 +525,7 @@ class TestCheckAuth(OsfTestCase):
 class TestCheckPreregAuth(OsfTestCase):
 
     def setUp(self):
-        super(TestCheckPreregAuth, self).setUp()
+        super().setUp()
 
         self.prereg_challenge_admin_user = AuthUserFactory()
         administer_permission = Permission.objects.get(codename='administer_prereg')
@@ -580,7 +580,7 @@ class TestCheckPreregAuth(OsfTestCase):
 class TestCheckOAuth(OsfTestCase):
 
     def setUp(self):
-        super(TestCheckOAuth, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.node = ProjectFactory(creator=self.user)
 
@@ -690,7 +690,7 @@ def mock_touch(self, bearer, version=None, revision=None, **kwargs):
 class TestAddonFileViews(OsfTestCase):
 
     def setUp(self):
-        super(TestAddonFileViews, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.project = ProjectFactory(creator=self.user)
 
@@ -1169,7 +1169,7 @@ class TestAddonFileViews(OsfTestCase):
 class TestLegacyViews(OsfTestCase):
 
     def setUp(self):
-        super(TestLegacyViews, self).setUp()
+        super().setUp()
         self.path = 'mercury.png'
         self.user = AuthUserFactory()
         self.project = ProjectFactory(creator=self.user)
@@ -1310,7 +1310,7 @@ class TestLegacyViews(OsfTestCase):
 class TestViewUtils(OsfTestCase):
 
     def setUp(self):
-        super(TestViewUtils, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.auth_obj = Auth(user=self.user)
         self.node = ProjectFactory(creator=self.user)

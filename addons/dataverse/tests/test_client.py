@@ -25,7 +25,7 @@ pytestmark = pytest.mark.django_db
 class TestClient(DataverseAddonTestCase, unittest.TestCase):
 
     def setUp(self):
-        super(TestClient, self).setUp()
+        super().setUp()
 
         self.host = 'some.host.url'
         self.token = 'some-fancy-api-token-which-is-long'

@@ -35,7 +35,7 @@ class TestGitLabAuthViews(GitLabAddonTestCase, OAuthAddonAuthViewsTestCaseMixin,
         mock.PropertyMock()
     )
     def test_delete_external_account(self):
-        super(TestGitLabAuthViews, self).test_delete_external_account()
+        super().test_delete_external_account()
 
     def test_oauth_start(self):
         pass
@@ -52,14 +52,14 @@ class TestGitLabConfigViews(GitLabAddonTestCase, OAuthAddonConfigViewsTestCaseMi
     ## Overrides ##
 
     def setUp(self):
-        super(TestGitLabConfigViews, self).setUp()
+        super().setUp()
         self.mock_api_user = mock.patch('addons.gitlab.api.GitLabClient.user')
         self.mock_api_user.return_value = mock.Mock()
         self.mock_api_user.start()
 
     def tearDown(self):
         self.mock_api_user.stop()
-        super(TestGitLabConfigViews, self).tearDown()
+        super().tearDown()
 
     def test_folder_list(self):
         # GH only lists root folder (repos), this test is superfluous
@@ -90,7 +90,7 @@ class TestGitLabConfigViews(GitLabAddonTestCase, OAuthAddonConfigViewsTestCaseMi
 class TestCRUD(OsfTestCase):
 
     def setUp(self):
-        super(TestCRUD, self).setUp()
+        super().setUp()
         self.gitlab = create_mock_gitlab(user='fred', private=False)
         self.user = AuthUserFactory()
         self.consolidated_auth = Auth(user=self.user)
@@ -108,7 +108,7 @@ class TestCRUD(OsfTestCase):
 class TestGitLabViews(OsfTestCase):
 
     def setUp(self):
-        super(TestGitLabViews, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.consolidated_auth = Auth(user=self.user)
 
@@ -428,7 +428,7 @@ class TestRegistrationsWithGitLab(OsfTestCase):
 
     def setUp(self):
 
-        super(TestRegistrationsWithGitLab, self).setUp()
+        super().setUp()
         self.project = ProjectFactory.build()
         self.project.save()
         self.consolidated_auth = Auth(user=self.project.creator)
@@ -447,7 +447,7 @@ class TestGitLabSettings(OsfTestCase):
 
     def setUp(self):
 
-        super(TestGitLabSettings, self).setUp()
+        super().setUp()
         self.gitlab = create_mock_gitlab(user='fred', private=False)
         self.project = ProjectFactory()
         self.auth = self.project.creator.auth

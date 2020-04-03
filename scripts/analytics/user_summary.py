@@ -72,7 +72,7 @@ class UserSummary(SummaryAnalytics):
         return last_one / last_thirty
 
     def get_events(self, date):
-        super(UserSummary, self).get_events(date)
+        super().get_events(date)
 
         # Convert to a datetime at midnight for queries and the timestamp
         timestamp_datetime = datetime(date.year, date.month, date.day).replace(tzinfo=pytz.UTC)

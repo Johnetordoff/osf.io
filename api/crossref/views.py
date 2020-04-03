@@ -24,7 +24,7 @@ class ParseCrossRefConfirmation(APIView):
 
     @csrf_exempt
     def dispatch(self, request, *args, **kwargs):
-        return super(ParseCrossRefConfirmation, self).dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)
 
     def get_serializer_class(self):
         return None

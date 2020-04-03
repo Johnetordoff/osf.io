@@ -31,7 +31,7 @@ class _CachedProperty(property):
         if callable(fdel):
             fdel = self._wrap_fdel(fdel)
         # Create the property.
-        super(_CachedProperty, self).__init__(fget, fset, fdel, doc)
+        super().__init__(fget, fset, fdel, doc)
 
     def _wrap_fget(self, fget):
         @wraps(fget)

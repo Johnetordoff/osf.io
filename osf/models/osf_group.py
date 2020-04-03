@@ -460,7 +460,7 @@ class OSFGroup(GuardianMixin, Loggable, base.ObjectIDMixin, base.BaseModel):
 
     def save(self, *args, **kwargs):
         first_save = not bool(self.pk)
-        ret = super(OSFGroup, self).save(*args, **kwargs)
+        ret = super().save(*args, **kwargs)
         if first_save:
             self.update_group_permissions()
             self.make_manager(self.creator)

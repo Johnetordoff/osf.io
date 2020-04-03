@@ -22,7 +22,7 @@ class PreprintSummary(SummaryAnalytics):
         return 'preprint_summary'
 
     def get_events(self, date):
-        super(PreprintSummary, self).get_events(date)
+        super().get_events(date)
         from osf.models import PreprintProvider
 
         # Convert to a datetime at midnight for queries and the timestamp

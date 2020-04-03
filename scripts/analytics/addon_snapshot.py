@@ -72,7 +72,7 @@ class AddonSnapshot(SnapshotAnalytics):
         return 'addon_snapshot'
 
     def get_events(self, date=None):
-        super(AddonSnapshot, self).get_events(date)
+        super().get_events(date)
 
         counts = []
         addons_available = {k: v for k, v in [(addon.short_name, addon) for addon in ADDONS_AVAILABLE]}

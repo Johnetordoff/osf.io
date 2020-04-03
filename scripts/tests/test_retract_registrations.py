@@ -14,7 +14,7 @@ from scripts.retract_registrations import main
 class TestRetractRegistrations(OsfTestCase):
 
     def setUp(self):
-        super(TestRetractRegistrations, self).setUp()
+        super().setUp()
         self.user = UserFactory()
         self.registration = RegistrationFactory(creator=self.user)
         self.registration.is_public = True

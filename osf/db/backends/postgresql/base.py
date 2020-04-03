@@ -52,11 +52,11 @@ class DatabaseWrapper(PostgresqlDatabaseWrapper):
         self.server_side_cursors = False
         self.server_side_cursor_itersize = None
 
-        super(DatabaseWrapper, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def create_cursor(self, name=None):
         if not self.server_side_cursors:
-            return super(DatabaseWrapper, self).create_cursor(name=name)
+            return super().create_cursor(name=name)
 
         cursor = self.connection.cursor(
             name='osf.db.backends.postgresql_cursors:{}'.format(

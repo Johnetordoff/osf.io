@@ -22,7 +22,7 @@ class TestAuthBasicAuthentication(OsfTestCase):
     TOTP_SECRET = 'b8f85986068f8079aa9d'
 
     def setUp(self):
-        super(TestAuthBasicAuthentication, self).setUp()
+        super().setUp()
         self.user1 = AuthUserFactory()
         self.user2 = AuthUserFactory()
 

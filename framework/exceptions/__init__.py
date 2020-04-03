@@ -50,7 +50,7 @@ class HTTPError(FrameworkError):
 
     def __init__(self, code, message=None, redirect_url=None, data=None):
 
-        super(HTTPError, self).__init__(message)
+        super().__init__(message)
 
         self.code = code
         self.redirect_url = redirect_url
@@ -110,4 +110,4 @@ class TemplateHTTPError(HTTPError):
 
     def __init__(self, code, message=None, redirect_url=None, data=None, template=None):
         self.template = template
-        super(TemplateHTTPError, self).__init__(code, message, redirect_url, data)
+        super().__init__(code, message, redirect_url, data)

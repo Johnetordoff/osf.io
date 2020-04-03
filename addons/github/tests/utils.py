@@ -15,7 +15,7 @@ class GitHubAddonTestCase(OAuthAddonTestCaseMixin, AddonTestCase):
     Provider = GitHubProvider
 
     def set_node_settings(self, settings):
-        super(GitHubAddonTestCase, self).set_node_settings(settings)
+        super().set_node_settings(settings)
         settings.repo = 'abc'
         settings.user = 'octo-cat'
         settings.save()

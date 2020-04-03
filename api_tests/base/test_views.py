@@ -48,7 +48,7 @@ for mod in URLS_MODULES:
 
 class TestApiBaseViews(ApiTestCase):
     def setUp(self):
-        super(TestApiBaseViews, self).setUp()
+        super().setUp()
         self.EXCLUDED_VIEWS = [ClaimUser, MoveFileMetadataView, CopyFileMetadataView, ParseCrossRefConfirmation]
 
     def test_root_returns_200(self):
@@ -173,7 +173,7 @@ class TestStatusView(ApiTestCase):
 class TestJSONAPIBaseView(ApiTestCase):
 
     def setUp(self):
-        super(TestJSONAPIBaseView, self).setUp()
+        super().setUp()
 
         self.user = factories.AuthUserFactory()
         self.node = factories.ProjectFactory(creator=self.user)

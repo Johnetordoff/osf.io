@@ -468,25 +468,25 @@ class Registration(AbstractNode):
 
     def add_tag(self, tag, auth=None, save=True, log=True, system=False):
         if self.retraction is None:
-            super(Registration, self).add_tag(tag, auth, save, log, system)
+            super().add_tag(tag, auth, save, log, system)
         else:
             raise NodeStateError('Cannot add tags to withdrawn registrations.')
 
     def add_tags(self, tags, auth=None, save=True, log=True, system=False):
         if self.retraction is None:
-            super(Registration, self).add_tags(tags, auth, save, log, system)
+            super().add_tags(tags, auth, save, log, system)
         else:
             raise NodeStateError('Cannot add tags to withdrawn registrations.')
 
     def remove_tag(self, tag, auth, save=True):
         if self.retraction is None:
-            super(Registration, self).remove_tag(tag, auth, save)
+            super().remove_tag(tag, auth, save)
         else:
             raise NodeStateError('Cannot remove tags of withdrawn registrations.')
 
     def remove_tags(self, tags, auth, save=True):
         if self.retraction is None:
-            super(Registration, self).remove_tags(tags, auth, save)
+            super().remove_tags(tags, auth, save)
         else:
             raise NodeStateError('Cannot remove tags of withdrawn registrations.')
 
@@ -1057,7 +1057,7 @@ class DraftRegistration(ObjectIDMixin, RegistrationResponseMixin, DirtyFieldsMix
     def save(self, *args, **kwargs):
         if 'old_subjects' in kwargs.keys():
             kwargs.pop('old_subjects')
-        return super(DraftRegistration, self).save(*args, **kwargs)
+        return super().save(*args, **kwargs)
 
     def update(self, fields, auth=None, save=True):
         """Update the draft registration with the given fields.

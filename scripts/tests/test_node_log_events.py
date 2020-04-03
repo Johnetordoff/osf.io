@@ -11,7 +11,7 @@ from scripts.analytics.node_log_events import NodeLogEvents
 class TestNodeLogAnalytics(OsfTestCase):
 
     def setUp(self):
-        super(TestNodeLogAnalytics, self).setUp()
+        super().setUp()
 
         self.user_one = UserFactory()
         self.user_two = UserFactory()

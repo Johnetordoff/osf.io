@@ -174,7 +174,7 @@ class WikiVersion(ObjectIDMixin, BaseModel):
         return self.content
 
     def save(self, *args, **kwargs):
-        rv = super(WikiVersion, self).save(*args, **kwargs)
+        rv = super().save(*args, **kwargs)
         if self.wiki_page.node:
             self.wiki_page.node.update_search()
         self.wiki_page.modified = self.created
@@ -286,7 +286,7 @@ class WikiPage(GuidMixin, BaseModel):
         ]
 
     def save(self, *args, **kwargs):
-        rv = super(WikiPage, self).save(*args, **kwargs)
+        rv = super().save(*args, **kwargs)
         if self.node and self.node.is_public:
             self.node.update_search()
         return rv
@@ -535,7 +535,7 @@ class NodeSettings(BaseNodeSettings):
     def after_fork(self, node, fork, user, save=True):
         """Copy wiki settings and wiki pages to forks."""
         WikiPage.clone_wiki_pages(node, fork, user, save)
-        return super(NodeSettings, self).after_fork(node, fork, user, save)
+        return super().after_fork(node, fork, user, save)
 
     def after_register(self, node, registration, user, save=True):
         """Copy wiki settings and wiki pages to registrations."""

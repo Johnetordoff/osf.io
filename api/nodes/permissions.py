@@ -127,7 +127,7 @@ class IsAdminContributorOrReviewer(IsAdminContributor):
         auth = get_user_auth(request)
         if request.method != 'DELETE' and is_prereg_admin(auth.user):
             return True
-        return super(IsAdminContributorOrReviewer, self).has_object_permission(request, view, obj)
+        return super().has_object_permission(request, view, obj)
 
 
 class AdminOrPublic(permissions.BasePermission):
@@ -329,7 +329,7 @@ class ReadOnlyIfRegistration(permissions.BasePermission):
 class ShowIfVersion(permissions.BasePermission):
 
     def __init__(self, min_version, max_version, deprecated_message):
-        super(ShowIfVersion, self).__init__()
+        super().__init__()
         self.min_version = min_version
         self.max_version = max_version
         self.deprecated_message = deprecated_message
@@ -346,4 +346,4 @@ class NodeLinksShowIfVersion(ShowIfVersion):
         min_version = '2.0'
         max_version = '2.0'
         deprecated_message = 'This feature is deprecated as of version 2.1'
-        super(NodeLinksShowIfVersion, self).__init__(min_version, max_version, deprecated_message)
+        super().__init__(min_version, max_version, deprecated_message)

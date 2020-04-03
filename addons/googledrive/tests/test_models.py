@@ -20,7 +20,7 @@ pytestmark = pytest.mark.django_db
 
 class TestGoogleDriveProvider(unittest.TestCase):
     def setUp(self):
-        super(TestGoogleDriveProvider, self).setUp()
+        super().setUp()
         self.provider = GoogleDriveProvider()
 
     @mock.patch.object(GoogleAuthClient, 'userinfo')
@@ -57,11 +57,11 @@ class TestNodeSettings(OAuthAddonNodeSettingsTestSuiteMixin, unittest.TestCase):
         )
         self.mock_refresh.return_value = True
         self.mock_refresh.start()
-        super(TestNodeSettings, self).setUp()
+        super().setUp()
 
     def tearDown(self):
         self.mock_refresh.stop()
-        super(TestNodeSettings, self).tearDown()
+        super().tearDown()
 
     @mock.patch('addons.googledrive.models.GoogleDriveProvider')
     def test_api_not_cached(self, mock_gdp):

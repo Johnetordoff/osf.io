@@ -8,7 +8,7 @@ class TagManager(models.Manager):
     """
 
     def get_queryset(self):
-        return super(TagManager, self).get_queryset().filter(system=False)
+        return super().get_queryset().filter(system=False)
 
 class Tag(BaseModel):
     name = models.CharField(db_index=True, max_length=1024)

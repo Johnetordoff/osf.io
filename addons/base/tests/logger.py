@@ -18,7 +18,7 @@ class AddonNodeLoggerTestSuiteMixinBase(object):
         pass
 
     def setUp(self):
-        super(AddonNodeLoggerTestSuiteMixinBase, self).setUp()
+        super().setUp()
         self.auth = Auth(AuthUserFactory())
         self.node = ProjectFactory(creator=self.auth.user)
         self.path = None
@@ -29,7 +29,7 @@ class AddonNodeLoggerTestSuiteMixinBase(object):
 class StorageAddonNodeLoggerTestSuiteMixin(AddonNodeLoggerTestSuiteMixinBase):
 
     def setUp(self):
-        super(StorageAddonNodeLoggerTestSuiteMixin, self).setUp()
+        super().setUp()
 
     def test_log_file_added(self):
         self.logger.log('file_added', save=True)

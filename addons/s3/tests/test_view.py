@@ -31,13 +31,13 @@ class TestS3Views(S3AddonTestCase, OAuthAddonConfigViewsTestCaseMixin, OsfTestCa
         self.mock_exists = mock.patch('addons.s3.views.utils.bucket_exists')
         self.mock_exists.return_value = True
         self.mock_exists.start()
-        super(TestS3Views, self).setUp()
+        super().setUp()
 
     def tearDown(self):
         self.mock_can_list.stop()
         self.mock_uid.stop()
         self.mock_exists.stop()
-        super(TestS3Views, self).tearDown()
+        super().tearDown()
 
     def test_s3_settings_input_empty_keys(self):
         url = self.project.api_url_for('s3_add_user_account')
@@ -148,7 +148,7 @@ class TestS3Views(S3AddonTestCase, OAuthAddonConfigViewsTestCaseMixin, OsfTestCa
     @mock.patch('addons.s3.models.get_bucket_names')
     def test_folder_list(self, mock_names):
         mock_names.return_value = ['bucket1', 'bucket2']
-        super(TestS3Views, self).test_folder_list()
+        super().test_folder_list()
 
     @mock.patch('addons.s3.models.bucket_exists')
     @mock.patch('addons.s3.models.get_bucket_location_or_error')
@@ -174,7 +174,7 @@ class TestCreateBucket(S3AddonTestCase, OsfTestCase):
 
     def setUp(self):
 
-        super(TestCreateBucket, self).setUp()
+        super().setUp()
 
         self.user = AuthUserFactory()
         self.consolidated_auth = Auth(user=self.user)

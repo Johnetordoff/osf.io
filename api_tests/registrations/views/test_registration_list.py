@@ -37,7 +37,7 @@ SCHEMA_VERSION = 2
 class TestRegistrationList(ApiTestCase):
 
     def setUp(self):
-        super(TestRegistrationList, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
 
         self.project = ProjectFactory(is_public=False, creator=self.user)
@@ -120,7 +120,7 @@ class TestRegistrationList(ApiTestCase):
 class TestSparseRegistrationList(ApiTestCase):
 
     def setUp(self):
-        super(TestSparseRegistrationList, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
 
         self.project = ProjectFactory(is_public=False, creator=self.user)
@@ -186,7 +186,7 @@ class TestSparseRegistrationList(ApiTestCase):
 class TestRegistrationFiltering(ApiTestCase):
 
     def setUp(self):
-        super(TestRegistrationFiltering, self).setUp()
+        super().setUp()
         self.user_one = AuthUserFactory()
         self.user_two = AuthUserFactory()
         self.project_one = ProjectFactory(

@@ -158,7 +158,7 @@ class TestNodeSerializerAndRegistrationSerializerDifferences(ApiTestCase):
     """
 
     def setUp(self):
-        super(TestNodeSerializerAndRegistrationSerializerDifferences, self).setUp()
+        super().setUp()
 
         self.node = factories.ProjectFactory(is_public=True)
         self.registration = factories.RegistrationFactory(
@@ -241,7 +241,7 @@ class TestNullLinks(ApiTestCase):
 class TestApiBaseSerializers(ApiTestCase):
 
     def setUp(self):
-        super(TestApiBaseSerializers, self).setUp()
+        super().setUp()
         self.user = factories.AuthUserFactory()
         self.auth = factories.Auth(self.user)
         self.node = factories.ProjectFactory(is_public=True)
@@ -577,7 +577,7 @@ class TestRelationshipField:
 class TestShowIfVersion(ApiTestCase):
 
     def setUp(self):
-        super(TestShowIfVersion, self).setUp()
+        super().setUp()
         self.node = factories.NodeFactory()
         self.registration = factories.RegistrationFactory()
 
@@ -629,7 +629,7 @@ class TestShowIfVersion(ApiTestCase):
 class VersionedDateTimeField(DbTestCase):
 
     def setUp(self):
-        super(VersionedDateTimeField, self).setUp()
+        super().setUp()
         self.node = factories.NodeFactory()
         self.old_date = datetime.utcnow()   # naive dates before django-osf
         self.old_date_without_microseconds = self.old_date.replace(

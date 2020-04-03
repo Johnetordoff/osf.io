@@ -45,7 +45,7 @@ SPECIAL_CHARACTERS_ALLOWED = u'`~!@#$%^*()-=_+ []{}\|?.df,;:''"'
 class TestWikiViews(OsfTestCase):
 
     def setUp(self):
-        super(TestWikiViews, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.project = ProjectFactory(is_public=True, creator=self.user)
         self.consolidate_auth = Auth(user=self.project.creator)
@@ -457,7 +457,7 @@ class TestWikiViews(OsfTestCase):
 class TestViewHelpers(OsfTestCase):
 
     def setUp(self):
-        super(TestViewHelpers, self).setUp()
+        super().setUp()
         self.project = ProjectFactory()
         self.wname = 'New page'
         wiki = WikiPage.objects.create_for_node(self.project, self.wname, 'some content', Auth(self.project.creator))
@@ -481,7 +481,7 @@ class TestViewHelpers(OsfTestCase):
 class TestWikiDelete(OsfTestCase):
 
     def setUp(self):
-        super(TestWikiDelete, self).setUp()
+        super().setUp()
 
         creator = AuthUserFactory()
         self.user = creator
@@ -559,7 +559,7 @@ class TestWikiDelete(OsfTestCase):
 class TestWikiRename(OsfTestCase):
 
     def setUp(self):
-        super(TestWikiRename, self).setUp()
+        super().setUp()
 
         creator = AuthUserFactory()
 
@@ -744,7 +744,7 @@ class TestWikiLinks(OsfTestCase):
 class TestWikiUuid(OsfTestCase):
 
     def setUp(self):
-        super(TestWikiUuid, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.project = ProjectFactory(is_public=True, creator=self.user)
         self.wname = 'foo.bar'
@@ -938,7 +938,7 @@ class TestWikiShareJSMongo(OsfTestCase):
         settings.SHAREJS_DB_NAME = 'sharejs_test'
 
     def setUp(self):
-        super(TestWikiShareJSMongo, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.project = ProjectFactory(is_public=True, creator=self.user)
         self.wname = 'foo.bar'
@@ -1063,7 +1063,7 @@ class TestWikiShareJSMongo(OsfTestCase):
         assert_equals(current_content, new_content)
 
     def tearDown(self):
-        super(TestWikiShareJSMongo, self).tearDown()
+        super().tearDown()
         self.db.drop_collection('docs')
         self.db.drop_collection('docs_ops')
 
@@ -1076,7 +1076,7 @@ class TestWikiShareJSMongo(OsfTestCase):
 class TestWikiUtils(OsfTestCase):
 
     def setUp(self):
-        super(TestWikiUtils, self).setUp()
+        super().setUp()
         self.project = ProjectFactory()
 
     def test_get_sharejs_uuid(self):
@@ -1144,7 +1144,7 @@ class TestWikiUtils(OsfTestCase):
 class TestPublicWiki(OsfTestCase):
 
     def setUp(self):
-        super(TestPublicWiki, self).setUp()
+        super().setUp()
         self.project = ProjectFactory()
         self.consolidate_auth = Auth(user=self.project.creator)
         self.user = AuthUserFactory()
@@ -1287,7 +1287,7 @@ class TestPublicWiki(OsfTestCase):
 class TestWikiMenu(OsfTestCase):
 
     def setUp(self):
-        super(TestWikiMenu, self).setUp()
+        super().setUp()
         self.user = UserFactory()
         self.project = ProjectFactory(creator=self.user, is_public=True)
         self.component = NodeFactory(creator=self.user, parent=self.project, is_public=True)

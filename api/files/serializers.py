@@ -53,7 +53,7 @@ class CheckoutField(ser.HyperlinkedRelatedField):
         self.link_type = 'related'
         self.always_embed = kwargs.pop('always_embed', False)
 
-        super(CheckoutField, self).__init__('users:user-detail', **kwargs)
+        super().__init__('users:user-detail', **kwargs)
 
     def resolve(self, resource, field_name, request):
         """
@@ -120,7 +120,7 @@ class CheckoutField(ser.HyperlinkedRelatedField):
 
     def to_representation(self, value):
 
-        url = super(CheckoutField, self).to_representation(value)
+        url = super().to_representation(value)
 
         rel_meta = None
         if value and hasattr(value, '_id'):
@@ -144,7 +144,7 @@ class FileNodeRelationshipField(RelationshipField):
     def to_representation(self, value):
         if not isinstance(value.target, AbstractNode):
             raise SkipField
-        return super(FileNodeRelationshipField, self).to_representation(value)
+        return super().to_representation(value)
 
 
 class BaseFileSerializer(JSONAPISerializer):
@@ -338,7 +338,7 @@ class BaseFileSerializer(JSONAPISerializer):
         return instance
 
     def is_valid(self, **kwargs):
-        return super(BaseFileSerializer, self).is_valid(clean_html=False, **kwargs)
+        return super().is_valid(clean_html=False, **kwargs)
 
     def get_file_guid(self, obj):
         if obj:
@@ -383,7 +383,7 @@ class OsfStorageFileSerializer(FileSerializer):
     ])
 
     def create(self, validated_data):
-        return super(OsfStorageFileSerializer, self).create(validated_data)
+        return super().create(validated_data)
 
 
 class FileDetailSerializer(FileSerializer):

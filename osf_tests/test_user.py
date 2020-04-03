@@ -1589,7 +1589,7 @@ class TestMergingUsers:
 
 class TestDisablingUsers(OsfTestCase):
     def setUp(self):
-        super(TestDisablingUsers, self).setUp()
+        super().setUp()
         self.user = UserFactory()
 
     def test_user_enabled_by_default(self):
@@ -1655,7 +1655,7 @@ class TestDisablingUsers(OsfTestCase):
 @pytest.mark.enable_bookmark_creation
 class TestUser(OsfTestCase):
     def setUp(self):
-        super(TestUser, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
 
     # Regression test for https://github.com/CenterForOpenScience/osf.io/issues/2454
@@ -1849,7 +1849,7 @@ class TestUser(OsfTestCase):
 @pytest.mark.enable_quickfiles_creation
 class TestUserMerging(OsfTestCase):
     def setUp(self):
-        super(TestUserMerging, self).setUp()
+        super().setUp()
         self.user = UserFactory()
         with self.context:
             handlers.celery_before_request()
@@ -2119,7 +2119,7 @@ class TestUserMerging(OsfTestCase):
 class TestUserValidation(OsfTestCase):
 
     def setUp(self):
-        super(TestUserValidation, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
 
     def test_validate_fullname_none(self):

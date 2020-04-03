@@ -47,4 +47,4 @@ class DraftRegistrationForm(forms.Form):
         prereg_reviewers = ((None, 'None'), )
         self.base_fields['assignee'] = forms.ChoiceField(
             choices=prereg_reviewers, required=False)
-        super(DraftRegistrationForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)

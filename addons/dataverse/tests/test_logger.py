@@ -16,10 +16,10 @@ class TestDataverseNodeLogger(StorageAddonNodeLoggerTestSuiteMixin, OsfTestCase)
     NodeLogger = DataverseNodeLogger
 
     def setUp(self):
-        super(TestDataverseNodeLogger, self).setUp()
+        super().setUp()
         node_settings = self.node.get_addon(self.addon_short_name)
         node_settings.dataset = 'fake dataset'
         node_settings.save()
 
     def tearDown(self):
-        super(TestDataverseNodeLogger, self).tearDown()
+        super().tearDown()

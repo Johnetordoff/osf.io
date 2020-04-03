@@ -31,7 +31,7 @@ class OSFGroupsFormView(PermissionRequiredMixin, FormView):
 
     def __init__(self):
         self.redirect_url = None
-        super(OSFGroupsFormView, self).__init__()
+        super().__init__()
 
     def form_valid(self, form):
         id = form.data.get('id').strip()
@@ -43,7 +43,7 @@ class OSFGroupsFormView(PermissionRequiredMixin, FormView):
         elif name:
             self.redirect_url = reverse('osf_groups:osf_groups_list',) + '?name={}'.format(name)
 
-        return super(OSFGroupsFormView, self).form_valid(form)
+        return super().form_valid(form)
 
     @property
     def success_url(self):

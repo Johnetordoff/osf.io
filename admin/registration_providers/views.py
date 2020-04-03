@@ -30,13 +30,13 @@ class CreateRegistrationProvider(PermissionRequiredMixin, CreateView):
         self.object = form.save(commit=False)
         self.object._creator = self.request.user
         self.object.save()
-        return super(CreateRegistrationProvider, self).form_valid(form)
+        return super().form_valid(form)
 
     def get_context_data(self, *args, **kwargs):
         kwargs['import_form'] = ImportFileForm()
         kwargs['show_taxonomies'] = True
         kwargs['tinymce_apikey'] = settings.TINYMCE_APIKEY
-        return super(CreateRegistrationProvider, self).get_context_data(*args, **kwargs)
+        return super().get_context_data(*args, **kwargs)
 
 
 class RegistrationProviderList(PermissionRequiredMixin, ListView):
@@ -152,7 +152,7 @@ class RegistrationProviderChangeForm(PermissionRequiredMixin, UpdateView):
     form_class = RegistrationProviderForm
 
     def form_invalid(self, form):
-        super(RegistrationProviderChangeForm, self).form_invalid(form)
+        super().form_invalid(form)
         err_message = ''
         for item in form.errors.values():
             err_message = err_message + item + '\n'
@@ -160,7 +160,7 @@ class RegistrationProviderChangeForm(PermissionRequiredMixin, UpdateView):
 
     def get_context_data(self, *args, **kwargs):
         kwargs['import_form'] = ImportFileForm()
-        return super(RegistrationProviderChangeForm, self).get_context_data(*args, **kwargs)
+        return super().get_context_data(*args, **kwargs)
 
     def get_object(self, queryset=None):
         provider_id = self.kwargs.get('registration_provider_id')
@@ -181,13 +181,13 @@ class DeleteRegistrationProvider(PermissionRequiredMixin, DeleteView):
         provider = RegistrationProvider.objects.get(id=self.kwargs['registration_provider_id'])
         if provider.registrations.count() > 0:
             return redirect('registration_providers:cannot_delete', registration_provider_id=provider.pk)
-        return super(DeleteRegistrationProvider, self).delete(request, *args, **kwargs)
+        return super().delete(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         provider = RegistrationProvider.objects.get(id=self.kwargs['registration_provider_id'])
         if provider.registrations.count() > 0:
             return redirect('registration_providers:cannot_delete', registration_provider_id=provider.pk)
-        return super(DeleteRegistrationProvider, self).get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
         return RegistrationProvider.objects.get(id=self.kwargs['registration_provider_id'])
@@ -198,14 +198,14 @@ class DeleteRegistrationProvider(PermissionRequiredMixin, DeleteView):
         kwargs['has_collected_submissions'] = registration_provider.primary_collection.collectionsubmission_set.exists()
         kwargs['collected_submissions_count'] = registration_provider.primary_collection.collectionsubmission_set.count()
         kwargs['provider_id'] = registration_provider.id
-        return super(DeleteRegistrationProvider, self).get_context_data(*args, **kwargs)
+        return super().get_context_data(*args, **kwargs)
 
 
 class CannotDeleteProvider(TemplateView):
     template_name = 'registration_providers/cannot_delete.html'
 
     def get_context_data(self, **kwargs):
-        context = super(CannotDeleteProvider, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['provider'] = RegistrationProvider.objects.get(id=self.kwargs['registration_provider_id'])
         return context
 

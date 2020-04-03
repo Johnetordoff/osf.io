@@ -37,21 +37,21 @@ class TestConfigViews(OwnCloudAddonTestCase, OAuthAddonConfigViewsTestCaseMixin,
         return {'name': '/Documents/', 'path': '/Documents/'}
 
     def setUp(self):
-        super(TestConfigViews, self).setUp()
+        super().setUp()
         self.mock_ser_api = mock.patch('owncloud.Client.login')
         self.mock_ser_api.start()
         self.set_node_settings(self.node_settings)
 
     def tearDown(self):
         self.mock_ser_api.stop()
-        super(TestConfigViews, self).tearDown()
+        super().tearDown()
 
     @mock.patch('addons.owncloud.models.NodeSettings.get_folders')
     def test_folder_list(self, mock_connection):
         #test_get_datasets
         mock_connection.return_value = ['/Documents/', '/Pictures/', '/Videos/']
 
-        super(TestConfigViews, self).test_folder_list()
+        super().test_folder_list()
 
     def test_get_config(self):
         url = self.project.api_url_for(

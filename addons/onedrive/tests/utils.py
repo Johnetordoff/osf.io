@@ -12,7 +12,7 @@ class OneDriveAddonTestCase(OAuthAddonTestCaseMixin, AddonTestCase):
     Provider = OneDriveProvider
 
     def set_node_settings(self, settings):
-        super(OneDriveAddonTestCase, self).set_node_settings(settings)
+        super().set_node_settings(settings)
         settings.folder_id = '1234567890'
         settings.folder_path = 'Drive/Camera Uploads'
         settings.external_account = self.external_account

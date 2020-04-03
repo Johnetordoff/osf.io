@@ -15,7 +15,7 @@ from osf.management.commands import migrate_deleted_date
 class TestMigrateDeletedDate(DbTestCase):
 
     def setUp(self):
-        super(TestMigrateDeletedDate, self).setUp()
+        super().setUp()
         self.region_us = RegionFactory(_id='US', name='United States')
 
     @pytest.fixture()

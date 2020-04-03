@@ -14,7 +14,7 @@ from website import settings
 class TestSendQueuedMails(OsfTestCase):
 
     def setUp(self):
-        super(TestSendQueuedMails, self).setUp()
+        super().setUp()
         self.user = UserFactory()
         self.user.date_last_login = timezone.now()
         self.user.osf_mailing_lists[settings.OSF_HELP_LIST] = True

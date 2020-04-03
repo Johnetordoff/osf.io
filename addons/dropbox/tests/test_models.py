@@ -39,7 +39,7 @@ class TestDropboxNodeSettings(OAuthAddonNodeSettingsTestSuiteMixin, unittest.Tes
         mock.PropertyMock()
     )
     def test_complete_has_auth_not_verified(self):
-        super(TestDropboxNodeSettings, self).test_complete_has_auth_not_verified()
+        super().test_complete_has_auth_not_verified()
 
 
 class TestDropboxUserSettings(OAuthAddonUserSettingTestSuiteMixin, unittest.TestCase):

@@ -15,7 +15,7 @@ from website.views import find_bookmark_collection
 class TestSearchViews(OsfTestCase):
 
     def setUp(self):
-        super(TestSearchViews, self).setUp()
+        super().setUp()
         import website.search.search as search
         search.delete_all()
 
@@ -33,7 +33,7 @@ class TestSearchViews(OsfTestCase):
         self.project_public_user_two = factories.ProjectFactory(title='aaa', creator=self.user_two, is_public=True)
 
     def tearDown(self):
-        super(TestSearchViews, self).tearDown()
+        super().tearDown()
         import website.search.search as search
         search.delete_all()
 
@@ -221,7 +221,7 @@ class TestODMTitleSearch(OsfTestCase):
     :return: a list of dictionaries of projects
     """
     def setUp(self):
-        super(TestODMTitleSearch, self).setUp()
+        super().setUp()
 
         self.user = factories.AuthUserFactory()
         self.user_two = factories.AuthUserFactory()

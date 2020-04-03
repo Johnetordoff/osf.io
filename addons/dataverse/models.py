@@ -37,7 +37,7 @@ class DataverseFile(DataverseFileNode, File):
         Call super to update _history and last_touched anyway.
         Dataverse requires a user for the weird check below
         """
-        version = super(DataverseFile, self).update(None, data, user=user, save=save)
+        version = super().update(None, data, user=user, save=save)
         version.identifier = revision
 
         user = user or _get_current_user()
@@ -62,7 +62,7 @@ class DataverseProvider(object):
     serializer = DataverseSerializer
 
     def __init__(self, account=None):
-        super(DataverseProvider, self).__init__()  # this does exactly nothing...
+        super().__init__()  # this does exactly nothing...
         # provide an unauthenticated session by default
         self.account = account
 
@@ -149,7 +149,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
 
     def _get_fileobj_child_metadata(self, filenode, user, cookie=None, version=None):
         try:
-            return super(NodeSettings, self)._get_fileobj_child_metadata(filenode, user, cookie=cookie, version=version)
+            return super()._get_fileobj_child_metadata(filenode, user, cookie=cookie, version=version)
         except HTTPError as e:
             # The Dataverse API returns a 404 if the dataset has no published files
             if e.code == http_status.HTTP_404_NOT_FOUND and version == 'latest-published':

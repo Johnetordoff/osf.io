@@ -31,7 +31,7 @@ class PreprintProviderForm(forms.ModelForm):
         toplevel_choices = get_toplevel_subjects()
         nodelicense_choices = get_nodelicense_choices()
         defaultlicense_choices = get_defaultlicense_choices()
-        super(PreprintProviderForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fields['toplevel_subjects'].choices = toplevel_choices
         self.fields['licenses_acceptable'].choices = nodelicense_choices
         self.fields['default_license'].choices = defaultlicense_choices
@@ -90,7 +90,7 @@ class PreprintProviderCustomTaxonomyForm(forms.Form):
     merge_into = forms.ChoiceField(choices=[], required=False)
 
     def __init__(self, *args, **kwargs):
-        super(PreprintProviderCustomTaxonomyForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         subject_choices = [(x, x) for x in Subject.objects.filter(bepress_subject__isnull=True).values_list('text', flat=True)]
         for name, field in self.fields.items():
             if hasattr(field, 'choices'):
@@ -104,7 +104,7 @@ class PreprintProviderRegisterModeratorOrAdminForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         provider_id = kwargs.pop('provider_id')
-        super(PreprintProviderRegisterModeratorOrAdminForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fields['group_perms'] = forms.ModelMultipleChoiceField(
             queryset=Group.objects.filter(name__startswith='reviews_preprint_{}'.format(provider_id)),
             required=False,

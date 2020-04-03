@@ -25,7 +25,7 @@ class BannerForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         banner = kwargs.get('instance')
         self.banner_id = banner.id if banner else None
-        super(BannerForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def clean_default_photo(self):
         return self.check_photo_type(self.cleaned_data['default_photo'])

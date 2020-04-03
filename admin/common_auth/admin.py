@@ -86,7 +86,7 @@ class LogEntryAdmin(admin.ModelAdmin):
     object_link.short_description = u'object'
 
     def queryset(self, request):
-        return super(LogEntryAdmin, self).queryset(request) \
+        return super().queryset(request) \
             .prefetch_related('content_type')
 
 

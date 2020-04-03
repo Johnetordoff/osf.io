@@ -23,7 +23,7 @@ from api_tests import utils as api_utils
 
 class TestDraftNodeProvidersList(ApiTestCase):
     def setUp(self):
-        super(TestDraftNodeProvidersList, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.draft_reg = DraftRegistrationFactory(creator=self.user)
         self.draft_node = self.draft_reg.branched_from
@@ -144,7 +144,7 @@ def prepare_mock_wb_response(
 class TestNodeFilesList(ApiTestCase):
 
     def setUp(self):
-        super(TestNodeFilesList, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.draft_reg = DraftRegistrationFactory(creator=self.user)
         self.draft_node = self.draft_reg.branched_from
@@ -479,7 +479,7 @@ class TestNodeFilesList(ApiTestCase):
 class TestNodeFilesListFiltering(ApiTestCase):
 
     def setUp(self):
-        super(TestNodeFilesListFiltering, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.draft_reg = DraftRegistrationFactory(creator=self.user)
         self.draft_node = self.draft_reg.branched_from
@@ -621,7 +621,7 @@ class TestNodeFilesListFiltering(ApiTestCase):
 
 class TestNodeFilesListPagination(ApiTestCase):
     def setUp(self):
-        super(TestNodeFilesListPagination, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.draft_reg = DraftRegistrationFactory(creator=self.user)
         self.draft_node = self.draft_reg.branched_from
@@ -693,7 +693,7 @@ class TestNodeFilesListPagination(ApiTestCase):
 class TestDraftNodeStorageProviderDetail(ApiTestCase):
 
     def setUp(self):
-        super(TestDraftNodeStorageProviderDetail, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.draft_reg = DraftRegistrationFactory(initiator=self.user)
         self.draft_node = self.draft_reg.branched_from

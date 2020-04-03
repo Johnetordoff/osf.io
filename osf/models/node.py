@@ -452,7 +452,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
     def __init__(self, *args, **kwargs):
         self._parent = kwargs.pop('parent', None)
         self._is_templated_clone = False
-        super(AbstractNode, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def __repr__(self):
         return ('(title={self.title!r}, category={self.category!r}) '
@@ -1056,7 +1056,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         Unlike remove_tag, this optimization method assumes that the provided
         tags are already present on the node.
         """
-        super(AbstractNode, self).remove_tags(tags, auth, save)
+        super().remove_tags(tags, auth, save)
         self.update_search()
         node_tasks.update_node_share(self)
 
@@ -1912,7 +1912,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         else:
             self._suppress_log = False
         saved_fields = self.get_dirty_fields(check_relationship=True) or []
-        ret = super(AbstractNode, self).save(*args, **kwargs)
+        ret = super().save(*args, **kwargs)
         if saved_fields:
             self.on_update(first_save, saved_fields)
 
@@ -1962,7 +1962,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         user = User.load(user_id)
         if user and self.check_spam(user, saved_fields, request_headers):
             # Specifically call the super class save method to avoid recursion into model save method.
-            super(AbstractNode, self).save()
+            super().save()
 
     def resolve(self):
         """For compat with v1 Pointers."""
@@ -2224,7 +2224,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         return True
 
     def add_addon(self, name, auth, log=True):
-        ret = super(AbstractNode, self).add_addon(name, auth)
+        ret = super().add_addon(name, auth)
         if ret and log:
             self.add_log(
                 action=NodeLog.ADDON_ADDED,
@@ -2249,7 +2249,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
             mandatory add-ons!
         :return bool: Add-on was deleted
         """
-        ret = super(AbstractNode, self).delete_addon(addon_name, auth, _force)
+        ret = super().delete_addon(addon_name, auth, _force)
         if ret:
             config = settings.ADDONS_AVAILABLE_DICT[addon_name]
             self.add_log(

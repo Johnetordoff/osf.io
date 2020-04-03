@@ -196,7 +196,7 @@ class MeetingSubmissionSerializer(NodeSerializer):
                 continue
             if field_name not in fieldset:
                 self.fields.pop(field_name)
-        return super(MeetingSubmissionSerializer, self).parse_sparse_fields(allow_unsafe, **kwargs)
+        return super().parse_sparse_fields(allow_unsafe, **kwargs)
 
     class Meta:
         type_ = 'meeting-submissions'

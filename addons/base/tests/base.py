@@ -80,7 +80,7 @@ class AddonTestCase(object):
 
     def setUp(self):
 
-        super(AddonTestCase, self).setUp()
+        super().setUp()
 
         self.user = self.create_user()
         if not self.ADDON_SHORT_NAME:

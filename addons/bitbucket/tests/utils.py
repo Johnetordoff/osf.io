@@ -13,7 +13,7 @@ class BitbucketAddonTestCase(OAuthAddonTestCaseMixin, AddonTestCase):
     Provider = BitbucketProvider
 
     def set_node_settings(self, settings):
-        super(BitbucketAddonTestCase, self).set_node_settings(settings)
+        super().set_node_settings(settings)
         settings.repo = 'abc'
         settings.user = 'octo-cat'
 

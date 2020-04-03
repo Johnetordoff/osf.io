@@ -47,7 +47,7 @@ class CaptureSignals(object):
         if isinstance(signal, blinker.base.NamedSignal):
             return self._records[signal]
         else:
-            super(CaptureSignals, self).__setitem__(signal)
+            super().__setitem__(signal)
 
     def _record(self, signal, *args, **kwargs):
         self._records[signal].append((args, kwargs))

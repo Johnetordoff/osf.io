@@ -1020,7 +1020,7 @@ class TestNodeS3Addon(NodeConfigurableAddonTestSuiteMixin, ApiAddonTestCase):
     @mock.patch('addons.s3.models.get_bucket_names')
     def test_folder_list_GET_expected_behavior(self, mock_names):
         mock_names.return_value = ['a.bucket']
-        super(TestNodeS3Addon, self).test_folder_list_GET_expected_behavior()
+        super().test_folder_list_GET_expected_behavior()
 
     @mock.patch('addons.s3.models.bucket_exists')
     @mock.patch('addons.s3.models.get_bucket_location_or_error')
@@ -1028,7 +1028,7 @@ class TestNodeS3Addon(NodeConfigurableAddonTestSuiteMixin, ApiAddonTestCase):
             self, mock_location, mock_exists):
         mock_exists.return_value = True
         mock_location.return_value = ''
-        super(TestNodeS3Addon, self).test_settings_detail_PUT_all_sets_settings()
+        super().test_settings_detail_PUT_all_sets_settings()
 
 
 class TestNodeGoogleDriveAddon(
@@ -1154,7 +1154,7 @@ class TestNodeForwardAddon(
         }
 
     def setUp(self):
-        super(TestNodeForwardAddon, self).setUp()
+        super().setUp()
         self.addon_type = 'OAUTH'
         self.node_settings = self.node.get_or_add_addon(
             self.short_name, auth=self.auth)

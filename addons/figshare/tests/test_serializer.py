@@ -23,4 +23,4 @@ class TestFigshareSerializer(StorageAddonSerializerTestSuiteMixin, OsfTestCase):
     @mock.patch.object(FigshareSerializer, 'credentials_are_valid')
     def test_serialize_settings_authorized_folder_is_set(self, mock_valid):
         mock_valid.return_value = True
-        super(TestFigshareSerializer, self).test_serialize_settings_authorized_folder_is_set()
+        super().test_serialize_settings_authorized_folder_is_set()

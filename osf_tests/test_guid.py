@@ -133,7 +133,7 @@ class TestReferent:
 class TestResolveGuid(OsfTestCase):
 
     def setUp(self):
-        super(TestResolveGuid, self).setUp()
+        super().setUp()
         self.node = NodeFactory()
 
     def test_resolve_guid(self):

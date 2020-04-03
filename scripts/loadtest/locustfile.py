@@ -41,7 +41,7 @@ def make_file_like(nchars):
 class UserBehavior(TaskSet):
 
     def __init__(self, *args, **kwargs):
-        super(UserBehavior, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.node_id = None
 
     def login(self):

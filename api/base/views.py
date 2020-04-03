@@ -52,7 +52,7 @@ class JSONAPIBaseView(generics.GenericAPIView):
         assert getattr(self, 'view_name', None), 'Must specify view_name on view.'
         assert getattr(self, 'view_category', None), 'Must specify view_category on view.'
         self.view_fqn = ':'.join([self.view_category, self.view_name])
-        super(JSONAPIBaseView, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def _get_embed_partial(self, field_name, field):
         """Create a partial function to fetch the values of an embedded field. A basic
@@ -144,7 +144,7 @@ class JSONAPIBaseView(generics.GenericAPIView):
         (request, object -> embed items) if the query string contains embeds.  Allows
          multiple levels of nesting.
         """
-        context = super(JSONAPIBaseView, self).get_serializer_context()
+        context = super().get_serializer_context()
         if self.kwargs.get('is_embedded'):
             embeds = []
         else:
@@ -284,7 +284,7 @@ class LinkedNodesRelationship(JSONAPIBaseView, generics.RetrieveUpdateDestroyAPI
 
     def create(self, *args, **kwargs):
         try:
-            ret = super(LinkedNodesRelationship, self).create(*args, **kwargs)
+            ret = super().create(*args, **kwargs)
         except RelationshipPostMakesNoChanges:
             return Response(status=status.HTTP_204_NO_CONTENT)
         return ret
@@ -392,7 +392,7 @@ class LinkedRegistrationsRelationship(JSONAPIBaseView, generics.RetrieveUpdateDe
 
     def create(self, *args, **kwargs):
         try:
-            ret = super(LinkedRegistrationsRelationship, self).create(*args, **kwargs)
+            ret = super().create(*args, **kwargs)
         except RelationshipPostMakesNoChanges:
             return Response(status=status.HTTP_204_NO_CONTENT)
         return ret
@@ -551,7 +551,7 @@ class BaseContributorList(JSONAPIBaseView, generics.ListAPIView, ListFilterMixin
             elif query_val == ADMIN:
                 # If admin, return only members of admin group
                 return Q(user_id__in=resource.get_group(ADMIN).user_set.values_list('id', flat=True))
-        return super(BaseContributorList, self).build_query_from_field(field_name, operation)
+        return super().build_query_from_field(field_name, operation)
 
 
 class BaseNodeLinksDetail(JSONAPIBaseView, generics.RetrieveAPIView):
@@ -699,18 +699,18 @@ class DeprecatedView(JSONAPIBaseView):
         raise NotImplementedError()
 
     def __init__(self, *args, **kwargs):
-        super(DeprecatedView, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.is_deprecated = False
 
     def determine_version(self, request, *args, **kwargs):
-        version, scheme = super(DeprecatedView, self).determine_version(request, *args, **kwargs)
+        version, scheme = super().determine_version(request, *args, **kwargs)
         if StrictVersion(version) > StrictVersion(self.max_version):
             self.is_deprecated = True
             raise NotFound(detail='This route has been deprecated. It was last available in version {}'.format(self.max_version))
         return version, scheme
 
     def finalize_response(self, request, response, *args, **kwargs):
-        response = super(DeprecatedView, self).finalize_response(request, response, *args, **kwargs)
+        response = super().finalize_response(request, response, *args, **kwargs)
         if self.is_deprecated:
             # Already has the error message
             return response

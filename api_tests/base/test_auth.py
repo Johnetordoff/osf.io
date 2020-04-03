@@ -26,7 +26,7 @@ class TestBasicAuthenticationValidation(ApiTestCase):
     TOTP_SECRET = 'b8f85986068f8079aa9d'
 
     def setUp(self):
-        super(TestBasicAuthenticationValidation, self).setUp()
+        super().setUp()
         self.user1 = AuthUserFactory()
         self.user2 = AuthUserFactory()
 
@@ -138,7 +138,7 @@ class TestOAuthValidation(ApiTestCase):
     """Test that APIv2 requests can validate and respond to OAuth2 bearer tokens"""
 
     def setUp(self):
-        super(TestOAuthValidation, self).setUp()
+        super().setUp()
         self.user1 = UserFactory()
         self.user2 = UserFactory()
 
@@ -236,7 +236,7 @@ class TestOAuthScopedAccess(ApiTestCase):
         but are not intended to be an exhaustive list of how all views respond to all scopes."""
 
     def setUp(self):
-        super(TestOAuthScopedAccess, self).setUp()
+        super().setUp()
         self.user = UserFactory()
         self.user2 = UserFactory()  # Todo move inside tests that need this
         self.project = ProjectFactory(creator=self.user)

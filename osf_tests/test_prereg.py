@@ -15,7 +15,7 @@ from osf_tests import factories
 
 class TestPreregLandingPage(OsfTestCase):
     def setUp(self):
-        super(TestPreregLandingPage, self).setUp()
+        super().setUp()
         self.user = factories.UserFactory()
 
     def test_not_logged_in(self):
@@ -164,7 +164,7 @@ class TestPreregLandingPage(OsfTestCase):
 class TestPreregUtils(OsfTestCase):
 
     def setUp(self):
-        super(TestPreregUtils, self).setUp()
+        super().setUp()
 
     def test_get_prereg_schema_returns_prereg_metaschema(self):
         schema = get_prereg_schema()

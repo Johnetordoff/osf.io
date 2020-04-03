@@ -86,7 +86,7 @@ class SparseNodeSerializer(NodeSerializer):
                 continue
             if field_name not in fieldset:
                 self.fields.pop(field_name)
-        return super(SparseNodeSerializer, self).parse_sparse_fields(allow_unsafe, **kwargs)
+        return super().parse_sparse_fields(allow_unsafe, **kwargs)
 
     class Meta:
         type_ = 'sparse-nodes'
@@ -181,7 +181,7 @@ class SparseRegistrationSerializer(RegistrationSerializer):
                 continue
             if field_name not in fieldset:
                 self.fields.pop(field_name)
-        return super(SparseRegistrationSerializer, self).parse_sparse_fields(allow_unsafe, **kwargs)
+        return super().parse_sparse_fields(allow_unsafe, **kwargs)
 
     class Meta:
         type_ = 'sparse-registrations'

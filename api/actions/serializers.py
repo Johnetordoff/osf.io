@@ -26,7 +26,7 @@ class ReviewableCountsRelationshipField(RelationshipField):
         kwargs['related_meta'] = kwargs.get('related_meta') or {}
         if 'include_state_counts' not in kwargs['related_meta']:
             kwargs['related_meta']['include_state_counts'] = True
-        super(ReviewableCountsRelationshipField, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def get_meta_information(self, metadata, provider):
         # Clone metadata because its mutability is questionable
@@ -47,7 +47,7 @@ class ReviewableCountsRelationshipField(RelationshipField):
             if auth and auth.logged_in and auth.user.has_perm('view_actions', provider):
                 metadata.update(provider.get_reviewable_state_counts())
 
-        return super(ReviewableCountsRelationshipField, self).get_meta_information(metadata, provider)
+        return super().get_meta_information(metadata, provider)
 
 
 class TargetRelationshipField(RelationshipField):
@@ -55,7 +55,7 @@ class TargetRelationshipField(RelationshipField):
 
     def __init__(self, *args, **kwargs):
         self._target_class = kwargs.pop('target_class', None)
-        super(TargetRelationshipField, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def TargetClass(self):
@@ -73,7 +73,7 @@ class TargetRelationshipField(RelationshipField):
 
 class PreprintRequestTargetRelationshipField(TargetRelationshipField):
     def to_representation(self, value):
-        ret = super(TargetRelationshipField, self).to_representation(value)
+        ret = super().to_representation(value)
         ret['data']['type'] = get_meta_type(
             PreprintRequestSerializer,
             self.context.get('request'),
@@ -197,7 +197,7 @@ class ReviewActionSerializer(BaseActionSerializer):
     def create(self, validated_data):
         trigger = validated_data.get('trigger')
         if trigger != ReviewTriggers.WITHDRAW.value:
-            return super(ReviewActionSerializer, self).create(validated_data)
+            return super().create(validated_data)
         user = validated_data.pop('user')
         target = validated_data.pop('target')
         comment = validated_data.pop('comment', '')

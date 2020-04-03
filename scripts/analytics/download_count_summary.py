@@ -18,7 +18,7 @@ class DownloadCountSummary(SummaryAnalytics):
         return 'download_count_summary'
 
     def get_events(self, date):
-        super(DownloadCountSummary, self).get_events(date)
+        super().get_events(date)
 
         timestamp_datetime = datetime(date.year, date.month, date.day).replace(tzinfo=pytz.UTC)
         return [{

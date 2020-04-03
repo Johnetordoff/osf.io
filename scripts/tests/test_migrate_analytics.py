@@ -8,7 +8,7 @@ from scripts.analytics.migrate_analytics import generate_events_between_events, 
 
 class TestMigrateAnalytics(OsfTestCase):
     def setUp(self):
-        super(TestMigrateAnalytics, self).setUp()
+        super().setUp()
 
         self.day_one = parse('2016-03-12').replace(tzinfo=pytz.UTC)
         self.day_two = parse('2016-03-16').replace(tzinfo=pytz.UTC)

@@ -30,7 +30,7 @@ pytestmark = pytest.mark.django_db
 class TestSubjectRules(AdminTestCase):
 
     def setUp(self):
-        super(TestSubjectRules, self).setUp()
+        super().setUp()
 
         self.parent_one = SubjectFactory()  # 0
         self.parent_two = SubjectFactory()  # 1
@@ -121,7 +121,7 @@ class TestSubjectRules(AdminTestCase):
 
 class TestNodeChanges(AdminTestCase):
     def setUp(self):
-        super(TestNodeChanges, self).setUp()
+        super().setUp()
         self.registration = RegistrationFactory(is_public=True)
         self.user = UserFactory()
         self.user.is_staff = True

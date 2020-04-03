@@ -24,7 +24,7 @@ class FileSummary(SummaryAnalytics):
         return 'file_summary'
 
     def get_events(self, date):
-        super(FileSummary, self).get_events(date)
+        super().get_events(date)
         from addons.osfstorage.models import OsfStorageFile
 
         # Convert to a datetime at midnight for queries and the timestamp

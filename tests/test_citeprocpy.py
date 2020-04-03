@@ -21,7 +21,7 @@ class Node:
 class TestCiteprocpy(OsfTestCase):
 
     def setUp(self):
-        super(TestCiteprocpy, self).setUp()
+        super().setUp()
         self.user = UserFactory(fullname='Henrique Harman')
 
     def test_failing_citations(self):
@@ -80,7 +80,7 @@ class TestCiteprocpyMLA(OsfTestCase):
     }
 
     def setUp(self):
-        super(TestCiteprocpyMLA, self).setUp()
+        super().setUp()
         self.user = UserFactory(fullname='John Tordoff')
         self.second_contrib = UserFactory(fullname='Carson Wentz')
         self.third_contrib = UserFactory(fullname='Nick Foles')

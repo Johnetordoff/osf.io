@@ -79,7 +79,7 @@ class Command(BaseCommand):
     Add/Rename subjects based on BePress taxonomy changes, update SHARE with new data for affected preprints
     """
     def add_arguments(self, parser):
-        super(Command, self).add_arguments(parser)
+        super().add_arguments(parser)
         parser.add_argument(
             '--dry',
             action='store_true',

@@ -11,7 +11,7 @@ from scripts.analytics.node_summary import NodeSummary
 class TestNodeCount(OsfTestCase):
 
     def setUp(self):
-        super(TestNodeCount, self).setUp()
+        super().setUp()
 
         self.user = UserFactory()
 

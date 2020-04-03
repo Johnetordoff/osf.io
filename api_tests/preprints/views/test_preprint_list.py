@@ -214,7 +214,7 @@ class TestPreprintCreateWithoutNode:
 class TestPreprintList(ApiTestCase):
 
     def setUp(self):
-        super(TestPreprintList, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
 
         self.preprint = PreprintFactory(creator=self.user)
@@ -397,7 +397,7 @@ class TestPreprintListFilteringByReviewableFields(ReviewableFilterMixin):
 
 class TestPreprintCreate(ApiTestCase):
     def setUp(self):
-        super(TestPreprintCreate, self).setUp()
+        super().setUp()
 
         self.user = AuthUserFactory()
         self.other_user = AuthUserFactory()

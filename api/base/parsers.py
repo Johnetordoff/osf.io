@@ -113,7 +113,7 @@ class JSONAPIParser(JSONParser):
         """
         Parses the incoming bytestream as JSON and returns the resulting data.
         """
-        result = super(JSONAPIParser, self).parse(stream, media_type=media_type, parser_context=parser_context)
+        result = super().parse(stream, media_type=media_type, parser_context=parser_context)
 
         if not isinstance(result, dict):
             raise ParseError()
@@ -140,7 +140,7 @@ class JSONAPIParser(JSONParser):
     def flatten_multiple_relationships(self, parser, relationships):
         rel = {}
         for resource in relationships:
-            ret = super(parser, self).flatten_relationships({resource: relationships[resource]})
+            ret = super().flatten_relationships({resource: relationships[resource]})
             if isinstance(ret, list):
                 rel[resource] = []
                 for item in ret:
@@ -165,7 +165,7 @@ class JSONAPIRelationshipParser(JSONParser):
     media_type = 'application/vnd.api+json'
 
     def parse(self, stream, media_type=None, parser_context=None):
-        res = super(JSONAPIRelationshipParser, self).parse(stream, media_type, parser_context)
+        res = super().parse(stream, media_type, parser_context)
 
         if not isinstance(res, dict):
             raise ParseError('Request body must be dictionary')
@@ -201,7 +201,7 @@ class JSONAPIOnetoOneRelationshipParser(JSONParser):
     media_type = 'application/vnd.api+json'
 
     def parse(self, stream, media_type=None, parser_context=None):
-        res = super(JSONAPIOnetoOneRelationshipParser, self).parse(stream, media_type, parser_context)
+        res = super().parse(stream, media_type, parser_context)
 
         if not isinstance(res, dict):
             raise ParseError('Request body must be dictionary')
@@ -258,7 +258,7 @@ class HMACSignedParser(JSONParser):
         """
         Parses the incoming bytestream as JSON. Validates the 'signature' in the payload then returns the resulting data.
         """
-        data = super(HMACSignedParser, self).parse(stream, media_type=media_type, parser_context=parser_context)
+        data = super().parse(stream, media_type=media_type, parser_context=parser_context)
 
         try:
             sig = data['signature']
@@ -282,7 +282,7 @@ class SearchParser(JSONAPIParser):
             view = parser_context['view']
         except KeyError:
             raise ImproperlyConfigured('SearchParser requires "view" context.')
-        data = super(SearchParser, self).parse(stream, media_type=media_type, parser_context=parser_context)
+        data = super().parse(stream, media_type=media_type, parser_context=parser_context)
         if not data:
             raise JSONAPIException(detail='Invalid Payload')
 

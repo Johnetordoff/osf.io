@@ -165,7 +165,7 @@ class Zotero(CitationsOauthProvider):
         """
         Add all_groups query param so Zotero API key will have permissions to user's groups
         """
-        url = super(Zotero, self).auth_url
+        url = super().auth_url
         return url + '&all_groups=read'
 
 

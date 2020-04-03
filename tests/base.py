@@ -112,7 +112,7 @@ class AppTestCase(unittest.TestCase):
     }
 
     def setUp(self):
-        super(AppTestCase, self).setUp()
+        super().setUp()
         self.app = TestApp(test_app)
         self.app.lint = False  # This breaks things in Py3
         if not self.PUSH_CONTEXT:
@@ -129,7 +129,7 @@ class AppTestCase(unittest.TestCase):
                 signal.disconnect(receiver)
 
     def tearDown(self):
-        super(AppTestCase, self).tearDown()
+        super().tearDown()
         if not self.PUSH_CONTEXT:
             return
         with mock.patch('website.mailchimp_utils.get_mailchimp_api'):
@@ -145,7 +145,7 @@ class ApiAppTestCase(unittest.TestCase):
     allow_database_queries = True
 
     def setUp(self):
-        super(ApiAppTestCase, self).setUp()
+        super().setUp()
         self.app = JSONAPITestApp()
 
 
@@ -161,10 +161,10 @@ class SearchTestCase(unittest.TestCase):
 
         # NOTE: Super is called last to ensure the ES connection can be established before
         #       the responses module patches the socket.
-        super(SearchTestCase, self).setUp()
+        super().setUp()
 
     def tearDown(self):
-        super(SearchTestCase, self).tearDown()
+        super().tearDown()
 
         from website.search import elastic_search
         elastic_search.delete_index(settings.ELASTIC_INDEX)
@@ -185,7 +185,7 @@ class ApiTestCase(DbTestCase, ApiAppTestCase, SearchTestCase):
     teardown methods to be called correctly.
     """
     def setUp(self):
-        super(ApiTestCase, self).setUp()
+        super().setUp()
         settings.USE_EMAIL = False
 
 class ApiAddonTestCase(ApiTestCase):
@@ -218,7 +218,7 @@ class ApiAddonTestCase(ApiTestCase):
         }
 
     def setUp(self):
-        super(ApiAddonTestCase, self).setUp()
+        super().setUp()
         from osf_tests.factories import (
             ProjectFactory,
             AuthUserFactory,
@@ -258,7 +258,7 @@ class ApiAddonTestCase(ApiTestCase):
         self.set_urls()
 
     def tearDown(self):
-        super(ApiAddonTestCase, self).tearDown()
+        super().tearDown()
         self.user.delete()
         self.node.delete()
         if self.account:
@@ -281,17 +281,17 @@ class NotificationTestCase(OsfTestCase):
     }
 
     def setUp(self):
-        super(NotificationTestCase, self).setUp()
+        super().setUp()
 
     def tearDown(self):
-        super(NotificationTestCase, self).tearDown()
+        super().tearDown()
 
 
 class ApiWikiTestCase(ApiTestCase):
 
     def setUp(self):
         from osf_tests.factories import AuthUserFactory
-        super(ApiWikiTestCase, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.non_contributor = AuthUserFactory()
 
@@ -338,7 +338,7 @@ class CaptureSignals(object):
         if isinstance(signal, blinker.base.NamedSignal):
             return self._records[signal]
         else:
-            super(CaptureSignals, self).__setitem__(signal)
+            super().__setitem__(signal)
 
     def _record(self, signal, *args, **kwargs):
         self._records[signal].append((args, kwargs))

@@ -12,7 +12,7 @@ class DataverseSerializer(OAuthAddonSerializer):
 
     # Include host information with more informative labels / formatting
     def serialize_account(self, external_account):
-        ret = super(DataverseSerializer, self).serialize_account(external_account)
+        ret = super().serialize_account(external_account)
         host = external_account.oauth_key
         ret.update({
             'host': host,
@@ -61,7 +61,7 @@ class DataverseSerializer(OAuthAddonSerializer):
 
     @property
     def serialized_node_settings(self):
-        result = super(DataverseSerializer, self).serialized_node_settings
+        result = super().serialized_node_settings
         result['hosts'] = DEFAULT_HOSTS
 
         # Update with Dataverse specific fields

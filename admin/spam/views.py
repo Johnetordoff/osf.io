@@ -59,7 +59,7 @@ class SpamList(PermissionRequiredMixin, ListView):
         kwargs.setdefault('page', page)
         kwargs.setdefault('status', self.request.GET.get('status', '1'))
         kwargs.setdefault('page_number', page.number)
-        return super(SpamList, self).get_context_data(**kwargs)
+        return super().get_context_data(**kwargs)
 
 
 class UserSpamList(SpamList):
@@ -80,7 +80,7 @@ class UserSpamList(SpamList):
 
     def get_context_data(self, **kwargs):
         kwargs.setdefault('user_id', self.kwargs.get('user_id', None))
-        return super(UserSpamList, self).get_context_data(**kwargs)
+        return super().get_context_data(**kwargs)
 
 
 class SpamDetail(PermissionRequiredMixin, FormView):
@@ -95,7 +95,7 @@ class SpamDetail(PermissionRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         spam_id = self.kwargs.get('spam_id')
-        kwargs = super(SpamDetail, self).get_context_data(**kwargs)
+        kwargs = super().get_context_data(**kwargs)
         try:
             kwargs.setdefault('comment',
                               serialize_comment(Comment.load(spam_id)))
@@ -132,7 +132,7 @@ class SpamDetail(PermissionRequiredMixin, FormView):
             message=log_message,
             action_flag=log_action
         )
-        return super(SpamDetail, self).form_valid(form)
+        return super().form_valid(form)
 
     @property
     def success_url(self):

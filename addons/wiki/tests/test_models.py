@@ -52,7 +52,7 @@ class TestWikiPageModel:
 class TestWikiPage(OsfTestCase):
 
     def setUp(self):
-        super(TestWikiPage, self).setUp()
+        super().setUp()
         self.user = UserFactory()
         self.project = ProjectFactory(creator=self.user)
         self.wiki = WikiFactory(user=self.user, node=self.project)

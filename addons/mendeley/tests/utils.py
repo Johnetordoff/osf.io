@@ -13,7 +13,7 @@ class MendeleyTestCase(OAuthAddonTestCaseMixin, AddonTestCase):
     Provider = Mendeley
 
     def set_node_settings(self, settings):
-        super(MendeleyTestCase, self).set_node_settings(settings)
+        super().set_node_settings(settings)
         settings.list_id = MockFolder().json['id']
         settings.external_account = self.external_account
         settings.save()

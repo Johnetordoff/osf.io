@@ -71,4 +71,4 @@ class DraftNode(AbstractNode):
         self.subscribe_contributors_to_node()
 
         # Calls super on Node, since self is no longer a DraftNode
-        return super(Node, self).register_node(schema, auth, draft_registration, parent, child_ids, provider)
+        return super().register_node(schema, auth, draft_registration, parent, child_ids, provider)

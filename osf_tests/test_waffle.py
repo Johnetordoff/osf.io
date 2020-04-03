@@ -27,7 +27,7 @@ def inject_check_is_active(func):
 class TestWaffleCookies(OsfTestCase):
 
     def setUp(self):
-        super(TestWaffleCookies, self).setUp()
+        super().setUp()
         self.flag = FlagFactory(name='test_flag')
         self.flag.percent = 50
         self.flag.everyone = None

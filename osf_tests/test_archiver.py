@@ -385,7 +385,7 @@ def generate_metadata(file_trees, selected_files, node_index):
 class ArchiverTestCase(OsfTestCase):
 
     def setUp(self):
-        super(ArchiverTestCase, self).setUp()
+        super().setUp()
 
         handlers.celery_before_request()
         self.user = factories.UserFactory()
@@ -1286,7 +1286,7 @@ class TestArchiveTarget(OsfTestCase):
 class TestArchiveJobModel(OsfTestCase):
 
     def tearDown(self, *args, **kwargs):
-        super(TestArchiveJobModel, self).tearDown(*args, **kwargs)
+        super().tearDown(*args, **kwargs)
         with open(os.path.join(settings.ROOT, 'addons.json')) as fp:
             addon_settings = json.load(fp)
             settings.ADDONS_ARCHIVABLE = addon_settings['addons_archivable']

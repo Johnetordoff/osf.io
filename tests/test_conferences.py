@@ -135,7 +135,7 @@ class ContextTestCase(OsfTestCase):
 class TestProvisionNode(ContextTestCase):
 
     def setUp(self):
-        super(TestProvisionNode, self).setUp()
+        super().setUp()
         self.node = ProjectFactory()
         self.user = self.node.creator
         self.conference = ConferenceFactory()
@@ -156,7 +156,7 @@ class TestProvisionNode(ContextTestCase):
             'stripped-text': self.body,
         }
         data.update(kwargs.pop('data', {}))
-        return super(TestProvisionNode, self).make_context(data=data, **kwargs)
+        return super().make_context(data=data, **kwargs)
 
     def test_provision(self):
         with self.make_context():

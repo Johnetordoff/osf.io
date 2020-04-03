@@ -43,7 +43,7 @@ class GitLabFile(GitLabFileNode, File):
 
     def touch(self, auth_header, revision=None, ref=None, branch=None, **kwargs):
         revision = revision or ref or branch
-        return super(GitLabFile, self).touch(auth_header, revision=revision, **kwargs)
+        return super().touch(auth_header, revision=revision, **kwargs)
 
 class GitLabProvider(object):
     name = 'GitLab'
@@ -51,7 +51,7 @@ class GitLabProvider(object):
     serializer = GitLabSerializer
 
     def __init__(self, account=None):
-        super(GitLabProvider, self).__init__()  # this does exactly nothing...
+        super().__init__()  # this does exactly nothing...
         # provide an unauthenticated session by default
         self.account = account
 
@@ -136,7 +136,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
         self.clear_auth()
 
     def delete(self, save=False):
-        super(NodeSettings, self).delete(save=False)
+        super().delete(save=False)
         self.deauthorize(log=False)
         if save:
             self.save()
@@ -158,7 +158,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
 
     def to_json(self, user):
 
-        ret = super(NodeSettings, self).to_json(user)
+        ret = super().to_json(user)
         user_settings = user.get_addon('gitlab')
         ret.update({
             'user_has_auth': user_settings and user_settings.has_auth,
@@ -318,7 +318,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
 
         """
         try:
-            message = (super(NodeSettings, self).before_remove_contributor_message(node, removed) +
+            message = (super().before_remove_contributor_message(node, removed) +
             'You can download the contents of this repository before removing '
             'this contributor <u><a href="{url}">here</a></u>.'.format(
                 url=node.api_url + 'gitlab/tarball/'
@@ -368,7 +368,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
         :param bool save: Save settings after callback
         :return tuple: Tuple of cloned settings and alert message
         """
-        clone = super(NodeSettings, self).after_fork(
+        clone = super().after_fork(
             node, fork, user, save=False
         )
 

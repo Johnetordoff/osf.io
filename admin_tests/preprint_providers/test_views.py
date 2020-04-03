@@ -83,7 +83,7 @@ class TestShareSourcePreprintProvider(AdminTestCase):
 
 class TestPreprintProviderChangeForm(AdminTestCase):
     def setUp(self):
-        super(TestPreprintProviderChangeForm, self).setUp()
+        super().setUp()
 
         self.user = AuthUserFactory()
         self.preprint_provider = PreprintProviderFactory()
@@ -162,7 +162,7 @@ class TestPreprintProviderChangeForm(AdminTestCase):
 @pytest.mark.enable_implicit_clean
 class TestPreprintProviderExportImport(AdminTestCase):
     def setUp(self):
-        super(TestPreprintProviderExportImport, self).setUp()
+        super().setUp()
 
         self.user = AuthUserFactory()
         self.preprint_provider = PreprintProviderFactory()

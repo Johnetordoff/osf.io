@@ -94,7 +94,7 @@ class OAuthAddonSerializer(AddonSerializer):
 
     @property
     def serialized_user_settings(self):
-        retval = super(OAuthAddonSerializer, self).serialized_user_settings
+        retval = super().serialized_user_settings
         retval['accounts'] = []
         if self.user_settings:
             retval['accounts'] = self.serialized_accounts
@@ -202,12 +202,12 @@ class CitationsAddonSerializer(OAuthAddonSerializer):
         if external_account and external_account.profile_url:
             ret['owner'] = external_account.profile_url
 
-        ret.update(super(CitationsAddonSerializer, self).serialized_urls)
+        ret.update(super().serialized_urls)
         return ret
 
     @property
     def serialized_node_settings(self):
-        result = super(CitationsAddonSerializer, self).serialized_node_settings
+        result = super().serialized_node_settings
         result['folder'] = {
             'name': self.node_settings.fetch_folder_name
         }

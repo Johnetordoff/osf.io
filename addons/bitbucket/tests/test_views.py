@@ -38,7 +38,7 @@ class TestBitbucketAuthViews(BitbucketAddonTestCase, OAuthAddonAuthViewsTestCase
         mock.PropertyMock()
     )
     def test_delete_external_account(self):
-        super(TestBitbucketAuthViews, self).test_delete_external_account()
+        super().test_delete_external_account()
 
 
 class TestBitbucketConfigViews(BitbucketAddonTestCase, OAuthAddonConfigViewsTestCaseMixin, OsfTestCase):
@@ -49,14 +49,14 @@ class TestBitbucketConfigViews(BitbucketAddonTestCase, OAuthAddonConfigViewsTest
     ## Overrides ##
 
     def setUp(self):
-        super(TestBitbucketConfigViews, self).setUp()
+        super().setUp()
         self.mock_access_token = mock.patch('addons.bitbucket.models.BitbucketProvider.fetch_access_token')
         self.mock_access_token.return_value = mock.Mock()
         self.mock_access_token.start()
 
     def tearDown(self):
         self.mock_access_token.stop()
-        super(TestBitbucketConfigViews, self).tearDown()
+        super().tearDown()
 
     def test_folder_list(self):
         # BB only lists root folder (repos), this test is superfluous
@@ -84,7 +84,7 @@ class TestBitbucketConfigViews(BitbucketAddonTestCase, OAuthAddonConfigViewsTest
 class TestBitbucketViews(OsfTestCase):
 
     def setUp(self):
-        super(TestBitbucketViews, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.consolidated_auth = Auth(user=self.user)
 
@@ -204,7 +204,7 @@ class TestBitbucketSettings(OsfTestCase):
 
     def setUp(self):
 
-        super(TestBitbucketSettings, self).setUp()
+        super().setUp()
         self.bitbucket = create_mock_bitbucket(user='fred', private=False)
         self.project = ProjectFactory()
         self.project.save()

@@ -237,7 +237,7 @@ class OAuthCitationAddonConfigViewsTestCaseMixin(OAuthAddonConfigViewsTestCaseMi
         raise NotImplementedError()
 
     def setUp(self):
-        super(OAuthCitationAddonConfigViewsTestCaseMixin, self).setUp()
+        super().setUp()
         self.mock_verify = mock.patch.object(
             self.client,
             '_verify_client_validity'
@@ -246,7 +246,7 @@ class OAuthCitationAddonConfigViewsTestCaseMixin(OAuthAddonConfigViewsTestCaseMi
 
     def tearDown(self):
         self.mock_verify.stop()
-        super(OAuthCitationAddonConfigViewsTestCaseMixin, self).tearDown()
+        super().tearDown()
 
     def test_set_config(self):
         with mock.patch.object(self.client, '_folder_metadata') as mock_metadata:

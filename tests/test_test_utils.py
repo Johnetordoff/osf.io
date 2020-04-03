@@ -13,7 +13,7 @@ from tests import utils as test_utils
 class TestUtilsTests(OsfTestCase):
 
     def setUp(self):
-        super(TestUtilsTests, self).setUp()
+        super().setUp()
 
         self.node = ProjectFactory()
         self.user = self.node.creator

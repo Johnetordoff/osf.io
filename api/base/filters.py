@@ -58,7 +58,7 @@ class OSFOrderingFilter(OrderingFilter):
                 order_fields = tuple([field.lstrip('-') for field in ordering])
                 distinct_fields = queryset.query.distinct_fields
                 queryset.query.distinct_fields = tuple(set(distinct_fields + order_fields))
-            return super(OSFOrderingFilter, self).filter_queryset(request, queryset, view)
+            return super().filter_queryset(request, queryset, view)
         if ordering:
             if isinstance(ordering, (list, tuple)):
                 sorted_list = sorted(queryset, key=cmp_to_key(sort_multiple(ordering)))
@@ -99,7 +99,7 @@ class OSFOrderingFilter(OrderingFilter):
         :param fields, array, input sort fields
         :returns array of source fields for sorting.
         """
-        valid_fields = super(OSFOrderingFilter, self).remove_invalid_fields(queryset, fields, view, request)
+        valid_fields = super().remove_invalid_fields(queryset, fields, view, request)
         if not valid_fields:
             for invalid_field in fields:
                 ordering_sign = '-' if invalid_field[0] == '-' else ''
@@ -139,7 +139,7 @@ class FilterMixin(object):
     RELATIONSHIP_FIELDS = (RelationshipField, TargetField)
 
     def __init__(self, *args, **kwargs):
-        super(FilterMixin, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if not self.serializer_class:
             raise NotImplementedError()
 
@@ -396,7 +396,7 @@ class ListFilterMixin(FilterMixin):
     }
 
     def __init__(self, *args, **kwargs):
-        super(FilterMixin, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if not self.serializer_class:
             raise NotImplementedError()
 

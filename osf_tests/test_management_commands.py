@@ -36,7 +36,7 @@ def next_file_size():
 class TestDataStorageUsage(DbTestCase):
 
     def setUp(self):
-        super(TestDataStorageUsage, self).setUp()
+        super().setUp()
         self.region_us = RegionFactory(_id='US', name='United States')
 
     @staticmethod

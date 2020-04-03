@@ -34,7 +34,7 @@ class BitbucketFile(BitbucketFileNode, File):
 
     def touch(self, auth_header, revision=None, commitSha=None, branch=None, **kwargs):
         revision = revision or commitSha or branch
-        return super(BitbucketFile, self).touch(auth_header, revision=revision, **kwargs)
+        return super().touch(auth_header, revision=revision, **kwargs)
 
     @property
     def _hashes(self):
@@ -178,7 +178,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
         self.clear_auth()
 
     def delete(self, save=False):
-        super(NodeSettings, self).delete(save=False)
+        super().delete(save=False)
         self.deauthorize(log=False)
         if save:
             self.save()
@@ -211,7 +211,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
 
     # TODO: Delete me and replace with serialize_settings / Knockout
     def to_json(self, user):
-        ret = super(NodeSettings, self).to_json(user)
+        ret = super().to_json(user)
         user_settings = user.get_addon('bitbucket')
         ret.update({
             'user_has_auth': user_settings and user_settings.has_auth,
@@ -372,7 +372,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
 
         """
         try:
-            message = (super(NodeSettings, self).before_remove_contributor_message(node, removed) +
+            message = (super().before_remove_contributor_message(node, removed) +
             'You can download the contents of this repository before removing '
             'this contributor <u><a href="{url}">here</a></u>.'.format(
                 url=node.api_url + 'bitbucket/tarball/'
@@ -425,7 +425,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
         :param bool save: Save settings after callback
         :return tuple: Tuple of cloned settings and alert message
         """
-        clone = super(NodeSettings, self).after_fork(
+        clone = super().after_fork(
             node, fork, user, save=False
         )
 

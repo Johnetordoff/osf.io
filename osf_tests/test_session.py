@@ -33,13 +33,13 @@ class TestSession:
 
 class SessionUtilsTestCase(DbTestCase):
     def setUp(self, *args, **kwargs):
-        super(SessionUtilsTestCase, self).setUp(*args, **kwargs)
+        super().setUp(*args, **kwargs)
         self.user = UserFactory()
         # Ensure usable password
         self.user.set_password('usablepassword')
 
     def tearDown(self, *args, **kwargs):
-        super(SessionUtilsTestCase, self).tearDown(*args, **kwargs)
+        super().tearDown(*args, **kwargs)
         OSFUser.objects.all().delete()
         Session.objects.all().delete()
 

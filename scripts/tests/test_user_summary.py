@@ -14,7 +14,7 @@ class TestUserCount(OsfTestCase):
     def setUp(self):
         self.yesterday = timezone.now() - timedelta(days=1)
         self.a_while_ago = timezone.now() - timedelta(days=2)
-        super(TestUserCount, self).setUp()
+        super().setUp()
 
         for _ in range(3):
             u = AuthUserFactory()

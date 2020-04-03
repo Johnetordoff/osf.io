@@ -1954,7 +1954,7 @@ class SpamOverrideMixin(SpamMixin):
         return NotImplementedError()
 
     def confirm_spam(self, save=False):
-        super(SpamOverrideMixin, self).confirm_spam(save=False)
+        super().confirm_spam(save=False)
         self.set_privacy('private', auth=None, log=False, save=False)
         log = self.add_log(
             action=self.log_class.MADE_PRIVATE,
@@ -2047,7 +2047,7 @@ class SpamOverrideMixin(SpamMixin):
     def flag_spam(self):
         """ Overrides SpamMixin#flag_spam.
         """
-        super(SpamOverrideMixin, self).flag_spam()
+        super().flag_spam()
         if settings.SPAM_FLAGGED_MAKE_NODE_PRIVATE:
             self.set_privacy('private', auth=None, log=False, save=False, check_addons=False)
             log = self.add_log(

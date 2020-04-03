@@ -214,7 +214,7 @@ class RegistrationDetail(JSONAPIBaseView, generics.RetrieveUpdateAPIView, Regist
         return registration
 
     def get_renderer_context(self):
-        context = super(RegistrationDetail, self).get_renderer_context()
+        context = super().get_renderer_context()
         show_counts = is_truthy(self.request.query_params.get('related_counts', False))
         if show_counts:
             registration = self.get_object()

@@ -37,13 +37,13 @@ class QuickFilesNode(AbstractNode):
 
     def __init__(self, *args, **kwargs):
         kwargs['is_public'] = True
-        super(QuickFilesNode, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def remove_node(self, auth, date=None):
         # QuickFilesNodes are only delete-able for disabled users
         # This is only done when doing a GDPR-delete
         if auth.user.is_disabled:
-            super(QuickFilesNode, self).remove_node(auth=auth, date=date)
+            super().remove_node(auth=auth, date=date)
         else:
             raise NodeStateError('A QuickFilesNode may not be deleted.')
 
@@ -52,7 +52,7 @@ class QuickFilesNode(AbstractNode):
 
     def add_contributor(self, contributor, *args, **kwargs):
         if contributor == self.creator:
-            return super(QuickFilesNode, self).add_contributor(contributor, *args, **kwargs)
+            return super().add_contributor(contributor, *args, **kwargs)
         raise NodeStateError('A QuickFilesNode may not have additional contributors.')
 
     def clone(self):
@@ -61,7 +61,7 @@ class QuickFilesNode(AbstractNode):
     def add_addon(self, name, auth, log=True):
         if name != 'osfstorage':
             raise NodeStateError('A QuickFilesNode can only have the osfstorage addon.')
-        return super(QuickFilesNode, self).add_addon(name, auth, log)
+        return super().add_addon(name, auth, log)
 
     @property
     def is_registration(self):

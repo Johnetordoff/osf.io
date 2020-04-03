@@ -23,7 +23,7 @@ class GuidFormView(FormView):
 
     def __init__(self):
         self.guid = None
-        super(GuidFormView, self).__init__()
+        super().__init__()
 
     def get_context_data(self, **kwargs):
         kwargs.setdefault('view', self)
@@ -32,7 +32,7 @@ class GuidFormView(FormView):
 
     def form_valid(self, form):
         self.guid = form.cleaned_data.get('guid').strip()
-        return super(GuidFormView, self).form_valid(form)
+        return super().form_valid(form)
 
     @property
     def success_url(self):
@@ -42,7 +42,7 @@ class GuidFormView(FormView):
 class GuidView(DetailView):
     def get(self, request, *args, **kwargs):
         try:
-            return super(GuidView, self).get(request, *args, **kwargs)
+            return super().get(request, *args, **kwargs)
         except (AttributeError, ObjectDoesNotExist):
             return page_not_found(
                 request,

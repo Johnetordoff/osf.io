@@ -15,7 +15,7 @@ from addons.googledrive.tests.factories import GoogleDriveAccountFactory
 
 class TestAddonCount(OsfTestCase):
     def setUp(self):
-        super(TestAddonCount, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.node = ProjectFactory(creator=self.user)
         self.user.add_addon('github')

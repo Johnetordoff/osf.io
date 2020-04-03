@@ -62,7 +62,7 @@ class ZoteroNodeSettingsTestCase(OAuthCitationsNodeSettingsTestSuiteMixin, unitt
     UserSettingsFactory = ZoteroUserSettingsFactory
 
     def setUp(self):
-        super(ZoteroNodeSettingsTestCase, self).setUp()
+        super().setUp()
         self.user_settings.grant_oauth_access(
             node=self.node,
             external_account=self.external_account,

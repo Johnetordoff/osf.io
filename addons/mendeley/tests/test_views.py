@@ -30,4 +30,4 @@ class TestConfigViews(MendeleyTestCase, views.OAuthCitationAddonConfigViewsTestC
 
     @mock.patch('addons.mendeley.models.NodeSettings._fetch_folder_name', mock.PropertyMock(return_value='Fake Name'))
     def test_deauthorize_node(self):
-        super(TestConfigViews, self).test_deauthorize_node()
+        super().test_deauthorize_node()

@@ -32,7 +32,7 @@ class TestFolder(TestFileNode, Folder):
 class FilesTestCase(OsfTestCase):
 
     def setUp(self):
-        super(FilesTestCase, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.node = ProjectFactory(creator=self.user)
 
@@ -40,7 +40,7 @@ class FilesTestCase(OsfTestCase):
 class TestStoredFileNode(FilesTestCase):
 
     def setUp(self):
-        super(TestStoredFileNode, self).setUp()
+        super().setUp()
         self.test_file = TestFile(
             _path='anid',
             name='name',
@@ -616,7 +616,7 @@ class TestFileObj(FilesTestCase):
 class TestFolderObj(FilesTestCase):
 
     def setUp(self):
-        super(TestFolderObj, self).setUp()
+        super().setUp()
         self.parent = TestFolder(
             _path='aparent',
             name='parent',

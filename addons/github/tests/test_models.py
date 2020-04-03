@@ -65,13 +65,13 @@ class TestNodeSettings(OAuthAddonNodeSettingsTestSuiteMixin, unittest.TestCase):
         mock.PropertyMock()
     )
     def test_complete_has_auth_not_verified(self):
-        super(TestNodeSettings, self).test_complete_has_auth_not_verified()
+        super().test_complete_has_auth_not_verified()
 
     @mock.patch('addons.github.api.GitHubClient.repos')
     @mock.patch('addons.github.api.GitHubClient.check_authorization')
     def test_to_json(self, mock_repos, mock_check_authorization):
         mock_repos.return_value = {}
-        super(TestNodeSettings, self).test_to_json()
+        super().test_to_json()
 
     @mock.patch('addons.github.api.GitHubClient.repos')
     @mock.patch('addons.github.api.GitHubClient.check_authorization')
@@ -145,7 +145,7 @@ class TestCallbacks(OsfTestCase):
 
     def setUp(self):
 
-        super(TestCallbacks, self).setUp()
+        super().setUp()
 
         self.project = ProjectFactory()
         self.consolidated_auth = Auth(self.project.creator)
@@ -316,7 +316,7 @@ class TestCallbacks(OsfTestCase):
 class TestGithubNodeSettings(unittest.TestCase):
 
     def setUp(self):
-        super(TestGithubNodeSettings, self).setUp()
+        super().setUp()
         self.user = UserFactory()
         self.user.add_addon('github')
         self.user_settings = self.user.get_addon('github')

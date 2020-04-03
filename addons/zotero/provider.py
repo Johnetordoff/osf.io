@@ -22,7 +22,7 @@ class ZoteroCitationsProvider(CitationsProvider):
         Serializes setting needed to build the widget
         library_id added specifically for zotero
         """
-        ret = super(ZoteroCitationsProvider, self).widget(node_addon)
+        ret = super().widget(node_addon)
         ret.update({
             'library_id': node_addon.library_id
         })

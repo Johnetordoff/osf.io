@@ -17,7 +17,7 @@ class Command(BaseCommand):
         python3 manage.py vacuum osf.OSFUser osf.Node
     """
     def add_arguments(self, parser):
-        super(Command, self).add_arguments(parser)
+        super().add_arguments(parser)
         parser.add_argument('models', nargs='+', type=str)
         parser.add_argument(
             '--analyze',

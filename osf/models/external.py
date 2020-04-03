@@ -119,7 +119,7 @@ class ExternalProvider(object, with_metaclass(ExternalProviderMeta)):
     expiry_time = 0  # If/When the refresh token expires (seconds). 0 indicates a non-expiring refresh token
 
     def __init__(self, account=None):
-        super(ExternalProvider, self).__init__()
+        super().__init__()
 
         # provide an unauthenticated session by default
         self.account = account
@@ -483,7 +483,7 @@ class BasicAuthProviderMixin(object):
     """
 
     def __init__(self, account=None, host=None, username=None, password=None):
-        super(BasicAuthProviderMixin, self).__init__()
+        super().__init__()
         if account:
             self.account = account
         elif not account and host and password and username:

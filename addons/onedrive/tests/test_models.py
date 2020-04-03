@@ -19,7 +19,7 @@ pytestmark = pytest.mark.django_db
 
 class TestOneDriveProvider(unittest.TestCase):
     def setUp(self):
-        super(TestOneDriveProvider, self).setUp()
+        super().setUp()
         self.provider = OneDriveProvider()
 
     @mock.patch.object(OneDriveClient, 'user_info_for_token')
@@ -57,11 +57,11 @@ class TestNodeSettings(OAuthAddonNodeSettingsTestSuiteMixin, unittest.TestCase):
         )
         self.mock_refresh.return_value = True
         self.mock_refresh.start()
-        super(TestNodeSettings, self).setUp()
+        super().setUp()
 
     def tearDown(self):
         self.mock_refresh.stop()
-        super(TestNodeSettings, self).tearDown()
+        super().tearDown()
 
     @mock.patch('addons.onedrive.models.OneDriveProvider')
     def test_api_not_cached(self, mock_odp):

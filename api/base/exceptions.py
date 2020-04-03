@@ -121,7 +121,7 @@ class JSONAPIException(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
 
     def __init__(self, detail=None, source=None, meta=None):
-        super(JSONAPIException, self).__init__(detail=detail)
+        super().__init__(detail=detail)
         self.source = source
         self.meta = meta
 
@@ -151,7 +151,7 @@ class JSONAPIParameterException(JSONAPIException):
         source = {
             'parameter': parameter,
         }
-        super(JSONAPIParameterException, self).__init__(detail=detail, source=source)
+        super().__init__(detail=detail, source=source)
 
 
 class JSONAPIAttributeException(JSONAPIException):
@@ -159,7 +159,7 @@ class JSONAPIAttributeException(JSONAPIException):
         source = {
             'pointer': '/data/attributes/{}'.format(attribute),
         }
-        super(JSONAPIAttributeException, self).__init__(detail=detail, source=source)
+        super().__init__(detail=detail, source=source)
 
 
 class InvalidQueryStringError(JSONAPIParameterException):
@@ -179,7 +179,7 @@ class InvalidFilterOperator(JSONAPIParameterException):
                 value,
                 valid_operators,
             )
-        super(InvalidFilterOperator, self).__init__(detail=detail, parameter='filter')
+        super().__init__(detail=detail, parameter='filter')
 
 
 class InvalidFilterValue(JSONAPIParameterException):
@@ -194,7 +194,7 @@ class InvalidFilterValue(JSONAPIParameterException):
                     field_type,
                 )
             detail += '.'
-        super(InvalidFilterValue, self).__init__(detail=detail, parameter='filter')
+        super().__init__(detail=detail, parameter='filter')
 
 
 class InvalidFilterError(JSONAPIParameterException):
@@ -203,7 +203,7 @@ class InvalidFilterError(JSONAPIParameterException):
     status_code = http_status.HTTP_400_BAD_REQUEST
 
     def __init__(self, detail=None):
-        super(InvalidFilterError, self).__init__(detail=detail, parameter='filter')
+        super().__init__(detail=detail, parameter='filter')
 
 
 class InvalidFilterComparisonType(JSONAPIParameterException):
@@ -226,7 +226,7 @@ class InvalidFilterFieldError(JSONAPIParameterException):
     def __init__(self, detail=None, parameter=None, value=None):
         if value and not detail:
             detail = "Value '{}' is not a filterable field.".format(value)
-        super(InvalidFilterFieldError, self).__init__(detail=detail, parameter=parameter)
+        super().__init__(detail=detail, parameter=parameter)
 
 
 class UnconfirmedAccountError(APIException):
@@ -281,4 +281,4 @@ class NonDescendantNodeError(APIException):
     def __init__(self, node_id, detail=None):
         if not detail:
             detail = self.default_detail.format(node_id)
-        super(NonDescendantNodeError, self).__init__(detail=detail)
+        super().__init__(detail=detail)

@@ -14,7 +14,7 @@ from framework.celery_tasks import handlers
 class TestMailChimpHelpers(OsfTestCase):
 
     def setUp(self, *args, **kwargs):
-        super(TestMailChimpHelpers, self).setUp(*args, **kwargs)
+        super().setUp(*args, **kwargs)
         with self.context:
             handlers.celery_before_request()
 

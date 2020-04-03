@@ -33,7 +33,7 @@ class TestGitHubAuthViews(GitHubAddonTestCase, OAuthAddonAuthViewsTestCaseMixin,
         mock.PropertyMock()
     )
     def test_delete_external_account(self):
-        super(TestGitHubAuthViews, self).test_delete_external_account()
+        super().test_delete_external_account()
 
 
 class TestGitHubConfigViews(GitHubAddonTestCase, OAuthAddonConfigViewsTestCaseMixin, OsfTestCase):
@@ -44,7 +44,7 @@ class TestGitHubConfigViews(GitHubAddonTestCase, OAuthAddonConfigViewsTestCaseMi
     ## Overrides ##
 
     def setUp(self):
-        super(TestGitHubConfigViews, self).setUp()
+        super().setUp()
         self.mock_api_user = mock.patch('addons.github.api.GitHubClient.user')
         self.mock_api_credentials_are_valid = mock.patch('addons.github.api.GitHubClient.check_authorization', return_value=True)
         self.mock_api_user.return_value = mock.Mock()
@@ -53,7 +53,7 @@ class TestGitHubConfigViews(GitHubAddonTestCase, OAuthAddonConfigViewsTestCaseMi
 
     def tearDown(self):
         self.mock_api_user.stop()
-        super(TestGitHubConfigViews, self).tearDown()
+        super().tearDown()
 
     def test_folder_list(self):
         # GH only lists root folder (repos), this test is superfluous
@@ -83,7 +83,7 @@ class TestGitHubConfigViews(GitHubAddonTestCase, OAuthAddonConfigViewsTestCaseMi
 class TestCRUD(OsfTestCase):
 
     def setUp(self):
-        super(TestCRUD, self).setUp()
+        super().setUp()
         self.github = create_mock_github(user='fred', private=False)
         self.user = AuthUserFactory()
         self.consolidated_auth = Auth(user=self.user)
@@ -101,7 +101,7 @@ class TestCRUD(OsfTestCase):
 class TestGithubViews(OsfTestCase):
 
     def setUp(self):
-        super(TestGithubViews, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.consolidated_auth = Auth(user=self.user)
 
@@ -390,7 +390,7 @@ class TestRegistrationsWithGithub(OsfTestCase):
 
     def setUp(self):
 
-        super(TestRegistrationsWithGithub, self).setUp()
+        super().setUp()
         self.project = ProjectFactory()
         self.consolidated_auth = Auth(user=self.project.creator)
 
@@ -408,7 +408,7 @@ class TestGithubSettings(OsfTestCase):
 
     def setUp(self):
 
-        super(TestGithubSettings, self).setUp()
+        super().setUp()
         self.github = create_mock_github(user='fred', private=False)
         self.project = ProjectFactory()
         self.auth = self.project.creator.auth

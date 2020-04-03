@@ -18,7 +18,7 @@ class DeskCaseList(PermissionRequiredMixin, ListView):
 
     def dispatch(self, request, *args, **kwargs):
         try:
-            return super(DeskCaseList, self).dispatch(request, *args, **kwargs)
+            return super().dispatch(request, *args, **kwargs)
         except DeskError as e:
             return render(request, 'desk/desk_error.html',
                           context={
@@ -44,7 +44,7 @@ class DeskCaseList(PermissionRequiredMixin, ListView):
         kwargs.setdefault('user_id', self.kwargs.get('user_id'))
         kwargs.setdefault('desk_case', 'https://{}.desk.com/web/agent/case/'.format(DeskClient.SITE_NAME))
         kwargs.setdefault('desk_customer', 'https://{}.desk.com/web/agent/customer/'.format(DeskClient.SITE_NAME))
-        return super(DeskCaseList, self).get_context_data(**kwargs)
+        return super().get_context_data(**kwargs)
 
 
 class DeskCustomer(PermissionRequiredMixin, DetailView):
@@ -55,7 +55,7 @@ class DeskCustomer(PermissionRequiredMixin, DetailView):
 
     def dispatch(self, request, *args, **kwargs):
         try:
-            return super(DeskCustomer, self).dispatch(request, *args, **kwargs)
+            return super().dispatch(request, *args, **kwargs)
         except DeskCustomerNotFound as e:
             return render(request, 'desk/user_not_found.html',
                           context={
@@ -86,4 +86,4 @@ class DeskCustomer(PermissionRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         kwargs.setdefault('user_id', self.kwargs.get('user_id'))
         kwargs.setdefault('desk_link', 'https://{}.desk.com/web/agent/customer/'.format(DeskClient.SITE_NAME))
-        return super(DeskCustomer, self).get_context_data(**kwargs)
+        return super().get_context_data(**kwargs)

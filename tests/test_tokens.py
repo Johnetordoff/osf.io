@@ -23,7 +23,7 @@ REJECTED_MSG = 'This registration {0} has been rejected.'
 class TestTokenHandler(OsfTestCase):
 
     def setUp(self, *args, **kwargs):
-        super(TestTokenHandler, self).setUp(*args, **kwargs)
+        super().setUp(*args, **kwargs)
 
         self.payload = {
             'user_id': 'abc123',

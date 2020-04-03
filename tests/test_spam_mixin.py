@@ -16,7 +16,7 @@ from osf.models import SpamStatus
 class TestSpamMixin(OsfTestCase):
 
     def setUp(self):
-        super(TestSpamMixin, self).setUp()
+        super().setUp()
         self.comment = CommentFactory()
         self.auth = Auth(user=self.comment.user)
 

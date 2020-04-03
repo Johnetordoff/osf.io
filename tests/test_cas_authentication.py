@@ -264,7 +264,7 @@ class TestCASTicketAuthentication(OsfTestCase):
 class TestCASExternalLogin(OsfTestCase):
 
     def setUp(self):
-        super(TestCASExternalLogin, self).setUp()
+        super().setUp()
         self.user = UserFactory()
 
     def test_get_user_from_cas_resp_already_authorized(self):

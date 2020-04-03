@@ -21,7 +21,7 @@ DUMMY_TOKEN = tokens.encode({
 class DraftRegistrationApprovalTestCase(OsfTestCase):
 
     def setUp(self):
-        super(RegistrationEmbargoModelsTestCase, self).setUp()
+        super().setUp()
         self.user = UserFactory()
         self.project = ProjectFactory(creator=self.user)
         self.draft = DraftRegistrationFactory(

@@ -323,7 +323,7 @@ class TestUsersCreate:
         }
 
     def tearDown(self, app):
-        super(TestUsersCreate, self).tearDown()
+        super().tearDown()
         app.reset()  # clears cookies
         OSFUser.remove()
 

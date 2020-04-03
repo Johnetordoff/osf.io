@@ -25,7 +25,7 @@ class BaseMachine(Machine):
         transitions = kwargs.get('transitions', DEFAULT_TRANSITIONS)
         self._validate_transitions(transitions)
 
-        super(BaseMachine, self).__init__(
+        super().__init__(
             states=states,
             transitions=transitions,
             initial=self.state,
@@ -77,7 +77,7 @@ class ReviewsMachine(BaseMachine):
     def __init__(self, *args, **kwargs):
         kwargs['transitions'] = kwargs.get('transitions', REVIEWABLE_TRANSITIONS)
         kwargs['states'] = kwargs.get('states', [s.value for s in ReviewStates])
-        super(ReviewsMachine, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def save_changes(self, ev):
         now = self.action.created if self.action is not None else timezone.now()

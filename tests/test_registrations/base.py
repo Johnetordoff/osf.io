@@ -13,7 +13,7 @@ from osf_tests.factories import AuthUserFactory, ProjectFactory, DraftRegistrati
 
 class RegistrationsTestBase(OsfTestCase):
     def setUp(self):
-        super(RegistrationsTestBase, self).setUp()
+        super().setUp()
 
         self.user = AuthUserFactory()
         self.auth = Auth(self.user)

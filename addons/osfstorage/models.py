@@ -164,7 +164,7 @@ class OsfStorageFileNode(BaseFileNode):
     def delete(self, user=None, parent=None, **kwargs):
         self._path = self.path
         self._materialized_path = self.materialized_path
-        return super(OsfStorageFileNode, self).delete(user=user, parent=parent) if self._check_delete_allowed() else None
+        return super().delete(user=user, parent=parent) if self._check_delete_allowed() else None
 
     def update_region_from_latest_version(self, destination_parent):
         raise NotImplementedError
@@ -176,7 +176,7 @@ class OsfStorageFileNode(BaseFileNode):
         if self.is_checked_out:
             raise exceptions.FileNodeCheckedOutError()
         self.update_region_from_latest_version(destination_parent)
-        return super(OsfStorageFileNode, self).move_under(destination_parent, name)
+        return super().move_under(destination_parent, name)
 
     def check_in_or_out(self, user, checkout, save=False):
         """
@@ -233,7 +233,7 @@ class OsfStorageFileNode(BaseFileNode):
     def save(self):
         self._path = ''
         self._materialized_path = ''
-        return super(OsfStorageFileNode, self).save()
+        return super().save()
 
 
 class OsfStorageFile(OsfStorageFileNode, File):
@@ -278,7 +278,7 @@ class OsfStorageFile(OsfStorageFileNode, File):
         logger.warn('Tried to set history on OsfStorageFile/Folder')
 
     def serialize(self, include_full=None, version=None):
-        ret = super(OsfStorageFile, self).serialize()
+        ret = super().serialize()
         if include_full:
             ret['fullPath'] = self.materialized_path
 
@@ -392,12 +392,12 @@ class OsfStorageFile(OsfStorageFileNode, File):
         from website.search import search
 
         search.update_file(self, delete=True)
-        return super(OsfStorageFile, self).delete(user, parent, **kwargs)
+        return super().delete(user, parent, **kwargs)
 
     def save(self, skip_search=False, *args, **kwargs):
         from website.search import search
 
-        ret = super(OsfStorageFile, self).save()
+        ret = super().save()
         if not skip_search:
             search.update_file(self)
         return ret
@@ -453,7 +453,7 @@ class OsfStorageFolder(OsfStorageFileNode, Folder):
 
     def serialize(self, include_full=False, version=None):
         # Versions just for compatibility
-        ret = super(OsfStorageFolder, self).serialize()
+        ret = super().serialize()
         if include_full:
             ret['fullPath'] = self.materialized_path
         return ret

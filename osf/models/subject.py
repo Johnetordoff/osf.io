@@ -82,9 +82,9 @@ class Subject(ObjectIDMixin, BaseModel, DirtyFieldsMixin):
         validate_subject_highlighted_count(self.provider, bool('highlighted' in saved_fields and self.highlighted))
         if 'text' in saved_fields and self.pk and (self.preprints.exists() or self.abstractnodes.exists()):
             raise ValidationError('Cannot edit a used Subject')
-        return super(Subject, self).save()
+        return super().save()
 
     def delete(self, *args, **kwargs):
         if self.preprints.exists() or self.abstractnodes.exists():
             raise ValidationError('Cannot delete a used Subject')
-        return super(Subject, self).delete()
+        return super().delete()

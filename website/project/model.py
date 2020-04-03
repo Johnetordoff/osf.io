@@ -74,6 +74,6 @@ def validate_title(value):
 
 class NodeUpdateError(Exception):
     def __init__(self, reason, key, *args, **kwargs):
-        super(NodeUpdateError, self).__init__(reason, *args, **kwargs)
+        super().__init__(reason, *args, **kwargs)
         self.key = key
         self.reason = reason

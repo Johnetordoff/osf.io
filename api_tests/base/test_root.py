@@ -22,13 +22,13 @@ from osf.utils.permissions import ADMIN
 @pytest.mark.enable_quickfiles_creation
 class TestWelcomeToApi(ApiTestCase):
     def setUp(self):
-        super(TestWelcomeToApi, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.url = '/{}'.format(API_BASE)
 
     def tearDown(self):
         self.app.reset()
-        super(TestWelcomeToApi, self).tearDown()
+        super().tearDown()
 
     def test_returns_200_for_logged_out_user(self):
         res = self.app.get(self.url)

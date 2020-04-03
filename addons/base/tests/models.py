@@ -180,7 +180,7 @@ class OAuthAddonNodeSettingsTestSuiteMixin(OAuthAddonModelTestSuiteMixinBase):
         }
 
     def setUp(self):
-        super(OAuthAddonNodeSettingsTestSuiteMixin, self).setUp()
+        super().setUp()
         self.node = ProjectFactory()
         self.user = self.node.creator
         self.external_account = self.ExternalAccountFactory()
@@ -479,7 +479,7 @@ class OAuthCitationsNodeSettingsTestSuiteMixin(
         OAuthCitationsTestSuiteMixinBase):
 
     def setUp(self):
-        super(OAuthCitationsNodeSettingsTestSuiteMixin, self).setUp()
+        super().setUp()
         self.user_settings.grant_oauth_access(
             node=self.node,
             external_account=self.external_account,
@@ -639,7 +639,7 @@ class CitationAddonProviderTestSuiteMixin(OAuthCitationsTestSuiteMixinBase):
         pass
 
     def setUp(self):
-        super(CitationAddonProviderTestSuiteMixin, self).setUp()
+        super().setUp()
         self.provider = self.OAuthProviderClass()
 
     @abc.abstractmethod

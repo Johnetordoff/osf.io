@@ -46,19 +46,19 @@ logger = get_task_logger(__name__)
 
 class ArchiverSizeExceeded(Exception):
     def __init__(self, result, *args, **kwargs):
-        super(ArchiverSizeExceeded, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.result = result
 
 
 class ArchiverStateError(Exception):
     def __init__(self, info, *args, **kwargs):
-        super(ArchiverStateError, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.info = info
 
 
 class ArchivedFileNotFound(Exception):
     def __init__(self, registration, missing_files, *args, **kwargs):
-        super(ArchivedFileNotFound, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.draft_registration = DraftRegistration.objects.get(registered_node=registration)
         self.missing_files = missing_files

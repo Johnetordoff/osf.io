@@ -32,7 +32,7 @@ class CollectionProviderForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         nodelicense_choices = get_nodelicense_choices()
         defaultlicense_choices = get_defaultlicense_choices()
-        super(CollectionProviderForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fields['licenses_acceptable'].choices = nodelicense_choices
         self.fields['default_license'].choices = defaultlicense_choices
 

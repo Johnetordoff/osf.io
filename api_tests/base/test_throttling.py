@@ -26,7 +26,7 @@ class TestDefaultThrottleClasses(ApiTestCase):
 class TestRootThrottle(ApiTestCase):
 
     def setUp(self):
-        super(TestRootThrottle, self).setUp()
+        super().setUp()
         self.url = '/{}'.format(API_BASE)
         self.user = AuthUserFactory()
 
@@ -46,7 +46,7 @@ class TestRootThrottle(ApiTestCase):
 class TestUserRateThrottle(ApiTestCase):
 
     def setUp(self):
-        super(TestUserRateThrottle, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.url = '/{}nodes/'.format(API_BASE)
 
@@ -60,7 +60,7 @@ class TestUserRateThrottle(ApiTestCase):
 class TestNonCookieAuthThrottle(ApiTestCase):
 
     def setUp(self):
-        super(TestNonCookieAuthThrottle, self).setUp()
+        super().setUp()
         self.url = '/{}nodes/'.format(API_BASE)
 
     @mock.patch('api.base.throttling.NonCookieAuthThrottle.allow_request')
@@ -73,7 +73,7 @@ class TestNonCookieAuthThrottle(ApiTestCase):
 class TestAddContributorEmailThrottle(ApiTestCase):
 
     def setUp(self):
-        super(TestAddContributorEmailThrottle, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.user_two = AuthUserFactory()
 

@@ -80,7 +80,7 @@ def retry_assertion(interval=0.3, retries=3):
 @pytest.mark.enable_enqueue_task
 class TestCollectionsSearch(OsfTestCase):
     def setUp(self):
-        super(TestCollectionsSearch, self).setUp()
+        super().setUp()
         search.delete_index(elastic_search.INDEX)
         search.create_index(elastic_search.INDEX)
 
@@ -266,7 +266,7 @@ class TestCollectionsSearch(OsfTestCase):
 class TestUserUpdate(OsfTestCase):
 
     def setUp(self):
-        super(TestUserUpdate, self).setUp()
+        super().setUp()
         search.delete_index(elastic_search.INDEX)
         search.create_index(elastic_search.INDEX)
         self.user = factories.UserFactory(fullname='David Bowie')
@@ -381,7 +381,7 @@ class TestUserUpdate(OsfTestCase):
 class TestProject(OsfTestCase):
 
     def setUp(self):
-        super(TestProject, self).setUp()
+        super().setUp()
         search.delete_index(elastic_search.INDEX)
         search.create_index(elastic_search.INDEX)
         self.user = factories.UserFactory(fullname='John Deacon')
@@ -407,7 +407,7 @@ class TestOSFGroup(OsfTestCase):
 
     def setUp(self):
         with run_celery_tasks():
-            super(TestOSFGroup, self).setUp()
+            super().setUp()
             search.delete_index(elastic_search.INDEX)
             search.create_index(elastic_search.INDEX)
             self.user = factories.UserFactory(fullname='John Deacon')
@@ -478,7 +478,7 @@ class TestPreprint(OsfTestCase):
 
     def setUp(self):
         with run_celery_tasks():
-            super(TestPreprint, self).setUp()
+            super().setUp()
             search.delete_index(elastic_search.INDEX)
             search.create_index(elastic_search.INDEX)
             self.user = factories.UserFactory(fullname='John Deacon')
@@ -678,7 +678,7 @@ class TestPreprint(OsfTestCase):
 class TestNodeSearch(OsfTestCase):
 
     def setUp(self):
-        super(TestNodeSearch, self).setUp()
+        super().setUp()
         with run_celery_tasks():
             self.node = factories.ProjectFactory(is_public=True, title='node')
             self.public_child = factories.ProjectFactory(parent=self.node, is_public=True, title='public_child')
@@ -724,7 +724,7 @@ class TestNodeSearch(OsfTestCase):
 class TestRegistrationRetractions(OsfTestCase):
 
     def setUp(self):
-        super(TestRegistrationRetractions, self).setUp()
+        super().setUp()
         self.user = factories.UserFactory(fullname='Doug Bogie')
         self.title = 'Red Special'
         self.consolidate_auth = Auth(user=self.user)
@@ -818,7 +818,7 @@ class TestPublicNodes(OsfTestCase):
 
     def setUp(self):
         with run_celery_tasks():
-            super(TestPublicNodes, self).setUp()
+            super().setUp()
             self.user = factories.UserFactory(fullname='Doug Bogie')
             self.title = 'Red Special'
             self.consolidate_auth = Auth(user=self.user)
@@ -1044,7 +1044,7 @@ class TestAddContributor(OsfTestCase):
         self.name4 = u'B\xc3\xb3bbert4 Jones4'
 
         with run_celery_tasks():
-            super(TestAddContributor, self).setUp()
+            super().setUp()
             self.user = factories.UserFactory(fullname=self.name1)
             self.user3 = factories.UserFactory(fullname=self.name3)
 
@@ -1136,7 +1136,7 @@ class TestProjectSearchResults(OsfTestCase):
         self.possessive = 'Spanish\'s Inquisition'
 
         with run_celery_tasks():
-            super(TestProjectSearchResults, self).setUp()
+            super().setUp()
             self.user = factories.UserFactory(fullname='Doug Bogie')
 
             self.project_singular = factories.ProjectFactory(
@@ -1211,7 +1211,7 @@ def job(**kwargs):
 class TestUserSearchResults(OsfTestCase):
     def setUp(self):
         with run_celery_tasks():
-            super(TestUserSearchResults, self).setUp()
+            super().setUp()
             self.user_one = factories.UserFactory(jobs=[job(institution='Oxford'),
                                                         job(institution='Star Fleet')],
                                                   fullname='Date Soong')
@@ -1307,7 +1307,7 @@ class TestSearchMigration(OsfTestCase):
         search.create_index(settings.ELASTIC_INDEX)
 
     def setUp(self):
-        super(TestSearchMigration, self).setUp()
+        super().setUp()
         populate_institutions(default_args=True)
         self.es = search.search_engine.CLIENT
         search.delete_index(settings.ELASTIC_INDEX)
@@ -1407,7 +1407,7 @@ class TestSearchMigration(OsfTestCase):
 class TestSearchFiles(OsfTestCase):
 
     def setUp(self):
-        super(TestSearchFiles, self).setUp()
+        super().setUp()
         self.node = factories.ProjectFactory(is_public=True, title='Otis')
         self.osf_storage = self.node.get_addon('osfstorage')
         self.root = self.osf_storage.get_root()

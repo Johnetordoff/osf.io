@@ -15,7 +15,7 @@ from admin.osf_groups.serializers import serialize_node_for_groups
 class TestOSFGroupsView(AdminTestCase):
 
     def setUp(self):
-        super(TestOSFGroupsView, self).setUp()
+        super().setUp()
         self.user = UserFactory()
         self.user_two = UserFactory()
         self.project = ProjectFactory()
@@ -47,7 +47,7 @@ class TestOSFGroupsView(AdminTestCase):
 class TestOSFGroupsListView(AdminTestCase):
 
     def setUp(self):
-        super(TestOSFGroupsListView, self).setUp()
+        super().setUp()
         self.user = UserFactory()
         self.group = OSFGroupFactory(name='Brian Dawkins', creator=self.user)
         self.group2 = OSFGroupFactory(name='Brian Westbrook', creator=self.user)
@@ -81,7 +81,7 @@ class TestOSFGroupsListView(AdminTestCase):
 class TestOSFGroupsFormView(AdminTestCase):
 
     def setUp(self):
-        super(TestOSFGroupsFormView, self).setUp()
+        super().setUp()
         self.user = UserFactory()
         self.group = OSFGroupFactory(name='Brian Dawkins', creator=self.user)
         self.group2 = OSFGroupFactory(name='Brian Westbrook', creator=self.user)

@@ -129,7 +129,7 @@ class CommentSerializer(JSONAPISerializer):
         return obj.referent.target_type
 
     def sanitize_data(self):
-        ret = super(CommentSerializer, self).sanitize_data()
+        ret = super().sanitize_data()
         content = self.validated_data.get('get_content', None)
         if content:
             ret['get_content'] = bleach.clean(content)

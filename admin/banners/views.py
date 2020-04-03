@@ -43,7 +43,7 @@ class BannerList(PermissionRequiredMixin, ListView):
         paginator, page, query_set, is_paginated = self.paginate_queryset(query_set, page_size)
         kwargs.setdefault('banners', query_set)
         kwargs.setdefault('page', page)
-        return super(BannerList, self).get_context_data(**kwargs)
+        return super().get_context_data(**kwargs)
 
 
 class BannerDisplay(PermissionRequiredMixin, DetailView):
@@ -116,7 +116,7 @@ class CreateBanner(PermissionRequiredMixin, CreateView):
 
     def get_context_data(self, *args, **kwargs):
         kwargs['blackoutDates'] = json.dumps(get_blackout_dates())
-        return super(CreateBanner, self).get_context_data(*args, **kwargs)
+        return super().get_context_data(*args, **kwargs)
 
 
 class DeleteBanner(PermissionRequiredMixin, DeleteView):

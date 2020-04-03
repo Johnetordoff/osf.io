@@ -284,7 +284,7 @@ class Command(BaseCommand):
         #   export only projects/registrations/preprints
         #   export only private projects
         #   export only projects on which user is an admin
-        super(Command, self).add_arguments(parser)
+        super().add_arguments(parser)
         parser.add_argument(
             'user',
             type=str,

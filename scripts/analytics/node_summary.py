@@ -23,7 +23,7 @@ class NodeSummary(SummaryAnalytics):
         return 'node_summary'
 
     def get_events(self, date):
-        super(NodeSummary, self).get_events(date)
+        super().get_events(date)
         from osf.models import Node, Registration
         from osf.models.spam import SpamStatus
 

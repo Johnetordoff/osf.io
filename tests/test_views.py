@@ -135,7 +135,7 @@ class TestViewsAreAtomic(OsfTestCase):
 class TestViewingProjectWithPrivateLink(OsfTestCase):
 
     def setUp(self):
-        super(TestViewingProjectWithPrivateLink, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()  # Is NOT a contributor
         self.project = ProjectFactory(is_public=False)
         self.link = PrivateLinkFactory()
@@ -274,7 +274,7 @@ class TestViewingProjectWithPrivateLink(OsfTestCase):
 class TestProjectViews(OsfTestCase):
 
     def setUp(self):
-        super(TestProjectViews, self).setUp()
+        super().setUp()
         self.user1 = AuthUserFactory()
         self.user1.save()
         self.consolidate_auth1 = Auth(user=self.user1)
@@ -1091,7 +1091,7 @@ class TestGetNodeTree(OsfTestCase):
 class TestUserProfile(OsfTestCase):
 
     def setUp(self):
-        super(TestUserProfile, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
 
     def test_unserialize_social(self):
@@ -1536,7 +1536,7 @@ class TestUserProfile(OsfTestCase):
 class TestUserProfileApplicationsPage(OsfTestCase):
 
     def setUp(self):
-        super(TestUserProfileApplicationsPage, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.user2 = AuthUserFactory()
 
@@ -1565,7 +1565,7 @@ class TestUserProfileApplicationsPage(OsfTestCase):
 class TestUserProfileTokensPage(OsfTestCase):
 
     def setUp(self):
-        super(TestUserProfileTokensPage, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.token = ApiOAuth2PersonalTokenFactory()
         self.detail_url = web_url_for('personal_access_token_detail', _id=self.token._id)
@@ -1577,7 +1577,7 @@ class TestUserProfileTokensPage(OsfTestCase):
 class TestUserAccount(OsfTestCase):
 
     def setUp(self):
-        super(TestUserAccount, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.user.set_password('password')
         self.user.auth = (self.user.username, 'password')
@@ -1814,7 +1814,7 @@ class TestUserAccount(OsfTestCase):
 class TestAddingContributorViews(OsfTestCase):
 
     def setUp(self):
-        super(TestAddingContributorViews, self).setUp()
+        super().setUp()
         self.creator = AuthUserFactory()
         self.project = ProjectFactory(creator=self.creator)
         self.auth = Auth(self.project.creator)
@@ -2219,14 +2219,14 @@ class TestAddingContributorViews(OsfTestCase):
                      n_contributors_pre + len(payload['users']))
 
     def tearDown(self):
-        super(TestAddingContributorViews, self).tearDown()
+        super().tearDown()
         contributor_added.disconnect(notify_added_contributor)
 
 
 class TestUserInviteViews(OsfTestCase):
 
     def setUp(self):
-        super(TestUserInviteViews, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.project = ProjectFactory(creator=self.user)
         self.invite_url = '/api/v1/project/{0}/invite_contributor/'.format(
@@ -2370,7 +2370,7 @@ class TestUserInviteViews(OsfTestCase):
 class TestClaimViews(OsfTestCase):
 
     def setUp(self):
-        super(TestClaimViews, self).setUp()
+        super().setUp()
         self.referrer = AuthUserFactory()
         self.project = ProjectFactory(creator=self.referrer, is_public=True)
         self.given_name = fake.name()
@@ -2783,7 +2783,7 @@ class TestClaimViews(OsfTestCase):
 class TestPointerViews(OsfTestCase):
 
     def setUp(self):
-        super(TestPointerViews, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.consolidate_auth = Auth(user=self.user)
         self.project = ProjectFactory(creator=self.user)
@@ -3152,7 +3152,7 @@ class TestPublicViews(OsfTestCase):
 class TestAuthViews(OsfTestCase):
 
     def setUp(self):
-        super(TestAuthViews, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.auth = self.user.auth
 
@@ -3653,7 +3653,7 @@ class TestAuthViews(OsfTestCase):
 class TestAuthLoginAndRegisterLogic(OsfTestCase):
 
     def setUp(self):
-        super(TestAuthLoginAndRegisterLogic, self).setUp()
+        super().setUp()
         self.no_auth = Auth()
         self.user_auth = AuthUserFactory()
         self.auth = Auth(user=self.user_auth)
@@ -3901,7 +3901,7 @@ class TestAuthLoginAndRegisterLogic(OsfTestCase):
 class TestAuthLogout(OsfTestCase):
 
     def setUp(self):
-        super(TestAuthLogout, self).setUp()
+        super().setUp()
         self.goodbye_url = web_url_for('goodbye', _absolute=True)
         self.redirect_url = web_url_for('forgot_password_get', _absolute=True)
         self.valid_next_url = web_url_for('dashboard', _absolute=True)
@@ -3909,7 +3909,7 @@ class TestAuthLogout(OsfTestCase):
         self.auth_user = AuthUserFactory()
 
     def tearDown(self):
-        super(TestAuthLogout, self).tearDown()
+        super().tearDown()
         OSFUser.objects.all().delete()
         assert_equal(OSFUser.objects.count(), 0)
 
@@ -3953,7 +3953,7 @@ class TestAuthLogout(OsfTestCase):
 class TestExternalAuthViews(OsfTestCase):
 
     def setUp(self):
-        super(TestExternalAuthViews, self).setUp()
+        super().setUp()
         name, email = fake.name(), fake_email()
         self.provider_id = fake.ean()
         external_identity = {
@@ -4096,7 +4096,7 @@ class TestExternalAuthViews(OsfTestCase):
 class TestAddonUserViews(OsfTestCase):
 
     def setUp(self):
-        super(TestAddonUserViews, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
 
     def test_choose_addons_add(self):
@@ -4326,7 +4326,7 @@ class TestConfigureMailingListViews(OsfTestCase):
 class TestFileViews(OsfTestCase):
 
     def setUp(self):
-        super(TestFileViews, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.project = ProjectFactory(creator=self.user, is_public=True)
         self.project.add_contributor(self.user)
@@ -4344,7 +4344,7 @@ class TestFileViews(OsfTestCase):
 class TestTagViews(OsfTestCase):
 
     def setUp(self):
-        super(TestTagViews, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.project = ProjectFactory(creator=self.user)
 
@@ -4358,7 +4358,7 @@ class TestTagViews(OsfTestCase):
 class TestReorderComponents(OsfTestCase):
 
     def setUp(self):
-        super(TestReorderComponents, self).setUp()
+        super().setUp()
         self.creator = AuthUserFactory()
         self.contrib = AuthUserFactory()
         # Project is public
@@ -4391,7 +4391,7 @@ class TestReorderComponents(OsfTestCase):
 class TestWikiWidgetViews(OsfTestCase):
 
     def setUp(self):
-        super(TestWikiWidgetViews, self).setUp()
+        super().setUp()
 
         # project with no home wiki page
         self.project = ProjectFactory()
@@ -4432,7 +4432,7 @@ class TestWikiWidgetViews(OsfTestCase):
 class TestProjectCreation(OsfTestCase):
 
     def setUp(self):
-        super(TestProjectCreation, self).setUp()
+        super().setUp()
         self.creator = AuthUserFactory()
         self.url = api_url_for('project_new_post')
         self.user1 = AuthUserFactory()
@@ -4442,7 +4442,7 @@ class TestProjectCreation(OsfTestCase):
         self.project.save()
 
     def tearDown(self):
-        super(TestProjectCreation, self).tearDown()
+        super().tearDown()
 
     def test_needs_title(self):
         res = self.app.post_json(self.url, {}, auth=self.creator.auth, expect_errors=True)
@@ -4742,7 +4742,7 @@ class TestUserConfirmSignal(OsfTestCase):
 class TestCommentViews(OsfTestCase):
 
     def setUp(self):
-        super(TestCommentViews, self).setUp()
+        super().setUp()
         self.project = ProjectFactory(is_public=True)
         self.user = AuthUserFactory()
         self.project.add_contributor(self.user)
@@ -4826,7 +4826,7 @@ class TestCommentViews(OsfTestCase):
 class TestResetPassword(OsfTestCase):
 
     def setUp(self):
-        super(TestResetPassword, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.another_user = AuthUserFactory()
         self.osf_key_v2 = generate_verification_key(verification_type='password')
@@ -4927,7 +4927,7 @@ class TestResetPassword(OsfTestCase):
 @mock.patch('website.views.PROXY_EMBER_APPS', False)
 class TestResolveGuid(OsfTestCase):
     def setUp(self):
-        super(TestResolveGuid, self).setUp()
+        super().setUp()
 
     def test_preprint_provider_without_domain(self):
         provider = PreprintProviderFactory(domain='')
@@ -5003,7 +5003,7 @@ class TestConfirmationViewBlockBingPreview(OsfTestCase):
 
     def setUp(self):
 
-        super(TestConfirmationViewBlockBingPreview, self).setUp()
+        super().setUp()
         self.user_agent = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/534+ (KHTML, like Gecko) BingPreview/1.0b'
 
     # reset password link should fail with BingPreview

@@ -773,7 +773,7 @@ class TestNodeSettingsModel(StorageTestCase):
 @pytest.mark.enable_implicit_clean
 class TestOsfStorageFileVersion(StorageTestCase):
     def setUp(self):
-        super(TestOsfStorageFileVersion, self).setUp()
+        super().setUp()
         self.user = factories.AuthUserFactory()
         self.mock_date = datetime.datetime(1991, 10, 31, tzinfo=pytz.UTC)
 
@@ -909,7 +909,7 @@ class TestOsfStorageFileVersion(StorageTestCase):
 @pytest.mark.enable_quickfiles_creation
 class TestOsfStorageCheckout(StorageTestCase):
     def setUp(self):
-        super(TestOsfStorageCheckout, self).setUp()
+        super().setUp()
         self.user = factories.AuthUserFactory()
         self.node = ProjectFactory(creator=self.user)
         self.osfstorage = self.node.get_addon('osfstorage')

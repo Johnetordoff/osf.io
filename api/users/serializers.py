@@ -32,7 +32,7 @@ from api.base.versioning import get_kebab_snake_case_field
 class QuickFilesRelationshipField(RelationshipField):
 
     def to_representation(self, value):
-        relationship_links = super(QuickFilesRelationshipField, self).to_representation(value)
+        relationship_links = super().to_representation(value)
         quickfiles_guid = value.nodes_created.filter(type=QuickFilesNode._typedmodels_type).values_list('guids___id', flat=True).get()
         upload_url = waterbutler_api_url_for(quickfiles_guid, 'osfstorage')
         relationship_links['links']['upload'] = {
@@ -48,7 +48,7 @@ class QuickFilesRelationshipField(RelationshipField):
 
 class SocialField(ser.DictField):
     def __init__(self, min_version, **kwargs):
-        super(SocialField, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.min_version = min_version
         self.help_text = 'This field will change data formats after version {}'.format(self.min_version)
 
@@ -64,7 +64,7 @@ class SocialField(ser.DictField):
                 elif social.get(key) == []:
                     social[key] = ''
             value = social
-        return super(SocialField, self).to_representation(value)
+        return super().to_representation(value)
 
 
 class UserSerializer(JSONAPISerializer):
@@ -435,7 +435,7 @@ class UserSettingsSerializer(JSONAPISerializer):
 
     def to_representation(self, instance):
         self.context['twofactor_addon'] = instance.get_addon('twofactor')
-        return super(UserSettingsSerializer, self).to_representation(instance)
+        return super().to_representation(instance)
 
     def get_two_factor_enabled(self, obj):
         try:

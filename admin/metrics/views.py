@@ -12,4 +12,4 @@ class MetricsView(PermissionRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
 
         kwargs.update(KEEN_CREDENTIALS.copy())
-        return super(MetricsView, self).get_context_data(**kwargs)
+        return super().get_context_data(**kwargs)

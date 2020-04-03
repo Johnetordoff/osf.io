@@ -117,7 +117,7 @@ class TestNodeView(AdminTestCase):
 
 class TestNodeDeleteView(AdminTestCase):
     def setUp(self):
-        super(TestNodeDeleteView, self).setUp()
+        super().setUp()
         self.node = ProjectFactory()
         self.request = RequestFactory().post('/fake_path')
         self.plain_view = NodeDeleteView
@@ -185,7 +185,7 @@ class TestNodeDeleteView(AdminTestCase):
 
 class TestRemoveContributor(AdminTestCase):
     def setUp(self):
-        super(TestRemoveContributor, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.node = ProjectFactory(creator=self.user)
         self.user_2 = AuthUserFactory()
@@ -270,7 +270,7 @@ class TestRemoveContributor(AdminTestCase):
 @pytest.mark.enable_implicit_clean
 class TestNodeReindex(AdminTestCase):
     def setUp(self):
-        super(TestNodeReindex, self).setUp()
+        super().setUp()
         self.request = RequestFactory().post('/fake_path')
 
         self.user = AuthUserFactory()
@@ -331,7 +331,7 @@ class TestNodeReindex(AdminTestCase):
 
 class TestNodeConfirmHamView(AdminTestCase):
     def setUp(self):
-        super(TestNodeConfirmHamView, self).setUp()
+        super().setUp()
 
         self.request = RequestFactory().post('/fake_path')
         self.user = AuthUserFactory()
@@ -359,7 +359,7 @@ class TestNodeConfirmHamView(AdminTestCase):
 class TestAdminNodeLogView(AdminTestCase):
 
     def setUp(self):
-        super(TestAdminNodeLogView, self).setUp()
+        super().setUp()
 
         self.request = RequestFactory().post('/fake_path')
         self.user = AuthUserFactory()
@@ -424,7 +424,7 @@ class TestAdminNodeLogView(AdminTestCase):
 
 class TestRestartStuckRegistrationsView(AdminTestCase):
     def setUp(self):
-        super(TestRestartStuckRegistrationsView, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.registration = RegistrationFactory(creator=self.user)
         self.registration.save()
@@ -458,7 +458,7 @@ class TestRestartStuckRegistrationsView(AdminTestCase):
 
 class TestRemoveStuckRegistrationsView(AdminTestCase):
     def setUp(self):
-        super(TestRemoveStuckRegistrationsView, self).setUp()
+        super().setUp()
         self.user = UserFactory()
         self.registration = RegistrationFactory(creator=self.user)
         # Make the registration "stuck"

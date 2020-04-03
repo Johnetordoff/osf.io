@@ -15,7 +15,7 @@ from admin.common_auth.forms import UserRegistrationForm
 
 class TestRegisterUser(AdminTestCase):
     def setUp(self):
-        super(TestRegisterUser, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.data = {
             'osf_id': 'abc12',

@@ -33,7 +33,7 @@ class IsPreprintFile(PreprintPublishedOrAdmin):
                 return obj.target.can_view_files(get_user_auth(request))
 
             # If object is a primary_file on a preprint, need PreprintPublishedOrAdmin permissions to view
-            return super(IsPreprintFile, self).has_object_permission(request, view, obj.target)
+            return super().has_object_permission(request, view, obj.target)
 
         return True
 
@@ -54,5 +54,5 @@ def FileMetadataRecordPermission(Base):
 
         def has_object_permission(self, request, view, obj):
             obj = self.get_object(request, view, obj)
-            return super(Perm, self).has_object_permission(request, view, obj)
+            return super().has_object_permission(request, view, obj)
     return Perm

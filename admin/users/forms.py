@@ -7,7 +7,7 @@ class EmailResetForm(forms.Form):
     def __init__(self, *args, **kwargs):
         choices = kwargs.get('initial', {}).get('emails', [])
         self.base_fields['emails'] = forms.ChoiceField(choices=choices)
-        super(EmailResetForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class WorkshopForm(forms.Form):

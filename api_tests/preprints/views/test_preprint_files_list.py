@@ -16,7 +16,7 @@ from addons.osfstorage.models import OsfStorageFile
 
 class TestPreprintProvidersList(ApiTestCase):
     def setUp(self):
-        super(TestPreprintProvidersList, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.preprint = PreprintFactory(creator=self.user)
         self.url = '/{}preprints/{}/files/'.format(API_BASE, self.preprint._id)
@@ -223,7 +223,7 @@ class TestPreprintProvidersList(ApiTestCase):
 
 class TestPreprintFilesList(ApiTestCase):
     def setUp(self):
-        super(TestPreprintFilesList, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.preprint = PreprintFactory(creator=self.user)
         self.url = '/{}preprints/{}/files/osfstorage/'.format(API_BASE, self.preprint._id)

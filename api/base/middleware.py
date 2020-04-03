@@ -106,7 +106,7 @@ class CorsMiddleware(corsheaders.middleware.CorsMiddleware):
     def origin_found_in_white_lists(self, origin, url):
         settings.CORS_ORIGIN_WHITELIST += api_settings.ORIGINS_WHITELIST
         # Check if origin is in the dynamic custom domain whitelist
-        found = super(CorsMiddleware, self).origin_found_in_white_lists(origin, url)
+        found = super().origin_found_in_white_lists(origin, url)
         # Check if a cross-origin request using the Authorization header
         if not found:
             if not self._context.request.COOKIES:
@@ -127,7 +127,7 @@ class CorsMiddleware(corsheaders.middleware.CorsMiddleware):
     def process_response(self, request, response):
         self._context.request = request
         try:
-            return super(CorsMiddleware, self).process_response(request, response)
+            return super().process_response(request, response)
         finally:
             self._context.request = None
 
@@ -216,7 +216,7 @@ class SloanOverrideWaffleMiddleware(WaffleMiddleware):
                 httponly=settings.CSRF_COOKIE_HTTPONLY,
             )
 
-        return super(SloanOverrideWaffleMiddleware, self).process_response(request, response)
+        return super().process_response(request, response)
 
     @staticmethod
     def get_domain(url: str) -> str:

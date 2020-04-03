@@ -913,7 +913,7 @@ class UserEmailsDetail(JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView, U
         return UserEmail(email_id=email_id, address=address, confirmed=confirmed, verified=verified, primary=primary, is_merge=is_merge)
 
     def get(self, request, *args, **kwargs):
-        response = super(UserEmailsDetail, self).get(request, *args, **kwargs)
+        response = super().get(request, *args, **kwargs)
         if is_truthy(self.request.query_params.get('resend_confirmation')):
             user = self.get_user()
             email_id = kwargs.get('email_id')

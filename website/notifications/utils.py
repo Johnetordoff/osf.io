@@ -14,7 +14,7 @@ from framework.celery_tasks import app
 
 class NotificationsDict(dict):
     def __init__(self):
-        super(NotificationsDict, self).__init__()
+        super().__init__()
         self.update(messages=[], children=collections.defaultdict(NotificationsDict))
 
     def add_message(self, keys, messages):

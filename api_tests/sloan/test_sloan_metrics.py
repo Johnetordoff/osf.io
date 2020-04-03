@@ -36,7 +36,7 @@ django_app = JSONAPITestApp()
 class TestSloanMetrics(OsfTestCase):
 
     def setUp(self):
-        super(TestSloanMetrics, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.auth_obj = Auth(user=self.user)
         self.preprint = PreprintFactory(creator=self.user, is_public=True)

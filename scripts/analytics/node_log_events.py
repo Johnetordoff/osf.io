@@ -24,7 +24,7 @@ class NodeLogEvents(EventAnalytics):
         """ Get all node logs from a given date for a 24 hour period,
         ending at the date given.
         """
-        super(NodeLogEvents, self).get_events(date)
+        super().get_events(date)
 
         # In the end, turn the date back into a datetime at midnight for queries
         date = datetime(date.year, date.month, date.day).replace(tzinfo=pytz.UTC)

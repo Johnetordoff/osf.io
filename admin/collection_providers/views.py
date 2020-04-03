@@ -39,12 +39,12 @@ class CreateCollectionProvider(PermissionRequiredMixin, CreateView):
         for item in form.cleaned_data['program_area_choices']['added']:
             self.object.primary_collection.program_area_choices.append(item)
         self.object.primary_collection.save()
-        return super(CreateCollectionProvider, self).form_valid(form)
+        return super().form_valid(form)
 
     def get_context_data(self, *args, **kwargs):
         kwargs['import_form'] = ImportFileForm()
         kwargs['tinymce_apikey'] = settings.TINYMCE_APIKEY
-        return super(CreateCollectionProvider, self).get_context_data(*args, **kwargs)
+        return super().get_context_data(*args, **kwargs)
 
 
 class CollectionProviderList(PermissionRequiredMixin, ListView):
@@ -184,10 +184,10 @@ class CollectionProviderChangeForm(PermissionRequiredMixin, UpdateView):
             self.object.primary_collection.program_area_choices.remove(item)
 
         self.object.primary_collection.save()
-        return super(CollectionProviderChangeForm, self).form_valid(form)
+        return super().form_valid(form)
 
     def form_invalid(self, form):
-        super(CollectionProviderChangeForm, self).form_invalid(form)
+        super().form_invalid(form)
         err_message = ''
         for item in form.errors.values():
             err_message = err_message + item + '\n'
@@ -195,7 +195,7 @@ class CollectionProviderChangeForm(PermissionRequiredMixin, UpdateView):
 
     def get_context_data(self, *args, **kwargs):
         kwargs['import_form'] = ImportFileForm()
-        return super(CollectionProviderChangeForm, self).get_context_data(*args, **kwargs)
+        return super().get_context_data(*args, **kwargs)
 
     def get_object(self, queryset=None):
         provider_id = self.kwargs.get('collection_provider_id')
@@ -216,13 +216,13 @@ class DeleteCollectionProvider(PermissionRequiredMixin, DeleteView):
         provider = CollectionProvider.objects.get(id=self.kwargs['collection_provider_id'])
         if provider.primary_collection.collectionsubmission_set.count() > 0:
             return redirect('collection_providers:cannot_delete', collection_provider_id=provider.pk)
-        return super(DeleteCollectionProvider, self).delete(request, *args, **kwargs)
+        return super().delete(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         provider = CollectionProvider.objects.get(id=self.kwargs['collection_provider_id'])
         if provider.primary_collection.collectionsubmission_set.count() > 0:
             return redirect('collection_providers:cannot_delete', collection_provider_id=provider.pk)
-        return super(DeleteCollectionProvider, self).get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
         return CollectionProvider.objects.get(id=self.kwargs['collection_provider_id'])
@@ -232,7 +232,7 @@ class CannotDeleteProvider(TemplateView):
     template_name = 'collection_providers/cannot_delete.html'
 
     def get_context_data(self, **kwargs):
-        context = super(CannotDeleteProvider, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['provider'] = CollectionProvider.objects.get(id=self.kwargs['collection_provider_id'])
         return context
 

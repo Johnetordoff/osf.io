@@ -84,7 +84,7 @@ def prepare_mock_wb_response(
 class TestNodeFilesList(ApiTestCase):
 
     def setUp(self):
-        super(TestNodeFilesList, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.project = ProjectFactory(creator=self.user)
         self.private_url = '/{}nodes/{}/files/'.format(
@@ -449,7 +449,7 @@ class TestNodeFilesList(ApiTestCase):
 class TestNodeFilesListFiltering(ApiTestCase):
 
     def setUp(self):
-        super(TestNodeFilesListFiltering, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.project = ProjectFactory(creator=self.user)
         # Prep HTTP mocks
@@ -590,7 +590,7 @@ class TestNodeFilesListFiltering(ApiTestCase):
 
 class TestNodeFilesListPagination(ApiTestCase):
     def setUp(self):
-        super(TestNodeFilesListPagination, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.project = ProjectFactory(creator=self.user)
 
@@ -661,7 +661,7 @@ class TestNodeFilesListPagination(ApiTestCase):
 class TestNodeStorageProviderDetail(ApiTestCase):
 
     def setUp(self):
-        super(TestNodeStorageProviderDetail, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.public_project = ProjectFactory(is_public=True)
         self.private_project = ProjectFactory(creator=self.user)

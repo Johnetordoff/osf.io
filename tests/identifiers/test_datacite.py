@@ -137,7 +137,7 @@ class TestDataCiteViews(OsfTestCase):
     """ This tests the v1 views for Project/Registration DOI creation."""
 
     def setUp(self):
-        super(TestDataCiteViews, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.node = RegistrationFactory(creator=self.user, is_public=True)
         self.client = DataCiteClient(base_url = 'https://mds.fake.datacite.org', prefix=settings.DATACITE_PREFIX)

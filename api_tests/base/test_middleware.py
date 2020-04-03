@@ -18,7 +18,7 @@ class MiddlewareTestCase(ApiTestCase):
     MIDDLEWARE = None
 
     def setUp(self):
-        super(MiddlewareTestCase, self).setUp()
+        super().setUp()
         self.middleware = self.MIDDLEWARE()
         self.mock_response = mock.Mock()
         self.request_factory = APIRequestFactory()

@@ -26,7 +26,7 @@ class TestAuthViews(ZoteroTestCase, views.OAuthAddonAuthViewsTestCaseMixin, OsfT
             'oauth_token': 'token',
             'oauth_secret': 'secret',
         }
-        super(TestAuthViews, self).test_oauth_start()
+        super().test_oauth_start()
 
 
 class TestConfigViews(ZoteroTestCase, views.OAuthCitationAddonConfigViewsTestCaseMixin, OsfTestCase):
@@ -41,7 +41,7 @@ class TestConfigViews(ZoteroTestCase, views.OAuthCitationAddonConfigViewsTestCas
     mockResponsesFiledUnfiled = mock_responses_with_filed_and_unfiled
 
     def setUp(self):
-        super(TestConfigViews, self).setUp()
+        super().setUp()
         self.foldersApiUrl = urljoin(API_URL, 'users/{}/collections'
             .format(self.external_account.provider_id))
         self.documentsApiUrl = urljoin(API_URL, 'users/{}/items/top'

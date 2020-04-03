@@ -100,7 +100,7 @@ class UserDeleteView(PermissionRequiredMixin, DeleteView):
     def get_context_data(self, **kwargs):
         context = {}
         context.setdefault('guid', kwargs.get('object')._id)
-        return super(UserDeleteView, self).get_context_data(**context)
+        return super().get_context_data(**context)
 
     def get_object(self, queryset=None):
         return OSFUser.load(self.kwargs.get('guid'))
@@ -139,7 +139,7 @@ class UserGDPRDeleteView(PermissionRequiredMixin, DeleteView):
     def get_context_data(self, **kwargs):
         context = {}
         context.setdefault('guid', kwargs.get('object')._id)
-        return super(UserGDPRDeleteView, self).get_context_data(**context)
+        return super().get_context_data(**context)
 
     def get_object(self, queryset=None):
         user = OSFUser.load(self.kwargs.get('guid'))
@@ -183,7 +183,7 @@ class SpamUserDeleteView(UserDeleteView):
                     )
 
         kwargs.update({'is_spam': True})
-        return super(SpamUserDeleteView, self).delete(request, *args, **kwargs)
+        return super().delete(request, *args, **kwargs)
 
 
 class HamUserRestoreView(UserDeleteView):
@@ -216,7 +216,7 @@ class HamUserRestoreView(UserDeleteView):
                     )
 
         kwargs.update({'is_spam': False})
-        return super(HamUserRestoreView, self).delete(request, *args, **kwargs)
+        return super().delete(request, *args, **kwargs)
 
 
 class UserSpamList(PermissionRequiredMixin, ListView):
@@ -329,7 +329,7 @@ class UserAddSystemTag(PermissionRequiredMixin, FormView):
         user.add_system_tag(system_tag_to_add)
         user.save()
 
-        return super(UserAddSystemTag, self).form_valid(form)
+        return super().form_valid(form)
 
 
 class UserFormView(PermissionRequiredMixin, FormView):
@@ -341,7 +341,7 @@ class UserFormView(PermissionRequiredMixin, FormView):
 
     def __init__(self, *args, **kwargs):
         self.redirect_url = None
-        super(UserFormView, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def form_valid(self, form):
         guid = form.cleaned_data['guid']
@@ -361,7 +361,7 @@ class UserFormView(PermissionRequiredMixin, FormView):
         elif name:
             self.redirect_url = reverse('users:search_list', kwargs={'name': name})
 
-        return super(UserFormView, self).form_valid(form)
+        return super().form_valid(form)
 
     @property
     def success_url(self):
@@ -420,7 +420,7 @@ class UserSearchList(PermissionRequiredMixin, ListView):
             'confirmed': user.date_confirmed,
             'disabled': user.date_disabled if user.is_disabled else None
         } for user in query_set]
-        return super(UserSearchList, self).get_context_data(**kwargs)
+        return super().get_context_data(**kwargs)
 
 
 class UserView(PermissionRequiredMixin, GuidView):
@@ -431,7 +431,7 @@ class UserView(PermissionRequiredMixin, GuidView):
     raise_exception = True
 
     def get_context_data(self, **kwargs):
-        kwargs = super(UserView, self).get_context_data(**kwargs)
+        kwargs = super().get_context_data(**kwargs)
         kwargs.update({'SPAM_STATUS': SpamStatus})  # Pass spam status in to check against
         user = OSFUser.load(self.kwargs.get('guid'))  # Pull User for Node/Preprints
 
@@ -559,7 +559,7 @@ class UserWorkshopFormView(PermissionRequiredMixin, FormView):
         return result
 
     def form_invalid(self, form):
-        super(UserWorkshopFormView, self).form_invalid(form)
+        super().form_invalid(form)
 
 
 class GetUserLink(PermissionRequiredMixin, TemplateView):
@@ -585,7 +585,7 @@ class GetUserLink(PermissionRequiredMixin, TemplateView):
         kwargs['title'] = self.get_link_type()
         kwargs['node_claim_links'] = self.get_claim_links(user)
 
-        return super(GetUserLink, self).get_context_data(**kwargs)
+        return super().get_context_data(**kwargs)
 
 
 class GetUserConfirmationLink(GetUserLink):
@@ -648,19 +648,19 @@ class ResetPasswordView(PermissionRequiredMixin, FormView):
                     self.context_object_name.title(),
                     self.kwargs.get('guid')
                 ))
-        return super(ResetPasswordView, self).dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)
 
     def get_initial(self):
         self.initial = {
             'guid': self.user._id,
             'emails': [(r, r) for r in self.user.emails.values_list('address', flat=True)],
         }
-        return super(ResetPasswordView, self).get_initial()
+        return super().get_initial()
 
     def get_context_data(self, **kwargs):
         kwargs.setdefault('guid', self.user._id)
         kwargs.setdefault('emails', self.user.emails)
-        return super(ResetPasswordView, self).get_context_data(**kwargs)
+        return super().get_context_data(**kwargs)
 
     def form_valid(self, form):
         email = form.cleaned_data.get('emails')
@@ -696,7 +696,7 @@ class ResetPasswordView(PermissionRequiredMixin, FormView):
             message='Emailed user {} a reset link.'.format(user.pk),
             action_flag=USER_EMAILED
         )
-        return super(ResetPasswordView, self).form_valid(form)
+        return super().form_valid(form)
 
     @property
     def success_url(self):

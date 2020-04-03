@@ -180,7 +180,7 @@ class GroupMembersList(OSFGroupMemberBaseView, bulk_views.BulkUpdateJSONAPIView,
 
     # Overrides ListBulkCreateJSONAPIView
     def get_serializer_context(self):
-        context = super(GroupMembersList, self).get_serializer_context()
+        context = super().get_serializer_context()
         # Permissions check handled here - needed when performing write operations
         context['group'] = self.get_osf_group()
         return context
@@ -214,11 +214,11 @@ class GroupMembersList(OSFGroupMemberBaseView, bulk_views.BulkUpdateJSONAPIView,
                 raise InvalidFilterValue(value=operation['value'])
             group = self.get_osf_group(check_object_permissions=False)
             return Q(id__in=group.managers if role == MANAGER else group.members_only)
-        return super(GroupMembersList, self).build_query_from_field(field_name, operation)
+        return super().build_query_from_field(field_name, operation)
 
     @require_flag(OSF_GROUPS)
     def perform_create(self, serializer):
-        return super(GroupMembersList, self).perform_create(serializer)
+        return super().perform_create(serializer)
 
 
 class GroupMemberDetail(OSFGroupMemberBaseView, generics.RetrieveUpdateDestroyAPIView, UserMixin):
@@ -238,6 +238,6 @@ class GroupMemberDetail(OSFGroupMemberBaseView, generics.RetrieveUpdateDestroyAP
 
     # Overrides RetrieveUpdateDestroyAPIView
     def get_serializer_context(self):
-        context = super(GroupMemberDetail, self).get_serializer_context()
+        context = super().get_serializer_context()
         context['group'] = self.get_osf_group(check_object_permissions=False)
         return context

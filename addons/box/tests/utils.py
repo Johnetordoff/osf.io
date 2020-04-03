@@ -14,7 +14,7 @@ class BoxAddonTestCase(OAuthAddonTestCaseMixin, AddonTestCase):
     Provider = Provider
 
     def set_node_settings(self, settings):
-        super(BoxAddonTestCase, self).set_node_settings(settings)
+        super().set_node_settings(settings)
         settings.folder_id = '1234567890'
         settings.folder_name = 'Foo'
 

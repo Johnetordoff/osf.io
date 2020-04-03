@@ -16,11 +16,11 @@ class TestApproveEmbargoTerminations(OsfTestCase):
 
     def tearDown(self):
         with mock.patch('framework.celery_tasks.handlers.queue', mock.Mock(return_value=None)):
-            super(TestApproveEmbargoTerminations, self).tearDown()
+            super().tearDown()
 
     @mock.patch('osf.models.sanctions.EmailApprovableSanction.ask', mock.Mock())
     def setUp(self):
-        super(TestApproveEmbargoTerminations, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
 
         self.node = NodeFactory(creator=self.user)

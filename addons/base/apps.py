@@ -74,7 +74,7 @@ class BaseAddonAppConfig(AppConfig):
     categories = []
 
     def __init__(self, *args, **kwargs):
-        ret = super(BaseAddonAppConfig, self).__init__(*args, **kwargs).__init__()
+        ret = super().__init__(*args, **kwargs).__init__()
         # Build template lookup
         paths = [settings.TEMPLATES_PATH]
         if self.user_settings_template:

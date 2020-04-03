@@ -1114,7 +1114,7 @@ class CompoundIDField(IDField):
     def __init__(self, *args, **kwargs):
         kwargs['source'] = kwargs.pop('source', '_id')
         kwargs['help_text'] = kwargs.get('help_text', 'Unique ID that is a compound of two objects. Has the form "<resource-id>-<related-id>". Example: "abc12-xyz34"')
-        super(CompoundIDField, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _get_resource_id(self):
         return self.context['request'].parser_context['kwargs']['node_id']
@@ -1127,7 +1127,7 @@ class CompoundIDField(IDField):
 
     def to_representation(self, value):
         resource_id = self._get_resource_id()
-        related_id = super(CompoundIDField, self).to_representation(value)
+        related_id = super().to_representation(value)
         return '{}-{}'.format(resource_id, related_id)
 
 

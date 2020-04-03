@@ -35,7 +35,7 @@ LICENSE_TEXT = json.dumps({
 class TestNodeLicenses(OsfTestCase):
 
     def setUp(self):
-        super(TestNodeLicenses, self).setUp()
+        super().setUp()
 
         self.user = AuthUserFactory()
         self.node = ProjectFactory(creator=self.user)

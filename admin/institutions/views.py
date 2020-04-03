@@ -34,7 +34,7 @@ class InstitutionList(PermissionRequiredMixin, ListView):
         kwargs.setdefault('institutions', query_set)
         kwargs.setdefault('page', page)
         kwargs.setdefault('logohost', settings.OSF_URL)
-        return super(InstitutionList, self).get_context_data(**kwargs)
+        return super().get_context_data(**kwargs)
 
 
 class InstitutionDisplay(PermissionRequiredMixin, DetailView):
@@ -105,7 +105,7 @@ class InstitutionChangeForm(PermissionRequiredMixin, UpdateView):
 
     def get_context_data(self, *args, **kwargs):
         kwargs['import_form'] = ImportFileForm()
-        return super(InstitutionChangeForm, self).get_context_data(*args, **kwargs)
+        return super().get_context_data(*args, **kwargs)
 
     def get_success_url(self, *args, **kwargs):
         return reverse_lazy('institutions:detail', kwargs={'institution_id': self.kwargs.get('institution_id')})
@@ -136,7 +136,7 @@ class CreateInstitution(PermissionRequiredMixin, CreateView):
 
     def get_context_data(self, *args, **kwargs):
         kwargs['import_form'] = ImportFileForm()
-        return super(CreateInstitution, self).get_context_data(*args, **kwargs)
+        return super().get_context_data(*args, **kwargs)
 
 
 class InstitutionNodeList(PermissionRequiredMixin, ListView):
@@ -159,7 +159,7 @@ class InstitutionNodeList(PermissionRequiredMixin, ListView):
         kwargs.setdefault('institution', Institution.objects.get(id=self.kwargs['institution_id']))
         kwargs.setdefault('page', page)
         kwargs.setdefault('logohost', settings.OSF_URL)
-        return super(InstitutionNodeList, self).get_context_data(**kwargs)
+        return super().get_context_data(**kwargs)
 
 
 class DeleteInstitution(PermissionRequiredMixin, DeleteView):
@@ -172,13 +172,13 @@ class DeleteInstitution(PermissionRequiredMixin, DeleteView):
         institution = Institution.objects.get(id=self.kwargs['institution_id'])
         if institution.nodes.count() > 0:
             return redirect('institutions:cannot_delete', institution_id=institution.pk)
-        return super(DeleteInstitution, self).delete(request, *args, **kwargs)
+        return super().delete(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         institution = Institution.objects.get(id=self.kwargs['institution_id'])
         if institution.nodes.count() > 0:
             return redirect('institutions:cannot_delete', institution_id=institution.pk)
-        return super(DeleteInstitution, self).get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
         institution = Institution.objects.get(id=self.kwargs['institution_id'])
@@ -189,6 +189,6 @@ class CannotDeleteInstitution(TemplateView):
     template_name = 'institutions/cannot_delete.html'
 
     def get_context_data(self, **kwargs):
-        context = super(CannotDeleteInstitution, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['institution'] = Institution.objects.get(id=self.kwargs['institution_id'])
         return context

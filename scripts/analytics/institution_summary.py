@@ -26,7 +26,7 @@ class InstitutionSummary(SummaryAnalytics):
         return 'institution_summary'
 
     def get_events(self, date):
-        super(InstitutionSummary, self).get_events(date)
+        super().get_events(date)
 
         institutions = Institution.objects.all()
         counts = []

@@ -88,7 +88,7 @@ class TestUserView(AdminTestCase):
 
 class TestResetPasswordView(AdminTestCase):
     def setUp(self):
-        super(TestResetPasswordView, self).setUp()
+        super().setUp()
         self.user = UserFactory()
         self.request = RequestFactory().get('/fake_path')
         self.request.user = self.user
@@ -379,7 +379,7 @@ class SpamUserListMixin(object):
 
 class TestFlaggedSpamUserList(SpamUserListMixin, AdminTestCase):
     def setUp(self):
-        super(TestFlaggedSpamUserList, self).setUp()
+        super().setUp()
         self.plain_view = views.UserFlaggedSpamList
         self.view = setup_log_view(self.plain_view(), self.request)
         self.url = reverse('users:flagged-spam')
@@ -392,7 +392,7 @@ class TestFlaggedSpamUserList(SpamUserListMixin, AdminTestCase):
 
 class TestConfirmedSpamUserList(SpamUserListMixin, AdminTestCase):
     def setUp(self):
-        super(TestConfirmedSpamUserList, self).setUp()
+        super().setUp()
         self.plain_view = views.UserKnownSpamList
         self.view = setup_log_view(self.plain_view(), self.request)
 
@@ -406,7 +406,7 @@ class TestConfirmedSpamUserList(SpamUserListMixin, AdminTestCase):
 
 class TestConfirmedHamUserList(SpamUserListMixin, AdminTestCase):
     def setUp(self):
-        super(TestConfirmedHamUserList, self).setUp()
+        super().setUp()
         self.plain_view = views.UserKnownHamList
         self.view = setup_log_view(self.plain_view(), self.request)
 
@@ -420,7 +420,7 @@ class TestConfirmedHamUserList(SpamUserListMixin, AdminTestCase):
 
 class TestRemove2Factor(AdminTestCase):
     def setUp(self):
-        super(TestRemove2Factor, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.request = RequestFactory().post('/fake_path')
         self.view = views.User2FactorDeleteView
@@ -791,7 +791,7 @@ class TestGetLinkView(AdminTestCase):
 
 class TestUserReindex(AdminTestCase):
     def setUp(self):
-        super(TestUserReindex, self).setUp()
+        super().setUp()
         self.request = RequestFactory().post('/fake_path')
 
         self.user = AuthUserFactory()
@@ -808,7 +808,7 @@ class TestUserReindex(AdminTestCase):
 
 class TestUserMerge(AdminTestCase):
     def setUp(self):
-        super(TestUserMerge, self).setUp()
+        super().setUp()
         self.request = RequestFactory().post('/fake_path')
 
     @mock.patch('osf.models.user.OSFUser.merge_user')

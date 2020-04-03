@@ -38,7 +38,7 @@ DUMMY_TOKEN = tokens.encode({
 @pytest.mark.enable_bookmark_creation
 class RegistrationEmbargoModelsTestCase(OsfTestCase):
     def setUp(self):
-        super(RegistrationEmbargoModelsTestCase, self).setUp()
+        super().setUp()
         self.user = UserFactory()
         self.project = ProjectFactory(creator=self.user)
         self.registration = RegistrationFactory(project=self.project)
@@ -439,7 +439,7 @@ class RegistrationEmbargoModelsTestCase(OsfTestCase):
 class RegistrationWithChildNodesEmbargoModelTestCase(OsfTestCase):
 
     def setUp(self):
-        super(RegistrationWithChildNodesEmbargoModelTestCase, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.auth = self.user.auth
         self.valid_embargo_end_date = timezone.now() + datetime.timedelta(days=3)
@@ -522,7 +522,7 @@ class LegacyRegistrationEmbargoApprovalDisapprovalViewsTestCase(OsfTestCase):
     off the view_project view
     """
     def setUp(self):
-        super(LegacyRegistrationEmbargoApprovalDisapprovalViewsTestCase, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.project = ProjectFactory(creator=self.user)
         self.registration = RegistrationFactory(creator=self.user, project=self.project)
@@ -798,7 +798,7 @@ class LegacyRegistrationEmbargoApprovalDisapprovalViewsTestCase(OsfTestCase):
 @pytest.mark.enable_bookmark_creation
 class RegistrationEmbargoApprovalDisapprovalViewsTestCase(OsfTestCase):
     def setUp(self):
-        super(RegistrationEmbargoApprovalDisapprovalViewsTestCase, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.project = ProjectFactory(creator=self.user)
         self.registration = RegistrationFactory(creator=self.user, project=self.project)
@@ -1074,7 +1074,7 @@ class RegistrationEmbargoApprovalDisapprovalViewsTestCase(OsfTestCase):
 @pytest.mark.enable_bookmark_creation
 class RegistrationEmbargoViewsTestCase(OsfTestCase):
     def setUp(self):
-        super(RegistrationEmbargoViewsTestCase, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.project = ProjectFactory(creator=self.user)
         self.draft = DraftRegistrationFactory(branched_from=self.project)

@@ -62,7 +62,7 @@ class NodeLicenseRecord(ObjectIDMixin, BaseModel):
     def __unicode__(self):
         if self.node_license:
             return self.node_license.__unicode__()
-        return super(NodeLicenseRecord, self).__unicode__()
+        return super().__unicode__()
 
     @property
     def name(self):

@@ -14,7 +14,7 @@ class DataverseAddonTestCase(OAuthAddonTestCaseMixin, AddonTestCase):
     Provider = DataverseProvider
 
     def set_node_settings(self, settings):
-        super(DataverseAddonTestCase, self).set_node_settings(settings)
+        super().set_node_settings(settings)
         settings.dataverse_alias = 'ALIAS2'
         settings.dataverse = 'Example 2'
         settings.dataset_doi = 'doi:12.3456/DVN/00001'

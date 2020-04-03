@@ -81,7 +81,7 @@ class CollectionSubmission(TaxonomizableMixin, BaseModel):
 
     def save(self, *args, **kwargs):
         kwargs.pop('old_subjects', None)  # Not indexing this, trash it
-        ret = super(CollectionSubmission, self).save(*args, **kwargs)
+        ret = super().save(*args, **kwargs)
         self.update_index()
         return ret
 
@@ -177,7 +177,7 @@ class Collection(DirtyFieldsMixin, GuidMixin, BaseModel, GuardianMixin):
                 # Bookmark collections are always named 'Bookmarks'
                 self.title = 'Bookmarks'
         saved_fields = self.get_dirty_fields() or []
-        ret = super(Collection, self).save(*args, **kwargs)
+        ret = super().save(*args, **kwargs)
 
         if first_save:
             # Set defaults for M2M

@@ -18,7 +18,7 @@ from osf_tests.factories import (
 class TestRegistrationEmbeds(ApiTestCase):
 
     def setUp(self):
-        super(TestRegistrationEmbeds, self).setUp()
+        super().setUp()
 
         self.user = AuthUserFactory()
         self.auth = Auth(self.user)

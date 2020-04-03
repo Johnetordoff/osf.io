@@ -186,7 +186,7 @@ class OsfWebRenderer(WebRenderer):
     """
     def __init__(self, *args, **kwargs):
         kwargs['data'] = get_globals
-        super(OsfWebRenderer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def __call__(self, data, *args, **kwargs):
         """
@@ -194,7 +194,7 @@ class OsfWebRenderer(WebRenderer):
         waffle's own middleware code at https://github.com/django-waffle/django-waffle/blob/master/waffle/middleware.py
         """
 
-        resp = super(OsfWebRenderer, self).__call__(data, *args, **kwargs)
+        resp = super().__call__(data, *args, **kwargs)
         max_age = get_setting('MAX_AGE')
 
         if hasattr(request, 'waffles'):

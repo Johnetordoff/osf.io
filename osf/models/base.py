@@ -108,7 +108,7 @@ class BaseModel(TimeStampedModel, QuerySetExplainMixin):
         return self.refresh_from_db()
 
     def refresh_from_db(self, **kwargs):
-        super(BaseModel, self).refresh_from_db(**kwargs)
+        super().refresh_from_db(**kwargs)
         # Django's refresh_from_db does not uncache GFKs
         for field in self._meta.private_fields:
             if hasattr(field, 'cache_attr') and field.cache_attr in self.__dict__:
@@ -137,7 +137,7 @@ class BaseModel(TimeStampedModel, QuerySetExplainMixin):
                 self.full_clean()
             except DjangoValidationError as err:
                 raise ValidationError(*err.args)
-        return super(BaseModel, self).save(*args, **kwargs)
+        return super().save(*args, **kwargs)
 
 
 # TODO: Rename to Identifier?
@@ -284,12 +284,12 @@ class OptionalGuidMixin(BaseIDMixin):
 class GuidMixinQuerySet(IncludeQuerySet):
 
     def _filter_or_exclude(self, negate, *args, **kwargs):
-        return super(GuidMixinQuerySet, self)._filter_or_exclude(negate, *args, **kwargs).include('guids')
+        return super()._filter_or_exclude(negate, *args, **kwargs).include('guids')
 
     def all(self):
         if self._fields:
-            return super(GuidMixinQuerySet, self).all()
-        return super(GuidMixinQuerySet, self).all().include('guids')
+            return super().all()
+        return super().all().include('guids')
 
     def count(self):
         return super(GuidMixinQuerySet, self.include(None)).count()

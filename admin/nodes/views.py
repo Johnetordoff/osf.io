@@ -111,7 +111,7 @@ class NodeRemoveContributorView(PermissionRequiredMixin, DeleteView):
         context.setdefault('user', serialize_simple_user_and_node_permissions(node, user))
         context['link'] = 'nodes:remove_user'
         context['resource_type'] = 'project'
-        return super(NodeRemoveContributorView, self).get_context_data(**context)
+        return super().get_context_data(**context)
 
     def get_object(self, queryset=None):
         return (Node.load(self.kwargs.get('guid')),
@@ -126,7 +126,7 @@ class NodeDeleteBase(DeleteView):
     def get_context_data(self, **kwargs):
         context = {}
         context.setdefault('guid', kwargs.get('object')._id)
-        return super(NodeDeleteBase, self).get_context_data(**context)
+        return super().get_context_data(**context)
 
     def get_object(self, queryset=None):
         return Node.load(self.kwargs.get('guid')) or Registration.load(self.kwargs.get('guid'))
@@ -143,7 +143,7 @@ class NodeDeleteView(PermissionRequiredMixin, NodeDeleteBase):
     raise_exception = True
 
     def get_context_data(self, **kwargs):
-        context = super(NodeDeleteView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['link'] = 'nodes:remove'
         context['resource_type'] = 'node'
         return context
@@ -213,7 +213,7 @@ class NodeView(PermissionRequiredMixin, GuidView):
     raise_exception = True
 
     def get_context_data(self, **kwargs):
-        kwargs = super(NodeView, self).get_context_data(**kwargs)
+        kwargs = super().get_context_data(**kwargs)
         kwargs.update({'SPAM_STATUS': SpamStatus})  # Pass spam status in to check against
         kwargs.update({'message': kwargs.get('message')})  # Pass spam status in to check against
         return kwargs
@@ -411,7 +411,7 @@ class NodeConfirmSpamView(PermissionRequiredMixin, NodeDeleteBase):
             return redirect(reverse_node(self.kwargs.get('guid')))
 
     def get_context_data(self, **kwargs):
-        context = super(NodeConfirmSpamView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['link'] = 'nodes:confirm-spam'
         context['resource_type'] = self.object_type.lower()
         return context
@@ -424,7 +424,7 @@ class NodeConfirmHamView(PermissionRequiredMixin, NodeDeleteBase):
     object_type = 'Node'
 
     def get_context_data(self, **kwargs):
-        context = super(NodeConfirmHamView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['link'] = 'nodes:confirm-ham'
         context['resource_type'] = self.object_type.lower()
         return context
@@ -465,7 +465,7 @@ class NodeReindexShare(PermissionRequiredMixin, NodeDeleteBase):
             return redirect(reverse_node(self.kwargs.get('guid')))
 
     def get_context_data(self, **kwargs):
-        context = super(NodeReindexShare, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['link'] = 'nodes:reindex-share-node'
         context['resource_type'] = 'node'
         return context
@@ -491,7 +491,7 @@ class NodeReindexElastic(PermissionRequiredMixin, NodeDeleteBase):
         return redirect(reverse_node(self.kwargs.get('guid')))
 
     def get_context_data(self, **kwargs):
-        context = super(NodeReindexElastic, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['link'] = 'nodes:reindex-elastic-node'
         context['resource_type'] = 'node'
         return context

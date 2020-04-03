@@ -66,14 +66,14 @@ class TestConfigViews(DataverseAddonTestCase, OAuthAddonConfigViewsTestCaseMixin
     client = DataverseProvider
 
     def setUp(self):
-        super(TestConfigViews, self).setUp()
+        super().setUp()
         self.mock_ser_api = mock.patch('addons.dataverse.serializer.client.connect_from_settings')
         self.mock_ser_api.return_value = create_mock_connection()
         self.mock_ser_api.start()
 
     def tearDown(self):
         self.mock_ser_api.stop()
-        super(TestConfigViews, self).tearDown()
+        super().tearDown()
 
     @mock.patch('addons.dataverse.views.client.connect_from_settings')
     def test_folder_list(self, mock_connection):
@@ -280,7 +280,7 @@ class TestDataverseRestrictions(DataverseAddonTestCase, OsfTestCase):
 
     def setUp(self):
 
-        super(DataverseAddonTestCase, self).setUp()
+        super().setUp()
 
         # Nasty contributor who will try to access content that he shouldn't
         # have access to

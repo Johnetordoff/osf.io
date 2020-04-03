@@ -12,7 +12,7 @@ class GitLabAddonTestCase(OAuthAddonTestCaseMixin, AddonTestCase):
     Provider = GitLabProvider
 
     def set_node_settings(self, settings):
-        super(GitLabAddonTestCase, self).set_node_settings(settings)
+        super().set_node_settings(settings)
         settings.repo = 'osfgitlabtest'
         settings.user = 'osfio'
 

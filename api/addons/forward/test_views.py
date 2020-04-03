@@ -17,7 +17,7 @@ class TestForward(ForwardAddonTestCase, OsfTestCase):
     django_app = JSONAPITestApp()
 
     def setUp(self):
-        super(TestForward, self).setUp()
+        super().setUp()
         self.app.authenticate(*self.user.auth)
 
     @mock.patch.object(settings, 'SPAM_CHECK_ENABLED', True)

@@ -145,5 +145,5 @@ def PermissionWithGetter(Base, getter):
 
         def has_object_permission(self, request, view, obj):
             obj = self.get_object(request, view, obj)
-            return super(Perm, self).has_object_permission(request, view, obj)
+            return super().has_object_permission(request, view, obj)
     return Perm

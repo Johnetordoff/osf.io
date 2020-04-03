@@ -1356,7 +1356,7 @@ class TestPreprintUpdate:
 class TestSetPreprintFile(OsfTestCase):
 
     def setUp(self):
-        super(TestSetPreprintFile, self).setUp()
+        super().setUp()
 
         self.user = AuthUserFactory()
         self.auth = Auth(user=self.user)
@@ -1472,7 +1472,7 @@ class TestSetPreprintFile(OsfTestCase):
 
 class TestPreprintPermissions(OsfTestCase):
     def setUp(self):
-        super(TestPreprintPermissions, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.noncontrib = AuthUserFactory()
         self.write_contrib = AuthUserFactory()
@@ -1736,7 +1736,7 @@ class TestPreprintPermissions(OsfTestCase):
 
 class TestPreprintProvider(OsfTestCase):
     def setUp(self):
-        super(TestPreprintProvider, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.auth = Auth(user=self.user)
         self.provider_osf = PreprintProviderFactory(_id='osf')
@@ -1853,7 +1853,7 @@ class TestPreprintProvider(OsfTestCase):
 
 class TestPreprintIdentifiers(OsfTestCase):
     def setUp(self):
-        super(TestPreprintIdentifiers, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.auth = Auth(user=self.user)
 
@@ -1880,7 +1880,7 @@ class TestPreprintIdentifiers(OsfTestCase):
 @pytest.mark.enable_implicit_clean
 class TestOnPreprintUpdatedTask(OsfTestCase):
     def setUp(self):
-        super(TestOnPreprintUpdatedTask, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         if len(self.user.fullname.split(' ')) > 2:
             # Prevent unexpected keys ('suffix', 'additional_name')
@@ -1914,7 +1914,7 @@ class TestOnPreprintUpdatedTask(OsfTestCase):
 
     def tearDown(self):
         handlers.celery_before_request()
-        super(TestOnPreprintUpdatedTask, self).tearDown()
+        super().tearDown()
 
     def test_update_or_enqueue_on_preprint_updated(self):
         # enqueue_postcommit_task automatically calls task in testing now.
@@ -2206,7 +2206,7 @@ class TestOnPreprintUpdatedTask(OsfTestCase):
 
 class TestPreprintSaveShareHook(OsfTestCase):
     def setUp(self):
-        super(TestPreprintSaveShareHook, self).setUp()
+        super().setUp()
         self.admin = AuthUserFactory()
         self.auth = Auth(user=self.admin)
         self.provider = PreprintProviderFactory(name='Lars Larson Snowmobiling Experience')
@@ -2308,7 +2308,7 @@ class TestPreprintSaveShareHook(OsfTestCase):
 
 class TestPreprintConfirmationEmails(OsfTestCase):
     def setUp(self):
-        super(TestPreprintConfirmationEmails, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.write_contrib = AuthUserFactory()
         self.project = ProjectFactory(creator=self.user)
@@ -2344,7 +2344,7 @@ class TestPreprintConfirmationEmails(OsfTestCase):
 
 class TestPreprintOsfStorage(OsfTestCase):
     def setUp(self):
-        super(TestPreprintOsfStorage, self).setUp()
+        super().setUp()
         self.user = UserFactory()
         self.session = Session(data={'auth_user_id': self.user._id})
         self.session.save()
@@ -2396,7 +2396,7 @@ class TestPreprintOsfStorage(OsfTestCase):
 class TestCheckPreprintAuth(OsfTestCase):
 
     def setUp(self):
-        super(TestCheckPreprintAuth, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.preprint = PreprintFactory(creator=self.user)
 
@@ -2453,7 +2453,7 @@ class TestCheckPreprintAuth(OsfTestCase):
 class TestPreprintOsfStorageLogs(OsfTestCase):
 
     def setUp(self):
-        super(TestPreprintOsfStorageLogs, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.user_non_contrib = AuthUserFactory()
         self.auth_obj = Auth(user=self.user)

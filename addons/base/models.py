@@ -119,7 +119,7 @@ class BaseUserSettings(BaseAddonSettings):
         return hasattr(self, 'merge')
 
     def to_json(self, user):
-        ret = super(BaseUserSettings, self).to_json(user)
+        ret = super().to_json(user)
         ret['has_auth'] = self.has_auth
         ret.update({
             'nodes': [
@@ -186,7 +186,7 @@ class BaseOAuthUserSettings(BaseUserSettings):
     def delete(self, save=True):
         for account in self.external_accounts.filter(provider=self.config.short_name):
             self.revoke_oauth_access(account, save=False)
-        super(BaseOAuthUserSettings, self).delete(save=save)
+        super().delete(save=save)
 
     def grant_oauth_access(self, node, external_account, metadata=None):
         """Give a node permission to use an ``ExternalAccount`` instance."""
@@ -328,7 +328,7 @@ class BaseOAuthUserSettings(BaseUserSettings):
         self.save()
 
     def to_json(self, user):
-        ret = super(BaseOAuthUserSettings, self).to_json(user)
+        ret = super().to_json(user)
 
         ret['accounts'] = self.serializer(
             user_settings=self
@@ -343,7 +343,7 @@ class BaseOAuthUserSettings(BaseUserSettings):
     def on_delete(self):
         """When the user deactivates the addon, clear auth for connected nodes.
         """
-        super(BaseOAuthUserSettings, self).on_delete()
+        super().on_delete()
         nodes = [AbstractNode.load(node_id) for node_id in self.oauth_grants.keys()]
         for node in nodes:
             node_addon = node.get_addon(self.oauth_provider.short_name)
@@ -378,7 +378,7 @@ class BaseNodeSettings(BaseAddonSettings):
         return False
 
     def to_json(self, user):
-        ret = super(BaseNodeSettings, self).to_json(user)
+        ret = super().to_json(user)
         ret.update({
             'user': {
                 'permissions': self.owner.get_permissions(user)
@@ -808,7 +808,7 @@ class BaseOAuthNodeSettings(BaseNodeSettings):
 
         :return: the cloned settings
         """
-        clone = super(BaseOAuthNodeSettings, self).after_fork(
+        clone = super().after_fork(
             node=node,
             fork=fork,
             user=user,
@@ -926,7 +926,7 @@ class BaseCitationsNodeSettings(BaseOAuthNodeSettings):
         self.list_id = None
         self.save()
 
-        return super(BaseCitationsNodeSettings, self).set_auth(*args, **kwargs)
+        return super().set_auth(*args, **kwargs)
 
     def deauthorize(self, auth=None, add_log=True):
         """Remove user authorization from this node and log the event."""

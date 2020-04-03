@@ -124,7 +124,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
 
     def delete(self, save=True):
         self.deauthorize(log=False)
-        super(NodeSettings, self).delete(save=save)
+        super().delete(save=save)
 
     def serialize_waterbutler_credentials(self):
         if not self.has_auth:

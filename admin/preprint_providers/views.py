@@ -169,7 +169,7 @@ class PreprintProviderChangeForm(PermissionRequiredMixin, UpdateView):
 
     def get_context_data(self, *args, **kwargs):
         kwargs['import_form'] = ImportFileForm()
-        return super(PreprintProviderChangeForm, self).get_context_data(*args, **kwargs)
+        return super().get_context_data(*args, **kwargs)
 
     def get_success_url(self, *args, **kwargs):
         return reverse_lazy('preprint_providers:detail', kwargs={'preprint_provider_id': self.kwargs.get('preprint_provider_id')})
@@ -259,13 +259,13 @@ class DeletePreprintProvider(PermissionRequiredMixin, DeleteView):
         preprint_provider = PreprintProvider.objects.get(id=self.kwargs['preprint_provider_id'])
         if preprint_provider.preprints.count() > 0:
             return redirect('preprint_providers:cannot_delete', preprint_provider_id=preprint_provider.pk)
-        return super(DeletePreprintProvider, self).delete(request, *args, **kwargs)
+        return super().delete(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         preprint_provider = PreprintProvider.objects.get(id=self.kwargs['preprint_provider_id'])
         if preprint_provider.preprints.count() > 0:
             return redirect('preprint_providers:cannot_delete', preprint_provider_id=preprint_provider.pk)
-        return super(DeletePreprintProvider, self).get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
         return PreprintProvider.objects.get(id=self.kwargs['preprint_provider_id'])
@@ -275,7 +275,7 @@ class CannotDeleteProvider(TemplateView):
     template_name = 'preprint_providers/cannot_delete.html'
 
     def get_context_data(self, **kwargs):
-        context = super(CannotDeleteProvider, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['provider'] = PreprintProvider.objects.get(id=self.kwargs['preprint_provider_id'])
         return context
 
@@ -424,7 +424,7 @@ class CreatePreprintProvider(PermissionRequiredMixin, CreateView):
         kwargs['import_form'] = ImportFileForm()
         kwargs['show_taxonomies'] = SHOW_TAXONOMIES_IN_PREPRINT_PROVIDER_CREATE
         kwargs['tinymce_apikey'] = settings.TINYMCE_APIKEY
-        return super(CreatePreprintProvider, self).get_context_data(*args, **kwargs)
+        return super().get_context_data(*args, **kwargs)
 
 
 class SharePreprintProviderWhitelist(PermissionRequiredMixin, View):
@@ -459,12 +459,12 @@ class PreprintProviderRegisterModeratorOrAdmin(PermissionRequiredMixin, FormView
     form_class = PreprintProviderRegisterModeratorOrAdminForm
 
     def get_form_kwargs(self):
-        kwargs = super(PreprintProviderRegisterModeratorOrAdmin, self).get_form_kwargs()
+        kwargs = super().get_form_kwargs()
         kwargs['provider_id'] = self.kwargs['preprint_provider_id']
         return kwargs
 
     def get_context_data(self, **kwargs):
-        context = super(PreprintProviderRegisterModeratorOrAdmin, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['provider_name'] = PreprintProvider.objects.get(id=self.kwargs['preprint_provider_id']).name
         return context
 
@@ -486,7 +486,7 @@ class PreprintProviderRegisterModeratorOrAdmin(PermissionRequiredMixin, FormView
 
         osf_user.save()
         messages.success(self.request, 'Permissions update successful for OSF User {}!'.format(osf_user.username))
-        return super(PreprintProviderRegisterModeratorOrAdmin, self).form_valid(form)
+        return super().form_valid(form)
 
     def get_success_url(self):
         return reverse('preprint_providers:register_moderator_admin', kwargs={'preprint_provider_id': self.kwargs['preprint_provider_id']})

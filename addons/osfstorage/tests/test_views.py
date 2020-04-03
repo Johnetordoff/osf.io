@@ -223,7 +223,7 @@ class TestGetMetadataHook(HookTestCase):
 class TestUploadFileHook(HookTestCase):
 
     def setUp(self):
-        super(TestUploadFileHook, self).setUp()
+        super().setUp()
         self.name = 'pízza.png'
         self.record = recursively_create_file(self.node_settings, self.name)
         self.auth = make_auth(self.user)
@@ -468,7 +468,7 @@ class TestUploadFileHook(HookTestCase):
 class TestUploadFileHookPreprint(TestUploadFileHook):
 
     def setUp(self):
-        super(TestUploadFileHookPreprint, self).setUp()
+        super().setUp()
         self.preprint = PreprintFactory(creator=self.user)
         self.name = self.preprint.primary_file.name
         self.record = self.preprint.primary_file
@@ -639,7 +639,7 @@ class TestUploadFileHookPreprint(TestUploadFileHook):
 class TestUpdateMetadataHook(HookTestCase):
 
     def setUp(self):
-        super(TestUpdateMetadataHook, self).setUp()
+        super().setUp()
         self.path = 'greasy/pízza.png'
         self.record = recursively_create_file(self.node_settings, self.path)
         self.version = factories.FileVersionFactory()
@@ -712,7 +712,7 @@ class TestUpdateMetadataHook(HookTestCase):
 class TestUpdateMetadataHookPreprints(HookTestCase):
 
     def setUp(self):
-        super(TestUpdateMetadataHookPreprints, self).setUp()
+        super().setUp()
         self.preprint = PreprintFactory()
         self.record = self.preprint.primary_file
         self.path = 'greasy/pízza.png'
@@ -786,7 +786,7 @@ class TestUpdateMetadataHookPreprints(HookTestCase):
 class TestGetRevisions(StorageTestCase):
 
     def setUp(self):
-        super(TestGetRevisions, self).setUp()
+        super().setUp()
         self.path = 'tie/your/mother/down.mp3'
         self.record = recursively_create_file(self.node_settings, self.path)
         attach_versions(self.record, [factories.FileVersionFactory() for __ in range(15)])
@@ -830,7 +830,7 @@ class TestGetRevisions(StorageTestCase):
 class TestCreateFolder(HookTestCase):
 
     def setUp(self):
-        super(TestCreateFolder, self).setUp()
+        super().setUp()
         self.root_node = self.node_settings.get_root()
 
     def create_folder(self, name, parent=None, target=None, **kwargs):
@@ -891,7 +891,7 @@ class TestCreateFolder(HookTestCase):
 class DeleteHook(HookTestCase):
 
     def setUp(self):
-        super(DeleteHook, self).setUp()
+        super().setUp()
         self.root_node = self.node_settings.get_root()
 
     def send_hook(self, view_name, view_kwargs, payload, target, method='get', **kwargs):
@@ -1000,7 +1000,7 @@ class TestDeleteHookProjectOnly(DeleteHook):
 class TestDeleteHookPreprint(TestDeleteHookNode):
 
     def setUp(self):
-        super(TestDeleteHookPreprint, self).setUp()
+        super().setUp()
         self.preprint = PreprintFactory(creator=self.user)
         self.node = self.preprint
         self.root_node = self.preprint.root_folder
@@ -1041,7 +1041,7 @@ class TestDeleteHookPreprint(TestDeleteHookNode):
 class TestMoveHook(HookTestCase):
 
     def setUp(self):
-        super(TestMoveHook, self).setUp()
+        super().setUp()
         self.root_node = self.node_settings.get_root()
 
     def test_move_hook(self):
@@ -1260,7 +1260,7 @@ class TestMoveHook(HookTestCase):
 class TestMoveHookPreprint(TestMoveHook):
 
     def setUp(self):
-        super(TestMoveHook, self).setUp()
+        super().setUp()
         self.node = PreprintFactory(creator=self.user)
         self.root_node = self.node.root_folder
 
@@ -1399,7 +1399,7 @@ class TestMoveHookProjectsOnly(TestMoveHook):
 class TestCopyHook(HookTestCase):
 
     def setUp(self):
-        super(TestCopyHook, self).setUp()
+        super().setUp()
         self.root_node = self.node_settings.get_root()
 
     @pytest.mark.enable_implicit_clean

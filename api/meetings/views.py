@@ -106,7 +106,7 @@ class BaseMeetingSubmission(JSONAPIBaseView, MeetingMixin):
     view_category = 'meetings'
 
     def get_serializer_context(self):
-        context = super(BaseMeetingSubmission, self).get_serializer_context()
+        context = super().get_serializer_context()
         context['meeting'] = self.get_meeting()
         return context
 
@@ -137,7 +137,7 @@ class MeetingSubmissionList(BaseMeetingSubmission, generics.ListAPIView, ListFil
                 raise InvalidFilterOperator(value=operation['op'], valid_operators=['eq'])
             return Q(meeting_category__icontains=operation['value'])
 
-        return super(MeetingSubmissionList, self).build_query_from_field(field_name, operation)
+        return super().build_query_from_field(field_name, operation)
 
     def annotate_queryset_for_filtering_and_sorting(self, meeting, queryset):
         queryset = self.annotate_queryset_with_meeting_category(meeting, queryset)

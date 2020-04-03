@@ -48,7 +48,7 @@ def get_kebab_snake_case_field(version, field):
 class BaseVersioning(drf_versioning.BaseVersioning):
 
     def __init__(self):
-        super(BaseVersioning, self).__init__()
+        super().__init__()
 
     def get_url_path_version(self, kwargs):
         invalid_version_message = 'Invalid version in URL path.'
@@ -157,7 +157,7 @@ class PrivateVersioning(BaseVersioning):
         reverse with one, then without if that fails.
         """
         try:
-            return super(PrivateVersioning, self).reverse(viewname, args=args, kwargs=kwargs, request=request, format=format, **extra)
+            return super().reverse(viewname, args=args, kwargs=kwargs, request=request, format=format, **extra)
         except NoReverseMatch:
             kwargs = kwargs or {}
             if kwargs.get('version', False):
@@ -166,4 +166,4 @@ class PrivateVersioning(BaseVersioning):
                     viewname, query_kwargs=None, args=args, kwargs=kwargs,
                 )
             kwargs['version'] = get_latest_sub_version('2')
-            return super(PrivateVersioning, self).reverse(viewname, args=args, kwargs=kwargs, request=request, format=format, **extra)
+            return super().reverse(viewname, args=args, kwargs=kwargs, request=request, format=format, **extra)

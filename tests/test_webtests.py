@@ -59,7 +59,7 @@ def assert_not_in_html(member, container, **kwargs):
 class TestDisabledUser(OsfTestCase):
 
     def setUp(self):
-        super(TestDisabledUser, self).setUp()
+        super().setUp()
         self.user = UserFactory()
         self.user.set_password('Korben Dallas')
         self.user.is_disabled = True
@@ -85,7 +85,7 @@ class TestAnUnregisteredUser(OsfTestCase):
 class TestAUser(OsfTestCase):
 
     def setUp(self):
-        super(TestAUser, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.auth = self.user.auth
 
@@ -264,7 +264,7 @@ class TestAUser(OsfTestCase):
 class TestComponents(OsfTestCase):
 
     def setUp(self):
-        super(TestComponents, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.consolidate_auth = Auth(user=self.user)
         self.project = ProjectFactory(creator=self.user)
@@ -344,7 +344,7 @@ class TestComponents(OsfTestCase):
 class TestPrivateLinkView(OsfTestCase):
 
     def setUp(self):
-        super(TestPrivateLinkView, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()  # Is NOT a contributor
         self.project = ProjectFactory(is_public=False)
         self.link = PrivateLinkFactory(anonymous=True)
@@ -400,7 +400,7 @@ class TestPrivateLinkView(OsfTestCase):
 class TestMergingAccounts(OsfTestCase):
 
     def setUp(self):
-        super(TestMergingAccounts, self).setUp()
+        super().setUp()
         self.user = UserFactory.build()
         self.user.fullname = "tess' test string"
         self.user.set_password('science')
@@ -442,7 +442,7 @@ class TestMergingAccounts(OsfTestCase):
 class TestShortUrls(OsfTestCase):
 
     def setUp(self):
-        super(TestShortUrls, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.auth = self.user.auth
         self.consolidate_auth = Auth(user=self.user)
@@ -490,7 +490,7 @@ class TestShortUrls(OsfTestCase):
 class TestClaiming(OsfTestCase):
 
     def setUp(self):
-        super(TestClaiming, self).setUp()
+        super().setUp()
         self.referrer = AuthUserFactory()
         self.project = ProjectFactory(creator=self.referrer, is_public=True)
 
@@ -612,7 +612,7 @@ class TestClaiming(OsfTestCase):
 class TestConfirmingEmail(OsfTestCase):
 
     def setUp(self):
-        super(TestConfirmingEmail, self).setUp()
+        super().setUp()
         self.user = UnconfirmedUserFactory()
         self.confirmation_url = self.user.get_confirmation_url(
             self.user.username,
@@ -670,7 +670,7 @@ class TestConfirmingEmail(OsfTestCase):
 class TestClaimingAsARegisteredUser(OsfTestCase):
 
     def setUp(self):
-        super(TestClaimingAsARegisteredUser, self).setUp()
+        super().setUp()
         self.referrer = AuthUserFactory()
         self.project = ProjectFactory(creator=self.referrer, is_public=True)
         name, email = fake.name(), fake_email()
@@ -741,7 +741,7 @@ class TestClaimingAsARegisteredUser(OsfTestCase):
 class TestResendConfirmation(OsfTestCase):
 
     def setUp(self):
-        super(TestResendConfirmation, self).setUp()
+        super().setUp()
         self.unconfirmed_user = UnconfirmedUserFactory()
         self.confirmed_user = UserFactory()
         self.get_url = web_url_for('resend_confirmation_get')
@@ -817,7 +817,7 @@ class TestResendConfirmation(OsfTestCase):
 class TestForgotPassword(OsfTestCase):
 
     def setUp(self):
-        super(TestForgotPassword, self).setUp()
+        super().setUp()
         self.user = UserFactory()
         self.auth_user = AuthUserFactory()
         self.get_url = web_url_for('forgot_password_get')
@@ -1012,7 +1012,7 @@ class TestAUserProfile(OsfTestCase):
 @pytest.mark.enable_bookmark_creation
 class TestPreprintBannerView(OsfTestCase):
     def setUp(self):
-        super(TestPreprintBannerView, self).setUp()
+        super().setUp()
 
         self.admin = AuthUserFactory()
         self.write_contrib = AuthUserFactory()

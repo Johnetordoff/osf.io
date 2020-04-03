@@ -84,7 +84,7 @@ class ConditionalField(ser.Field):
     """
 
     def __init__(self, field, **kwargs):
-        super(ConditionalField, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.field = getattr(field, 'child_relation', field)
         # source is intentionally field.source and not self.field.source
         self.source = field.source
@@ -108,7 +108,7 @@ class ConditionalField(ser.Field):
         return self.field.get_attribute(instance)
 
     def bind(self, field_name, parent):
-        super(ConditionalField, self).bind(field_name, parent)
+        super().bind(field_name, parent)
         self.field.bind(field_name, self)
 
     def to_representation(self, value):
@@ -136,7 +136,7 @@ class ShowIfVersion(ConditionalField):
     """
 
     def __init__(self, field, min_version=None, max_version=None, **kwargs):
-        super(ShowIfVersion, self).__init__(field, **kwargs)
+        super().__init__(field, **kwargs)
         self.min_version = min_version
         self.max_version = max_version
         self.help_text = 'This field is deprecated as of version {}'.format(self.max_version) or kwargs.get('help_text')
@@ -319,14 +319,14 @@ class HideIfProviderCommentsPrivate(ConditionalField):
 
 class AllowMissing(ser.Field):
     def __init__(self, field, **kwargs):
-        super(AllowMissing, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.field = field
 
     def to_representation(self, value):
         return self.field.to_representation(value)
 
     def bind(self, field_name, parent):
-        super(AllowMissing, self).bind(field_name, parent)
+        super().bind(field_name, parent)
         self.field.bind(field_name, self)
 
     def get_attribute(self, instance):
@@ -375,7 +375,7 @@ class VersionedDateTimeField(ser.DateTimeField):
                 self.format = '%Y-%m-%dT%H:%M:%S.%fZ'
             else:
                 self.format = '%Y-%m-%dT%H:%M:%S.%f' if value.microsecond else '%Y-%m-%dT%H:%M:%S'
-        return super(VersionedDateTimeField, self).to_representation(value)
+        return super().to_representation(value)
 
 
 class IDField(ser.CharField):
@@ -385,7 +385,7 @@ class IDField(ser.CharField):
 
     def __init__(self, **kwargs):
         kwargs['label'] = 'ID'
-        super(IDField, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     # Overrides CharField
     def to_internal_value(self, data):
@@ -395,7 +395,7 @@ class IDField(ser.CharField):
                 id_field = self.get_id(self.root.instance)
                 if id_field != data:
                     raise api_exceptions.Conflict(detail=('The id you used in the URL, "{}", does not match the id you used in the json body\'s id field, "{}". The object "{}" exists, otherwise you\'d get a 404, so most likely you need to change the id field to match.'.format(id_field, data, id_field)))
-        return super(IDField, self).to_internal_value(data)
+        return super().to_internal_value(data)
 
     def get_id(self, obj):
         return getattr(obj, self.source, '_id')
@@ -411,7 +411,7 @@ class TypeField(ser.CharField):
     def __init__(self, **kwargs):
         kwargs['write_only'] = True
         kwargs['required'] = True
-        super(TypeField, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     # Overrides CharField
     def to_internal_value(self, data):
@@ -426,7 +426,7 @@ class TypeField(ser.CharField):
             self.context['request'].META.setdefault('warning', 'As of API Version {0}, all types are now Kebab-case. {0} will accept snake_case, but this will be deprecated in future versions.'.format(KEBAB_CASE_VERSION))
         elif type_ != data:
             raise api_exceptions.Conflict(detail=('This resource has a type of "{}", but you set the json body\'s type field to "{}". You probably need to change the type field to match the resource\'s type.'.format(type_, data)))
-        return super(TypeField, self).to_internal_value(data)
+        return super().to_internal_value(data)
 
 
 class TargetTypeField(ser.CharField):
@@ -438,12 +438,12 @@ class TargetTypeField(ser.CharField):
         kwargs['write_only'] = True
         kwargs['required'] = True
         self.target_type = kwargs.pop('target_type')
-        super(TargetTypeField, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def to_internal_value(self, data):
         if self.target_type != data:
             raise api_exceptions.Conflict(detail=('The target resource has a type of "{}", but you set the json body\'s type field to "{}".  You probably need to change the type field to match the target resource\'s type.'.format(self.target_type, data)))
-        return super(TargetTypeField, self).to_internal_value(data)
+        return super().to_internal_value(data)
 
 
 class JSONAPIListField(ser.ListField):
@@ -451,7 +451,7 @@ class JSONAPIListField(ser.ListField):
         if not isinstance(data, list):
             self.fail('not_a_list', input_type=type(data).__name__)
 
-        return super(JSONAPIListField, self).to_internal_value(data)
+        return super().to_internal_value(data)
 
 
 class ValuesListField(JSONAPIListField):
@@ -461,7 +461,7 @@ class ValuesListField(JSONAPIListField):
     """
     def __init__(self, **kwargs):
         self.attr_name = kwargs.pop('attr_name')
-        super(ValuesListField, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def to_representation(self, val):
         return val.values_list(self.attr_name, flat=True)
@@ -478,7 +478,7 @@ class AuthorizedCharField(ser.CharField):
 
     def __init__(self, source, **kwargs):
         self.source = source
-        super(AuthorizedCharField, self).__init__(source=self.source, **kwargs)
+        super().__init__(source=self.source, **kwargs)
 
     def get_attribute(self, obj):
         user = self.context['request'].user
@@ -499,10 +499,10 @@ class AnonymizedRegexField(AuthorizedCharField):
         self.source = source
         self.regex = regex
         self.replace = replace
-        super(AnonymizedRegexField, self).__init__(source=self.source, **kwargs)
+        super().__init__(source=self.source, **kwargs)
 
     def get_attribute(self, obj):
-        value = super(AnonymizedRegexField, self).get_attribute(obj)
+        value = super().get_attribute(obj)
 
         if value:
             user = self.context['request'].user
@@ -603,7 +603,7 @@ class RelationshipField(ser.HyperlinkedIdentityField):
             lookup_kwargs = self_kwargs
         if kwargs.get('lookup_url_kwarg', None):
             lookup_kwargs = kwargs.pop('lookup_url_kwarg')
-        super(RelationshipField, self).__init__(view_name, lookup_url_kwarg=lookup_kwargs, **kwargs)
+        super().__init__(view_name, lookup_url_kwarg=lookup_kwargs, **kwargs)
 
         # Allow a RelationshipField to be modified if explicitly set so
         if kwargs.get('read_only') is not None:
@@ -916,14 +916,14 @@ class TypedRelationshipField(RelationshipField):
             for k, v in list(self.views.items()):
                 if v == untyped_view:
                     self.views[k] = view_name
-        return super(TypedRelationshipField, self).get_url(obj, view_name, request, format)
+        return super().get_url(obj, view_name, request, format)
 
 
 class FileRelationshipField(RelationshipField):
     def get_url(self, obj, view_name, request, format):
         if obj.kind == 'folder':
             raise SkipField
-        return super(FileRelationshipField, self).get_url(obj, view_name, request, format)
+        return super().get_url(obj, view_name, request, format)
 
 
 class TargetField(ser.Field):
@@ -963,7 +963,7 @@ class TargetField(ser.Field):
     def __init__(self, **kwargs):
         self.meta = kwargs.pop('meta', {})
         self.link_type = kwargs.pop('link_type', 'url')
-        super(TargetField, self).__init__(read_only=True, **kwargs)
+        super().__init__(read_only=True, **kwargs)
 
     def resolve(self, resource, field_name, request):
         """
@@ -1180,12 +1180,12 @@ class NodeFileHyperLinkField(RelationshipField):
     def __init__(self, kind=None, never_embed=False, **kws):
         self.kind = kind
         self.never_embed = never_embed
-        super(NodeFileHyperLinkField, self).__init__(**kws)
+        super().__init__(**kws)
 
     def get_url(self, obj, view_name, request, format):
         if self.kind and obj.kind != self.kind:
             raise SkipField
-        return super(NodeFileHyperLinkField, self).get_url(obj, view_name, request, format)
+        return super().get_url(obj, view_name, request, format)
 
 
 class JSONAPIListSerializer(ser.ListSerializer):
@@ -1260,7 +1260,7 @@ class JSONAPIListSerializer(ser.ListSerializer):
                 detail='Bulk operation limit is {}, got {}.'.format(bulk_limit, num_items),
             )
 
-        return super(JSONAPIListSerializer, self).run_validation(data)
+        return super().run_validation(data)
 
     # overrides ListSerializer: Add HTML-sanitization similar to that used by APIv1 front-end views
     def is_valid(self, clean_html=True, **kwargs):
@@ -1270,7 +1270,7 @@ class JSONAPIListSerializer(ser.ListSerializer):
         Exclude 'type' from validated_data.
 
         """
-        ret = super(JSONAPIListSerializer, self).is_valid(**kwargs)
+        ret = super().is_valid(**kwargs)
 
         if clean_html is True:
             self._validated_data = functional.rapply(self.validated_data, sanitize.strip_html)
@@ -1299,7 +1299,7 @@ class BaseAPISerializer(ser.Serializer, SparseFieldsetMixin):
 
     def __init__(self, *args, **kwargs):
         self.parse_sparse_fields(**kwargs)
-        super(BaseAPISerializer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.model_field_names = [
             name if field.source == '*' else field.source
             for name, field in self.fields.items()
@@ -1347,12 +1347,12 @@ class JSONAPISerializer(BaseAPISerializer):
             ).remove(args=['envelope']).add(args={'envelope': envelope}).url
             return '<esi:include src="{}"/>'.format(esi_url)
         # failsafe, let python do it if something bad happened in the ESI construction
-        return super(JSONAPISerializer, self).to_representation(data)
+        return super().to_representation(data)
 
     def run_validation(self, data):
         # Overrides construtor for validated_data to allow writes to a SerializerMethodField
         # Validation for writeable SMFs is expected to happen in the model
-        _validated_data = super(JSONAPISerializer, self).run_validation(data)
+        _validated_data = super().run_validation(data)
         for field in self.writeable_method_fields:
             if field in data:
                 _validated_data[field] = data[field]
@@ -1524,7 +1524,7 @@ class JSONAPISerializer(BaseAPISerializer):
         Exclude 'type' and '_id' from validated_data.
 
         """
-        ret = super(JSONAPISerializer, self).is_valid(**kwargs)
+        ret = super().is_valid(**kwargs)
 
         if clean_html is True:
             self._validated_data = self.sanitize_data()
@@ -1873,7 +1873,7 @@ class HideIfSwitch(ConditionalField):
         :param hide_if: The value of the switch that indicates it's hidden.
         :param kwargs: You know, kwargs...
         """
-        super(HideIfSwitch, self).__init__(field, **kwargs)
+        super().__init__(field, **kwargs)
         self.switch_name = switch_name
         self.hide_if = hide_if
 
@@ -1894,5 +1894,5 @@ class DisableIfSwitch(HideIfSwitch):
         :param hide_if: The value of the switch that indicates it's hidden/validated.
         :param kwargs: My mama always told me life is like a bunch of kwargs...
         """
-        super(DisableIfSwitch, self).__init__(switch_name, field, hide_if, **kwargs)
+        super().__init__(switch_name, field, hide_if, **kwargs)
         self.validators.append(SwitchValidator(self.switch_name))

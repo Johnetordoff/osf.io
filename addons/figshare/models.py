@@ -35,7 +35,7 @@ class FigshareFile(FigshareFileNode, File):
         Always pass revision as None to avoid conflict.
         Call super to update _history and last_touched anyway.
         """
-        version = super(FigshareFile, self).update(None, data, user=user, save=save)
+        version = super().update(None, data, user=user, save=save)
 
         # Draft files are not renderable
         if data['extra']['status'] == 'drafts':

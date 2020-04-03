@@ -23,7 +23,7 @@ pytestmark = pytest.mark.django_db
 class TestUpdateNodeWiki(OsfTestCase):
 
     def setUp(self):
-        super(TestUpdateNodeWiki, self).setUp()
+        super().setUp()
         # Create project with component
         self.user = AuthUserFactory()
         self.auth = Auth(user=self.user)
@@ -198,7 +198,7 @@ class TestUpdateNodeWiki(OsfTestCase):
 class TestRenameNodeWiki(OsfTestCase):
 
     def setUp(self):
-        super(TestRenameNodeWiki, self).setUp()
+        super().setUp()
         # Create project with component
         self.user = UserFactory()
         self.auth = Auth(user=self.user)
@@ -308,7 +308,7 @@ class TestRenameNodeWiki(OsfTestCase):
 class TestDeleteNodeWiki(OsfTestCase):
 
     def setUp(self):
-        super(TestDeleteNodeWiki, self).setUp()
+        super().setUp()
         # Create project with component
         self.user = UserFactory()
         self.auth = Auth(user=self.user)

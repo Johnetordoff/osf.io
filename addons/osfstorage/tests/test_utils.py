@@ -19,7 +19,7 @@ from website.files.utils import attach_versions
 class TestSerializeRevision(StorageTestCase):
 
     def setUp(self):
-        super(TestSerializeRevision, self).setUp()
+        super().setUp()
         self.path = 'kind-of-magic.webm'
         self.record = self.node_settings.get_root().append_file(self.path)
         self.versions = [

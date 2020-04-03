@@ -25,7 +25,7 @@ class TestTruthyFalsy:
 class TestIsDeprecated(unittest.TestCase):
 
     def setUp(self):
-        super(TestIsDeprecated, self).setUp()
+        super().setUp()
         self.min_version = '2.0'
         self.max_version = '2.5'
 

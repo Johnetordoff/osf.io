@@ -35,7 +35,7 @@ class AssertDeltas(object):
 class StorageTestCase(OsfTestCase):
 
     def setUp(self):
-        super(StorageTestCase, self).setUp()
+        super().setUp()
 
         self.project = ProjectFactory()
         self.node = self.project

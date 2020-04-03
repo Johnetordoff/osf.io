@@ -26,7 +26,7 @@ class TestGitHubSerializer(StorageAddonSerializerTestSuiteMixin, OsfTestCase):
     ## Overrides ##
 
     def setUp(self):
-        super(TestGitHubSerializer, self).setUp()
+        super().setUp()
         self.mock_api_user = mock.patch('addons.github.api.GitHubClient.user')
         self.mock_api_user.return_value = mock.Mock()
         self.mock_api_user.start()
@@ -36,4 +36,4 @@ class TestGitHubSerializer(StorageAddonSerializerTestSuiteMixin, OsfTestCase):
 
     def tearDown(self):
         self.mock_api_user.stop()
-        super(TestGitHubSerializer, self).tearDown()
+        super().tearDown()

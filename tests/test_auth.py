@@ -279,7 +279,7 @@ class TestAuthObject(OsfTestCase):
 class TestPrivateLink(OsfTestCase):
 
     def setUp(self):
-        super(TestPrivateLink, self).setUp()
+        super().setUp()
         self.flaskapp = Flask('testing_private_links')
 
         @self.flaskapp.route('/project/<pid>/')
@@ -334,7 +334,7 @@ class AuthAppTestCase(OsfTestCase):
 class TestMustBeContributorDecorator(AuthAppTestCase):
 
     def setUp(self):
-        super(TestMustBeContributorDecorator, self).setUp()
+        super().setUp()
         self.contrib = AuthUserFactory()
         self.non_contrib = AuthUserFactory()
         admin = UserFactory()
@@ -451,7 +451,7 @@ def view_that_needs_contributor_or_public(**kwargs):
 class TestMustBeContributorOrPublicDecorator(AuthAppTestCase):
 
     def setUp(self):
-        super(TestMustBeContributorOrPublicDecorator, self).setUp()
+        super().setUp()
         self.contrib = AuthUserFactory()
         self.non_contrib = AuthUserFactory()
         self.public_project = ProjectFactory(is_public=True)
@@ -560,7 +560,7 @@ def view_that_needs_contributor_or_public_but_not_anonymized(**kwargs):
 
 class TestMustBeContributorOrPublicButNotAnonymizedDecorator(AuthAppTestCase):
     def setUp(self):
-        super(TestMustBeContributorOrPublicButNotAnonymizedDecorator, self).setUp()
+        super().setUp()
         self.contrib = AuthUserFactory()
         self.non_contrib = AuthUserFactory()
         admin = UserFactory()
@@ -757,7 +757,7 @@ def needs_addon_view(**kwargs):
 class TestMustHaveAddonDecorator(AuthAppTestCase):
 
     def setUp(self):
-        super(TestMustHaveAddonDecorator, self).setUp()
+        super().setUp()
         self.project = ProjectFactory()
 
     @mock.patch('website.project.decorators._kwargs_to_nodes')
@@ -796,7 +796,7 @@ class TestMustHaveAddonDecorator(AuthAppTestCase):
 class TestMustBeAddonAuthorizerDecorator(AuthAppTestCase):
 
     def setUp(self):
-        super(TestMustBeAddonAuthorizerDecorator, self).setUp()
+        super().setUp()
         self.project = ProjectFactory()
         self.decorated = must_be_addon_authorizer('github')(needs_addon_view)
 

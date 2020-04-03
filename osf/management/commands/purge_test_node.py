@@ -33,7 +33,7 @@ class Command(BaseCommand):
     For cleaning up after RunScope tests that get out of hand.
     """
     def add_arguments(self, parser):
-        super(Command, self).add_arguments(parser)
+        super().add_arguments(parser)
         parser.add_argument(
             '--node',
             type=str,

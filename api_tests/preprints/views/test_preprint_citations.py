@@ -12,7 +12,7 @@ from osf.utils.workflows import DefaultStates
 class PreprintCitationsMixin(object):
 
     def setUp(self):
-        super(PreprintCitationsMixin, self).setUp()
+        super().setUp()
         self.admin_contributor = AuthUserFactory()
         self.published_preprint = PreprintFactory(
             creator=self.admin_contributor)
@@ -48,7 +48,7 @@ class PreprintCitationsMixin(object):
 class TestPreprintCitations(PreprintCitationsMixin, ApiTestCase):
 
     def setUp(self):
-        super(TestPreprintCitations, self).setUp()
+        super().setUp()
         self.published_preprint_url = '/{}preprints/{}/citation/'.format(
             API_BASE, self.published_preprint._id)
         self.unpublished_preprint_url = '/{}preprints/{}/citation/'.format(
@@ -73,7 +73,7 @@ class TestPreprintCitations(PreprintCitationsMixin, ApiTestCase):
 class TestPreprintCitationsPermissions(PreprintCitationsMixin, ApiTestCase):
 
     def setUp(self):
-        super(TestPreprintCitationsPermissions, self).setUp()
+        super().setUp()
         self.published_preprint_url = '/{}preprints/{}/citation/'.format(
             API_BASE, self.published_preprint._id)
         self.unpublished_preprint_url = '/{}preprints/{}/citation/'.format(
@@ -191,7 +191,7 @@ class TestPreprintCitationsPermissions(PreprintCitationsMixin, ApiTestCase):
 class TestPreprintCitationContent(PreprintCitationsMixin, ApiTestCase):
 
     def setUp(self):
-        super(TestPreprintCitationContent, self).setUp()
+        super().setUp()
         self.published_preprint_url = '/{}preprints/{}/citation/apa/'.format(
             API_BASE, self.published_preprint._id)
         self.unpublished_preprint_url = '/{}preprints/{}/citation/apa/'.format(
@@ -218,7 +218,7 @@ class TestPreprintCitationContent(PreprintCitationsMixin, ApiTestCase):
 class TestPreprintCitationsContentPermissions(PreprintCitationsMixin, ApiTestCase):
 
     def setUp(self):
-        super(TestPreprintCitationsContentPermissions, self).setUp()
+        super().setUp()
         self.published_preprint_url = '/{}preprints/{}/citation/apa/'.format(
             API_BASE, self.published_preprint._id)
         self.unpublished_preprint_url = '/{}preprints/{}/citation/apa/'.format(
@@ -336,7 +336,7 @@ class TestPreprintCitationsContentPermissions(PreprintCitationsMixin, ApiTestCas
 class TestPreprintCitationContentMLA(ApiTestCase):
 
     def setUp(self):
-        super(TestPreprintCitationContentMLA, self).setUp()
+        super().setUp()
         self.admin_contributor = AuthUserFactory()
         self.published_preprint = PreprintFactory(
             creator=self.admin_contributor)
@@ -445,7 +445,7 @@ class TestPreprintCitationContentMLA(ApiTestCase):
 class TestPreprintCitationContentAPA(ApiTestCase):
 
     def setUp(self):
-        super(TestPreprintCitationContentAPA, self).setUp()
+        super().setUp()
         self.admin_contributor = AuthUserFactory()
         self.published_preprint = PreprintFactory(
             title='A Study of Coffee',
@@ -614,7 +614,7 @@ class TestPreprintCitationContentAPA(ApiTestCase):
 class TestPreprintCitationContentChicago(ApiTestCase):
 
     def setUp(self):
-        super(TestPreprintCitationContentChicago, self).setUp()
+        super().setUp()
         self.admin_contributor = AuthUserFactory()
         self.published_preprint = PreprintFactory(
             title='A Study of Coffee',

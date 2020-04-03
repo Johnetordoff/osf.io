@@ -72,7 +72,7 @@ class PreprintView(PreprintMixin, UpdateView, GuidView):
         old_provider = self.get_object().provider
         if not request.user.has_perm('osf.change_preprint'):
             raise PermissionsError("This user does not have permission to update this preprint's provider.")
-        response = super(PreprintView, self).post(request, *args, **kwargs)
+        response = super().post(request, *args, **kwargs)
         new_provider = self.get_object().provider
         if new_provider and old_provider.id != new_provider.id:
             self.update_subjects_for_provider(request, old_provider, new_provider)
@@ -85,7 +85,7 @@ class PreprintView(PreprintMixin, UpdateView, GuidView):
         kwargs['change_provider_form'] = ChangeProviderForm(instance=preprint)
         kwargs.update({'SPAM_STATUS': SpamStatus})  # Pass spam status in to check against
         kwargs.update({'message': kwargs.get('message')})
-        return super(PreprintView, self).get_context_data(**kwargs)
+        return super().get_context_data(**kwargs)
 
     def update_subjects_for_provider(self, request, old_provider, new_provider):
         subject_problems = self.object.map_subjects_between_providers(old_provider, new_provider, auth=None)
@@ -131,7 +131,7 @@ class PreprintReindexShare(PreprintMixin, DeleteView):
         context.setdefault('guid', kwargs.get('object')._id)
         context['link'] = 'preprints:reindex-share-preprint'
         context['resource_type'] = self.context_object_name
-        return super(PreprintReindexShare, self).get_context_data(**context)
+        return super().get_context_data(**context)
 
     def delete(self, request, *args, **kwargs):
         preprint = self.get_object()
@@ -164,7 +164,7 @@ class PreprintReindexElastic(PreprintMixin, NodeDeleteBase):
         return redirect(reverse_preprint(self.kwargs.get('guid')))
 
     def get_context_data(self, **kwargs):
-        context = super(PreprintReindexElastic, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['link'] = 'preprints:reindex-elastic-preprint'
         context['resource_type'] = 'preprint'
         return context
@@ -190,7 +190,7 @@ class PreprintRemoveContributorView(NodeRemoveContributorView):
         return osf_log.save()
 
     def delete(self, request, *args, **kwargs):
-        super(PreprintRemoveContributorView, self).delete(request, args, kwargs)
+        super().delete(request, args, kwargs)
         return redirect(reverse_preprint(self.kwargs.get('guid')))
 
     def get_context_data(self, **kwargs):
@@ -200,7 +200,7 @@ class PreprintRemoveContributorView(NodeRemoveContributorView):
         context.setdefault('user', serialize_simple_user_and_preprint_permissions(preprint, user))
         context.setdefault('resource_type', 'preprint')
         context.setdefault('link', 'preprints:remove_user')
-        return super(NodeRemoveContributorView, self).get_context_data(**context)
+        return super().get_context_data(**context)
 
     def get_object(self, queryset=None):
         return (Preprint.load(self.kwargs.get('guid')),
@@ -218,7 +218,7 @@ class PreprintDeleteView(PreprintMixin, NodeDeleteBase):
     context_object_name = 'preprint'
 
     def get_context_data(self, **kwargs):
-        context = super(PreprintDeleteView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['link'] = 'preprints:remove'
         context['resource_type'] = self.context_object_name
         return context
@@ -279,7 +279,7 @@ class PreprintRequestDeleteBase(DeleteView):
     def get_context_data(self, **kwargs):
         context = {}
         context.setdefault('guid', kwargs.get('object').target._id)
-        return super(PreprintRequestDeleteBase, self).get_context_data(**context)
+        return super().get_context_data(**context)
 
     def get_object(self, queryset=None):
         return PreprintRequest.objects.filter(
@@ -410,11 +410,11 @@ class PreprintConfirmSpamView(PreprintMixin, NodeConfirmSpamView):
     object_type = 'Preprint'
 
     def delete(self, request, *args, **kwargs):
-        super(PreprintConfirmSpamView, self).delete(request, args, kwargs)
+        super().delete(request, args, kwargs)
         return redirect(reverse_preprint(self.kwargs.get('guid')))
 
     def get_context_data(self, **kwargs):
-        context = super(PreprintConfirmSpamView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['link'] = 'preprints:confirm-spam'
         return context
 
@@ -423,10 +423,10 @@ class PreprintConfirmHamView(PreprintMixin, NodeConfirmHamView):
     object_type = 'Preprint'
 
     def get_context_data(self, **kwargs):
-        context = super(PreprintConfirmHamView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['link'] = 'preprints:confirm-ham'
         return context
 
     def delete(self, request, *args, **kwargs):
-        super(PreprintConfirmHamView, self).delete(request, args, kwargs)
+        super().delete(request, args, kwargs)
         return redirect(reverse_preprint(self.kwargs.get('guid')))

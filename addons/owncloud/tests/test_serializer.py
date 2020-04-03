@@ -21,8 +21,8 @@ class TestOwnCloudSerializer(StorageAddonSerializerTestSuiteMixin, OsfTestCase):
         self.mock_credentials = mock.patch('addons.owncloud.serializer.OwnCloudSerializer.credentials_are_valid')
         self.mock_credentials.return_value = True
         self.mock_credentials.start()
-        super(TestOwnCloudSerializer, self).setUp()
+        super().setUp()
 
     def tearDown(self):
         self.mock_credentials.stop()
-        super(TestOwnCloudSerializer, self).tearDown()
+        super().tearDown()

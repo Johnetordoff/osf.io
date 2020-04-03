@@ -335,7 +335,7 @@ class EmailApprovableSanction(TokenApprovableSanction):
                 self._notify_non_authorizer(contrib, node)
 
     def add_authorizer(self, user, node, **kwargs):
-        super(EmailApprovableSanction, self).add_authorizer(user, node,
+        super().add_authorizer(user, node,
                                                             **kwargs)
         self.stashed_urls[user._id] = {
             'view': self._view_url(user._id, node),
@@ -469,7 +469,7 @@ class Embargo(PreregCallbackMixin, EmailApprovableSanction):
                                 node,
                                 is_authorizer=False,
                                 urls=None):
-        context = super(Embargo, self)._email_template_context(
+        context = super()._email_template_context(
             user,
             node,
             is_authorizer=is_authorizer)
@@ -510,7 +510,7 @@ class Embargo(PreregCallbackMixin, EmailApprovableSanction):
                     'message_long': 'This project has already been registered and cannot be deleted',
                 }
             )
-        super(Embargo, self).reject(user, token)
+        super().reject(user, token)
 
     def _on_reject(self, user):
         NodeLog = apps.get_model('osf.NodeLog')
@@ -545,7 +545,7 @@ class Embargo(PreregCallbackMixin, EmailApprovableSanction):
         if parent_registration.is_spammy:
             raise NodeStateError('Cannot complete a spammy registration.')
 
-        super(Embargo, self)._on_complete(user)
+        super()._on_complete(user)
         parent_registration.registered_from.add_log(
             action=NodeLog.EMBARGO_APPROVED,
             params={
@@ -757,7 +757,7 @@ class RegistrationApproval(PreregCallbackMixin, EmailApprovableSanction):
             }
 
     def _email_template_context(self, user, node, is_authorizer=False, urls=None):
-        context = super(RegistrationApproval, self)._email_template_context(user, node, is_authorizer, urls)
+        context = super()._email_template_context(user, node, is_authorizer, urls)
         urls = urls or self.stashed_urls.get(user._id, {})
         registration_link = urls.get('view', self._view_url(user._id, node))
         if is_authorizer:
@@ -807,7 +807,7 @@ class RegistrationApproval(PreregCallbackMixin, EmailApprovableSanction):
         if register.is_spammy:
             raise NodeStateError('Cannot approve a spammy registration')
 
-        super(RegistrationApproval, self)._on_complete(user)
+        super()._on_complete(user)
         self.state = Sanction.APPROVED
         self.save()
         registered_from = register.registered_from
@@ -974,7 +974,7 @@ class EmbargoTerminationApproval(EmailApprovableSanction):
             }
 
     def _email_template_context(self, user, node, is_authorizer=False, urls=None):
-        context = super(EmbargoTerminationApproval, self)._email_template_context(
+        context = super()._email_template_context(
             user,
             node,
             is_authorizer=is_authorizer
@@ -1007,7 +1007,7 @@ class EmbargoTerminationApproval(EmailApprovableSanction):
         return context
 
     def _on_complete(self, user=None):
-        super(EmbargoTerminationApproval, self)._on_complete(user)
+        super()._on_complete(user)
         registration = self._get_registration()
         registration.terminate_embargo(Auth(user) if user else None)
 

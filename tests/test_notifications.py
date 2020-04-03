@@ -32,7 +32,7 @@ from tests.base import OsfTestCase, NotificationTestCase
 class TestNotificationsModels(OsfTestCase):
 
     def setUp(self):
-        super(TestNotificationsModels, self).setUp()
+        super().setUp()
         # Create project with component
         self.user = factories.UserFactory()
         self.consolidate_auth = Auth(user=self.user)
@@ -412,7 +412,7 @@ class TestNotificationsModels(OsfTestCase):
 class TestSubscriptionView(OsfTestCase):
 
     def setUp(self):
-        super(TestSubscriptionView, self).setUp()
+        super().setUp()
         self.node = factories.NodeFactory()
         self.user = self.node.creator
         self.registration = factories.RegistrationFactory(creator=self.user)
@@ -516,7 +516,7 @@ class TestSubscriptionView(OsfTestCase):
 class TestRemoveContributor(OsfTestCase):
 
     def setUp(self):
-        super(OsfTestCase, self).setUp()
+        super().setUp()
         self.project = factories.ProjectFactory()
         self.contributor = factories.UserFactory()
         self.project.add_contributor(contributor=self.contributor, permissions=permissions.READ)
@@ -679,7 +679,7 @@ def event_schema(level=None):
 class TestNotificationUtils(OsfTestCase):
 
     def setUp(self):
-        super(TestNotificationUtils, self).setUp()
+        super().setUp()
         self.user = factories.UserFactory()
         self.project = factories.ProjectFactory(creator=self.user)
 
@@ -1165,7 +1165,7 @@ class TestNotificationsDict(OsfTestCase):
 
 class TestCompileSubscriptions(NotificationTestCase):
     def setUp(self):
-        super(TestCompileSubscriptions, self).setUp()
+        super().setUp()
         self.user_1 = factories.UserFactory()
         self.user_2 = factories.UserFactory()
         self.user_3 = factories.UserFactory()
@@ -1285,7 +1285,7 @@ class TestCompileSubscriptions(NotificationTestCase):
 
 class TestMoveSubscription(NotificationTestCase):
     def setUp(self):
-        super(TestMoveSubscription, self).setUp()
+        super().setUp()
         self.blank = {key: [] for key in constants.NOTIFICATION_TYPES}  # For use where it is blank.
         self.user_1 = factories.AuthUserFactory()
         self.auth = Auth(user=self.user_1)
@@ -1414,7 +1414,7 @@ class TestMoveSubscription(NotificationTestCase):
 
 class TestSendEmails(NotificationTestCase):
     def setUp(self):
-        super(TestSendEmails, self).setUp()
+        super().setUp()
         self.user = factories.AuthUserFactory()
         self.project = factories.ProjectFactory()
         self.project_subscription = factories.NotificationSubscriptionFactory(
@@ -1699,7 +1699,7 @@ class TestSendEmails(NotificationTestCase):
 
 class TestSendDigest(OsfTestCase):
     def setUp(self):
-        super(TestSendDigest, self).setUp()
+        super().setUp()
         self.user_1 = factories.UserFactory()
         self.user_2 = factories.UserFactory()
         self.project = factories.ProjectFactory()
@@ -1873,7 +1873,7 @@ class TestSendDigest(OsfTestCase):
 
 class TestNotificationsReviews(OsfTestCase):
     def setUp(self):
-        super(TestNotificationsReviews, self).setUp()
+        super().setUp()
         self.provider = factories.PreprintProviderFactory(_id='engrxiv')
         self.preprint = factories.PreprintFactory(provider=self.provider)
         self.user = factories.UserFactory()
@@ -1932,7 +1932,7 @@ class QuerySetMatcher(object):
 class TestNotificationsReviewsModerator(OsfTestCase):
 
     def setUp(self):
-        super(TestNotificationsReviewsModerator, self).setUp()
+        super().setUp()
         self.provider = factories.PreprintProviderFactory(_id='engrxiv')
         self.preprint = factories.PreprintFactory(provider=self.provider)
         self.submitter = factories.UserFactory()

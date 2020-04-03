@@ -209,4 +209,4 @@ class RegistrationSchemaBlock(ObjectIDMixin, BaseModel):
         empty "registration_response_key"s as null, instead of an empty string.
         """
         self.registration_response_key = self.registration_response_key or None
-        return super(RegistrationSchemaBlock, self).save(*args, **kwargs)
+        return super().save(*args, **kwargs)

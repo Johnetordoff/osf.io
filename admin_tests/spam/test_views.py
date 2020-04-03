@@ -24,7 +24,7 @@ from admin.spam.views import (
 
 class TestSpamListView(AdminTestCase):
     def setUp(self):
-        super(TestSpamListView, self).setUp()
+        super().setUp()
         Comment.objects.all().delete()
         self.project = ProjectFactory(is_public=True)
         self.user_1 = AuthUserFactory()
@@ -102,7 +102,7 @@ class TestSpamListView(AdminTestCase):
 
 class TestSpamDetail(AdminTestCase):
     def setUp(self):
-        super(TestSpamDetail, self).setUp()
+        super().setUp()
         self.comment = CommentFactory()
         self.comment.report_abuse(user=AuthUserFactory(), save=True,
                                   category='spam')
@@ -162,7 +162,7 @@ class TestSpamDetail(AdminTestCase):
 
 class TestEmailView(AdminTestCase):
     def setUp(self):
-        super(TestEmailView, self).setUp()
+        super().setUp()
         self.comment = CommentFactory()
         self.comment.report_abuse(user=AuthUserFactory(), save=True,
                                   category='spam')
@@ -177,7 +177,7 @@ class TestEmailView(AdminTestCase):
 
 class TestUserSpamListView(AdminTestCase):
     def setUp(self):
-        super(TestUserSpamListView, self).setUp()
+        super().setUp()
         self.project = ProjectFactory(is_public=True)
         self.user_1 = AuthUserFactory()
         self.user_2 = AuthUserFactory()

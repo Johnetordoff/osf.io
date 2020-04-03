@@ -25,7 +25,7 @@ class CasHTTPError(CasError):
     """Error raised when an unexpected error is returned from the CAS server."""
 
     def __init__(self, code, message, headers, content):
-        super(CasHTTPError, self).__init__(code, message)
+        super().__init__(code, message)
         self.headers = headers
         self.content = content
 
@@ -40,7 +40,7 @@ class CasTokenError(CasError):
     """Raised if an invalid token is passed by the client."""
 
     def __init__(self, message):
-        super(CasTokenError, self).__init__(http_status.HTTP_400_BAD_REQUEST, message)
+        super().__init__(http_status.HTTP_400_BAD_REQUEST, message)
 
 
 class CasResponse(object):

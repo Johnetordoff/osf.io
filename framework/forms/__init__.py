@@ -18,7 +18,7 @@ class BootstrapTextInput(TextInput):
     def __call__(self, field, **kwargs):
         kwargs.setdefault('class', 'form-control')
         kwargs.setdefault('class_', 'form-control')
-        return super(BootstrapTextInput, self).__call__(field, **kwargs)
+        return super().__call__(field, **kwargs)
 
 
 class BootstrapPasswordInput(PasswordInput):
@@ -27,7 +27,7 @@ class BootstrapPasswordInput(PasswordInput):
     def __call__(self, field, **kwargs):
         kwargs.setdefault('class', 'form-control')
         kwargs.setdefault('class_', 'form-control')
-        html = super(BootstrapPasswordInput, self).__call__(field, **kwargs)
+        html = super().__call__(field, **kwargs)
         return html
 
 class BootstrapTextArea(TextArea):
@@ -36,7 +36,7 @@ class BootstrapTextArea(TextArea):
     def __call__(self, field, **kwargs):
         kwargs.setdefault('class', 'form-control')
         kwargs.setdefault('class_', 'form-control')
-        html = super(BootstrapTextArea, self).__call__(field, **kwargs)
+        html = super().__call__(field, **kwargs)
         return html
 
 

@@ -10,7 +10,7 @@ from requests_oauthlib import OAuth1Session
 
 class DeskError(Exception):
     def __init__(self, message, status_code=None, content=None):
-        super(DeskError, self).__init__(message)
+        super().__init__(message)
         self.status_code = status_code
         self.content = content
 

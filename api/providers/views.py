@@ -90,7 +90,7 @@ class PreprintProviderList(MetricsViewMixin, GenericProviderList):
         )
 
     def get_renderer_context(self):
-        context = super(PreprintProviderList, self).get_renderer_context()
+        context = super().get_renderer_context()
         context['meta'] = {
             'whitelisted_providers': WhitelistedSHAREPreprintProvider.objects.all().values_list('provider_name', flat=True),
         }
@@ -112,7 +112,7 @@ class PreprintProviderList(MetricsViewMixin, GenericProviderList):
                 raise InvalidFilterValue('Invalid permission! Valid values are: {}'.format(valid_permissions))
             return Q(id__in=get_objects_for_user(auth_user, permissions, PreprintProvider, any_perm=True))
 
-        return super(PreprintProviderList, self).build_query_from_field(field_name, operation)
+        return super().build_query_from_field(field_name, operation)
 
 
 class GenericProviderDetail(JSONAPIBaseView, generics.RetrieveAPIView):
@@ -159,7 +159,7 @@ class PreprintProviderDetail(GenericProviderDetail, generics.UpdateAPIView):
     def perform_update(self, serializer):
         if serializer.instance.is_reviewed:
             raise Conflict('Reviews settings may be set only once. Contact support@osf.io if you need to update them.')
-        super(PreprintProviderDetail, self).perform_update(serializer)
+        super().perform_update(serializer)
 
 
 class GenericProviderTaxonomies(JSONAPIBaseView, generics.ListAPIView):
@@ -395,7 +395,7 @@ class PreprintProviderPreprintList(JSONAPIBaseView, generics.ListAPIView, Prepri
 
     # overrides APIView
     def get_renderer_context(self):
-        context = super(PreprintProviderPreprintList, self).get_renderer_context()
+        context = super().get_renderer_context()
         show_counts = is_truthy(self.request.query_params.get('meta[reviews_state_counts]', False))
         if show_counts:
             # TODO don't duplicate the above
@@ -509,7 +509,7 @@ class PreprintProviderWithdrawRequestList(JSONAPIBaseView, generics.ListAPIView,
         )
 
     def get_renderer_context(self):
-        context = super(PreprintProviderWithdrawRequestList, self).get_renderer_context()
+        context = super().get_renderer_context()
         if is_truthy(self.request.query_params.get('meta[requests_state_counts]', False)):
             auth = get_user_auth(self.request)
             auth_user = getattr(auth, 'user', None)
@@ -530,7 +530,7 @@ class ModeratorMixin(object):
         return get_object_or_error(PreprintProvider, self.kwargs['provider_id'], self.request, display_name='PreprintProvider')
 
     def get_serializer_context(self, *args, **kwargs):
-        ctx = super(ModeratorMixin, self).get_serializer_context(*args, **kwargs)
+        ctx = super().get_serializer_context(*args, **kwargs)
         ctx.update({'provider': self.get_provider()})
         return ctx
 

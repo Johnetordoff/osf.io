@@ -17,7 +17,7 @@ from osf.models import Node
 
 class TestInstitutionRegistrationList(ApiTestCase):
     def setUp(self):
-        super(TestInstitutionRegistrationList, self).setUp()
+        super().setUp()
         self.institution = InstitutionFactory()
         self.registration1 = RegistrationFactory(is_public=True)
         self.registration1.affiliated_institutions.add(self.institution)
@@ -115,7 +115,7 @@ class TestRegistrationListFiltering(
         self.url = '/{}institutions/{}/registrations/?version=2.2&'.format(
             API_BASE, self.institution._id)
 
-        super(TestRegistrationListFiltering, self).setUp()
+        super().setUp()
 
         A_children = [
             child for child in Node.objects.get_children(

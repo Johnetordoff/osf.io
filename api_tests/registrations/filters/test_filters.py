@@ -14,7 +14,7 @@ from osf_tests.factories import (
 class RegistrationListFilteringMixin(object):
 
     def setUp(self):
-        super(RegistrationListFilteringMixin, self).setUp()
+        super().setUp()
 
         assert self.url, 'Subclasses of RegistrationListFilteringMixin must define self.url'
 

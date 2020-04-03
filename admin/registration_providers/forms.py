@@ -29,7 +29,7 @@ class RegistrationProviderForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         nodelicense_choices = get_nodelicense_choices()
         defaultlicense_choices = get_defaultlicense_choices()
-        super(RegistrationProviderForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fields['licenses_acceptable'].choices = nodelicense_choices
         self.fields['default_license'].choices = defaultlicense_choices
 
@@ -69,7 +69,7 @@ class RegistrationProviderCustomTaxonomyForm(forms.Form):
     merge_into = forms.ChoiceField(choices=[], required=False)
 
     def __init__(self, *args, **kwargs):
-        super(RegistrationProviderCustomTaxonomyForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         subject_choices = [(x, x) for x in Subject.objects.filter(bepress_subject__isnull=True).values_list('text', flat=True)]
         for name, field in self.fields.items():
             if hasattr(field, 'choices'):

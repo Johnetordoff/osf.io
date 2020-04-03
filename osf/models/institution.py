@@ -65,7 +65,7 @@ class Institution(DirtyFieldsMixin, Loggable, base.ObjectIDMixin, base.BaseModel
 
     def __init__(self, *args, **kwargs):
         kwargs.pop('node', None)
-        super(Institution, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def __unicode__(self):
         return u'{} : ({})'.format(self.name, self._id)
@@ -140,4 +140,4 @@ class Institution(DirtyFieldsMixin, Loggable, base.ObjectIDMixin, base.BaseModel
 
     def save(self, *args, **kwargs):
         self.update_search()
-        return super(Institution, self).save(*args, **kwargs)
+        return super().save(*args, **kwargs)

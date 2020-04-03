@@ -626,7 +626,7 @@ class Preprint(DirtyFieldsMixin, GuidMixin, IdentifierMixin, ReviewableMixin, Ba
         if not first_save and ('ever_public' in saved_fields and saved_fields['ever_public']):
             raise ValidationError('Cannot set "ever_public" to False')
 
-        ret = super(Preprint, self).save(*args, **kwargs)
+        ret = super().save(*args, **kwargs)
 
         if first_save:
             self._set_default_region()
@@ -790,7 +790,7 @@ class Preprint(DirtyFieldsMixin, GuidMixin, IdentifierMixin, ReviewableMixin, Ba
         if not self.has_permission(auth.user, WRITE):
             raise PermissionsError('Must have admin or write permissions to edit a preprint\'s title.')
 
-        return super(Preprint, self).set_title(title, auth, save)
+        return super().set_title(title, auth, save)
 
     def set_description(self, description, auth, save=False):
         """Set the description and log the event.
@@ -802,7 +802,7 @@ class Preprint(DirtyFieldsMixin, GuidMixin, IdentifierMixin, ReviewableMixin, Ba
         if not self.has_permission(auth.user, WRITE):
             raise PermissionsError('Must have admin or write permissions to edit a preprint\'s title.')
 
-        return super(Preprint, self).set_description(description, auth, save)
+        return super().set_description(description, auth, save)
 
     def get_spam_fields(self, saved_fields):
         return self.SPAM_CHECK_FIELDS if self.is_published and 'is_published' in saved_fields else self.SPAM_CHECK_FIELDS.intersection(

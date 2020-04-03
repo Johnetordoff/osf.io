@@ -42,7 +42,7 @@ from osf.models.admin_log_entry import AdminLogEntry
 class TestDraftListView(AdminTestCase):
     @mock.patch('website.archiver.tasks.archive')
     def setUp(self, mock_archive):
-        super(TestDraftListView, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.schema = utils.draft_reg_util()
         self.dr1 = DraftRegistrationFactory(
@@ -127,7 +127,7 @@ class TestDraftListView(AdminTestCase):
 
 class TestDraftDetailView(AdminTestCase):
     def setUp(self):
-        super(TestDraftDetailView, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         schema = utils.draft_reg_util()
         self.dr1 = DraftRegistrationFactory(
@@ -170,7 +170,7 @@ class TestDraftDetailView(AdminTestCase):
 
 class TestDraftFormView(AdminTestCase):
     def setUp(self):
-        super(TestDraftFormView, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.dr1 = DraftRegistrationFactory(
             initiator=self.user,
@@ -291,7 +291,7 @@ class TestDraftFormView(AdminTestCase):
 
 class TestCommentUpdateView(AdminTestCase):
     def setUp(self):
-        super(TestCommentUpdateView, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.dr1 = DraftRegistrationFactory(
             initiator=self.user,
@@ -323,7 +323,7 @@ class TestCommentUpdateView(AdminTestCase):
 
 class TestPreregFiles(AdminTestCase):
     def setUp(self):
-        super(TestPreregFiles, self).setUp()
+        super().setUp()
         self.prereg_user = AuthUserFactory()
         self.user = AuthUserFactory()
         self.node = ProjectFactory(creator=self.user)

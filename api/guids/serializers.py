@@ -85,4 +85,4 @@ class GuidSerializer(JSONAPISerializer):
             )).func.cls.serializer_class(context=self.context)
             [ser.context.update({k: v}) for k, v in self.context.items()]
             return ser.to_representation(obj)
-        return super(GuidSerializer, self).to_representation(obj)
+        return super().to_representation(obj)

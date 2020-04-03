@@ -38,7 +38,7 @@ class AddonSerializerTestSuiteMixin(object):
         pass
 
     def setUp(self):
-        super(AddonSerializerTestSuiteMixin, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.node = ProjectFactory(creator=self.user)
         self.set_user_settings(self.user)
