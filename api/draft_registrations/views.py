@@ -185,7 +185,7 @@ class DraftContributorsList(NodeContributorsList, DraftRegistrationMixin):
 
     # Overrides NodeContributorsList
     def get_serializer_context(self):
-        context = super().get_serializer_context()
+        context = super(JSONAPIBaseView, self).get_serializer_context()
         context['resource'] = self.get_resource()
         context['default_email'] = 'draft_registration'
         return context
