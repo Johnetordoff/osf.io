@@ -48,7 +48,6 @@ before_install:
       mkdir -p $HOME/.cache/pip
       mkdir -p $HOME/.cache/wheelhouse
       mkdir -p $HOME/.cache/testmon
-      rm -rf node_modules  ## TODO remove this later
     # postgres
     - |
       cd $HOME/.cache/downloads
@@ -128,11 +127,10 @@ install:
     - cd $TRAVIS_BUILD_DIR
     - cp website/settings/local-travis.py website/settings/local.py
     - cp api/base/settings/local-travis.py api/base/settings/local.py
-    - '[ -d $HOME/preprints ] || ( mkdir -p $HOME/preprints && touch $HOME/preprints/index.html )'
 
     - travis_retry pip install --upgrade pip
-    - travis_retry pip install invoke==0.13.0
-    - travis_retry pip install flake8==2.4.0 --force-reinstall --upgrade
+    - travis_retry pip install invoke==1.4.1
+    - travis_retry pip install flake8 --upgrade
     - travis_retry invoke wheelhouse --dev --addons
 
     - |
@@ -147,9 +145,6 @@ install:
     - travis_retry invoke travis_addon_settings
     - travis_retry pip install psycopg2==2.7.3 --no-binary psycopg2
     - travis_retry invoke requirements --dev --addons
-    # Hack to fix package conflict between uritemplate and uritemplate.py (dependency of github3.py)
-    - pip uninstall uritemplate.py --yes
-    - pip install uritemplate.py==0.3.0
 
 # Run Python tests (core and addon) and JS tests
 

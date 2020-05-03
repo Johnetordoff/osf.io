@@ -280,24 +280,16 @@ def requirements(ctx, base=False, addons=False, release=False, dev=False, all=Fa
                 pip_install(req_file, constraints_file=CONSTRAINTS_PATH),
                 echo=True
             )
-    # fix URITemplate name conflict h/t @github
-    ctx.run('pip3 uninstall uritemplate.py --yes || true')
-    ctx.run('pip3 install --no-cache-dir uritemplate.py==0.3.0')
 
 
 @task
-def test_module(ctx, module=None, numprocesses=None, nocapture=False, params=None, coverage=False, testmon=False):
+def test_module(ctx, module=None, nocapture=False, params=None, coverage=False, testmon=False):
     """Helper for running tests.
     """
     from past.builtins import basestring
     os.environ['DJANGO_SETTINGS_MODULE'] = 'osf_tests.settings'
     import pytest
-    if not numprocesses:
-        from multiprocessing import cpu_count
-        numprocesses = cpu_count()
-    numprocesses = int(numprocesses)
-    # NOTE: Subprocess to compensate for lack of thread safety in the httpretty module.
-    # https://github.com/gabrielfalcao/HTTPretty/issues/209#issue-54090252
+
     args = []
     if coverage:
         args.extend([
@@ -311,8 +303,6 @@ def test_module(ctx, module=None, numprocesses=None, nocapture=False, params=Non
         ])
     if not nocapture:
         args += ['-s']
-    if numprocesses > 1:
-        args += ['-n {}'.format(numprocesses), '--max-slave-restart=0']
     modules = [module] if isinstance(module, basestring) else module
     args.extend(modules)
     if testmon:
@@ -413,7 +403,7 @@ def test_api1(ctx, numprocesses=None, coverage=False, testmon=False):
 @task
 def test_api2(ctx, numprocesses=None, coverage=False, testmon=False):
     """Run the API test suite."""
-    print('Testing modules "{}"'.format(API_TESTS2))
+    print(f'Testing modules {API_TESTS2}')
     test_module(ctx, module=API_TESTS2, numprocesses=numprocesses, coverage=coverage, testmon=testmon)
 
 
@@ -472,7 +462,7 @@ def travis_setup(ctx):
 
     with open('package.json', 'r') as fobj:
         package_json = json.load(fobj)
-        ctx.run('npm install @centerforopenscience/list-of-licenses@{}'.format(package_json['dependencies']['@centerforopenscience/list-of-licenses']), echo=True)
+        ctx.run(f'npm install @centerforopenscience/list-of-licenses@{package_json["dependencies"]["@centerforopenscience/list-of-licenses"]}', echo=True)
 
     with open('bower.json', 'r') as fobj:
         bower_json = json.load(fobj)
@@ -539,9 +529,7 @@ def wheelhouse(ctx, addons=False, release=False, dev=False, pty=True):
             if os.path.isdir(path):
                 req_file = os.path.join(path, 'requirements.txt')
                 if os.path.exists(req_file):
-                    cmd = 'pip3 wheel --find-links={} -r {} --wheel-dir={} -c {}'.format(
-                        WHEELHOUSE_PATH, req_file, WHEELHOUSE_PATH, CONSTRAINTS_PATH,
-                    )
+                    cmd = f'pip3 wheel --find-links={WHEELHOUSE_PATH} -r {req_file} --wheel-dir={WHEELHOUSE_PATH} -c {CONSTRAINTS_PATH}'
                     ctx.run(cmd, pty=pty)
     if release:
         req_file = os.path.join(HERE, 'requirements', 'release.txt')
@@ -549,9 +537,7 @@ def wheelhouse(ctx, addons=False, release=False, dev=False, pty=True):
         req_file = os.path.join(HERE, 'requirements', 'dev.txt')
     else:
         req_file = os.path.join(HERE, 'requirements.txt')
-    cmd = 'pip3 wheel --find-links={} -r {} --wheel-dir={} -c {}'.format(
-        WHEELHOUSE_PATH, req_file, WHEELHOUSE_PATH, CONSTRAINTS_PATH,
-    )
+    cmd = f'pip3 wheel --find-links={WHEELHOUSE_PATH} -r {req_file} --wheel-dir={WHEELHOUSE_PATH} -c {CONSTRAINTS_PATH}'
     ctx.run(cmd, pty=pty)
 
 
@@ -563,7 +549,7 @@ def addon_requirements(ctx):
 
         requirements_file = os.path.join(path, 'requirements.txt')
         if os.path.isdir(path) and os.path.isfile(requirements_file):
-            print('Installing requirements for {0}'.format(directory))
+            print(f'Installing requirements for {directory}')
             ctx.run(
                 pip_install(requirements_file, constraints_file=CONSTRAINTS_PATH),
                 echo=True
