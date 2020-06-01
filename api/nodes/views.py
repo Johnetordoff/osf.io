@@ -115,7 +115,7 @@ from api.osf_groups.views import OSFGroupMixin
 from api.preprints.serializers import PreprintSerializer
 from api.registrations.serializers import (
     RegistrationSerializer,
-    RegistrationCreateLegacySerializer,
+    RegistrationCreateSerializer,
 )
 from api.requests.permissions import NodeRequestPermission
 from api.requests.serializers import NodeRequestSerializer, NodeRequestCreateSerializer
@@ -126,6 +126,7 @@ from api.users.serializers import UserSerializer
 from api.wikis.serializers import NodeWikiSerializer
 from framework.exceptions import HTTPError, PermissionsError
 from framework.auth.oauth_scopes import CoreScopes
+from framework.sentry import log_exception
 from osf.features import OSF_GROUPS
 from osf.models import AbstractNode
 from osf.models import (Node, PrivateLink, Institution, Comment, DraftRegistration, Registration, )
@@ -691,7 +692,7 @@ class NodeRegistrationsList(JSONAPIBaseView, generics.ListCreateAPIView, NodeMix
 
     def get_serializer_class(self):
         if self.request.method in ('PUT', 'POST'):
-            return RegistrationCreateLegacySerializer
+            return RegistrationCreateSerializer
         return RegistrationSerializer
 
     # overrides ListCreateAPIView
@@ -709,7 +710,11 @@ class NodeRegistrationsList(JSONAPIBaseView, generics.ListCreateAPIView, NodeMix
         # On creation, make sure that current user is the creator
         draft_id = self.request.data.get('draft_registration', None) or self.request.data.get('draft_registration_id', None)
         draft = self.get_draft(draft_id)
-        serializer.save(draft=draft)
+        try:
+            serializer.save(draft=draft)
+        except ValidationError as e:
+            log_exception()
+            raise e
 
 
 class NodeChildrenList(BaseChildrenList, bulk_views.ListBulkCreateJSONAPIView, NodeMixin):

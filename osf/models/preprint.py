@@ -632,6 +632,8 @@ class Preprint(DirtyFieldsMixin, GuidMixin, IdentifierMixin, ReviewableMixin, Ba
 
         if not first_save and ('ever_public' in saved_fields and saved_fields['ever_public']):
             raise ValidationError('Cannot set "ever_public" to False')
+        if self.has_submitted_preprint and not self.primary_file:
+            raise ValidationError('Cannot save non-initial preprint without primary file.')
 
         ret = super(Preprint, self).save(*args, **kwargs)
 
@@ -1046,6 +1048,8 @@ class Preprint(DirtyFieldsMixin, GuidMixin, IdentifierMixin, ReviewableMixin, Ba
                 },
                 auth=auth
             )
+        if has_data_links != 'available':
+            self.update_data_links(auth, data_links=[], log=False)
         if save:
             self.save()
 
@@ -1065,7 +1069,7 @@ class Preprint(DirtyFieldsMixin, GuidMixin, IdentifierMixin, ReviewableMixin, Ba
         if self.data_links == data_links:
             return
 
-        if not self.has_data_links == 'available':
+        if not self.has_data_links == 'available' and data_links:
             raise PreprintStateError('You cannot edit this statement while your data links availability is set to false'
                                      ' or is unanswered.')
 

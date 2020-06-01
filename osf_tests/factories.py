@@ -602,6 +602,8 @@ class SubjectFactory(DjangoModelFactory):
 
 
 class PreprintProviderFactory(DjangoModelFactory):
+    _id = factory.Sequence(lambda n: f'slug{n}')
+
     name = factory.Faker('company')
     description = factory.Faker('bs')
     external_url = factory.Faker('url')
@@ -671,7 +673,6 @@ class PreprintFactory(DjangoModelFactory):
         subjects = kwargs.pop('subjects', None) or [[SubjectFactory()._id]]
         instance.article_doi = doi
 
-        instance.machine_state = kwargs.pop('machine_state', 'initial')
         user = kwargs.pop('creator', None) or instance.creator
         instance.save()
 
@@ -682,6 +683,7 @@ class PreprintFactory(DjangoModelFactory):
             name=filename,
             materialized_path='/{}'.format(filename))
 
+        instance.machine_state = kwargs.pop('machine_state', 'initial')
         preprint_file.save()
         from addons.osfstorage import settings as osfstorage_settings
 
