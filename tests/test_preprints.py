@@ -2262,7 +2262,6 @@ class TestPreprintSaveShareHook(OsfTestCase):
         assert not mock_on_preprint_updated.called
 
     @mock.patch('website.preprints.tasks.requests')
-    @mock.patch('website.preprints.tasks.settings.SHARE_URL', 'ima_real_website')
     def test_send_to_share_is_true(self, mock_requests):
         self.preprint.provider.access_token = 'Snowmobiling'
         self.preprint.provider.save()
@@ -2296,7 +2295,6 @@ class TestPreprintSaveShareHook(OsfTestCase):
         preprint.remove_contributor(contributor=user, auth=self.auth)
         assert mock_on_preprint_updated.call_count == 13
 
-    @mock.patch('website.preprints.tasks.settings.SHARE_URL', 'a_real_url')
     @mock.patch('website.preprints.tasks._async_update_preprint_share.delay')
     @mock.patch('website.preprints.tasks.requests')
     def test_call_async_update_on_500_failure(self, requests, mock_async):
@@ -2305,7 +2303,6 @@ class TestPreprintSaveShareHook(OsfTestCase):
         update_preprint_share(self.preprint)
         assert mock_async.called
 
-    @mock.patch('website.preprints.tasks.settings.SHARE_URL', 'a_real_url')
     @mock.patch('website.preprints.tasks.send_desk_share_preprint_error')
     @mock.patch('website.preprints.tasks._async_update_preprint_share.delay')
     @mock.patch('website.preprints.tasks.requests')

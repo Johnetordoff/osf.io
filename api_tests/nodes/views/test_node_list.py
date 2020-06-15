@@ -1,4 +1,5 @@
 import pytest
+import responses
 from nose.tools import *  # noqa:
 
 from django.utils import timezone
@@ -2756,6 +2757,7 @@ class TestNodeBulkUpdate:
         assert res.json['data'][0]['attributes']['title'] == new_title
         assert res.json['data'][1]['attributes']['title'] == new_title
 
+    @responses.activate
     def test_bulk_update_with_tags(self, app, user, public_project_one, url):
         new_payload = {
             'data': [{

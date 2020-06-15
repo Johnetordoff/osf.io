@@ -1,4 +1,5 @@
 import pytest
+import responses
 
 from framework.auth.core import Auth
 from osf_tests.factories import ConferenceFactory, ProjectFactory, AuthUserFactory
@@ -41,6 +42,7 @@ class TestMeetingDetail:
         submission.add_tag('poster', Auth(user))
         return submission
 
+    @responses.activate
     def test_meeting_detail(self, app, meeting, url, meeting_submission_one, private_meeting_submission):
         res = app.get(url)
         assert res.status_code == 200

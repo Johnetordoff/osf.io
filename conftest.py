@@ -1,8 +1,11 @@
 from __future__ import print_function
 
 import logging
+from website.settings import SHARE_URL
+
 
 import mock
+import responses
 import pytest
 from faker import Factory
 from website import settings as website_settings
@@ -144,3 +147,13 @@ def _es_marker(request, es6_client):
         teardown_es()
     else:
         yield
+
+@pytest.fixture(autouse=True)
+def share():
+    responses.add(
+        responses.Response(
+            responses.POST,
+            f'{SHARE_URL}/api/normalizeddata/',
+            status=200,
+        )
+    )

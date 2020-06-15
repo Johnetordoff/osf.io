@@ -75,11 +75,8 @@ def update_or_enqueue_on_preprint_updated(preprint_id, update_share=True, share_
         )
 
 def update_preprint_share(preprint, old_subjects=None, share_type=None):
-    if settings.SHARE_URL:
-        if not preprint.provider.access_token:
-            raise ValueError('No access_token for {}. Unable to send {} to SHARE.'.format(preprint.provider, preprint))
-        share_type = share_type or preprint.provider.share_publish_type
-        _update_preprint_share(preprint, old_subjects, share_type)
+    share_type = share_type or preprint.provider.share_publish_type
+    _update_preprint_share(preprint, old_subjects, share_type)
 
 def _update_preprint_share(preprint, old_subjects, share_type):
     # Any modifications to this function may need to change _async_update_preprint_share
@@ -128,7 +125,13 @@ def serialize_share_preprint_data(preprint, share_type, old_subjects):
     }
 
 def send_share_preprint_data(preprint, data):
-    resp = requests.post('{}api/v2/normalizeddata/'.format(settings.SHARE_URL), json=data, headers={'Authorization': 'Bearer {}'.format(preprint.provider.access_token), 'Content-Type': 'application/vnd.api+json'})
+    resp = requests.post(
+        f'{settings.SHARE_URL}api/v2/normalizeddata/',
+        json=data, headers={
+            'Authorization': f'Bearer {preprint.provider.access_token}',
+            'Content-Type': 'application/vnd.api+json'
+        }
+    )
     logger.debug(resp.content)
     return resp
 

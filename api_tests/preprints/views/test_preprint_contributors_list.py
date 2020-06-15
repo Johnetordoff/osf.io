@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
 import mock
+import responses
 import pytest
 import random
 from django.utils import timezone
@@ -1356,6 +1357,7 @@ class TestPreprintContributorCreateEmail(NodeCRUDTestCase):
         return '/{}preprints/{}/contributors/'.format(API_BASE, preprint_published._id)
 
     @mock.patch('framework.auth.views.mails.send_mail')
+    @responses.activate
     def test_add_contributor_no_email_if_false(
             self, mock_mail, app, user, url_preprint_contribs):
         url = '{}?send_email=false'.format(url_preprint_contribs)

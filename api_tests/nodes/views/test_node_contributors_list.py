@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
 import mock
+import resposes
 import pytest
 import random
 from nose.tools import *  # noqa:
@@ -1381,6 +1382,7 @@ class TestNodeContributorCreateEmail(NodeCRUDTestCase):
         assert mock_mail.call_count == 0
 
     @mock.patch('framework.auth.views.mails.send_mail')
+    @resposes.activate
     def test_add_contributor_sends_email(
             self, mock_mail, app, user, user_two,
             url_project_contribs):

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import responses
+
 from nose.tools import *  # noqa:
 
 from osf.models import Node, Registration
@@ -109,6 +111,7 @@ class RegistrationListFilteringMixin(object):
         assert_equal(len(actual), 6)
         assert_equal(set(expected), set(actual))
 
+    @responses.activate
     def test_tag_filter(self):
         self.node_A.add_tag('nerd', auth=Auth(self.node_A.creator), save=True)
         expected = [self.node_A._id]

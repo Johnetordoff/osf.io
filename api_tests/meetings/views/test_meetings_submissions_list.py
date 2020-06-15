@@ -1,4 +1,5 @@
 import pytest
+import responses
 
 from api_tests import utils as api_utils
 
@@ -102,6 +103,7 @@ class TestMeetingSubmissionsList:
         pc.save()
         return pc
 
+    @responses.activate
     def test_meeting_submissions_list(self, app, user, meeting, url, meeting_one_submission, meeting_one_private_submission):
         api_utils.create_test_file(meeting_one_submission, user, create_guid=False)
         res = app.get(url)
@@ -114,6 +116,7 @@ class TestMeetingSubmissionsList:
         assert 'download' in data[0]['links']
         assert 'author' in data[0]['relationships']
 
+    @responses.activate
     def test_meeting_submissions_list_sorting_and_filtering(self, app, url_meeting_two, meeting_two,
             meeting_two_submission, file, meeting_two_second_submission, file_two, meeting_two_third_submission, file_three):
         first = meeting_two_submission._id

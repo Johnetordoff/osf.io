@@ -81,8 +81,15 @@ def _async_update_node_share(self, node_id):
         else:
             send_desk_share_error(node, resp, self.request.retries)
 
+
 def send_share_node_data(data):
-    resp = requests.post('{}api/normalizeddata/'.format(settings.SHARE_URL), json=data, headers={'Authorization': 'Bearer {}'.format(settings.SHARE_API_TOKEN), 'Content-Type': 'application/vnd.api+json'})
+    resp = requests.post(
+        f'{settings.SHARE_URL}/api/normalizeddata/', json=data,
+        headers={
+            'Authorization': f'Bearer {settings.SHARE_API_TOKEN}',
+            'Content-Type': 'application/vnd.api+json'
+        }
+    )
     logger.debug(resp.content)
     return resp
 

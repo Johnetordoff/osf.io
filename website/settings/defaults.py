@@ -348,7 +348,7 @@ CROSSREF_JSON_API_URL = 'https://api.crossref.org/'
 SHARE_PREPRINT_PROVIDER_PREPEND = None
 
 SHARE_REGISTRATION_URL = ''
-SHARE_URL = None
+SHARE_URL = 'https://share.osf.io/'
 SHARE_API_TOKEN = None  # Required to send project updates to SHARE
 
 CAS_SERVER_URL = 'http://localhost:8080'

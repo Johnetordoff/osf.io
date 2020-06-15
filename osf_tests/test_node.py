@@ -3862,8 +3862,6 @@ class TestOnNodeUpdate:
         assert 'contributors' in task.kwargs['saved_fields']
         assert 'node_license' in task.kwargs['saved_fields']
 
-    @mock.patch('website.project.tasks.settings.SHARE_URL', 'https://share.osf.io')
-    @mock.patch('website.project.tasks.settings.SHARE_API_TOKEN', 'Token')
     @mock.patch('website.project.tasks.requests')
     def test_updates_share(self, requests, node, user):
         on_node_updated(node._id, user._id, False, {'is_public'})
@@ -3875,8 +3873,6 @@ class TestOnNodeUpdate:
         assert kwargs['headers']['Authorization'] == 'Bearer Token'
         assert graph[0]['uri'] == '{}{}/'.format(settings.DOMAIN, node._id)
 
-    @mock.patch('website.project.tasks.settings.SHARE_URL', 'https://share.osf.io')
-    @mock.patch('website.project.tasks.settings.SHARE_API_TOKEN', 'Token')
     @mock.patch('website.project.tasks.requests')
     def test_update_share_correctly_for_projects(self, requests, node, user, request_context):
         cases = [{
@@ -3904,8 +3900,6 @@ class TestOnNodeUpdate:
             graph = kwargs['json']['data']['attributes']['data']['@graph']
             assert graph[1]['is_deleted'] == case['is_deleted']
 
-    @mock.patch('website.project.tasks.settings.SHARE_URL', 'https://share.osf.io')
-    @mock.patch('website.project.tasks.settings.SHARE_API_TOKEN', 'Token')
     @mock.patch('website.search.search.update_collected_metadata')
     @mock.patch('website.project.tasks.requests')
     def test_update_collection_elasticsearch_make_private(self, requests, mock_update_collected_metadata, node_in_collection, collection, user, request_context):
@@ -3916,8 +3910,6 @@ class TestOnNodeUpdate:
 
         mock_update_collected_metadata.assert_called_with(node_in_collection._id, op='delete')
 
-    @mock.patch('website.project.tasks.settings.SHARE_URL', 'https://share.osf.io')
-    @mock.patch('website.project.tasks.settings.SHARE_API_TOKEN', 'Token')
     @mock.patch('website.project.tasks.requests')
     @mock.patch('osf.models.registrations.Registration.archiving', mock.PropertyMock(return_value=False))
     def test_update_share_correctly_for_registrations(self, requests, registration, user, request_context):
@@ -3948,8 +3940,6 @@ class TestOnNodeUpdate:
             payload = next((item for item in graph if 'is_deleted' in item.keys()))
             assert payload['is_deleted'] == case['is_deleted']
 
-    @mock.patch('website.project.tasks.settings.SHARE_URL', 'https://share.osf.io')
-    @mock.patch('website.project.tasks.settings.SHARE_API_TOKEN', 'Token')
     @mock.patch('website.project.tasks.requests')
     @mock.patch('osf.models.registrations.Registration.archiving', mock.PropertyMock(return_value=False))
     def test_format_registration_gets_parent_hierarchy_for_component_registrations(self, requests, project, component_registration, user, request_context):
@@ -3963,8 +3953,6 @@ class TestOnNodeUpdate:
         assert parent_relation
         assert parent_work_identifier
 
-    @mock.patch('website.project.tasks.settings.SHARE_URL', 'https://share.osf.io')
-    @mock.patch('website.project.tasks.settings.SHARE_API_TOKEN', 'Token')
     @mock.patch('website.project.tasks.requests')
     def test_update_share_correctly_for_projects_with_qa_tags(self, requests, node, user, request_context):
         node.add_tag(settings.DO_NOT_INDEX_LIST['tags'][0], auth=Auth(user))
@@ -3981,8 +3969,6 @@ class TestOnNodeUpdate:
         payload = next((item for item in graph if 'is_deleted' in item.keys()))
         assert payload['is_deleted'] is False
 
-    @mock.patch('website.project.tasks.settings.SHARE_URL', 'https://share.osf.io')
-    @mock.patch('website.project.tasks.settings.SHARE_API_TOKEN', 'Token')
     @mock.patch('website.project.tasks.requests')
     @mock.patch('osf.models.registrations.Registration.archiving', mock.PropertyMock(return_value=False))
     def test_update_share_correctly_for_registrations_with_qa_tags(self, requests, registration, user, request_context):
@@ -4000,8 +3986,6 @@ class TestOnNodeUpdate:
         payload = next((item for item in graph if 'is_deleted' in item.keys()))
         assert payload['is_deleted'] is False
 
-    @mock.patch('website.project.tasks.settings.SHARE_URL', 'https://share.osf.io')
-    @mock.patch('website.project.tasks.settings.SHARE_API_TOKEN', 'Token')
     @mock.patch('website.project.tasks.requests')
     def test_update_share_correctly_for_projects_with_qa_titles(self, requests, node, user, request_context):
         node.title = settings.DO_NOT_INDEX_LIST['titles'][0].join(random.choice(string.ascii_lowercase) for i in range(5))
@@ -4021,8 +4005,6 @@ class TestOnNodeUpdate:
         payload = next((item for item in graph if 'is_deleted' in item.keys()))
         assert payload['is_deleted'] is False
 
-    @mock.patch('website.project.tasks.settings.SHARE_URL', 'https://share.osf.io')
-    @mock.patch('website.project.tasks.settings.SHARE_API_TOKEN', 'Token')
     @mock.patch('website.project.tasks.requests')
     @mock.patch('osf.models.registrations.Registration.archiving', mock.PropertyMock(return_value=False))
     def test_update_share_correctly_for_registrations_with_qa_titles(self, requests, registration, user, request_context):

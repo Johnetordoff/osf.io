@@ -1,5 +1,6 @@
 import mock
 import pytest
+import responses
 
 from rest_framework import exceptions
 
@@ -163,6 +164,7 @@ class TestNodeWikiList:
         wiki_ids = [wiki['id'] for wiki in res.json['data']]
         assert WikiPage.objects.get_for_node(private_registration, 'home')._id in wiki_ids
 
+    @responses.activate
     def test_wikis_not_returned_for_withdrawn_registration(
             self, app, user, private_registration, private_registration_url):
         private_registration.is_public = True

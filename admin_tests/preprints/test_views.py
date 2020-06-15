@@ -379,8 +379,6 @@ class TestPreprintFormView:
 @pytest.mark.enable_implicit_clean
 class TestPreprintReindex:
     @mock.patch('website.preprints.tasks.send_share_preprint_data')
-    @mock.patch('website.settings.SHARE_URL', 'ima_real_website')
-    @mock.patch('website.project.tasks.settings.SHARE_API_TOKEN', 'totaly_real_token')
     def test_reindex_preprint_share(self, mock_reindex_preprint, preprint, req):
         preprint.provider.access_token = 'totally real access token I bought from a guy wearing a trenchcoat in the summer'
         preprint.provider.save()

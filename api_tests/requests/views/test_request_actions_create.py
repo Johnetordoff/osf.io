@@ -1,5 +1,6 @@
 import mock
 import pytest
+import responses
 
 from api.base.settings.defaults import API_BASE
 from api_tests.requests.mixins import NodeRequestTestMixin, PreprintRequestTestMixin
@@ -191,6 +192,7 @@ class TestCreateNodeRequestAction(NodeRequestTestMixin):
         assert initial_state == node_request.machine_state
         assert node_request.creator not in node_request.target.contributors
 
+    @responses.activate
     @mock.patch('website.project.views.contributor.mails.send_mail')
     def test_email_sent_on_approve(self, mock_mail, app, admin, url, node_request):
         initial_state = node_request.machine_state
@@ -315,6 +317,7 @@ class TestCreatePreprintRequestAction(PreprintRequestTestMixin):
             assert initial_state == request.machine_state
             assert initial_comment != request.comment
 
+    @responses.activate
     def test_moderator_can_approve_moderated_requests(self, app, moderator, url, pre_request, post_request):
         for request in [pre_request, post_request]:
             initial_state = request.machine_state
@@ -386,6 +389,7 @@ class TestCreatePreprintRequestAction(PreprintRequestTestMixin):
                 assert initial_state == request.machine_state
                 assert initial_comment == request.comment
 
+    @responses.activate
     @mock.patch('website.reviews.listeners.mails.send_mail')
     def test_email_sent_on_approve(self, mock_mail, app, moderator, url, pre_request, post_request):
         for request in [pre_request, post_request]:

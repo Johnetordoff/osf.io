@@ -3,7 +3,7 @@ import mock
 import pytest
 from future.moves.urllib.parse import urlparse
 from nose.tools import *  # noqa:
-
+import responses
 
 from addons.wiki.tests.factories import WikiFactory, WikiVersionFactory
 from api.base.settings.defaults import API_BASE
@@ -451,6 +451,7 @@ class TestNodeDetail:
         res = app.get(url, auth=grandparent.auth)
         assert res.json['data']['relationships']['children']['links']['related']['meta']['count'] == 2
 
+    @responses.activate
     def test_node_shows_related_count_for_linked_by_relationships(self, app, user, project_public, url_public, project_private):
         url = url_public + '?related_counts=true'
         res = app.get(url)
@@ -1784,6 +1785,7 @@ class TestNodeTags:
         assert res.status_code == 200
         assert len(res.json['data']['attributes']['tags']) == 0
 
+    @responses.activate
     def test_node_detail_does_not_expose_system_tags(
             self, app, project_public, url_public):
         project_public.add_system_tag('systag', save=True)
@@ -1791,6 +1793,7 @@ class TestNodeTags:
         assert res.status_code == 200
         assert len(res.json['data']['attributes']['tags']) == 0
 
+    @responses.activate
     def test_contributor_can_add_tag_to_public_project(
             self, app, user, project_public, payload_public, url_public):
         with assert_latest_log(NodeLog.TAG_ADDED, project_public):
@@ -1812,6 +1815,7 @@ class TestNodeTags:
             assert len(reload_res.json['data']['attributes']['tags']) == 1
             assert reload_res.json['data']['attributes']['tags'][0] == 'new-tag'
 
+    @responses.activate
     def test_contributor_can_add_tag_to_private_project(
             self, app, user, project_private, payload_private, url_private):
         with assert_latest_log(NodeLog.TAG_ADDED, project_private):
@@ -1830,6 +1834,7 @@ class TestNodeTags:
             assert len(reload_res.json['data']['attributes']['tags']) == 1
             assert reload_res.json['data']['attributes']['tags'][0] == 'new-tag'
 
+    @responses.activate
     def test_partial_update_project_does_not_clear_tags(
             self, app, user_admin, project_private, payload_private, url_private):
         res = app.patch_json_api(
@@ -1904,6 +1909,7 @@ class TestNodeTags:
             auth=user_read_contrib.auth)
         assert res.status_code == 403
 
+    @responses.activate
     def test_tags_add_and_remove_properly(
             self, app, user, project_private,
             payload_private, url_private):

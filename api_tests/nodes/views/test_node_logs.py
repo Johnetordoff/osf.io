@@ -1,4 +1,5 @@
 import pytest
+import responses
 
 from dateutil.parser import parse as parse_date
 
@@ -84,6 +85,7 @@ class TestNodeLogList:
         res = app.get(private_url, auth=group_mem.auth)
         assert res.status_code == 200
 
+    @responses.activate
     def test_add_tag(self, app, user, user_auth, public_project, public_url):
         public_project.add_tag('Rheisen', auth=user_auth)
         assert public_project.logs.latest().action == 'tag_added'
@@ -93,6 +95,7 @@ class TestNodeLogList:
         assert res.json['data'][API_LATEST]['attributes']['action'] == 'tag_added'
         assert 'Rheisen' == public_project.logs.latest().params['tag']
 
+    @responses.activate
     def test_remove_tag(
             self, app, user, user_auth,
             public_project, public_url):
@@ -309,6 +312,7 @@ class TestNodeLogList:
 @pytest.mark.django_db
 class TestNodeLogFiltering(TestNodeLogList):
 
+    @responses.activate
     def test_filter_action_not_equal(
             self, app, user, user_auth, public_project):
         public_project.add_tag('Rheisen', auth=user_auth)
@@ -319,6 +323,7 @@ class TestNodeLogFiltering(TestNodeLogList):
         assert len(res.json['data']) == 1
         assert res.json['data'][API_LATEST]['attributes']['action'] == 'project_created'
 
+    @responses.activate
     def test_filter_date_not_equal(self, app, user, public_project, pointer):
         public_project.add_pointer(pointer, auth=Auth(user), save=True)
         assert public_project.logs.latest().action == 'pointer_created'
