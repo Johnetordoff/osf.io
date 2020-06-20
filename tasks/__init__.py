@@ -237,7 +237,7 @@ def syntax(ctx):
 
 
 @task(aliases=['req'])
-def requirements(ctx, base=False, addons=False, release=False, dev=False, all=False):
+def requirements(ctx, base=False, addons=False, release=False, dev=False, all=False, travis=False):
     """Install python dependencies.
 
     Examples:
@@ -266,24 +266,25 @@ def requirements(ctx, base=False, addons=False, release=False, dev=False, all=Fa
             pip_install(req_file, constraints_file=CONSTRAINTS_PATH),
             echo=True
         )
-    else:
-        if dev:  # then dev requirements
+    elif dev:  # then dev requirements
             req_file = os.path.join(HERE, 'requirements', 'dev.txt')
             ctx.run(
                 pip_install(req_file, constraints_file=CONSTRAINTS_PATH),
                 echo=True
             )
-
-        if base:  # then base requirements
+    elif base:  # then base requirements
             req_file = os.path.join(HERE, 'requirements.txt')
             ctx.run(
                 pip_install(req_file, constraints_file=CONSTRAINTS_PATH),
                 echo=True
             )
-    # fix URITemplate name conflict h/t @github
-    ctx.run('pip3 uninstall uritemplate.py --yes || true')
-    ctx.run('pip3 install --no-cache-dir uritemplate.py==0.3.0')
-
+    elif travis:
+        addon_requirements(ctx)
+        req_file = os.path.join(HERE, 'requirements', 'travis.txt')
+        ctx.run(
+            pip_install(req_file, constraints_file=CONSTRAINTS_PATH),
+            echo=True
+        )
 
 @task
 def test_module(ctx, module=None, numprocesses=None, nocapture=False, params=None, coverage=False, testmon=False):
@@ -292,27 +293,7 @@ def test_module(ctx, module=None, numprocesses=None, nocapture=False, params=Non
     from past.builtins import basestring
     os.environ['DJANGO_SETTINGS_MODULE'] = 'osf_tests.settings'
     import pytest
-    if not numprocesses:
-        from multiprocessing import cpu_count
-        numprocesses = cpu_count()
-    numprocesses = int(numprocesses)
-    # NOTE: Subprocess to compensate for lack of thread safety in the httpretty module.
-    # https://github.com/gabrielfalcao/HTTPretty/issues/209#issue-54090252
     args = []
-    if coverage:
-        args.extend([
-            '--cov-report', 'term-missing',
-            '--cov', 'admin',
-            '--cov', 'addons',
-            '--cov', 'api',
-            '--cov', 'framework',
-            '--cov', 'osf',
-            '--cov', 'website',
-        ])
-    if not nocapture:
-        args += ['-s']
-    if numprocesses > 1:
-        args += ['-n {}'.format(numprocesses), '--max-slave-restart=0']
     modules = [module] if isinstance(module, basestring) else module
     args.extend(modules)
     if testmon:
@@ -350,15 +331,6 @@ API_TESTS1 = [
 ]
 API_TESTS2 = [
     'api_tests/actions',
-    'api_tests/chronos',
-    'api_tests/meetings',
-    'api_tests/metrics',
-    'api_tests/nodes',
-    'api_tests/osf_groups',
-    'api_tests/requests',
-    'api_tests/subscriptions',
-    'api_tests/waffle',
-    'api_tests/wb',
 ]
 API_TESTS3 = [
     'api_tests/addons_tests',
@@ -506,7 +478,6 @@ def test_travis_api1_and_js(ctx, numprocesses=None, coverage=False, testmon=Fals
 
 @task
 def test_travis_api2(ctx, numprocesses=None, coverage=False, testmon=False):
-    travis_setup(ctx)
     test_api2(ctx, numprocesses=numprocesses, coverage=coverage, testmon=testmon)
 
 
@@ -524,7 +495,7 @@ def karma(ctx, travis=False):
 
 
 @task
-def wheelhouse(ctx, addons=False, release=False, dev=False, pty=True):
+def wheelhouse(ctx, addons=False, release=False, dev=False, pty=True, travis=False):
     """Build wheels for python dependencies.
 
     Examples:
@@ -547,6 +518,16 @@ def wheelhouse(ctx, addons=False, release=False, dev=False, pty=True):
         req_file = os.path.join(HERE, 'requirements', 'release.txt')
     elif dev:
         req_file = os.path.join(HERE, 'requirements', 'dev.txt')
+    elif travis:
+        for directory in os.listdir(settings.ADDON_PATH):
+            path = os.path.join(settings.ADDON_PATH, directory)
+            if os.path.isdir(path):
+                req_file = os.path.join(path, 'requirements.txt')
+                if os.path.exists(req_file):
+                    cmd = 'pip3 wheel --find-links={} -r {} --wheel-dir={} -c {}'.format(
+                        WHEELHOUSE_PATH, req_file, WHEELHOUSE_PATH, CONSTRAINTS_PATH,
+                    )
+                    ctx.run(cmd, pty=pty)
     else:
         req_file = os.path.join(HERE, 'requirements.txt')
     cmd = 'pip3 wheel --find-links={} -r {} --wheel-dir={} -c {}'.format(

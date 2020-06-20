@@ -1,0 +1,27 @@
+-r ../requirements.txt
+
+# Requirements that are used in the development environment only
+
+# Testing
+pytest==3.6.3
+pytest-socket==0.3.1
+pytest-django==3.2.1
+pytest-testmon==0.9.16
+nose
+factory-boy==2.10.0
+webtest-plus==0.3.3
+mock==2.0.0
+Faker==0.8.13
+schema==0.3.1
+responses==0.8.1
+
+# Syntax checking
+flake8==3.6.0
+flake8-mutable==1.2.0
+pre-commit==1.10.5
+
+# Django SSL for local https development
+django-sslserver==0.19
+
+# Django Debug Toolbar for local development
+django-debug-toolbar==1.6
