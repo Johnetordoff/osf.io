@@ -909,13 +909,22 @@ class DraftRegistration(ObjectIDMixin, RegistrationResponseMixin, DirtyFieldsMix
         if not (isinstance(node, Node) or isinstance(node, DraftNode)):
             raise DraftRegistrationStateError()
 
-        draft = cls(
-            initiator=user,
-            branched_from=node,
-            registration_schema=schema,
-            registration_metadata=data or {},
-            provider=provider,
-        )
+        if provider:
+            draft = cls(
+                initiator=user,
+                branched_from=node,
+                registration_schema=schema,
+                registration_metadata=data or {},
+                provider=provider,
+            )
+        else:
+            draft = cls(
+                initiator=user,
+                branched_from=node,
+                registration_schema=schema,
+                registration_metadata=data or {},
+            )
+
         draft.save()
         draft.copy_editable_fields(node, Auth(user), save=True, contributors=False)
         draft.update(data)
