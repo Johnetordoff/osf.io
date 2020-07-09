@@ -918,9 +918,6 @@ class DraftRegistration(ObjectIDMixin, RegistrationResponseMixin, DirtyFieldsMix
 
     @classmethod
     def create_from_node(cls, user, schema, node=None, data=None, provider=None):
-        if not provider:
-            provider = RegistrationProvider.load('osf')
-
         if not node:
             # If no node provided, a DraftNode is created for you
             node = DraftNode.objects.create(creator=user, title='Untitled')
