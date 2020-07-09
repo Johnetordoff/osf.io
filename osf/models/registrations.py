@@ -44,7 +44,6 @@ from osf.models.mixins import (
     GuardianMixin,
 )
 from osf.models.nodelog import NodeLog
-from osf.models.provider import RegistrationProvider
 from osf.models.mixins import RegistrationResponseMixin
 from osf.models.tag import Tag
 from osf.models.validators import validate_title
@@ -567,21 +566,6 @@ class DraftRegistration(ObjectIDMixin, RegistrationResponseMixin, DirtyFieldsMix
     ]
 
     URL_TEMPLATE = settings.DOMAIN + 'project/{node_id}/drafts/{draft_id}'
-
-    def __init__(self, *args, **kwargs):
-        try:
-            default_registration_provider = RegistrationProvider.objects.get(_id=settings.REGISTRATION_PROVIDER_DEFAULT__ID).id
-        except RegistrationProvider.DoesNotExist:
-            # Allow test / local dev DBs to pass
-            logger.info('Unable to find OSF Registries provider - assuming test environment.')
-            default_registration_provider = RegistrationProvider(**{
-                '_id': settings.REGISTRATION_PROVIDER_DEFAULT__ID,
-                'name': 'OSF Registries'
-            })
-            default_registration_provider.save()
-
-        self._meta.get_field('provider').default = default_registration_provider
-        super().__init__(*args, **kwargs)
 
     # Overrides EditableFieldsMixin to make title not required
     title = models.TextField(validators=[validate_title], blank=True, default='')
