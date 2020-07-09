@@ -33,6 +33,5 @@ class Migration(migrations.Migration):
             model_name='draftregistration',
             name='provider',
             field=models.ForeignKey(default=get_default, on_delete=django.db.models.deletion.CASCADE, related_name='draft_registrations', to='osf.RegistrationProvider'),
-            preserve_default=False,
         ),
     ]
