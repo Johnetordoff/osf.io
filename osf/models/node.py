@@ -1366,6 +1366,11 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         if original.is_deleted:
             raise NodeStateError('Cannot register deleted node.')
 
+        if not provider:
+            # Avoid circular import
+            from osf.models.provider import RegistrationProvider
+            provider = RegistrationProvider.load('osf')
+
         registered = original.clone()
         registered.recast('osf.registration')
 
@@ -1373,8 +1378,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         registered.registered_date = timezone.now()
         registered.registered_user = auth.user
         registered.registered_from = original
-        if provider:
-            registered.provider = provider
+        registered.provider = provider
         if not registered.registered_meta:
             registered.registered_meta = {}
         registered.registered_meta[schema._id] = draft_registration.registration_metadata

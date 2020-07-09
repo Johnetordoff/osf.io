@@ -32,6 +32,7 @@ from osf.models import (
     DraftRegistrationApproval,
     EmbargoTerminationApproval,
     DraftRegistrationContributor,
+    RegistrationProvider,
 )
 
 from osf.models.archive import ArchiveJob
@@ -555,6 +556,20 @@ class DraftRegistrationLog(ObjectIDMixin, BaseModel):
         get_latest_by = 'created'
 
 
+def get_default_id():
+    try:
+        default_registration_provider = RegistrationProvider.objects.get(
+            _id=settings.REGISTRATION_PROVIDER_DEFAULT__ID)
+    except RegistrationProvider.DoesNotExist:
+        default_registration_provider = RegistrationProvider(**{
+            '_id': settings.REGISTRATION_PROVIDER_DEFAULT__ID,
+            'name': 'OSF Registries'
+        })
+        default_registration_provider.save()
+
+    return default_registration_provider.id
+
+
 class DraftRegistration(ObjectIDMixin, RegistrationResponseMixin, DirtyFieldsMixin,
         BaseModel, Loggable, EditableFieldsMixin, GuardianMixin):
     # Fields that are writable by DraftRegistration.update
@@ -590,6 +605,8 @@ class DraftRegistration(ObjectIDMixin, RegistrationResponseMixin, DirtyFieldsMix
         'RegistrationProvider',
         related_name='draft_registrations',
         on_delete=models.CASCADE,
+        default=get_default_id,
+        null=False
     )
 
     # Dictionary field mapping question id to a question's comments and answer

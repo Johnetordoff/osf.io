@@ -13,11 +13,7 @@ from website.archiver import listeners as archiver_listeners
 
 from osf.models import Sanction, RegistrationProvider
 
-from .factories import (
-    get_default_metaschema,
-    RegistrationProviderFactory,
-    DraftRegistrationFactory,
-)
+from .factories import get_default_metaschema, DraftRegistrationFactory
 
 
 # From Flask-Security: https://github.com/mattupstate/flask-security/blob/develop/flask_security/utils.py
@@ -116,7 +112,7 @@ def mock_archive(project, schema=None, auth=None, data=None, parent=None,
     schema = schema or get_default_metaschema()
     auth = auth or Auth(project.creator)
     data = data or ''
-    provider = provider or RegistrationProvider.objects.first() or RegistrationProviderFactory(_id='osf')
+    provider = provider or RegistrationProvider.objects.first()
 
     with mock.patch('framework.celery_tasks.handlers.enqueue_task'):
         draft_reg = DraftRegistrationFactory(branched_from=project)
