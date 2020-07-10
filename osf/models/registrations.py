@@ -32,7 +32,6 @@ from osf.models import (
     DraftRegistrationApproval,
     EmbargoTerminationApproval,
     DraftRegistrationContributor,
-    RegistrationProvider,
 )
 
 from osf.models.archive import ArchiveJob
@@ -557,6 +556,9 @@ class DraftRegistrationLog(ObjectIDMixin, BaseModel):
 
 
 def get_default_id():
+    from django.apps import apps
+    RegistrationProvider = apps.get_model('osf', 'RegistrationProvider')
+
     try:
         default_registration_provider = RegistrationProvider.objects.get(
             _id=settings.REGISTRATION_PROVIDER_DEFAULT__ID)
