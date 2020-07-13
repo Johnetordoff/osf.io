@@ -3,8 +3,12 @@ from rest_framework.exceptions import PermissionDenied, NotFound
 
 from api.base.exceptions import RelationshipPostMakesNoChanges, NonDescendantNodeError
 from api.base.serializers import (
-    JSONAPISerializer, IDField, RelationshipField,
-    JSONAPIRelationshipSerializer, LinksField, relationship_diff,
+    JSONAPISerializer,
+    IDField,
+    RelationshipField,
+    JSONAPIRelationshipSerializer,
+    LinksField,
+    relationship_diff,
     VersionedDateTimeField,
     BaseAPISerializer,
 )
@@ -12,6 +16,7 @@ from api.base.utils import absolute_reverse
 
 from osf.models import AbstractNode
 from osf.utils.permissions import ADMIN
+
 
 class ViewOnlyLinkDetailSerializer(JSONAPISerializer):
     key = ser.CharField(read_only=True)
@@ -54,9 +59,7 @@ class VOLNode(JSONAPIRelationshipSerializer):
 
 class ViewOnlyLinkNodesSerializer(BaseAPISerializer):
     data = ser.ListField(child=VOLNode())
-    links = LinksField({
-        'self': 'get_self_url',
-    })
+    links = LinksField({'self': 'get_self_url',})
 
     def get_self_url(self, obj):
         return absolute_reverse(
@@ -103,10 +106,7 @@ class ViewOnlyLinkNodesSerializer(BaseAPISerializer):
         user = self.context['request'].user
         new_nodes = validated_data['data']
 
-        add, remove = self.get_nodes_to_add_remove(
-            nodes=nodes,
-            new_nodes=new_nodes,
-        )
+        add, remove = self.get_nodes_to_add_remove(nodes=nodes, new_nodes=new_nodes,)
 
         if not len(add):
             raise RelationshipPostMakesNoChanges
@@ -130,10 +130,7 @@ class ViewOnlyLinkNodesSerializer(BaseAPISerializer):
         user = self.context['request'].user
         new_nodes = validated_data['data']
 
-        add, remove = self.get_nodes_to_add_remove(
-            nodes=nodes,
-            new_nodes=new_nodes,
-        )
+        add, remove = self.get_nodes_to_add_remove(nodes=nodes, new_nodes=new_nodes,)
 
         for node in remove:
             if not node.has_permission(user, ADMIN):

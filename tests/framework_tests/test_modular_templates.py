@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-'''Unit tests for the modular template system.
+"""Unit tests for the modular template system.
 
 These require a test db because they use Session objects.
-'''
+"""
 import json
 import unittest
 import os
@@ -14,7 +14,9 @@ import werkzeug.wrappers
 from rest_framework import status as http_status
 from framework.exceptions import HTTPError
 from framework.routing import (
-    Renderer, JSONRenderer, WebRenderer,
+    Renderer,
+    JSONRenderer,
+    WebRenderer,
     render_mako_string,
 )
 
@@ -38,8 +40,7 @@ class RendererTestCase(AppTestCase):
         resp = flask.make_response('')
 
         self.assertIsInstance(
-            self.r(resp),
-            werkzeug.wrappers.Response,
+            self.r(resp), werkzeug.wrappers.Response,
         )
 
     def test_http_error_raised(self):
@@ -50,11 +51,10 @@ class RendererTestCase(AppTestCase):
     def test_tuple(self):
         """Subclasses of Renderer must implement ``.render()``."""
         with self.assertRaises(NotImplementedError):
-            self.r(('response text', ))
+            self.r(('response text',))
 
 
 class JSONRendererTestCase(RendererTestCase):
-
     def setUp(self):
         super(JSONRendererTestCase, self).setUp()
         self.r = JSONRenderer()
@@ -65,8 +65,7 @@ class JSONRendererTestCase(RendererTestCase):
         resp = flask.make_response('')
 
         self.assertIsInstance(
-            self.r(resp),
-            werkzeug.wrappers.Response,
+            self.r(resp), werkzeug.wrappers.Response,
         )
 
     def test_http_error_raised(self):
@@ -92,7 +91,7 @@ class JSONRendererTestCase(RendererTestCase):
                 },
                 http_status.HTTP_404_NOT_FOUND,
             ),
-            (json.loads(resp[0]), http_status.HTTP_404_NOT_FOUND, ),
+            (json.loads(resp[0]), http_status.HTTP_404_NOT_FOUND,),
         )
 
     def test_tuple(self):
@@ -100,14 +99,12 @@ class JSONRendererTestCase(RendererTestCase):
 
 
 class WebRendererTestCase(OsfTestCase):
-
     def setUp(self):
         super(WebRendererTestCase, self).setUp()
 
         # Use OsfRenderer so that global vars are included
         self.r = OsfWebRenderer(
-            os.path.join(TEMPLATES_PATH, 'main.html'),
-            render_mako_string
+            os.path.join(TEMPLATES_PATH, 'main.html'), render_mako_string
         )
 
     def test_redirect(self):
@@ -121,16 +118,16 @@ class WebRendererTestCase(OsfTestCase):
         self.app.app.preprocess_request()
 
         resp = self.r(
-            ({},  # data
-            302,  # status code
-            None,  # headers
-            'http://google.com/',  # redirect_uri
+            (
+                {},  # data
+                302,  # status code
+                None,  # headers
+                'http://google.com/',  # redirect_uri
             )
         )
 
         self.assertIsInstance(
-            resp,
-            werkzeug.wrappers.Response,
+            resp, werkzeug.wrappers.Response,
         )
         self.assertEqual(302, resp.status_code)
         self.assertEqual('http://google.com/', resp.location)
@@ -146,14 +143,9 @@ class WebRendererTestCase(OsfTestCase):
 
         resp = self.r(input_dict)
 
-        self.assertIsInstance(
-            resp, werkzeug.wrappers.Response
-        )
+        self.assertIsInstance(resp, werkzeug.wrappers.Response)
 
-        self.assertIn(
-            'foo:bar',
-            resp.data.decode()
-        )
+        self.assertIn('foo:bar', resp.data.decode())
 
     def test_http_error_raised(self):
         """When an HTTPError is raised in the view function, it is passed as
@@ -171,12 +163,10 @@ class WebRendererTestCase(OsfTestCase):
         resp = self.r(err)
 
         self.assertIn(
-            err.to_data()['message_short'],
-            resp[0].decode(),
+            err.to_data()['message_short'], resp[0].decode(),
         )
         self.assertEqual(
-            http_status.HTTP_404_NOT_FOUND,
-            resp[1],
+            http_status.HTTP_404_NOT_FOUND, resp[1],
         )
 
     def test_http_error_raise_with_redirect(self):
@@ -199,17 +189,14 @@ class WebRendererTestCase(OsfTestCase):
             HTTPError(http_status.HTTP_201_CREATED, redirect_url='http://google.com/')
         )
 
-        self.assertIsInstance(
-            resp, werkzeug.wrappers.Response
-        )
+        self.assertIsInstance(resp, werkzeug.wrappers.Response)
 
         self.assertEqual(302, resp.status_code)
         self.assertEqual('http://google.com/', resp.location)
 
+
 class JSONRendererEncoderTestCase(unittest.TestCase):
-
     def test_encode_custom_class(self):
-
         class TestClass(object):
             def to_json(self):
                 return '<JSON representation>'
@@ -223,6 +210,5 @@ class JSONRendererEncoderTestCase(unittest.TestCase):
 
     def test_string(self):
         self.assertEqual(
-            '"my string"',
-            json.dumps('my string', cls=JSONRenderer.Encoder)
+            '"my string"', json.dumps('my string', cls=JSONRenderer.Encoder)
         )

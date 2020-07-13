@@ -8,7 +8,8 @@ from addons.osfstorage import settings as osfstorage_settings
 from osf.management.commands.handle_duplicate_files import (
     inspect_duplicates,
     remove_duplicates,
-    FETCH_DUPLICATES_BY_FILETYPE)
+    FETCH_DUPLICATES_BY_FILETYPE,
+)
 
 """
 Temporary tests - after partial file uniqueness constraint is added, these tests
@@ -20,29 +21,35 @@ TRASHED = 'osf.trashedfile'
 TRASHED_FOLDER = 'osf.trashedfolder'
 OSF_STORAGE_FOLDER = 'osf.osfstoragefolder'
 
+
 def create_version(file, user):
-    file.create_version(user, {
-        'object': '06d80e',
-        'service': 'cloud',
-        'bucket': 'us-bucket',
-        osfstorage_settings.WATERBUTLER_RESOURCE: 'osf',
-    }, {
-        'size': 1337,
-        'contentType': 'img/png'
-    }).save()
+    file.create_version(
+        user,
+        {
+            'object': '06d80e',
+            'service': 'cloud',
+            'bucket': 'us-bucket',
+            osfstorage_settings.WATERBUTLER_RESOURCE: 'osf',
+        },
+        {'size': 1337, 'contentType': 'img/png'},
+    ).save()
     return file
+
 
 @pytest.fixture()
 def user():
     return UserFactory()
 
+
 @pytest.fixture()
 def project(user):
     return ProjectFactory(creator=user)
 
+
 @pytest.fixture()
 def file_dupe_one(project, user):
     return create_test_file(project, user)
+
 
 @pytest.fixture()
 def file_dupe_two(project, user, file_dupe_one):
@@ -54,6 +61,7 @@ def file_dupe_two(project, user, file_dupe_one):
     file.save()
     return file
 
+
 @pytest.fixture()
 def file_dupe_three(project, user, file_dupe_one):
     file = create_test_file(project, user, 'temp_name')
@@ -61,19 +69,19 @@ def file_dupe_three(project, user, file_dupe_one):
     file.save()
     return file
 
+
 @pytest.fixture()
 def folder_one(project, user):
-    folder = project.get_addon(
-        'osfstorage').get_root().append_folder('NewFolder')
+    folder = project.get_addon('osfstorage').get_root().append_folder('NewFolder')
     folder.save()
     test_file = folder.append_file('dupe_file')
     create_version(test_file, user)
     return folder
 
+
 @pytest.fixture()
 def folder_two(project, user):
-    folder = project.get_addon(
-        'osfstorage').get_root().append_folder('temp_name')
+    folder = project.get_addon('osfstorage').get_root().append_folder('temp_name')
     folder.name = 'NewFolder'
     folder.save()
     test_file = folder.append_file('dupe_file')
@@ -83,7 +91,6 @@ def folder_two(project, user):
 
 @pytest.mark.django_db
 class TestHandleDuplicates:
-
     def test_does_not_remove_non_duplicates(self, app, project, user, file_dupe_one):
         create_test_file(project, user, 'non dupe')
         assert project.files.count() == 2
@@ -98,7 +105,9 @@ class TestHandleDuplicates:
         remove_duplicates(remove_data, OSF_STORAGE_FILE)
         assert project.files.count() == 2
 
-    def test_remove_duplicate_files(self, app, project, user, file_dupe_one, file_dupe_two, file_dupe_three):
+    def test_remove_duplicate_files(
+        self, app, project, user, file_dupe_one, file_dupe_two, file_dupe_three
+    ):
         assert project.files.count() == 3
         guid_two = file_dupe_two.get_guid()
         guid_three = file_dupe_three.get_guid()
@@ -197,7 +206,9 @@ class TestHandleDuplicates:
         assert folder_one.type == OSF_STORAGE_FOLDER
         assert folder_two.type == TRASHED_FOLDER
 
-    def test_does_not_remove_duplicate_folders_with_extra_files(self, app, project, user, folder_one, folder_two):
+    def test_does_not_remove_duplicate_folders_with_extra_files(
+        self, app, project, user, folder_one, folder_two
+    ):
         # The single file in folder one and folder two are being counted here
         assert project.files.count() == 2
         # Add an extra file to the second folder so their contents differ
@@ -210,7 +221,9 @@ class TestHandleDuplicates:
         remove_data = inspect_duplicates(duplicate_files)
         assert len(remove_data) == 0
 
-    def test_does_not_remove_duplicate_folders_where_first_has_extra_files(self, app, project, user, folder_one, folder_two):
+    def test_does_not_remove_duplicate_folders_where_first_has_extra_files(
+        self, app, project, user, folder_one, folder_two
+    ):
         # The single file in folder one and folder two are being counted here
         assert project.files.count() == 2
         # Add an extra file to the first folder so their contents differ
@@ -223,7 +236,9 @@ class TestHandleDuplicates:
         remove_data = inspect_duplicates(duplicate_files)
         assert len(remove_data) == 0
 
-    def test_does_not_remove_duplicate_folders_with_different_contents(self, app, project, user, folder_one, folder_two):
+    def test_does_not_remove_duplicate_folders_with_different_contents(
+        self, app, project, user, folder_one, folder_two
+    ):
         # The single file in folder one and folder two are being counted here
         assert project.files.count() == 2
         # Add different files to each folder
@@ -237,7 +252,9 @@ class TestHandleDuplicates:
         remove_data = inspect_duplicates(duplicate_files)
         assert len(remove_data) == 0
 
-    def test_does_not_remove_duplicate_folders_with_different_fileversions_count(self, app, project, user, folder_one, folder_two):
+    def test_does_not_remove_duplicate_folders_with_different_fileversions_count(
+        self, app, project, user, folder_one, folder_two
+    ):
         # The single file in folder one and folder two are being counted here
         assert project.files.count() == 2
         folder_one.append_file('another file')
@@ -251,7 +268,9 @@ class TestHandleDuplicates:
         remove_data = inspect_duplicates(duplicate_files)
         assert len(remove_data) == 0
 
-    def test_does_not_remove_duplicate_folders_with_different_fileversions_content(self, app, project, user, folder_one, folder_two):
+    def test_does_not_remove_duplicate_folders_with_different_fileversions_content(
+        self, app, project, user, folder_one, folder_two
+    ):
         # The single file in folder one and folder two are being counted here
         assert project.files.count() == 2
         file_one = folder_one.append_file('another file')
@@ -276,7 +295,9 @@ class TestHandleDuplicates:
         remove_data = inspect_duplicates(duplicate_files)
         assert len(remove_data) == 0
 
-    def test_removes_duplicate_folders_with_deeply_nested_duplicate_contents(self, app, project, user, folder_one, folder_two):
+    def test_removes_duplicate_folders_with_deeply_nested_duplicate_contents(
+        self, app, project, user, folder_one, folder_two
+    ):
         sub_folder_one = folder_one.append_folder('Test folder')
         sub_folder_two = folder_two.append_folder('Test folder')
         sub_file_one = sub_folder_one.append_file('sub file')

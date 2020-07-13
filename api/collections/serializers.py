@@ -2,10 +2,28 @@ from django.db import IntegrityError
 from rest_framework import exceptions
 from rest_framework import serializers as ser
 
-from osf.models import AbstractNode, Node, Collection, Guid, Registration, CollectionProvider
+from osf.models import (
+    AbstractNode,
+    Node,
+    Collection,
+    Guid,
+    Registration,
+    CollectionProvider,
+)
 from osf.exceptions import ValidationError, NodeStateError
-from api.base.serializers import LinksField, RelationshipField, LinkedNodesRelationshipSerializer, LinkedRegistrationsRelationshipSerializer, LinkedPreprintsRelationshipSerializer
-from api.base.serializers import JSONAPISerializer, IDField, TypeField, VersionedDateTimeField
+from api.base.serializers import (
+    LinksField,
+    RelationshipField,
+    LinkedNodesRelationshipSerializer,
+    LinkedRegistrationsRelationshipSerializer,
+    LinkedPreprintsRelationshipSerializer,
+)
+from api.base.serializers import (
+    JSONAPISerializer,
+    IDField,
+    TypeField,
+    VersionedDateTimeField,
+)
 from api.base.exceptions import InvalidModelValueError, RelationshipPostMakesNoChanges
 from api.base.utils import absolute_reverse, get_user_auth
 from api.nodes.serializers import NodeLinksSerializer
@@ -22,6 +40,7 @@ class CollectionProviderRelationshipField(RelationshipField):
         provider = self.get_object(data)
         return {'provider': provider}
 
+
 class GuidRelationshipField(RelationshipField):
     def get_object(self, _id):
         return Guid.load(_id)
@@ -32,11 +51,7 @@ class GuidRelationshipField(RelationshipField):
 
 
 class CollectionSerializer(JSONAPISerializer):
-    filterable_fields = frozenset([
-        'title',
-        'date_created',
-        'date_modified',
-    ])
+    filterable_fields = frozenset(['title', 'date_created', 'date_modified',])
 
     id = IDField(source='_id', read_only=True)
     type = TypeField()
@@ -44,28 +59,19 @@ class CollectionSerializer(JSONAPISerializer):
     title = ser.CharField(required=True)
     date_created = VersionedDateTimeField(source='created', read_only=True)
     date_modified = VersionedDateTimeField(source='modified', read_only=True)
-    bookmarks = ser.BooleanField(read_only=False, default=False, source='is_bookmark_collection')
+    bookmarks = ser.BooleanField(
+        read_only=False, default=False, source='is_bookmark_collection',
+    )
     is_promoted = ser.BooleanField(read_only=True, default=False)
     is_public = ser.BooleanField(read_only=False, default=False)
-    status_choices = ser.ListField(
-        child=ser.CharField(max_length=127),
-        default=list(),
-    )
+    status_choices = ser.ListField(child=ser.CharField(max_length=127), default=list(),)
     collected_type_choices = ser.ListField(
-        child=ser.CharField(max_length=127),
-        default=list(),
+        child=ser.CharField(max_length=127), default=list(),
     )
-    volume_choices = ser.ListField(
-        child=ser.CharField(max_length=127),
-        default=list(),
-    )
-    issue_choices = ser.ListField(
-        child=ser.CharField(max_length=127),
-        default=list(),
-    )
+    volume_choices = ser.ListField(child=ser.CharField(max_length=127), default=list(),)
+    issue_choices = ser.ListField(child=ser.CharField(max_length=127), default=list(),)
     program_area_choices = ser.ListField(
-        child=ser.CharField(max_length=127),
-        default=list(),
+        child=ser.CharField(max_length=127), default=list(),
     )
 
     links = LinksField({})
@@ -117,7 +123,8 @@ class CollectionSerializer(JSONAPISerializer):
 
     def get_absolute_url(self, obj):
         return absolute_reverse(
-            'collections:collection-detail', kwargs={
+            'collections:collection-detail',
+            kwargs={
                 'collection_id': obj._id,
                 'version': self.context['request'].parser_context['kwargs']['version'],
             },
@@ -126,12 +133,22 @@ class CollectionSerializer(JSONAPISerializer):
     def get_node_links_count(self, obj):
         auth = get_user_auth(self.context['request'])
         node_ids = obj.guid_links.all().values_list('_id', flat=True)
-        return Node.objects.filter(guids___id__in=node_ids, is_deleted=False).can_view(user=auth.user, private_link=auth.private_link).count()
+        return (
+            Node.objects.filter(guids___id__in=node_ids, is_deleted=False)
+            .can_view(user=auth.user, private_link=auth.private_link)
+            .count()
+        )
 
     def get_registration_links_count(self, obj):
         auth = get_user_auth(self.context['request'])
         registration_ids = obj.guid_links.all().values_list('_id', flat=True)
-        return Registration.objects.filter(guids___id__in=registration_ids, is_deleted=False).can_view(user=auth.user, private_link=auth.private_link).count()
+        return (
+            Registration.objects.filter(
+                guids___id__in=registration_ids, is_deleted=False,
+            )
+            .can_view(user=auth.user, private_link=auth.private_link)
+            .count()
+        )
 
     def get_preprint_links_count(self, obj):
         auth = get_user_auth(self.context['request'])
@@ -145,7 +162,9 @@ class CollectionSerializer(JSONAPISerializer):
         except ValidationError as e:
             raise InvalidModelValueError(detail=e.messages[0])
         except IntegrityError:
-            raise ser.ValidationError('Each user cannot have more than one Bookmark collection.')
+            raise ser.ValidationError(
+                'Each user cannot have more than one Bookmark collection.',
+            )
         return node
 
     def update(self, collection, validated_data):
@@ -155,7 +174,9 @@ class CollectionSerializer(JSONAPISerializer):
         if validated_data:
             for key, value in validated_data.items():
                 if key == 'title' and collection.is_bookmark_collection:
-                    raise InvalidModelValueError('Bookmark collections cannot be renamed.')
+                    raise InvalidModelValueError(
+                        'Bookmark collections cannot be renamed.',
+                    )
                 setattr(collection, key, value)
         try:
             collection.save()
@@ -168,22 +189,24 @@ class CollectionDetailSerializer(CollectionSerializer):
     """
     Overrides CollectionSerializer to make id required.
     """
+
     id = IDField(source='_id', required=True)
 
 
 class CollectionSubmissionSerializer(TaxonomizableSerializerMixin, JSONAPISerializer):
-
     class Meta:
         type_ = 'collected-metadata'
 
-    filterable_fields = frozenset([
-        'id',
-        'collected_type',
-        'date_created',
-        'date_modified',
-        'subjects',
-        'status',
-    ])
+    filterable_fields = frozenset(
+        [
+            'id',
+            'collected_type',
+            'date_created',
+            'date_modified',
+            'subjects',
+            'status',
+        ],
+    )
     id = IDField(source='guid._id', read_only=True)
     type = TypeField()
 
@@ -251,6 +274,7 @@ class CollectionSubmissionSerializer(TaxonomizableSerializerMixin, JSONAPISerial
         obj.save()
         return obj
 
+
 class CollectionSubmissionCreateSerializer(CollectionSubmissionSerializer):
     # Makes guid writeable only on create
     guid = GuidRelationshipField(
@@ -270,8 +294,16 @@ class CollectionSubmissionCreateSerializer(CollectionSubmissionSerializer):
             raise exceptions.ValidationError('"collection" must be specified.')
         if not creator:
             raise exceptions.ValidationError('"creator" must be specified.')
-        if not (creator.has_perm('write_collection', collection) or (hasattr(guid.referent, 'has_permission') and guid.referent.has_permission(creator, WRITE))):
-            raise exceptions.PermissionDenied('Must have write permission on either collection or collected object to collect.')
+        if not (
+            creator.has_perm('write_collection', collection)
+            or (
+                hasattr(guid.referent, 'has_permission')
+                and guid.referent.has_permission(creator, WRITE)
+            )
+        ):
+            raise exceptions.PermissionDenied(
+                'Must have write permission on either collection or collected object to collect.',
+            )
         try:
             obj = collection.collect_object(guid.referent, creator, **validated_data)
         except ValidationError as e:
@@ -298,7 +330,9 @@ class CollectionNodeLinkSerializer(NodeLinksSerializer):
         return absolute_reverse(
             'collections:node-pointer-detail',
             kwargs={
-                'collection_id': self.context['request'].parser_context['kwargs']['collection_id'],
+                'collection_id': self.context['request'].parser_context['kwargs'][
+                    'collection_id'
+                ],
                 'node_link_id': obj.guid._id,
                 'version': self.context['request'].parser_context['kwargs']['version'],
             },
@@ -314,16 +348,19 @@ class CollectionNodeLinkSerializer(NodeLinksSerializer):
         if not pointer_node:
             raise InvalidModelValueError(
                 source={'pointer': '/data/relationships/node_links/data/id'},
-                detail='Target Node \'{}\' not found.'.format(target_node_id),
+                detail="Target Node '{}' not found.".format(target_node_id),
             )
         try:
             pointer = collection.collect_object(pointer_node, user)
         except ValidationError:
             raise InvalidModelValueError(
                 source={'pointer': '/data/relationships/node_links/data/id'},
-                detail='Target Node \'{}\' already pointed to by \'{}\'.'.format(target_node_id, collection._id),
+                detail="Target Node '{}' already pointed to by '{}'.".format(
+                    target_node_id, collection._id,
+                ),
             )
         return pointer
+
 
 class CollectedAbstractNodeRelationshipSerializer(object):
     _abstract_node_subclass = None
@@ -331,10 +368,11 @@ class CollectedAbstractNodeRelationshipSerializer(object):
     def make_instance_obj(self, obj):
         # Convenience method to format instance based on view's get_object
         return {
-            'data':
-            list(self._abstract_node_subclass.objects.filter(
-                guids__in=obj.guid_links.all(), is_deleted=False,
-            )),
+            'data': list(
+                self._abstract_node_subclass.objects.filter(
+                    guids__in=obj.guid_links.all(), is_deleted=False,
+                ),
+            ),
             'self': obj,
         }
 
@@ -342,7 +380,9 @@ class CollectedAbstractNodeRelationshipSerializer(object):
         collection = instance['self']
         auth = get_user_auth(self.context['request'])
 
-        add, remove = self.get_pointers_to_add_remove(pointers=instance['data'], new_pointers=validated_data['data'])
+        add, remove = self.get_pointers_to_add_remove(
+            pointers=instance['data'], new_pointers=validated_data['data'],
+        )
 
         for pointer in remove:
             collection.remove_object(pointer)
@@ -356,7 +396,9 @@ class CollectedAbstractNodeRelationshipSerializer(object):
         auth = get_user_auth(self.context['request'])
         collection = instance['self']
 
-        add, remove = self.get_pointers_to_add_remove(pointers=instance['data'], new_pointers=validated_data['data'])
+        add, remove = self.get_pointers_to_add_remove(
+            pointers=instance['data'], new_pointers=validated_data['data'],
+        )
 
         if not len(add):
             raise RelationshipPostMakesNoChanges
@@ -367,23 +409,37 @@ class CollectedAbstractNodeRelationshipSerializer(object):
             except ValidationError as e:
                 raise InvalidModelValueError(
                     source={'pointer': '/data/relationships/node_links/data/id'},
-                    detail='Target Node {} generated error: {}.'.format(node._id, e.message),
+                    detail='Target Node {} generated error: {}.'.format(
+                        node._id, e.message,
+                    ),
                 )
 
         return self.make_instance_obj(collection)
 
-class CollectedNodeRelationshipSerializer(CollectedAbstractNodeRelationshipSerializer, LinkedNodesRelationshipSerializer):
+
+class CollectedNodeRelationshipSerializer(
+    CollectedAbstractNodeRelationshipSerializer, LinkedNodesRelationshipSerializer,
+):
     _abstract_node_subclass = Node
 
-class CollectedRegistrationsRelationshipSerializer(CollectedAbstractNodeRelationshipSerializer, LinkedRegistrationsRelationshipSerializer):
+
+class CollectedRegistrationsRelationshipSerializer(
+    CollectedAbstractNodeRelationshipSerializer,
+    LinkedRegistrationsRelationshipSerializer,
+):
     _abstract_node_subclass = Registration
 
-class CollectedPreprintsRelationshipSerializer(CollectedAbstractNodeRelationshipSerializer, LinkedPreprintsRelationshipSerializer):
 
+class CollectedPreprintsRelationshipSerializer(
+    CollectedAbstractNodeRelationshipSerializer, LinkedPreprintsRelationshipSerializer,
+):
     def make_instance_obj(self, obj):
         # Convenience method to format instance based on view's get_object
         return {
-            'data':
-                list(self.context['view'].collection_preprints(obj, user=get_user_auth(self.context['request']).user)),
+            'data': list(
+                self.context['view'].collection_preprints(
+                    obj, user=get_user_auth(self.context['request']).user,
+                ),
+            ),
             'self': obj,
         }

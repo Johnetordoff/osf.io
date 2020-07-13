@@ -3,7 +3,10 @@ from nose.tools import *  # noqa: F403
 from tests.base import AdminTestCase
 from osf_tests.factories import NodeFactory, UserFactory
 from osf.utils.permissions import ADMIN
-from admin.nodes.serializers import serialize_simple_user_and_node_permissions, serialize_node
+from admin.nodes.serializers import (
+    serialize_simple_user_and_node_permissions,
+    serialize_node,
+)
 
 
 class TestNodeSerializers(AdminTestCase):

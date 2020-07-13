@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 logging.getLogger('github3').setLevel(logging.WARNING)
 logging.getLogger('requests.packages.urllib3.connectionpool').setLevel(logging.WARNING)
 
+
 def github_hgrid_data(node_settings, auth, **kwargs):
 
     # Quit if no repo linked
@@ -59,43 +60,41 @@ def github_hgrid_data(node_settings, auth, **kwargs):
         ref = None
         can_edit = False
 
-    name_tpl = '{user}/{repo}'.format(
-        user=node_settings.user, repo=node_settings.repo
-    )
+    name_tpl = '{user}/{repo}'.format(user=node_settings.user, repo=node_settings.repo)
 
-    permissions = {
-        'edit': can_edit,
-        'view': True,
-        'private': node_settings.is_private
-    }
+    permissions = {'edit': can_edit, 'view': True, 'private': node_settings.is_private}
     urls = {
         'upload': node_settings.owner.api_url + 'github/file/' + (ref or ''),
         'fetch': node_settings.owner.api_url + 'github/hgrid/' + (ref or ''),
         'branch': node_settings.owner.api_url + 'github/hgrid/root/',
         'zip': node_settings.owner.api_url + 'github/zipball/' + (ref or ''),
-        'repo': 'https://github.com/{0}/{1}/tree/{2}'.format(node_settings.user, node_settings.repo, branch)
+        'repo': 'https://github.com/{0}/{1}/tree/{2}'.format(
+            node_settings.user, node_settings.repo, branch
+        ),
     }
 
     branch_names = [each.name for each in branches]
     if not branch_names:
-        branch_names = [branch]  # if repo un-init-ed then still add default branch to list of branches
+        branch_names = [
+            branch
+        ]  # if repo un-init-ed then still add default branch to list of branches
 
-    return [rubeus.build_addon_root(
-        node_settings,
-        name_tpl,
-        urls=urls,
-        permissions=permissions,
-        branches=branch_names,
-        defaultBranch=branch,
-        private_key=kwargs.get('view_only', None),
-    )]
+    return [
+        rubeus.build_addon_root(
+            node_settings,
+            name_tpl,
+            urls=urls,
+            permissions=permissions,
+            branches=branch_names,
+            defaultBranch=branch,
+            private_key=kwargs.get('view_only', None),
+        )
+    ]
+
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-NODE_SETTINGS_TEMPLATE = os.path.join(
-    HERE,
-    'templates',
-    'github_node_settings.mako',
-)
+NODE_SETTINGS_TEMPLATE = os.path.join(HERE, 'templates', 'github_node_settings.mako',)
+
 
 class GitHubAddonConfig(BaseAddonAppConfig):
 
@@ -131,11 +130,13 @@ class GitHubAddonConfig(BaseAddonAppConfig):
         NODE_AUTHORIZED,
         NODE_DEAUTHORIZED,
         NODE_DEAUTHORIZED_NO_USER,
-        REPO_LINKED)
+        REPO_LINKED,
+    )
 
     @property
     def routes(self):
         from . import routes
+
         return [routes.api_routes]
 
     @property

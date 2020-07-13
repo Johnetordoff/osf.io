@@ -11,17 +11,13 @@ from addons.forward import utils
 
 pytestmark = pytest.mark.django_db
 
-class TestUtils(OsfTestCase):
 
+class TestUtils(OsfTestCase):
     def test_serialize_settings(self):
         node_settings = ForwardSettingsFactory()
         serialized = utils.serialize_settings(node_settings)
         assert_equal(
-            serialized,
-            {
-                'url': node_settings.url,
-                'label': node_settings.label,
-            }
+            serialized, {'url': node_settings.url, 'label': node_settings.label,}
         )
 
     def test_settings_complete_true(self):

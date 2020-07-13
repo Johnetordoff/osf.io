@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0193_migrate_registered_meta'),
     ]
 
-    operations = [
-    ]
+    operations = []

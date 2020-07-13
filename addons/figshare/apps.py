@@ -3,6 +3,7 @@ from addons.figshare.settings import MAX_UPLOAD_SIZE
 
 from website.util import rubeus
 
+
 def figshare_root_folder(node_settings, auth, **kwargs):
     """Return the Rubeus/HGrid-formatted response for the root folder only.
 
@@ -14,15 +15,18 @@ def figshare_root_folder(node_settings, auth, **kwargs):
     if not node_settings.has_auth or not node_settings.folder_id:
         return None
     node = node_settings.owner
-    return [rubeus.build_addon_root(
-        node_settings=node_settings,
-        name=node_settings.fetch_folder_name(),
-        permissions=auth,
-        nodeUrl=node.url,
-        nodeApiUrl=node.api_url,
-        rootFolderType=node_settings.folder_path,
-        private_key=kwargs.get('view_only', None),
-    )]
+    return [
+        rubeus.build_addon_root(
+            node_settings=node_settings,
+            name=node_settings.fetch_folder_name(),
+            permissions=auth,
+            nodeUrl=node.url,
+            nodeApiUrl=node.api_url,
+            rootFolderType=node_settings.folder_path,
+            private_key=kwargs.get('view_only', None),
+        )
+    ]
+
 
 class FigshareAddonAppConfig(BaseAddonAppConfig):
 
@@ -57,11 +61,13 @@ class FigshareAddonAppConfig(BaseAddonAppConfig):
         FIGSHARE_FILE_REMOVED,
         FIGSHARE_NODE_AUTHORIZED,
         FIGSHARE_NODE_DEAUTHORIZED,
-        FIGSHARE_NODE_DEAUTHORIZED_NO_USER)
+        FIGSHARE_NODE_DEAUTHORIZED_NO_USER,
+    )
 
     @property
     def routes(self):
         from . import routes
+
         return [routes.api_routes]
 
     @property

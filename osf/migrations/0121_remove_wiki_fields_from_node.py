@@ -12,12 +12,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='abstractnode',
-            name='wiki_pages_current',
-        ),
-        migrations.RemoveField(
-            model_name='abstractnode',
-            name='wiki_pages_versions',
-        ),
+        migrations.RemoveField(model_name='abstractnode', name='wiki_pages_current',),
+        migrations.RemoveField(model_name='abstractnode', name='wiki_pages_versions',),
     ]

@@ -1,5 +1,6 @@
 from nameparser.parser import HumanName
 
+
 def impute_names(name):
     human = HumanName(name)
     return {

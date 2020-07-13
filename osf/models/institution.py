@@ -18,13 +18,15 @@ from website import settings as website_settings
 logger = logging.getLogger(__name__)
 
 
-class Institution(DirtyFieldsMixin, Loggable, base.ObjectIDMixin, base.BaseModel, GuardianMixin):
+class Institution(
+    DirtyFieldsMixin, Loggable, base.ObjectIDMixin, base.BaseModel, GuardianMixin
+):
 
     # TODO Remove null=True for things that shouldn't be nullable
     # e.g. CharFields should never be null=True
 
     INSTITUTION_GROUPS = {
-        'institutional_admins': ('view_institutional_metrics', ),
+        'institutional_admins': ('view_institutional_metrics',),
     }
     group_format = 'institution_{self._id}_{group}'
     groups = INSTITUTION_GROUPS
@@ -47,19 +49,25 @@ class Institution(DirtyFieldsMixin, Loggable, base.ObjectIDMixin, base.BaseModel
         ('saml-shib', 'SAML by Shibboleth'),
         ('', 'No Delegation Protocol'),
     )
-    delegation_protocol = models.CharField(max_length=15, choices=DELEGATION_PROTOCOL_CHOICES, blank=True, default='')
+    delegation_protocol = models.CharField(
+        max_length=15, choices=DELEGATION_PROTOCOL_CHOICES, blank=True, default=''
+    )
 
     # login_url and logout_url can be null or empty
     login_url = models.URLField(null=True, blank=True)
     logout_url = models.URLField(null=True, blank=True)
 
-    domains = fields.ArrayField(models.CharField(max_length=255), db_index=True, null=True, blank=True)
-    email_domains = fields.ArrayField(models.CharField(max_length=255), db_index=True, null=True, blank=True)
+    domains = fields.ArrayField(
+        models.CharField(max_length=255), db_index=True, null=True, blank=True
+    )
+    email_domains = fields.ArrayField(
+        models.CharField(max_length=255), db_index=True, null=True, blank=True
+    )
 
     contributors = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         through=InstitutionalContributor,
-        related_name='institutions'
+        related_name='institutions',
     )
 
     is_deleted = models.BooleanField(default=False, db_index=True)
@@ -69,7 +77,10 @@ class Institution(DirtyFieldsMixin, Loggable, base.ObjectIDMixin, base.BaseModel
         # custom permissions for use in the OSF Admin App
         permissions = (
             ('view_institution', 'Can view institution details'),
-            ('view_institutional_metrics', 'Can access metrics endpoints for their Institution'),
+            (
+                'view_institutional_metrics',
+                'Can access metrics endpoints for their Institution',
+            ),
         )
 
     def __init__(self, *args, **kwargs):
@@ -81,7 +92,10 @@ class Institution(DirtyFieldsMixin, Loggable, base.ObjectIDMixin, base.BaseModel
 
     @property
     def api_v2_url(self):
-        return reverse('institutions:institution-detail', kwargs={'institution_id': self._id, 'version': 'v2'})
+        return reverse(
+            'institutions:institution-detail',
+            kwargs={'institution_id': self._id, 'version': 'v2'},
+        )
 
     @property
     def absolute_url(self):
@@ -90,7 +104,11 @@ class Institution(DirtyFieldsMixin, Loggable, base.ObjectIDMixin, base.BaseModel
     @property
     def absolute_api_v2_url(self):
         from api.base.utils import absolute_reverse
-        return absolute_reverse('institutions:institution-detail', kwargs={'institution_id': self._id, 'version': 'v2'})
+
+        return absolute_reverse(
+            'institutions:institution-detail',
+            kwargs={'institution_id': self._id, 'version': 'v2'},
+        )
 
     @property
     def nodes_url(self):
@@ -117,7 +135,9 @@ class Institution(DirtyFieldsMixin, Loggable, base.ObjectIDMixin, base.BaseModel
 
     @property
     def logo_path_rounded_corners(self):
-        logo_base = '/static/img/institutions/shields-rounded-corners/{}-rounded-corners.png'
+        logo_base = (
+            '/static/img/institutions/shields-rounded-corners/{}-rounded-corners.png'
+        )
         if self.logo_name:
             return logo_base.format(self.logo_name.replace('.png', ''))
         else:
@@ -150,6 +170,7 @@ class Institution(DirtyFieldsMixin, Loggable, base.ObjectIDMixin, base.BaseModel
     def save(self, *args, **kwargs):
         self.update_search()
         return super(Institution, self).save(*args, **kwargs)
+
 
 @receiver(post_save, sender=Institution)
 def create_institution_auth_groups(sender, instance, created, **kwargs):

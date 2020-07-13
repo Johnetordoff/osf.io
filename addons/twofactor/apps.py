@@ -4,6 +4,7 @@ from addons.base.apps import BaseAddonAppConfig
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
+
 class TwoFactorAddonAppConfig(BaseAddonAppConfig):
 
     name = 'addons.twofactor'
@@ -16,7 +17,9 @@ class TwoFactorAddonAppConfig(BaseAddonAppConfig):
     added_mandatory = []
     widget_help = 'Two-Factor Authentication'
 
-    user_settings_template = os.path.join(HERE, 'templates', 'twofactor_user_settings.mako')
+    user_settings_template = os.path.join(
+        HERE, 'templates', 'twofactor_user_settings.mako'
+    )
 
     # FOLDER_SELECTED = 'dropbox_folder_selected'
     # NODE_AUTHORIZED = 'dropbox_node_authorized'
@@ -28,6 +31,7 @@ class TwoFactorAddonAppConfig(BaseAddonAppConfig):
     @property
     def routes(self):
         from .routes import settings_routes
+
         return [settings_routes]
 
     @property

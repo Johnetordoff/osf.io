@@ -10,7 +10,9 @@ from django.utils import timezone
 from addons.osfstorage import settings as osfstorage_settings
 from api_tests.utils import create_test_file
 from framework.auth import Auth
-from osf.management.commands.update_institution_project_counts import update_institution_project_counts
+from osf.management.commands.update_institution_project_counts import (
+    update_institution_project_counts,
+)
 from osf.models import QuickFilesNode, RegistrationSchema
 from osf.metrics import InstitutionProjectCounts, UserInstitutionProjectCounts
 from osf_tests.factories import (
@@ -23,9 +25,7 @@ from osf_tests.factories import (
     DraftRegistrationFactory,
 )
 from tests.base import DbTestCase
-from osf.management.commands.data_storage_usage import (
-    process_usages,
-)
+from osf.management.commands.data_storage_usage import process_usages
 
 
 # Using powers of two so that any combination of file sizes will give a unique total
@@ -39,27 +39,31 @@ def next_file_size():
 
 
 class TestDataStorageUsage(DbTestCase):
-
     def setUp(self):
         super(TestDataStorageUsage, self).setUp()
         self.region_us = RegionFactory(_id='US', name='United States')
 
     @staticmethod
     def add_file_version(file_to_version, user, size, version=1):
-        file_to_version.create_version(user, {
-            'object': '06d80e' + str(version),
-            'service': 'cloud',
-            osfstorage_settings.WATERBUTLER_RESOURCE: 'osf',
-        }, {
-            'size': size,
-            'contentType': 'img/png'
-        }).save()
+        file_to_version.create_version(
+            user,
+            {
+                'object': '06d80e' + str(version),
+                'service': 'cloud',
+                osfstorage_settings.WATERBUTLER_RESOURCE: 'osf',
+            },
+            {'size': size, 'contentType': 'img/png'},
+        ).save()
 
     @pytest.fixture()
-    def project(self, creator, is_public=True, is_deleted=False, region=None, parent=None):
+    def project(
+        self, creator, is_public=True, is_deleted=False, region=None, parent=None
+    ):
         if region is None:
             region = self.region_us
-        project = ProjectFactory(creator=creator, is_public=is_public, is_deleted=is_deleted)
+        project = ProjectFactory(
+            creator=creator, is_public=is_public, is_deleted=is_deleted
+        )
         addon = project.get_addon('osfstorage')
         addon.region = region
         addon.save()
@@ -96,23 +100,26 @@ class TestDataStorageUsage(DbTestCase):
     @pytest.mark.enable_quickfiles_creation
     def test_data_storage_usage_command(self):
         import logging
+
         logger = logging.getLogger(__name__)
 
-        expected_summary_data = OrderedDict([
-            ('date', None),
-            ('total', 0),
-            ('deleted', 0),
-            ('registrations', 0),
-            ('nd_quick_files', 0),
-            ('nd_public_nodes', 0),
-            ('nd_private_nodes', 0),
-            ('nd_preprints', 0),
-            ('nd_supp_nodes', 0),
-            ('canada_montreal', 0),
-            ('australia_sydney', 0),
-            ('germany_frankfurt', 0),
-            ('united_states', 0),
-        ])
+        expected_summary_data = OrderedDict(
+            [
+                ('date', None),
+                ('total', 0),
+                ('deleted', 0),
+                ('registrations', 0),
+                ('nd_quick_files', 0),
+                ('nd_public_nodes', 0),
+                ('nd_private_nodes', 0),
+                ('nd_preprints', 0),
+                ('nd_supp_nodes', 0),
+                ('canada_montreal', 0),
+                ('australia_sydney', 0),
+                ('germany_frankfurt', 0),
+                ('united_states', 0),
+            ]
+        )
         user = UserFactory()
         user_addon = user.get_addon('osfstorage')
         user_addon.default_region_id = self.region_us
@@ -124,9 +131,7 @@ class TestDataStorageUsage(DbTestCase):
         small_size = next_file_size()
         file_size = next(small_size)
         project_public_us_test_file = create_test_file(
-            target=project_public_us,
-            user=user,
-            size=file_size
+            target=project_public_us, user=user, size=file_size
         )
         logger.debug(u'Public project, US: {}'.format(file_size))
         expected_summary_data['total'] += file_size
@@ -134,38 +139,29 @@ class TestDataStorageUsage(DbTestCase):
         expected_summary_data['united_states'] += file_size
         file_size = next(small_size)
         self.add_file_version(
-            project_public_us_test_file,
-            user=user,
-            size=file_size,
+            project_public_us_test_file, user=user, size=file_size,
         )
         logger.debug(u'Public project file version, US: {}'.format(file_size))
         expected_summary_data['total'] += file_size
         expected_summary_data['nd_public_nodes'] += file_size
         expected_summary_data['united_states'] += file_size
 
-        project_private_au = self.project(creator=user, is_public=False, region=region_au)
-        file_size = next(small_size)
-        create_test_file(
-            target=project_private_au,
-            user=user,
-            size=file_size
+        project_private_au = self.project(
+            creator=user, is_public=False, region=region_au
         )
+        file_size = next(small_size)
+        create_test_file(target=project_private_au, user=user, size=file_size)
         logger.debug(u'Private project, AU: {}'.format(file_size))
         expected_summary_data['total'] += file_size
         expected_summary_data['nd_private_nodes'] += file_size
         expected_summary_data['australia_sydney'] += file_size
 
         component_private_small_deleted_de = self.project(
-            creator=user,
-            is_public=False,
-            region=region_de,
-            parent=project_public_us
+            creator=user, is_public=False, region=region_de, parent=project_public_us
         )
         file_size = next(small_size)
         deleted_file = create_test_file(
-            target=component_private_small_deleted_de,
-            user=user,
-            size=file_size,
+            target=component_private_small_deleted_de, user=user, size=file_size,
         )
         logger.debug('Before deletion: {}'.format(deleted_file.target.title))
 
@@ -196,16 +192,18 @@ class TestDataStorageUsage(DbTestCase):
         expected_summary_data['canada_montreal'] += file_size
         user_addon.default_region_id = self.region_us
         user_addon.save()
-        supplementary_node_public_au = self.project(creator=user, is_public=True, region=region_au)
+        supplementary_node_public_au = self.project(
+            creator=user, is_public=True, region=region_au
+        )
         preprint_with_supplement_ca.node = supplementary_node_public_au
         preprint_with_supplement_ca.save()
         file_size = next(small_size)
-        create_test_file(
-            target=supplementary_node_public_au,
-            user=user,
-            size=file_size
+        create_test_file(target=supplementary_node_public_au, user=user, size=file_size)
+        logger.debug(
+            u'Public supplemental project of Canadian preprint, US: {}'.format(
+                file_size
+            )
         )
-        logger.debug(u'Public supplemental project of Canadian preprint, US: {}'.format(file_size))
 
         expected_summary_data['total'] += file_size
         expected_summary_data['nd_supp_nodes'] += file_size
@@ -236,7 +234,7 @@ class TestDataStorageUsage(DbTestCase):
             filename='deleted_test_file',
             target=quickfiles_node_us,
             user=user,
-            size=file_size
+            size=file_size,
         )
         quickfile_deleted.delete(user=user, save=True)
         logger.debug(u'Deleted quickfile, US: {}'.format(file_size))
@@ -245,15 +243,13 @@ class TestDataStorageUsage(DbTestCase):
         expected_summary_data['deleted'] += file_size
         expected_summary_data['united_states'] += file_size
 
-        project_to_register_us = self.project(creator=user, is_public=True, region=self.region_us)
+        project_to_register_us = self.project(
+            creator=user, is_public=True, region=self.region_us
+        )
 
         registration = self.registration(project=project_to_register_us, creator=user)
         file_size = next(small_size)
-        create_test_file(
-            target=registration,
-            user=user,
-            size=file_size
-        )
+        create_test_file(target=registration, user=user, size=file_size)
         assert registration.get_addon('osfstorage').region == self.region_us
         logger.debug(u'Registration, US: {}'.format(file_size))
 
@@ -261,13 +257,11 @@ class TestDataStorageUsage(DbTestCase):
         expected_summary_data['united_states'] += file_size
         expected_summary_data['registrations'] += file_size
 
-        withdrawal = self.registration(project=project_to_register_us, creator=user, withdrawn=True)
-        file_size = next(small_size)
-        create_test_file(
-            target=withdrawal,
-            user=user,
-            size=file_size
+        withdrawal = self.registration(
+            project=project_to_register_us, creator=user, withdrawn=True
         )
+        file_size = next(small_size)
+        create_test_file(target=withdrawal, user=user, size=file_size)
         logger.debug(u'Withdrawn registration, US: {}'.format(file_size))
 
         expected_summary_data['total'] += file_size
@@ -287,13 +281,15 @@ class TestDataStorageUsage(DbTestCase):
 
         for key in actual_keys:
             if key != 'date':
-                assert (key, expected_summary_data[key]) == (key, actual_summary_data[key])
+                assert (key, expected_summary_data[key]) == (
+                    key,
+                    actual_summary_data[key],
+                )
 
 
 @pytest.mark.es
 @pytest.mark.django_db
 class TestInstitutionMetricsUpdate:
-
     @pytest.fixture()
     def institution(self):
         # Private: 14, Public: 4
@@ -365,7 +361,9 @@ class TestInstitutionMetricsUpdate:
 
         return user
 
-    def test_update_institution_counts(self, app, institution, user1, user2, user3, user4):
+    def test_update_institution_counts(
+        self, app, institution, user1, user2, user3, user4
+    ):
         update_institution_project_counts()
 
         time.sleep(2)
@@ -390,7 +388,9 @@ class TestInstitutionMetricsUpdate:
         assert user3_record['public_project_count'] == 0
         assert user3_record['private_project_count'] == 0
 
-        institution_results = InstitutionProjectCounts.get_latest_institution_project_document(institution)
+        institution_results = InstitutionProjectCounts.get_latest_institution_project_document(
+            institution
+        )
 
         assert institution_results['public_project_count'] == 4
         assert institution_results['private_project_count'] == 14

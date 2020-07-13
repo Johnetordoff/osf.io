@@ -11,33 +11,65 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
             name='NodeSettings',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('_id', models.CharField(db_index=True, default=osf.models.base.generate_object_id, max_length=24, unique=True)),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    '_id',
+                    models.CharField(
+                        db_index=True,
+                        default=osf.models.base.generate_object_id,
+                        max_length=24,
+                        unique=True,
+                    ),
+                ),
                 ('deleted', models.BooleanField(default=False)),
                 ('folder_id', models.TextField(blank=True, null=True)),
                 ('folder_path', models.TextField(blank=True, null=True)),
             ],
-            options={
-                'abstract': False,
-            },
+            options={'abstract': False,},
         ),
         migrations.CreateModel(
             name='UserSettings',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('_id', models.CharField(db_index=True, default=osf.models.base.generate_object_id, max_length=24, unique=True)),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    '_id',
+                    models.CharField(
+                        db_index=True,
+                        default=osf.models.base.generate_object_id,
+                        max_length=24,
+                        unique=True,
+                    ),
+                ),
                 ('deleted', models.BooleanField(default=False)),
-                ('oauth_grants', osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONField(blank=True, default=dict)),
+                (
+                    'oauth_grants',
+                    osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONField(
+                        blank=True, default=dict
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={'abstract': False,},
         ),
     ]

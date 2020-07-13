@@ -23,10 +23,7 @@ CONTENT_TYPE = 'text/plain'
 
 
 def random_string(nchars):
-    return ''.join([
-        random.choice(string.lowercase)
-        for _ in range(nchars)
-    ])
+    return ''.join([random.choice(string.lowercase) for _ in range(nchars)])
 
 
 def make_file_name(nchars):
@@ -39,16 +36,13 @@ def make_file_like(nchars):
 
 
 class UserBehavior(TaskSet):
-
     def __init__(self, *args, **kwargs):
         super(UserBehavior, self).__init__(*args, **kwargs)
         self.node_id = None
 
     def login(self):
         self.client.post(
-            'login/',
-            {'username': USERNAME, 'password': PASSWORD},
-            verify=VERIFY,
+            'login/', {'username': USERNAME, 'password': PASSWORD}, verify=VERIFY,
         )
 
     def create_project(self):
@@ -71,11 +65,13 @@ class UserBehavior(TaskSet):
         request_url = 'api/v1/project/{0}/osfstorage/files/'.format(self.node_id)
         resp = self.client.post(
             request_url,
-            data=json.dumps({
-                'name': name or make_file_name(16),
-                'size': FILE_SIZE,
-                'type': CONTENT_TYPE,
-            }),
+            data=json.dumps(
+                {
+                    'name': name or make_file_name(16),
+                    'size': FILE_SIZE,
+                    'type': CONTENT_TYPE,
+                }
+            ),
             headers={'Content-Type': 'application/json'},
             name='/api/v1/project/[nodeId]/osfstorage/files/',
         )

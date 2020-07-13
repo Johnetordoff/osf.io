@@ -15,6 +15,15 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='preprintprovider',
             name='preprint_word',
-            field=models.CharField(choices=[('preprint', 'Preprint'), ('paper', 'Paper'), ('thesis', 'Thesis'), ('none', 'None')], default='preprint', max_length=10),
+            field=models.CharField(
+                choices=[
+                    ('preprint', 'Preprint'),
+                    ('paper', 'Paper'),
+                    ('thesis', 'Thesis'),
+                    ('none', 'None'),
+                ],
+                default='preprint',
+                max_length=10,
+            ),
         ),
     ]

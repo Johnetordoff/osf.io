@@ -13,22 +13,18 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='preprintprovider',
-            name='banner_name',
-        ),
-        migrations.RemoveField(
-            model_name='preprintprovider',
-            name='header_text',
-        ),
-        migrations.RemoveField(
-            model_name='preprintprovider',
-            name='logo_name',
-        ),
+        migrations.RemoveField(model_name='preprintprovider', name='banner_name',),
+        migrations.RemoveField(model_name='preprintprovider', name='header_text',),
+        migrations.RemoveField(model_name='preprintprovider', name='logo_name',),
         migrations.AddField(
             model_name='preprintprovider',
             name='additional_providers',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=200), blank=True, default=list, size=None),
+            field=django.contrib.postgres.fields.ArrayField(
+                base_field=models.CharField(max_length=200),
+                blank=True,
+                default=list,
+                size=None,
+            ),
         ),
         migrations.AddField(
             model_name='preprintprovider',

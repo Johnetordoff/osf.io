@@ -3,6 +3,7 @@ from addons.gitlab.api import GitLabClient
 from addons.gitlab.exceptions import GitLabError
 from website.util import api_url_for
 
+
 class GitLabSerializer(StorageAddonSerializer):
 
     addon_short_name = 'gitlab'
@@ -11,10 +12,9 @@ class GitLabSerializer(StorageAddonSerializer):
     def serialize_account(self, external_account):
         ret = super(GitLabSerializer, self).serialize_account(external_account)
         host = external_account.oauth_secret
-        ret.update({
-            'host': host,
-            'host_url': host,
-        })
+        ret.update(
+            {'host': host, 'host_url': host,}
+        )
 
         return ret
 

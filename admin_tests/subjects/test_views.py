@@ -10,7 +10,6 @@ from admin.subjects.views import SubjectListView, SubjectUpdateView
 
 
 class TestSubjectListView(AdminTestCase):
-
     def setUp(self):
         self.subject = SubjectFactory()
         self.plain_view = SubjectListView
@@ -39,7 +38,6 @@ class TestSubjectListView(AdminTestCase):
 
 
 class TestSubjectUpdateView(AdminTestCase):
-
     def setUp(self):
         self.subject = SubjectFactory()
         self.plain_view = SubjectUpdateView

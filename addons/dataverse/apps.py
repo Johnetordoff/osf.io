@@ -4,10 +4,8 @@ from addons.base.apps import BaseAddonAppConfig
 from addons.dataverse.settings import MAX_UPLOAD_SIZE
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-TEMPLATE_PATH = os.path.join(
-    HERE,
-    'templates'
-)
+TEMPLATE_PATH = os.path.join(HERE, 'templates')
+
 
 class DataverseAddonAppConfig(BaseAddonAppConfig):
 
@@ -32,6 +30,7 @@ class DataverseAddonAppConfig(BaseAddonAppConfig):
     def get_hgrid_data(self):
         # Avoid circular import
         from addons.dataverse.views import _dataverse_root_folder
+
         return _dataverse_root_folder
 
     FILE_ADDED = 'dataverse_file_added'
@@ -44,11 +43,22 @@ class DataverseAddonAppConfig(BaseAddonAppConfig):
     NODE_DEAUTHORIZED = 'dataverse_node_deauthorized'
     NODE_DEAUTHORIZED_NO_USER = 'dataverse_node_deauthorized_no_user'
 
-    actions = (FILE_ADDED, FILE_REMOVED, DATASET_LINKED, DATASET_PUBLISHED, STUDY_LINKED, STUDY_RELEASED, NODE_AUTHORIZED, NODE_DEAUTHORIZED, NODE_DEAUTHORIZED_NO_USER)
+    actions = (
+        FILE_ADDED,
+        FILE_REMOVED,
+        DATASET_LINKED,
+        DATASET_PUBLISHED,
+        STUDY_LINKED,
+        STUDY_RELEASED,
+        NODE_AUTHORIZED,
+        NODE_DEAUTHORIZED,
+        NODE_DEAUTHORIZED_NO_USER,
+    )
 
     @property
     def routes(self):
         from .routes import api_routes
+
         return [api_routes]
 
     @property

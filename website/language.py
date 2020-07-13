@@ -56,7 +56,9 @@ TERMS_OF_SERVICE = """
 </script>
 """
 
-REGISTRATION_SUCCESS = """Registration successful. Please check {email} to confirm your email address."""
+REGISTRATION_SUCCESS = (
+    """Registration successful. Please check {email} to confirm your email address."""
+)
 
 EXTERNAL_LOGIN_EMAIL_CREATE_SUCCESS = """A new OSF account has been created with your {external_id_provider} profile. Please check {email} to confirm your email address."""
 
@@ -67,12 +69,16 @@ REGISTRATION_UNAVAILABLE = 'Registration currently unavailable.'
 
 ALREADY_REGISTERED = u'The email {email} has already been registered.'
 
-BLACKLISTED_EMAIL = 'Invalid email address. If this should not have occurred, please report this to {}.'.format(settings.OSF_SUPPORT_EMAIL)
+BLACKLISTED_EMAIL = 'Invalid email address. If this should not have occurred, please report this to {}.'.format(
+    settings.OSF_SUPPORT_EMAIL
+)
 
 
 # Shown if user tries to login with an email that is not yet confirmed
-UNCONFIRMED = ('This login email has been registered but not confirmed. Please check your email (and spam folder).'
-               ' <a href="/resend/">Click here</a> to resend your confirmation email.')
+UNCONFIRMED = (
+    'This login email has been registered but not confirmed. Please check your email (and spam folder).'
+    ' <a href="/resend/">Click here</a> to resend your confirmation email.'
+)
 
 # Shown if the user's account is disabled
 DISABLED = """
@@ -100,16 +106,20 @@ EMAIL_NOT_FOUND = u"""
 
 # Shown after an unregistered user claims an account and is redirected to the
 # settings page
-CLAIMED_CONTRIBUTOR = ('<strong>Welcome to the OSF!</strong> Edit your display name below and then check your '
-                       '<a href="/dashboard/">dashboard</a> to see projects to which you have been added as a '
-                       'contributor by someone else.')
+CLAIMED_CONTRIBUTOR = (
+    '<strong>Welcome to the OSF!</strong> Edit your display name below and then check your '
+    '<a href="/dashboard/">dashboard</a> to see projects to which you have been added as a '
+    'contributor by someone else.'
+)
 
 # Error Pages
 # ###########
 
 # Search-related errors
-SEARCH_QUERY_HELP = ('Please check our help (the question mark beside the search box) for more information '
-                     'on advanced search queries.')
+SEARCH_QUERY_HELP = (
+    'Please check our help (the question mark beside the search box) for more information '
+    'on advanced search queries.'
+)
 
 # Shown at error page if an expired/revokes email confirmation link is clicked
 EXPIRED_EMAIL_CONFIRM_TOKEN = 'This confirmation link has expired. Please <a href="/login/">log in</a> to continue.'
@@ -206,18 +216,30 @@ content of that project."""
 TEMPLATED_FROM_PREFIX = 'Templated from '
 
 # MFR Error handling
-ERROR_PREFIX = "Unable to render. <a href='?action=download'>Download</a> file to view it."
+ERROR_PREFIX = (
+    "Unable to render. <a href='?action=download'>Download</a> file to view it."
+)
 SUPPORT = u'Contact ' + settings.OSF_SUPPORT_EMAIL + u'for further assistance.'
 
-SUPPORT_LINK = 'please report it to <a href="mailto:' + settings.OSF_SUPPORT_EMAIL + '">' + settings.OSF_SUPPORT_EMAIL + '</a>.'
+SUPPORT_LINK = (
+    'please report it to <a href="mailto:'
+    + settings.OSF_SUPPORT_EMAIL
+    + '">'
+    + settings.OSF_SUPPORT_EMAIL
+    + '</a>.'
+)
 
 # Custom Error Messages w/ support  # TODO: Where are these used? See [#OSF-6101]
-STATA_VERSION_ERROR = u'Version of given Stata file is not 104, 105, 108, 113 (Stata 8/9), 114 (Stata 10/11) or 115 (Stata 12)<p>{0}</p>'.format(SUPPORT)
-BLANK_OR_CORRUPT_TABLE_ERROR = u'Is this a valid instance of this file type?<p>{0}</p>'.format(SUPPORT)
+STATA_VERSION_ERROR = u'Version of given Stata file is not 104, 105, 108, 113 (Stata 8/9), 114 (Stata 10/11) or 115 (Stata 12)<p>{0}</p>'.format(
+    SUPPORT
+)
+BLANK_OR_CORRUPT_TABLE_ERROR = u'Is this a valid instance of this file type?<p>{0}</p>'.format(
+    SUPPORT
+)
 
-#disk saving mode
+# disk saving mode
 DISK_SAVING_MODE = 'Forks, registrations, and uploads to OSF Storage uploads are temporarily disabled while we are undergoing a server upgrade. These features will return shortly.'
 
-#log out and revisit the link to confirm emails
+# log out and revisit the link to confirm emails
 CONFIRM_ALTERNATE_EMAIL_ERROR = 'The email address has <b>NOT</b> been added to your account. Please log out and revisit the link in your email. Thank you.'
 SWITCH_VALIDATOR_ERROR = 'You do not have the ability to edit this field at this time.'

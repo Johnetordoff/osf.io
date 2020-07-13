@@ -16,6 +16,7 @@ def get_targets():
     Preprint = apps.get_model('osf.Preprint')
     return Preprint.objects.filter().values_list('guids___id', flat=True)
 
+
 def migrate(dry=True):
     assert settings.SHARE_URL, 'SHARE_URL must be set to migrate.'
     assert settings.SHARE_API_TOKEN, 'SHARE_API_TOKEN must be set to migrate.'
@@ -38,7 +39,11 @@ def migrate(dry=True):
             # TODO: This reliably fails for certain nodes with
             # IncompleteRead(0 bytes read)
             failures.append(preprint_id)
-            logger.warn('Encountered exception {} while posting to SHARE for preprint {}'.format(e, preprint_id))
+            logger.warn(
+                'Encountered exception {} while posting to SHARE for preprint {}'.format(
+                    e, preprint_id
+                )
+            )
         else:
             successes.append(preprint_id)
 
@@ -52,6 +57,7 @@ def main():
         script_utils.add_file_logger(logger, __file__)
     setup_django()
     migrate(dry=dry_run)
+
 
 if __name__ == '__main__':
     main()

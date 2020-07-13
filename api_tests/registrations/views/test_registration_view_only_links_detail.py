@@ -6,18 +6,16 @@ from api_tests.nodes.views.test_node_view_only_links_detail import (
     TestViewOnlyLinksUpdate,
     TestViewOnlyLinksDelete,
 )
-from osf_tests.factories import (
-    RegistrationFactory,
-    AuthUserFactory,
-    PrivateLinkFactory
-)
+from osf_tests.factories import RegistrationFactory, AuthUserFactory, PrivateLinkFactory
 from osf.utils import permissions
 
 
 @pytest.fixture()
 def url(public_project, view_only_link):
     return '/{}registrations/{}/view_only_links/{}/'.format(
-        API_BASE, public_project._id, view_only_link._id)
+        API_BASE, public_project._id, view_only_link._id
+    )
+
 
 @pytest.fixture()
 def user():
@@ -42,10 +40,8 @@ def non_contrib():
 @pytest.fixture()
 def public_project(user, read_contrib, write_contrib):
     public_project = RegistrationFactory(is_public=True, creator=user)
-    public_project.add_contributor(
-        read_contrib, permissions=permissions.READ)
-    public_project.add_contributor(
-        write_contrib, permissions=permissions.WRITE)
+    public_project.add_contributor(read_contrib, permissions=permissions.READ)
+    public_project.add_contributor(write_contrib, permissions=permissions.WRITE)
     public_project.save()
     return public_project
 
@@ -62,9 +58,11 @@ def view_only_link(public_project):
 class TestRegistrationViewOnlyLinksDetail(TestViewOnlyLinksDetail):
     pass
 
+
 @pytest.mark.django_db
 class TestRegistrationViewOnlyLinksUpdate(TestViewOnlyLinksUpdate):
     pass
+
 
 @pytest.mark.django_db
 class TestRegistrationViewOnlyLinksDelete(TestViewOnlyLinksDelete):

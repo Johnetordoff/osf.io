@@ -7,7 +7,7 @@ import logging
 from django.db import migrations
 from osf.management.commands.migrate_registration_responses import (
     migrate_draft_registrations,
-    migrate_registrations
+    migrate_registrations,
 )
 from website.settings import DEBUG_MODE
 
@@ -20,9 +20,9 @@ def clear_draft_registration_responses(state, schema):
     """
     DraftRegistration = state.get_model('osf', 'draftregistration')
     DraftRegistration.objects.update(
-        registration_responses={},
-        registration_responses_migrated=False
+        registration_responses={}, registration_responses_migrated=False
     )
+
 
 def clear_registration_responses(state, schema):
     """
@@ -30,23 +30,25 @@ def clear_registration_responses(state, schema):
     """
     Registration = state.get_model('osf', 'registration')
     Registration.objects.update(
-        registration_responses={},
-        registration_responses_migrated=False
+        registration_responses={}, registration_responses_migrated=False
     )
+
 
 def migrate_draft_registration_metadata(state, schema):
     migrate_draft_registrations(
         dry_run=False,
         rows='all',
-        DraftRegistrationModel=state.get_model('osf', 'draftregistration')
+        DraftRegistrationModel=state.get_model('osf', 'draftregistration'),
     )
+
 
 def migrate_registration_registered_meta(state, schema):
     migrate_registrations(
         dry_run=False,
         rows='all',
-        AbstractNodeModel=state.get_model('osf', 'abstractnode')
+        AbstractNodeModel=state.get_model('osf', 'abstractnode'),
     )
+
 
 class Migration(migrations.Migration):
 
@@ -56,8 +58,12 @@ class Migration(migrations.Migration):
 
     if DEBUG_MODE:
         operations = [
-            migrations.RunPython(migrate_draft_registration_metadata, clear_draft_registration_responses),
-            migrations.RunPython(migrate_registration_registered_meta, clear_registration_responses),
+            migrations.RunPython(
+                migrate_draft_registration_metadata, clear_draft_registration_responses
+            ),
+            migrations.RunPython(
+                migrate_registration_registered_meta, clear_registration_responses
+            ),
         ]
     else:
         operations = []

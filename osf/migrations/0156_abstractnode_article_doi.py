@@ -16,6 +16,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='abstractnode',
             name='article_doi',
-            field=models.CharField(blank=True, max_length=128, null=True, validators=[osf.models.validators.validate_doi]),
+            field=models.CharField(
+                blank=True,
+                max_length=128,
+                null=True,
+                validators=[osf.models.validators.validate_doi],
+            ),
         ),
     ]

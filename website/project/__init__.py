@@ -33,13 +33,14 @@ def new_node(category, title, user, description='', parent=None, campaign=None):
         category=category,
         creator=user,
         description=description,
-        parent=parent
+        parent=parent,
     )
 
     node.save()
 
     if campaign:
         from framework.auth.campaigns import system_tag_for_campaign
+
         node.add_system_tag(system_tag_for_campaign(campaign))
 
     return node
@@ -54,18 +55,14 @@ def new_bookmark_collection(user):
     """
     Collection = apps.get_model('osf.Collection')
     existing_bookmark_collections = Collection.objects.filter(
-        is_bookmark_collection=True,
-        creator=user,
-        deleted__isnull=True
+        is_bookmark_collection=True, creator=user, deleted__isnull=True
     ).exists()
 
     if existing_bookmark_collections:
         raise NodeStateError('Users may only have one bookmark collection')
 
     collection = Collection(
-        title='Bookmarks',
-        creator=user,
-        is_bookmark_collection=True
+        title='Bookmarks', creator=user, is_bookmark_collection=True
     )
     collection.save()
     return collection
@@ -92,12 +89,7 @@ def new_private_link(name, user, nodes, anonymous):
     else:
         name = 'Shared project link'
 
-    private_link = PrivateLink(
-        key=key,
-        name=name,
-        creator=user,
-        anonymous=anonymous
-    )
+    private_link = PrivateLink(key=key, name=name, creator=user, anonymous=anonymous)
 
     private_link.save()
 
@@ -112,11 +104,7 @@ def new_private_link(name, user, nodes, anonymous):
             'anonymous_link': anonymous,
         }
 
-        node.add_log(
-            NodeLog.VIEW_ONLY_LINK_ADDED,
-            log_dict,
-            auth=auth
-        )
+        node.add_log(NodeLog.VIEW_ONLY_LINK_ADDED, log_dict, auth=auth)
 
     private_link.save()
 

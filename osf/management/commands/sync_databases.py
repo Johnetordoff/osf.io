@@ -12,8 +12,8 @@ from django.core.management.base import BaseCommand
 from django.core.management import call_command
 from osf import features
 
-class Command(BaseCommand):
 
+class Command(BaseCommand):
     def handle(self, *args, **options):
         COMMANDS = [
             # Sync Postgres

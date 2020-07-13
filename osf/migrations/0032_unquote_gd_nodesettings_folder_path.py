@@ -21,6 +21,7 @@ def unquote_folder_paths(state, schema):
             obj.folder_path = unquote(obj.folder_path)
     bulk_update(targets, update_fields=['folder_path'])
 
+
 def quote_folder_paths(state, schema):
     try:
         NodeSettings = state.get_model('addons_googledrive', 'nodesettings')
@@ -30,6 +31,7 @@ def quote_folder_paths(state, schema):
     for obj in targets:
         obj.folder_path = quote(obj.folder_path.encode('utf-8'))
     bulk_update(targets, update_fields=['folder_path'])
+
 
 class Migration(migrations.Migration):
 

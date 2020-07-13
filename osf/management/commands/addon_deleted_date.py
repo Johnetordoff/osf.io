@@ -38,11 +38,12 @@ TABLES_TO_POPULATE_WITH_MODIFIED = [
     'addons_s3_usersettings',
     'addons_twofactor_usersettings',
     'addons_wiki_nodesettings',
-    'addons_zotero_nodesettings'
+    'addons_zotero_nodesettings',
 ]
 
 UPDATE_DELETED_WITH_MODIFIED = """UPDATE {} SET deleted=modified
     WHERE id IN (SELECT id FROM {} WHERE is_deleted AND deleted IS NULL LIMIT {}) RETURNING id;"""
+
 
 @celery_app.task(name='management.commands.addon_deleted_date')
 def populate_deleted(dry_run=False, page_size=1000):
@@ -52,6 +53,7 @@ def populate_deleted(dry_run=False, page_size=1000):
         if dry_run:
             raise RuntimeError('Dry Run -- Transaction rolled back')
 
+
 def run_statements(statement, page_size, table):
     logger.info('Populating deleted column in table {}'.format(table))
     with connection.cursor() as cursor:
@@ -60,9 +62,10 @@ def run_statements(statement, page_size, table):
         if rows:
             logger.info('Table {} still has rows to populate'.format(table))
 
+
 class Command(BaseCommand):
-    help = '''Populates new deleted field for various models. Ensure you have run migrations
-    before running this script.'''
+    help = """Populates new deleted field for various models. Ensure you have run migrations
+    before running this script."""
 
     def add_arguments(self, parser):
         parser.add_argument(

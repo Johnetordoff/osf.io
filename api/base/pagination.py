@@ -8,7 +8,8 @@ from rest_framework import pagination
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.utils.urls import (
-    replace_query_param, remove_query_param,
+    replace_query_param,
+    remove_query_param,
 )
 from api.base.serializers import is_anonymized
 from api.base.settings import MAX_PAGE_SIZE
@@ -69,43 +70,59 @@ class JSONAPIPagination(pagination.PageNumberPagination):
         return self.page_number_query(url, page_number)
 
     def get_response_dict_deprecated(self, data, url):
-        return OrderedDict([
-            ('data', data),
-            (
-                'links', OrderedDict([
-                    ('first', self.get_first_real_link(url)),
-                    ('last', self.get_last_real_link(url)),
-                    ('prev', self.get_previous_real_link(url)),
-                    ('next', self.get_next_real_link(url)),
-                    (
-                        'meta', OrderedDict([
-                            ('total', self.page.paginator.count),
-                            ('per_page', self.page.paginator.per_page),
-                        ]),
+        return OrderedDict(
+            [
+                ('data', data),
+                (
+                    'links',
+                    OrderedDict(
+                        [
+                            ('first', self.get_first_real_link(url)),
+                            ('last', self.get_last_real_link(url)),
+                            ('prev', self.get_previous_real_link(url)),
+                            ('next', self.get_next_real_link(url)),
+                            (
+                                'meta',
+                                OrderedDict(
+                                    [
+                                        ('total', self.page.paginator.count),
+                                        ('per_page', self.page.paginator.per_page),
+                                    ],
+                                ),
+                            ),
+                        ],
                     ),
-                ]),
-            ),
-        ])
+                ),
+            ],
+        )
 
     def get_response_dict(self, data, url):
-        return OrderedDict([
-            ('data', data),
-            (
-                'meta', OrderedDict([
-                    ('total', self.page.paginator.count),
-                    ('per_page', self.page.paginator.per_page),
-                ]),
-            ),
-            (
-                'links', OrderedDict([
-                    ('self', self.get_self_real_link(url)),
-                    ('first', self.get_first_real_link(url)),
-                    ('last', self.get_last_real_link(url)),
-                    ('prev', self.get_previous_real_link(url)),
-                    ('next', self.get_next_real_link(url)),
-                ]),
-            ),
-        ])
+        return OrderedDict(
+            [
+                ('data', data),
+                (
+                    'meta',
+                    OrderedDict(
+                        [
+                            ('total', self.page.paginator.count),
+                            ('per_page', self.page.paginator.per_page),
+                        ],
+                    ),
+                ),
+                (
+                    'links',
+                    OrderedDict(
+                        [
+                            ('self', self.get_self_real_link(url)),
+                            ('first', self.get_first_real_link(url)),
+                            ('last', self.get_last_real_link(url)),
+                            ('prev', self.get_previous_real_link(url)),
+                            ('next', self.get_next_real_link(url)),
+                        ],
+                    ),
+                ),
+            ],
+        )
 
     def get_paginated_response(self, data):
         """
@@ -165,7 +182,9 @@ class JSONAPIPagination(pagination.PageNumberPagination):
             return list(self.page)
 
         else:
-            return super(JSONAPIPagination, self).paginate_queryset(queryset, request, view=None)
+            return super(JSONAPIPagination, self).paginate_queryset(
+                queryset, request, view=None,
+            )
 
 
 class MaxSizePagination(JSONAPIPagination):
@@ -173,14 +192,16 @@ class MaxSizePagination(JSONAPIPagination):
     max_page_size = None
     page_size_query_param = None
 
+
 class NoMaxPageSizePagination(JSONAPIPagination):
     max_page_size = None
+
 
 class IncreasedPageSizePagination(JSONAPIPagination):
     max_page_size = 1000
 
-class CommentPagination(JSONAPIPagination):
 
+class CommentPagination(JSONAPIPagination):
     def get_paginated_response(self, data):
         """Add number of unread comments to links.meta when viewing list of comments filtered by
         a target node, file or wiki page."""
@@ -193,7 +214,11 @@ class CommentPagination(JSONAPIPagination):
             node_id = kwargs.get('node_id', None)
             node = AbstractNode.load(node_id)
             user = self.request.user
-            if target_id and not user.is_anonymous and node.is_contributor_or_group_member(user):
+            if (
+                target_id
+                and not user.is_anonymous
+                and node.is_contributor_or_group_member(user)
+            ):
                 root_target = Guid.load(target_id)
                 if root_target:
                     page = getattr(root_target.referent, 'root_target_page', None)
@@ -201,7 +226,9 @@ class CommentPagination(JSONAPIPagination):
                         if not len(data):
                             unread = 0
                         else:
-                            unread = Comment.find_n_unread(user=user, node=node, page=page, root_id=target_id)
+                            unread = Comment.find_n_unread(
+                                user=user, node=node, page=page, root_id=target_id,
+                            )
                         if self.request.version < '2.1':
                             response_dict['links']['meta']['unread'] = unread
                         else:
@@ -210,7 +237,6 @@ class CommentPagination(JSONAPIPagination):
 
 
 class NodeContributorPagination(JSONAPIPagination):
-
     def get_resource(self, kwargs):
         resource_id = kwargs.get('node_id', None)
         return AbstractNode.load(resource_id)
@@ -230,21 +256,18 @@ class NodeContributorPagination(JSONAPIPagination):
 
 
 class PreprintContributorPagination(NodeContributorPagination):
-
     def get_resource(self, kwargs):
         resource_id = kwargs.get('preprint_id')
         return Preprint.load(resource_id)
 
 
 class DraftRegistrationContributorPagination(NodeContributorPagination):
-
     def get_resource(self, kwargs):
         resource_id = kwargs.get('draft_id')
         return DraftRegistration.load(resource_id)
 
 
 class SearchPaginator(DjangoPaginator):
-
     def __init__(self, object_list, per_page):
         super(SearchPaginator, self).__init__(object_list, per_page)
 
@@ -255,6 +278,7 @@ class SearchPaginator(DjangoPaginator):
     def _get_count(self):
         self._count = self.object_list['aggs']['total']
         return self._count
+
     count = property(_get_count)
 
     def page(self, number):
@@ -268,7 +292,6 @@ class SearchPaginator(DjangoPaginator):
 
 
 class SearchModelPaginator(SearchPaginator):
-
     def __init__(self, object_list, per_page, model):
         super(SearchModelPaginator, self).__init__(object_list, per_page)
         self.model = model
@@ -276,15 +299,11 @@ class SearchModelPaginator(SearchPaginator):
     def page(self, number):
         number = self.validate_number(number)
         results = self.object_list['results']
-        items = [
-            self.model.load(result.get('_id'))
-            for result in results
-        ]
+        items = [self.model.load(result.get('_id')) for result in results]
         return self._get_page(items, number, self)
 
 
 class SearchPagination(JSONAPIPagination):
-
     def __init__(self):
         super(SearchPagination, self).__init__()
         self.paginator = None
@@ -327,94 +346,136 @@ class SearchPagination(JSONAPIPagination):
         view_name = 'search:search-{}'.format(field)
         return absolute_reverse(
             view_name,
-            query_kwargs={
-                'q': query,
-            },
-            kwargs={
-                'version': self.request.parser_context['kwargs']['version'],
-            },
+            query_kwargs={'q': query,},
+            kwargs={'version': self.request.parser_context['kwargs']['version'],},
         )
 
     def get_search_field_total(self, field):
         return self.paginator.object_list['counts'].get(field, 0)
 
     def get_search_field(self, field, query):
-        return OrderedDict([
-            (
-                'related', OrderedDict([
-                    ('href', self.get_search_field_url(field, query)),
-                    (
-                        'meta', OrderedDict([
-                            ('total', self.get_search_field_total(field)),
-                        ]),
+        return OrderedDict(
+            [
+                (
+                    'related',
+                    OrderedDict(
+                        [
+                            ('href', self.get_search_field_url(field, query)),
+                            (
+                                'meta',
+                                OrderedDict(
+                                    [('total', self.get_search_field_total(field)),],
+                                ),
+                            ),
+                        ],
                     ),
-                ]),
-            ),
-        ])
+                ),
+            ],
+        )
 
     def get_response_dict(self, data, url):
         if isinstance(self.paginator, SearchModelPaginator):
             return super(SearchPagination, self).get_response_dict(data, url)
         else:
             query = self.request.query_params.get('q', '*')
-            return OrderedDict([
-                ('data', data),
-                (
-                    'search_fields', OrderedDict([
-                        ('files', self.get_search_field('file', query)),
-                        ('projects', self.get_search_field('project', query)),
-                        ('components', self.get_search_field('component', query)),
-                        ('registrations', self.get_search_field('registration', query)),
-                        ('users', self.get_search_field('user', query)),
-                        ('institutions', self.get_search_field('institution', query)),
-                    ]),
-                ),
-                (
-                    'meta', OrderedDict([
-                        ('total', self.page.paginator.count),
-                        ('per_page', self.page.paginator.per_page),
-                    ]),
-                ),
-                (
-                    'links', OrderedDict([
-                        ('self', self.get_self_real_link(url)),
-                        ('first', self.get_first_real_link(url)),
-                        ('last', self.get_last_real_link(url)),
-                        ('prev', self.get_previous_real_link(url)),
-                        ('next', self.get_next_real_link(url)),
-                    ]),
-                ),
-            ])
+            return OrderedDict(
+                [
+                    ('data', data),
+                    (
+                        'search_fields',
+                        OrderedDict(
+                            [
+                                ('files', self.get_search_field('file', query)),
+                                ('projects', self.get_search_field('project', query)),
+                                (
+                                    'components',
+                                    self.get_search_field('component', query),
+                                ),
+                                (
+                                    'registrations',
+                                    self.get_search_field('registration', query),
+                                ),
+                                ('users', self.get_search_field('user', query)),
+                                (
+                                    'institutions',
+                                    self.get_search_field('institution', query),
+                                ),
+                            ],
+                        ),
+                    ),
+                    (
+                        'meta',
+                        OrderedDict(
+                            [
+                                ('total', self.page.paginator.count),
+                                ('per_page', self.page.paginator.per_page),
+                            ],
+                        ),
+                    ),
+                    (
+                        'links',
+                        OrderedDict(
+                            [
+                                ('self', self.get_self_real_link(url)),
+                                ('first', self.get_first_real_link(url)),
+                                ('last', self.get_last_real_link(url)),
+                                ('prev', self.get_previous_real_link(url)),
+                                ('next', self.get_next_real_link(url)),
+                            ],
+                        ),
+                    ),
+                ],
+            )
 
     def get_response_dict_deprecated(self, data, url):
         if isinstance(self.paginator, SearchModelPaginator):
             return super(SearchPagination, self).get_response_dict_deprecated(data, url)
         else:
             query = self.request.query_params.get('q', '*')
-            return OrderedDict([
-                ('data', data),
-                (
-                    'search_fields', OrderedDict([
-                        ('files', self.get_search_field('file', query)),
-                        ('projects', self.get_search_field('project', query)),
-                        ('components', self.get_search_field('component', query)),
-                        ('registrations', self.get_search_field('registration', query)),
-                        ('users', self.get_search_field('user', query)),
-                        ('institutions', self.get_search_field('institution', query)),
-                    ]),
-                ),
-                (
-                    'links', OrderedDict([
-                        ('first', self.get_first_real_link(url)),
-                        ('last', self.get_last_real_link(url)),
-                        ('prev', self.get_previous_real_link(url)),
-                        ('next', self.get_next_real_link(url)),
-                        (
-                            'meta', OrderedDict([
-                                ('total', self.page.paginator.count),
-                                ('per_page', self.page.paginator.per_page),
-                            ]),
+            return OrderedDict(
+                [
+                    ('data', data),
+                    (
+                        'search_fields',
+                        OrderedDict(
+                            [
+                                ('files', self.get_search_field('file', query)),
+                                ('projects', self.get_search_field('project', query)),
+                                (
+                                    'components',
+                                    self.get_search_field('component', query),
+                                ),
+                                (
+                                    'registrations',
+                                    self.get_search_field('registration', query),
+                                ),
+                                ('users', self.get_search_field('user', query)),
+                                (
+                                    'institutions',
+                                    self.get_search_field('institution', query),
+                                ),
+                            ],
                         ),
-                    ]),
-                ),
-            ])
+                    ),
+                    (
+                        'links',
+                        OrderedDict(
+                            [
+                                ('first', self.get_first_real_link(url)),
+                                ('last', self.get_last_real_link(url)),
+                                ('prev', self.get_previous_real_link(url)),
+                                ('next', self.get_next_real_link(url)),
+                                (
+                                    'meta',
+                                    OrderedDict(
+                                        [
+                                            ('total', self.page.paginator.count),
+                                            ('per_page', self.page.paginator.per_page),
+                                        ],
+                                    ),
+                                ),
+                            ],
+                        ),
+                    ),
+                ],
+            )

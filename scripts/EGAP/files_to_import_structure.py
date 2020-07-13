@@ -63,7 +63,9 @@ def audit_files(source_directory):
     for root, directory, files in os.walk(source_directory):
         for item in files:
             project_id = get_project_id(root, source_directory)
-            name = '{}/{}'.format(root.split(source_directory)[-1], item)  # get file/folder name from just under source
+            name = '{}/{}'.format(
+                root.split(source_directory)[-1], item
+            )  # get file/folder name from just under source
             if not check_id(project_id, item):
                 ignoring.writelines(name + '\r')
             else:
@@ -95,11 +97,15 @@ def main(files_dir, metadata_dir, id_list=None):
     :param id_list: an optional list of project ids to limit what gets processed
     :return:
     """
-    logger.info('Processing files. Source: {} Destination: {}'.format(files_dir, metadata_dir))
+    logger.info(
+        'Processing files. Source: {} Destination: {}'.format(files_dir, metadata_dir)
+    )
 
     project_dirs = os.listdir(files_dir)
     if id_list:
-        project_dirs = [project for project in project_dirs if get_item_id(project) in id_list]
+        project_dirs = [
+            project for project in project_dirs if get_item_id(project) in id_list
+        ]
 
     logger.info('Processing directories: {}'.format(project_dirs))
 
@@ -131,22 +137,22 @@ if __name__ == '__main__':
     parser.add_argument(
         '-source',
         '--source',
-        help='The directory for the EGAP data files, traditionally called "EGAP_REGISTRY_staging/3 Registrations/"'
+        help='The directory for the EGAP data files, traditionally called "EGAP_REGISTRY_staging/3 Registrations/"',
     )
     parser.add_argument(
         '-destination',
         '--destination',
-        help='The directory of the import file structure containing the bags of data.'
+        help='The directory of the import file structure containing the bags of data.',
     )
     parser.add_argument(
         '-list',
         '--list',
-        help='An optional list of ids to import into a the new metadata directory.'
+        help='An optional list of ids to import into a the new metadata directory.',
     )
     parser.add_argument(
         '-audit',
         '--audit',
-        help='Boolean to generate two lists of all files that should and should not be included. Needs "source".'
+        help='Boolean to generate two lists of all files that should and should not be included. Needs "source".',
     )
 
     args = parser.parse_args()

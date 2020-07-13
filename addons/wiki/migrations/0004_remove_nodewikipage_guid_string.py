@@ -12,8 +12,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='nodewikipage',
-            name='guid_string',
-        ),
+        migrations.RemoveField(model_name='nodewikipage', name='guid_string',),
     ]

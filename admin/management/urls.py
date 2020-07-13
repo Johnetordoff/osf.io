@@ -8,5 +8,5 @@ app_name = 'admin'
 
 urlpatterns = [
     url(r'^$', views.ManagementCommands.as_view(), name='commands'),
-    url(r'^waffle_flag', views.WaffleFlag.as_view(), name='waffle_flag')
+    url(r'^waffle_flag', views.WaffleFlag.as_view(), name='waffle_flag'),
 ]

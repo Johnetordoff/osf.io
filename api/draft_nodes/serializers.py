@@ -15,12 +15,11 @@ class DraftNodeSerializer(JSONAPISerializer):
     A very sparse serializer for DraftNodes that will just reveal
     file links for uploading files to the node
     """
+
     id = IDField(source='_id', read_only=True)
     type = TypeField()
 
-    links = LinksField({
-        'self': 'get_absolute_url',
-    })
+    links = LinksField({'self': 'get_absolute_url',})
 
     def get_absolute_url(self, obj):
         return absolute_reverse(
@@ -43,7 +42,11 @@ class DraftNodeSerializer(JSONAPISerializer):
 class DraftNodeStorageProviderSerializer(NodeStorageProviderSerializer):
     files = NodeFileHyperLinkField(
         related_view='draft_nodes:node-files',
-        related_view_kwargs={'node_id': '<node._id>', 'path': '<path>', 'provider': '<provider>'},
+        related_view_kwargs={
+            'node_id': '<node._id>',
+            'path': '<path>',
+            'provider': '<provider>',
+        },
         kind='folder',
         never_embed=True,
     )

@@ -22,8 +22,13 @@ OSF_PROVIDER_DATA = {
     'domain': settings.DOMAIN,
     'domain_redirect_enabled': False,
     'default_license': 'CC0 1.0 Universal',
-    'licenses_acceptable': ['CC0 1.0 Universal', 'CC-By Attribution 4.0 International', 'No license'],
+    'licenses_acceptable': [
+        'CC0 1.0 Universal',
+        'CC-By Attribution 4.0 International',
+        'No license',
+    ],
 }
+
 
 def update_taxonomies(filename):
     Subject = apps.get_model('osf.Subject')
@@ -33,12 +38,7 @@ def update_taxonomies(filename):
     except PreprintProvider.DoesNotExist:
         bepress_provider, _ = update_or_create(OSF_PROVIDER_DATA)
     # Flat taxonomy is stored locally, read in here
-    with open(
-        os.path.join(
-            settings.APP_PATH,
-            'website', 'static', filename
-        )
-    ) as fp:
+    with open(os.path.join(settings.APP_PATH, 'website', 'static', filename)) as fp:
         taxonomy = json.load(fp)
 
         for subject_path in taxonomy.get('data'):
@@ -48,21 +48,35 @@ def update_taxonomies(filename):
             # Search for parent subject, get id if it exists
             parent = None
             if len(subjects) > 1:
-                parent, created_p = Subject.objects.get_or_create(text=subjects[-2], provider=bepress_provider)
+                parent, created_p = Subject.objects.get_or_create(
+                    text=subjects[-2], provider=bepress_provider
+                )
                 if created_p:
-                    logger.info('Created parent "{}":{} for subject {}'.format(parent.text, parent._id, text))
-            logger.info(u'Getting or creating Subject "{}"{}'.format(
-                text,
-                u' with parent {}:{}'.format(parent.text, parent._id) if parent else ''
-            ))
-            subject, _ = Subject.objects.get_or_create(text=text, provider=bepress_provider)
+                    logger.info(
+                        'Created parent "{}":{} for subject {}'.format(
+                            parent.text, parent._id, text
+                        )
+                    )
+            logger.info(
+                u'Getting or creating Subject "{}"{}'.format(
+                    text,
+                    u' with parent {}:{}'.format(parent.text, parent._id)
+                    if parent
+                    else '',
+                )
+            )
+            subject, _ = Subject.objects.get_or_create(
+                text=text, provider=bepress_provider
+            )
             if parent and not subject.parent:
-                logger.info(u'Adding parent "{}":{} to Subject "{}":{}'.format(
-                    parent.text, parent._id,
-                    subject.text, subject._id
-                ))
+                logger.info(
+                    u'Adding parent "{}":{} to Subject "{}":{}'.format(
+                        parent.text, parent._id, subject.text, subject._id
+                    )
+                )
                 subject.parent = parent
                 subject.save()
+
 
 def main():
     init_app(set_backends=True, routes=False)
@@ -73,6 +87,7 @@ def main():
         update_taxonomies('bepress_taxonomy.json')
         if dry_run:
             raise RuntimeError('Dry run, transaction rolled back')
+
 
 if __name__ == '__main__':
     main()

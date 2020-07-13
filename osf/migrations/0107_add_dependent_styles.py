@@ -9,9 +9,11 @@ from future.moves.urllib.parse import urlparse
 
 logger = logging.getLogger(__file__)
 
+
 def get_style_files(path):
     files = (os.path.join(path, x) for x in os.listdir(path))
     return (f for f in files if os.path.isfile(f))
+
 
 def update_styles(state, schema):
     # drop all styles
@@ -31,12 +33,26 @@ def update_styles(state, schema):
             has_bibliography = 'Bluebook' in title
 
             if not has_bibliography:
-                bib = root.find('{{{ns}}}{bib}'.format(ns=namespace, bib='bibliography'))
-                layout = bib.find('{{{ns}}}{layout}'.format(ns=namespace, layout='layout')) if bib is not None else None
+                bib = root.find(
+                    '{{{ns}}}{bib}'.format(ns=namespace, bib='bibliography')
+                )
+                layout = (
+                    bib.find('{{{ns}}}{layout}'.format(ns=namespace, layout='layout'))
+                    if bib is not None
+                    else None
+                )
                 has_bibliography = True
-                if layout is not None and len(layout.getchildren()) == 1 and 'choose' in layout.getchildren()[0].tag:
-                    choose = layout.find('{{{ns}}}{choose}'.format(ns=namespace, choose='choose'))
-                    else_tag = choose.find('{{{ns}}}{tag}'.format(ns=namespace, tag='else'))
+                if (
+                    layout is not None
+                    and len(layout.getchildren()) == 1
+                    and 'choose' in layout.getchildren()[0].tag
+                ):
+                    choose = layout.find(
+                        '{{{ns}}}{choose}'.format(ns=namespace, choose='choose')
+                    )
+                    else_tag = choose.find(
+                        '{{{ns}}}{tag}'.format(ns=namespace, tag='else')
+                    )
                     if else_tag is None:
                         supported_types = []
                         match_none = False
@@ -60,7 +76,7 @@ def update_styles(state, schema):
                 '_id': os.path.splitext(os.path.basename(style_file))[0],
                 'title': title,
                 'has_bibliography': has_bibliography,
-                'parent_style': None
+                'parent_style': None,
             }
 
             # Optional
@@ -90,7 +106,11 @@ def update_styles(state, schema):
             namespace = root.nsmap.get(None)
             selector = '{{{ns}}}info/{{{ns}}}'.format(ns=namespace)
             title = root.find(selector + 'title').text
-            has_bibliography = root.find('{{{ns}}}{tag}'.format(ns=namespace, tag='bibliography')) is not None or 'Bluebook' in title
+            has_bibliography = (
+                root.find('{{{ns}}}{tag}'.format(ns=namespace, tag='bibliography'))
+                is not None
+                or 'Bluebook' in title
+            )
 
             style_id = os.path.splitext(os.path.basename(style_file))[0]
             links = root.findall(selector + 'link')
@@ -105,12 +125,14 @@ def update_styles(state, schema):
                             '_id': style_id,
                             'title': title,
                             'has_bibliography': parent_has_bibliography,
-                            'parent_style': parent_style_id
+                            'parent_style': parent_style_id,
                         }
 
                         # Optional
                         try:
-                            fields['short_title'] = root.find(selector + 'title-short').text
+                            fields['short_title'] = root.find(
+                                selector + 'title-short'
+                            ).text
                         except AttributeError:
                             pass
 
@@ -124,13 +146,17 @@ def update_styles(state, schema):
                         break
 
                     else:
-                        logger.debug('Unable to load parent_style object: parent {}, dependent style {}'.format(parent_style_id, style_id))
+                        logger.debug(
+                            'Unable to load parent_style object: parent {}, dependent style {}'.format(
+                                parent_style_id, style_id
+                            )
+                        )
             else:
                 fields = {
                     '_id': style_id,
                     'title': title,
                     'has_bibliography': has_bibliography,
-                    'parent_style': None
+                    'parent_style': None,
                 }
                 style = CitationStyle(**fields)
                 style.save()
@@ -140,6 +166,7 @@ def revert(state, schema):
     # The revert of this migration simply removes all CitationStyle instances.
     CitationStyle = state.get_model('osf', 'citationstyle')
     CitationStyle.objects.all().delete()
+
 
 class Migration(migrations.Migration):
 

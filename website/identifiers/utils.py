@@ -49,9 +49,7 @@ def request_identifiers(target_object):
         identifiers = client.get_identifier(doi)
     except exceptions.ClientResponseError as error:
         raise HTTPError(error.response.status_code)
-    return {
-        'doi': identifiers.get('doi')
-    }
+    return {'doi': identifiers.get('doi')}
 
 
 def get_or_create_identifiers(target_object):
@@ -71,6 +69,7 @@ def get_or_create_identifiers(target_object):
         return {'doi': doi, 'ark': ark}
 
     return {'doi': doi}
+
 
 # From https://stackoverflow.com/a/19016117
 # lxml does not accept strings with control characters

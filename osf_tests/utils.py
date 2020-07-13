@@ -29,6 +29,7 @@ class CaptureSignals(object):
     blinker `NamedSignals` to patch. Each signal has its `send` mocked out.
 
     """
+
     def __init__(self, signals):
         """Patch all given signals and make them available as attributes.
 
@@ -66,23 +67,38 @@ class CaptureSignals(object):
         :rtype: list of blinker `NamedSignals`.
 
         """
-        return set([signal for signal, _ in self._records.items() if self._records[signal]])
+        return set(
+            [signal for signal, _ in self._records.items() if self._records[signal]]
+        )
 
 
 def capture_signals():
     """Factory method that creates a ``CaptureSignals`` with all OSF signals."""
     return CaptureSignals(ALL_SIGNALS)
 
+
 def assert_datetime_equal(dt1, dt2, allowance=500):
     """Assert that two datetimes are about equal."""
 
     assert abs(dt1 - dt2) < dt.timedelta(milliseconds=allowance)
 
+
 @contextlib.contextmanager
-def mock_archive(project, schema=None, auth=None, data=None, parent=None,
-                 embargo=False, embargo_end_date=None,
-                 retraction=False, justification=None, autoapprove_retraction=False,
-                 autocomplete=True, autoapprove=False, provider=None):
+def mock_archive(
+    project,
+    schema=None,
+    auth=None,
+    data=None,
+    parent=None,
+    embargo=False,
+    embargo_end_date=None,
+    retraction=False,
+    justification=None,
+    autoapprove_retraction=False,
+    autocomplete=True,
+    autoapprove=False,
+    provider=None,
+):
     """ A context manager for registrations. When you want to call Node#register_node in
     a test but do not want to deal with any of this side effects of archiver, this
     helper allows for creating a registration in a safe fashion.
@@ -116,7 +132,11 @@ def mock_archive(project, schema=None, auth=None, data=None, parent=None,
     schema = schema or get_default_metaschema()
     auth = auth or Auth(project.creator)
     data = data or ''
-    provider = provider or RegistrationProvider.objects.first() or RegistrationProviderFactory(_id='osf')
+    provider = (
+        provider
+        or RegistrationProvider.objects.first()
+        or RegistrationProviderFactory(_id='osf')
+    )
 
     with mock.patch('framework.celery_tasks.handlers.enqueue_task'):
         draft_reg = DraftRegistrationFactory(branched_from=project)
@@ -128,13 +148,8 @@ def mock_archive(project, schema=None, auth=None, data=None, parent=None,
             provider=provider,
         )
     if embargo:
-        embargo_end_date = embargo_end_date or (
-            timezone.now() + dt.timedelta(days=20)
-        )
-        registration.embargo_registration(
-            project.creator,
-            embargo_end_date
-        )
+        embargo_end_date = embargo_end_date or (timezone.now() + dt.timedelta(days=20))
+        registration.embargo_registration(project.creator, embargo_end_date)
     else:
         registration.require_approval(project.creator)
     if autocomplete:
@@ -144,7 +159,9 @@ def mock_archive(project, schema=None, auth=None, data=None, parent=None,
         root_job.done = True
         root_job.save()
         sanction = registration.sanction
-        mock.patch.object(root_job, 'archive_tree_finished', mock.Mock(return_value=True)),
+        mock.patch.object(
+            root_job, 'archive_tree_finished', mock.Mock(return_value=True)
+        ),
         mock.patch('website.archiver.tasks.archive_success.delay', mock.Mock())
         archiver_listeners.archive_callback(registration)
 
@@ -158,13 +175,16 @@ def mock_archive(project, schema=None, auth=None, data=None, parent=None,
     if retraction:
         justification = justification or 'Because reasons'
         registration.refresh_from_db()
-        retraction = registration.retract_registration(project.creator, justification=justification)
+        retraction = registration.retract_registration(
+            project.creator, justification=justification
+        )
         if autoapprove_retraction:
             retraction.state = Sanction.APPROVED
             retraction._on_complete(project.creator)
         retraction.save()
         registration.save()
     yield registration
+
 
 class MockShareResponse:
     def __init__(self, status_code):

@@ -28,7 +28,9 @@ class DraftNode(AbstractNode):
         raise NodeStateError('You may not set privacy for a DraftNode.')
 
     def clone(self):
-        raise NodeStateError('A DraftNode may not be forked, used as a template, or registered.')
+        raise NodeStateError(
+            'A DraftNode may not be forked, used as a template, or registered.'
+        )
 
     # Overrides AbstractNode.update_search
     def update_search(self):
@@ -41,20 +43,26 @@ class DraftNode(AbstractNode):
         self.recast('osf.node')
         self.save()
 
-        log_params = {
-            'node': self._id
-        }
+        log_params = {'node': self._id}
 
         log_action = NodeLog.PROJECT_CREATED_FROM_DRAFT_REG
         self.add_log(
             log_action,
             params=log_params,
             auth=Auth(user=auth.user),
-            log_date=timezone.now()
+            log_date=timezone.now(),
         )
         return
 
-    def register_node(self, schema, auth, draft_registration, parent=None, child_ids=None, provider=None):
+    def register_node(
+        self,
+        schema,
+        auth,
+        draft_registration,
+        parent=None,
+        child_ids=None,
+        provider=None,
+    ):
         """Converts the DraftNode to a Node, copies editable fields from the DraftRegistration back to the Node,
          and then registers the Node
 
@@ -71,4 +79,6 @@ class DraftNode(AbstractNode):
         self.subscribe_contributors_to_node()
 
         # Calls super on Node, since self is no longer a DraftNode
-        return super(Node, self).register_node(schema, auth, draft_registration, parent, child_ids, provider)
+        return super(Node, self).register_node(
+            schema, auth, draft_registration, parent, child_ids, provider
+        )

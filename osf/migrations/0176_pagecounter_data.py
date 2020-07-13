@@ -19,9 +19,7 @@ class Migration(migrations.Migration):
     ]
 
     if DEBUG_MODE:
-        operations = [
-            migrations.RunSQL(FORWARD_SQL, REVERSE_SQL)
-        ]
+        operations = [migrations.RunSQL(FORWARD_SQL, REVERSE_SQL)]
     else:
         operations = []
         logger.info(

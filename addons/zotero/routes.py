@@ -7,9 +7,7 @@ from addons.zotero.views import zotero_views
 api_routes = {
     'rules': [
         Rule(
-            [
-                '/settings/zotero/accounts/',
-            ],
+            ['/settings/zotero/accounts/',],
             'get',
             zotero_views.account_list(),
             json_renderer,
@@ -72,5 +70,4 @@ api_routes = {
         ),
     ],
     'prefix': '/api/v1',
-
 }

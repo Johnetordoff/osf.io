@@ -4,10 +4,8 @@ import factory
 from factory.django import DjangoModelFactory
 from osf_tests.factories import UserFactory, ProjectFactory, ExternalAccountFactory
 
-from addons.s3.models import (
-    UserSettings,
-    NodeSettings
-)
+from addons.s3.models import UserSettings, NodeSettings
+
 
 class S3AccountFactory(ExternalAccountFactory):
     provider = 's3'

@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0095_ensure_licenses'),
     ]
 
-    operations = [
-    ]
+    operations = []

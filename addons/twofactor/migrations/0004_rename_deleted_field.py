@@ -14,9 +14,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RenameField(
-            model_name='usersettings',
-            new_name='is_deleted',
-            old_name='deleted',
+            model_name='usersettings', new_name='is_deleted', old_name='deleted',
         ),
         migrations.AddField(
             model_name='usersettings',

@@ -16,8 +16,13 @@ from framework.auth.utils import validate_recaptcha
 from framework.exceptions import HTTPError
 from tests.base import OsfTestCase, assert_is_redirect, fake
 from osf_tests.factories import (
-    UserFactory, UnregUserFactory, AuthFactory,
-    ProjectFactory, NodeFactory, AuthUserFactory, PrivateLinkFactory
+    UserFactory,
+    UnregUserFactory,
+    AuthFactory,
+    ProjectFactory,
+    NodeFactory,
+    AuthUserFactory,
+    PrivateLinkFactory,
 )
 
 from framework.auth import Auth
@@ -31,7 +36,8 @@ from website.project.decorators import (
     must_be_contributor,
     must_be_contributor_or_public,
     must_be_contributor_or_public_but_not_anonymized,
-    must_have_addon, must_be_addon_authorizer,
+    must_have_addon,
+    must_be_addon_authorizer,
 )
 from website.util import api_url_for
 
@@ -39,7 +45,6 @@ from tests.test_cas_authentication import generate_external_user_with_resp
 
 
 class TestAuthUtils(OsfTestCase):
-
     def test_citation_with_only_fullname(self):
         user = UserFactory()
         user.fullname = 'Martin Luther King, Jr.'
@@ -58,9 +63,7 @@ class TestAuthUtils(OsfTestCase):
         user = UnregUserFactory()
 
         auth.register_unconfirmed(
-            username=user.username,
-            password='gattaca',
-            fullname='Rosie',
+            username=user.username, password='gattaca', fullname='Rosie',
         )
 
         user.reload()
@@ -72,15 +75,15 @@ class TestAuthUtils(OsfTestCase):
         user = UnregUserFactory()
 
         auth.register_unconfirmed(
-            username=user.username,
-            password='gattaca',
-            fullname='Rosie'
+            username=user.username, password='gattaca', fullname='Rosie'
         )
 
         user.reload()
         token = user.get_confirmation_token(user.username)
 
-        res = self.app.get('/confirm/{}/{}'.format(user._id, token), allow_redirects=False)
+        res = self.app.get(
+            '/confirm/{}/{}'.format(user._id, token), allow_redirects=False
+        )
         res = res.follow()
 
         assert_equal(res.status_code, 302)
@@ -88,14 +91,15 @@ class TestAuthUtils(OsfTestCase):
 
         user.reload()
 
-        mock_mail.assert_called_with(osf_support_email=settings.OSF_SUPPORT_EMAIL,
-                                     mimetype='html',
-                                     storage_flag_is_active=False,
-                                     to_addr=user.username,
-                                     domain=settings.DOMAIN,
-                                     user=user,
-                                     mail=mails.WELCOME)
-
+        mock_mail.assert_called_with(
+            osf_support_email=settings.OSF_SUPPORT_EMAIL,
+            mimetype='html',
+            storage_flag_is_active=False,
+            to_addr=user.username,
+            domain=settings.DOMAIN,
+            user=user,
+            mail=mails.WELCOME,
+        )
 
         self.app.set_cookie(settings.COOKIE_NAME, user.get_or_create_cookie().decode())
         res = self.app.get('/confirm/{}/{}'.format(user._id, token))
@@ -105,7 +109,11 @@ class TestAuthUtils(OsfTestCase):
         assert_equal(res.status_code, 302)
         assert_equal('/', urlparse(res.location).path)
         assert_equal(len(mock_mail.call_args_list), 1)
-        session = Session.objects.filter(data__auth_user_id=user._id).order_by('-modified').first()
+        session = (
+            Session.objects.filter(data__auth_user_id=user._id)
+            .order_by('-modified')
+            .first()
+        )
         assert_equal(len(session.data['status']), 1)
 
     def test_get_user_by_id(self):
@@ -119,23 +127,37 @@ class TestAuthUtils(OsfTestCase):
     def test_get_user_with_wrong_password_returns_false(self):
         user = UserFactory.build()
         user.set_password('killerqueen')
-        assert_false(
-            auth.get_user(email=user.username, password='wrong')
-        )
+        assert_false(auth.get_user(email=user.username, password='wrong'))
 
     def test_get_user_by_external_info(self):
         service_url = 'http://localhost:5000/dashboard/'
-        user, validated_credentials, cas_resp = generate_external_user_with_resp(service_url)
+        user, validated_credentials, cas_resp = generate_external_user_with_resp(
+            service_url
+        )
         user.save()
-        assert_equal(auth.get_user(external_id_provider=validated_credentials['provider'], external_id=validated_credentials['id']), user)
+        assert_equal(
+            auth.get_user(
+                external_id_provider=validated_credentials['provider'],
+                external_id=validated_credentials['id'],
+            ),
+            user,
+        )
 
     @mock.patch('framework.auth.cas.get_user_from_cas_resp')
     @mock.patch('framework.auth.cas.CasClient.service_validate')
-    def test_successful_external_login_cas_redirect(self, mock_service_validate, mock_get_user_from_cas_resp):
+    def test_successful_external_login_cas_redirect(
+        self, mock_service_validate, mock_get_user_from_cas_resp
+    ):
         service_url = 'http://localhost:5000/dashboard/'
-        user, validated_credentials, cas_resp = generate_external_user_with_resp(service_url)
+        user, validated_credentials, cas_resp = generate_external_user_with_resp(
+            service_url
+        )
         mock_service_validate.return_value = cas_resp
-        mock_get_user_from_cas_resp.return_value = (user, validated_credentials, 'authenticate')
+        mock_get_user_from_cas_resp.return_value = (
+            user,
+            validated_credentials,
+            'authenticate',
+        )
         ticket = fake.md5()
         resp = cas.make_response_from_ticket(ticket, service_url)
         assert_equal(resp.status_code, 302, 'redirect to CAS login')
@@ -148,11 +170,19 @@ class TestAuthUtils(OsfTestCase):
 
     @mock.patch('framework.auth.cas.get_user_from_cas_resp')
     @mock.patch('framework.auth.cas.CasClient.service_validate')
-    def test_successful_external_first_login(self, mock_service_validate, mock_get_user_from_cas_resp):
+    def test_successful_external_first_login(
+        self, mock_service_validate, mock_get_user_from_cas_resp
+    ):
         service_url = 'http://localhost:5000/dashboard/'
-        _, validated_credentials, cas_resp = generate_external_user_with_resp(service_url, user=False)
+        _, validated_credentials, cas_resp = generate_external_user_with_resp(
+            service_url, user=False
+        )
         mock_service_validate.return_value = cas_resp
-        mock_get_user_from_cas_resp.return_value = (None, validated_credentials, 'external_first_login')
+        mock_get_user_from_cas_resp.return_value = (
+            None,
+            validated_credentials,
+            'external_first_login',
+        )
         ticket = fake.md5()
         resp = cas.make_response_from_ticket(ticket, service_url)
         assert_equal(resp.status_code, 302, 'redirect to external login email get')
@@ -161,11 +191,22 @@ class TestAuthUtils(OsfTestCase):
     @mock.patch('framework.auth.cas.external_first_login_authenticate')
     @mock.patch('framework.auth.cas.get_user_from_cas_resp')
     @mock.patch('framework.auth.cas.CasClient.service_validate')
-    def test_successful_external_first_login_without_attributes(self, mock_service_validate, mock_get_user_from_cas_resp, mock_external_first_login_authenticate):
+    def test_successful_external_first_login_without_attributes(
+        self,
+        mock_service_validate,
+        mock_get_user_from_cas_resp,
+        mock_external_first_login_authenticate,
+    ):
         service_url = 'http://localhost:5000/dashboard/'
-        user, validated_credentials, cas_resp = generate_external_user_with_resp(service_url, user=False, release=False)
+        user, validated_credentials, cas_resp = generate_external_user_with_resp(
+            service_url, user=False, release=False
+        )
         mock_service_validate.return_value = cas_resp
-        mock_get_user_from_cas_resp.return_value = (None, validated_credentials, 'external_first_login')
+        mock_get_user_from_cas_resp.return_value = (
+            None,
+            validated_credentials,
+            'external_first_login',
+        )
         ticket = fake.md5()
         cas.make_response_from_ticket(ticket, service_url)
         assert_equal(user, mock_external_first_login_authenticate.call_args[0][0])
@@ -180,14 +221,17 @@ class TestAuthUtils(OsfTestCase):
         kwargs['user'].reload()
 
         assert_equal(empty, ())
-        assert_equal(kwargs, {
-            'user': user,
-            'mimetype': 'html',
-            'mail': mails.PASSWORD_RESET,
-            'to_addr': user.username,
-            'can_change_preferences': False,
-            'osf_contact_email': settings.OSF_CONTACT_EMAIL,
-        })
+        assert_equal(
+            kwargs,
+            {
+                'user': user,
+                'mimetype': 'html',
+                'mail': mails.PASSWORD_RESET,
+                'to_addr': user.username,
+                'can_change_preferences': False,
+                'osf_contact_email': settings.OSF_CONTACT_EMAIL,
+            },
+        )
 
     @mock.patch('framework.auth.utils.requests.post')
     def test_validate_recaptcha_success(self, req_post):
@@ -215,7 +259,7 @@ class TestAuthUtils(OsfTestCase):
 
     @mock.patch('framework.auth.utils.requests.post')
     def test_validate_recaptcha_empty_response(self, req_post):
-        req_post.side_effect=AssertionError()
+        req_post.side_effect = AssertionError()
         # ensure None short circuits execution (no call to google)
         assert_false(validate_recaptcha(None))
 
@@ -227,30 +271,25 @@ class TestAuthUtils(OsfTestCase):
             'fullName': 'Julius Caesar',
             'email1': 'caesar@romanempire.com',
             'email2': 'caesar@romanempire.com',
-            'password': 'brutusisajerk'
+            'password': 'brutusisajerk',
         }
 
         self.app.post_json(url, sign_up_data)
         assert_equal(len(mock_mail.call_args_list), 1)
         args, kwargs = mock_mail.call_args
-        assert_equal(args, (
-            'caesar@romanempire.com',
-            mails.INITIAL_CONFIRM_EMAIL,
-            'html'
-        ))
+        assert_equal(
+            args, ('caesar@romanempire.com', mails.INITIAL_CONFIRM_EMAIL, 'html')
+        )
 
         self.app.post_json(url, sign_up_data)
         assert_equal(len(mock_mail.call_args_list), 2)
         args, kwargs = mock_mail.call_args
-        assert_equal(args, (
-            'caesar@romanempire.com',
-            mails.INITIAL_CONFIRM_EMAIL,
-            'html'
-        ))
+        assert_equal(
+            args, ('caesar@romanempire.com', mails.INITIAL_CONFIRM_EMAIL, 'html')
+        )
 
 
 class TestAuthObject(OsfTestCase):
-
     def test_repr(self):
         auth = AuthFactory()
         rep = repr(auth)
@@ -277,7 +316,6 @@ class TestAuthObject(OsfTestCase):
 
 
 class TestPrivateLink(OsfTestCase):
-
     def setUp(self):
         super(TestPrivateLink, self).setUp()
         self.flaskapp = Flask('testing_private_links')
@@ -298,8 +336,10 @@ class TestPrivateLink(OsfTestCase):
     @mock.patch('website.project.decorators.Auth.from_kwargs')
     def test_has_private_link_key(self, mock_from_kwargs):
         mock_from_kwargs.return_value = Auth(user=None)
-        res = self.app.get('/project/{0}'.format(self.project._primary_key),
-            {'view_only': self.link.key})
+        res = self.app.get(
+            '/project/{0}'.format(self.project._primary_key),
+            {'view_only': self.link.key},
+        )
         res = res.follow()
         assert_equal(res.status_code, 200)
         assert_equal(res.body.decode(), 'success')
@@ -307,8 +347,9 @@ class TestPrivateLink(OsfTestCase):
     @mock.patch('website.project.decorators.Auth.from_kwargs')
     def test_does_not_have_key(self, mock_from_kwargs):
         mock_from_kwargs.return_value = Auth(user=None)
-        res = self.app.get('/project/{0}'.format(self.project._primary_key),
-            {'key': None})
+        res = self.app.get(
+            '/project/{0}'.format(self.project._primary_key), {'key': None}
+        )
         assert_is_redirect(res)
 
 
@@ -322,7 +363,6 @@ def view_that_needs_contributor(**kwargs):
 
 
 class AuthAppTestCase(OsfTestCase):
-
     def setUp(self):
         self.ctx = decoratorapp.test_request_context()
         self.ctx.push()
@@ -332,52 +372,62 @@ class AuthAppTestCase(OsfTestCase):
 
 
 class TestMustBeContributorDecorator(AuthAppTestCase):
-
     def setUp(self):
         super(TestMustBeContributorDecorator, self).setUp()
         self.contrib = AuthUserFactory()
         self.non_contrib = AuthUserFactory()
         admin = UserFactory()
         self.public_project = ProjectFactory(is_public=True)
-        self.public_project.add_contributor(admin, auth=Auth(self.public_project.creator), permissions=permissions.ADMIN)
+        self.public_project.add_contributor(
+            admin, auth=Auth(self.public_project.creator), permissions=permissions.ADMIN
+        )
         self.private_project = ProjectFactory(is_public=False)
-        self.public_project.add_contributor(self.contrib, auth=Auth(self.public_project.creator))
-        self.private_project.add_contributor(self.contrib, auth=Auth(self.private_project.creator))
-        self.private_project.add_contributor(admin, auth=Auth(self.private_project.creator), permissions=permissions.ADMIN)
+        self.public_project.add_contributor(
+            self.contrib, auth=Auth(self.public_project.creator)
+        )
+        self.private_project.add_contributor(
+            self.contrib, auth=Auth(self.private_project.creator)
+        )
+        self.private_project.add_contributor(
+            admin,
+            auth=Auth(self.private_project.creator),
+            permissions=permissions.ADMIN,
+        )
         self.public_project.save()
         self.private_project.save()
 
     def test_must_be_contributor_when_user_is_contributor_and_public_project(self):
         result = view_that_needs_contributor(
-            pid=self.public_project._primary_key,
-            user=self.contrib)
+            pid=self.public_project._primary_key, user=self.contrib
+        )
         assert_equal(result, self.public_project)
 
     @unittest.skip('Decorator function bug fails this test, skip until bug is fixed')
-    def test_must_be_contributor_when_user_is_not_contributor_and_public_project_raise_error(self):
+    def test_must_be_contributor_when_user_is_not_contributor_and_public_project_raise_error(
+        self,
+    ):
         with assert_raises(HTTPError):
             view_that_needs_contributor(
-                pid=self.public_project._primary_key,
-                user=self.non_contrib
+                pid=self.public_project._primary_key, user=self.non_contrib
             )
 
     def test_must_be_contributor_when_user_is_contributor_and_private_project(self):
         result = view_that_needs_contributor(
-            pid=self.private_project._primary_key,
-            user=self.contrib)
+            pid=self.private_project._primary_key, user=self.contrib
+        )
         assert_equal(result, self.private_project)
 
-    def test_must_be_contributor_when_user_is_not_contributor_and_private_project_raise_error(self):
+    def test_must_be_contributor_when_user_is_not_contributor_and_private_project_raise_error(
+        self,
+    ):
         with assert_raises(HTTPError):
             view_that_needs_contributor(
-                pid=self.private_project._primary_key,
-                user=self.non_contrib
+                pid=self.private_project._primary_key, user=self.non_contrib
             )
 
     def test_must_be_contributor_no_user_and_public_project_redirect(self):
         res = view_that_needs_contributor(
-            pid=self.public_project._primary_key,
-            user=None,
+            pid=self.public_project._primary_key, user=None,
         )
         assert_is_redirect(res)
         # redirects to login url
@@ -387,8 +437,7 @@ class TestMustBeContributorDecorator(AuthAppTestCase):
 
     def test_must_be_contributor_no_user_and_private_project_redirect(self):
         res = view_that_needs_contributor(
-            pid=self.private_project._primary_key,
-            user=None,
+            pid=self.private_project._primary_key, user=None,
         )
         assert_is_redirect(res)
         # redirects to login url
@@ -400,9 +449,7 @@ class TestMustBeContributorDecorator(AuthAppTestCase):
         user = UserFactory()
         node = NodeFactory(parent=self.public_project, creator=user)
         res = view_that_needs_contributor(
-            pid=self.public_project._id,
-            nid=node._id,
-            user=self.public_project.creator,
+            pid=self.public_project._id, nid=node._id, user=self.public_project.creator,
         )
         assert_equal(res, node)
 
@@ -419,7 +466,9 @@ class TestMustBeContributorDecorator(AuthAppTestCase):
     def test_must_be_contributor_parent_write_public_project(self):
         user = UserFactory()
         node = NodeFactory(parent=self.public_project, creator=user)
-        self.public_project.set_permissions(self.public_project.creator, permissions.WRITE)
+        self.public_project.set_permissions(
+            self.public_project.creator, permissions.WRITE
+        )
         self.public_project.save()
         with assert_raises(HTTPError) as exc_info:
             view_that_needs_contributor(
@@ -432,7 +481,9 @@ class TestMustBeContributorDecorator(AuthAppTestCase):
     def test_must_be_contributor_parent_write_private_project(self):
         user = UserFactory()
         node = NodeFactory(parent=self.private_project, creator=user)
-        self.private_project.set_permissions(self.private_project.creator, permissions.WRITE)
+        self.private_project.set_permissions(
+            self.private_project.creator, permissions.WRITE
+        )
         self.private_project.save()
         with assert_raises(HTTPError) as exc_info:
             view_that_needs_contributor(
@@ -449,54 +500,56 @@ def view_that_needs_contributor_or_public(**kwargs):
 
 
 class TestMustBeContributorOrPublicDecorator(AuthAppTestCase):
-
     def setUp(self):
         super(TestMustBeContributorOrPublicDecorator, self).setUp()
         self.contrib = AuthUserFactory()
         self.non_contrib = AuthUserFactory()
         self.public_project = ProjectFactory(is_public=True)
         self.private_project = ProjectFactory(is_public=False)
-        self.public_project.add_contributor(self.contrib, auth=Auth(self.public_project.creator))
-        self.private_project.add_contributor(self.contrib, auth=Auth(self.private_project.creator))
+        self.public_project.add_contributor(
+            self.contrib, auth=Auth(self.public_project.creator)
+        )
+        self.private_project.add_contributor(
+            self.contrib, auth=Auth(self.private_project.creator)
+        )
         self.public_project.save()
         self.private_project.save()
 
     def test_must_be_contributor_when_user_is_contributor_and_public_project(self):
         result = view_that_needs_contributor_or_public(
-            pid=self.public_project._primary_key,
-            user=self.contrib)
+            pid=self.public_project._primary_key, user=self.contrib
+        )
         assert_equal(result, self.public_project)
 
     def test_must_be_contributor_when_user_is_not_contributor_and_public_project(self):
         result = view_that_needs_contributor_or_public(
-            pid=self.public_project._primary_key,
-            user=self.non_contrib)
+            pid=self.public_project._primary_key, user=self.non_contrib
+        )
         assert_equal(result, self.public_project)
 
     def test_must_be_contributor_when_user_is_contributor_and_private_project(self):
         result = view_that_needs_contributor_or_public(
-            pid=self.private_project._primary_key,
-            user=self.contrib)
+            pid=self.private_project._primary_key, user=self.contrib
+        )
         assert_equal(result, self.private_project)
 
-    def test_must_be_contributor_when_user_is_not_contributor_and_private_project_raise_error(self):
+    def test_must_be_contributor_when_user_is_not_contributor_and_private_project_raise_error(
+        self,
+    ):
         with assert_raises(HTTPError):
             view_that_needs_contributor_or_public(
-                pid=self.private_project._primary_key,
-                user=self.non_contrib
+                pid=self.private_project._primary_key, user=self.non_contrib
             )
 
     def test_must_be_contributor_no_user_and_public_project(self):
         res = view_that_needs_contributor_or_public(
-            pid=self.public_project._primary_key,
-            user=None,
+            pid=self.public_project._primary_key, user=None,
         )
         assert_equal(res, self.public_project)
 
     def test_must_be_contributor_no_user_and_private_project(self):
         res = view_that_needs_contributor_or_public(
-            pid=self.private_project._primary_key,
-            user=None,
+            pid=self.private_project._primary_key, user=None,
         )
         assert_is_redirect(res)
         # redirects to login url
@@ -508,9 +561,7 @@ class TestMustBeContributorOrPublicDecorator(AuthAppTestCase):
         user = UserFactory()
         node = NodeFactory(parent=self.public_project, creator=user)
         res = view_that_needs_contributor_or_public(
-            pid=self.public_project._id,
-            nid=node._id,
-            user=self.public_project.creator,
+            pid=self.public_project._id, nid=node._id, user=self.public_project.creator,
         )
         assert_equal(res, node)
 
@@ -528,13 +579,15 @@ class TestMustBeContributorOrPublicDecorator(AuthAppTestCase):
         user = UserFactory()
         node = NodeFactory(parent=self.public_project, creator=user)
         contrib = UserFactory()
-        self.public_project.add_contributor(contrib, auth=Auth(self.public_project.creator), permissions=permissions.WRITE)
+        self.public_project.add_contributor(
+            contrib,
+            auth=Auth(self.public_project.creator),
+            permissions=permissions.WRITE,
+        )
         self.public_project.save()
         with assert_raises(HTTPError) as exc_info:
             view_that_needs_contributor_or_public(
-                pid=self.public_project._id,
-                nid=node._id,
-                user=contrib,
+                pid=self.public_project._id, nid=node._id, user=contrib,
             )
         assert_equal(exc_info.exception.code, 403)
 
@@ -542,13 +595,15 @@ class TestMustBeContributorOrPublicDecorator(AuthAppTestCase):
         user = UserFactory()
         node = NodeFactory(parent=self.private_project, creator=user)
         contrib = UserFactory()
-        self.private_project.add_contributor(contrib, auth=Auth(self.private_project.creator), permissions=permissions.WRITE)
+        self.private_project.add_contributor(
+            contrib,
+            auth=Auth(self.private_project.creator),
+            permissions=permissions.WRITE,
+        )
         self.private_project.save()
         with assert_raises(HTTPError) as exc_info:
             view_that_needs_contributor_or_public(
-                pid=self.private_project._id,
-                nid=node._id,
-                user=contrib,
+                pid=self.private_project._id, nid=node._id, user=contrib,
             )
         assert_equal(exc_info.exception.code, 403)
 
@@ -565,11 +620,21 @@ class TestMustBeContributorOrPublicButNotAnonymizedDecorator(AuthAppTestCase):
         self.non_contrib = AuthUserFactory()
         admin = UserFactory()
         self.public_project = ProjectFactory(is_public=True)
-        self.public_project.add_contributor(admin, auth=Auth(self.public_project.creator), permissions=permissions.ADMIN)
+        self.public_project.add_contributor(
+            admin, auth=Auth(self.public_project.creator), permissions=permissions.ADMIN
+        )
         self.private_project = ProjectFactory(is_public=False)
-        self.private_project.add_contributor(admin, auth=Auth(self.private_project.creator), permissions=permissions.ADMIN)
-        self.public_project.add_contributor(self.contrib, auth=Auth(self.public_project.creator))
-        self.private_project.add_contributor(self.contrib, auth=Auth(self.private_project.creator))
+        self.private_project.add_contributor(
+            admin,
+            auth=Auth(self.private_project.creator),
+            permissions=permissions.ADMIN,
+        )
+        self.public_project.add_contributor(
+            self.contrib, auth=Auth(self.public_project.creator)
+        )
+        self.private_project.add_contributor(
+            self.contrib, auth=Auth(self.private_project.creator)
+        )
         self.public_project.save()
         self.private_project.save()
         self.anonymized_link_to_public_project = PrivateLinkFactory(anonymous=True)
@@ -584,44 +649,44 @@ class TestMustBeContributorOrPublicButNotAnonymizedDecorator(AuthAppTestCase):
         @must_be_contributor_or_public_but_not_anonymized
         def project_get(**kwargs):
             return 'success', 200
+
         self.app = WebtestApp(self.flaskapp)
 
     def test_must_be_contributor_when_user_is_contributor_and_public_project(self):
         result = view_that_needs_contributor_or_public_but_not_anonymized(
-            pid=self.public_project._primary_key,
-            user=self.contrib)
+            pid=self.public_project._primary_key, user=self.contrib
+        )
         assert_equal(result, self.public_project)
 
     def test_must_be_contributor_when_user_is_not_contributor_and_public_project(self):
         result = view_that_needs_contributor_or_public_but_not_anonymized(
-            pid=self.public_project._primary_key,
-            user=self.non_contrib)
+            pid=self.public_project._primary_key, user=self.non_contrib
+        )
         assert_equal(result, self.public_project)
 
     def test_must_be_contributor_when_user_is_contributor_and_private_project(self):
         result = view_that_needs_contributor_or_public_but_not_anonymized(
-            pid=self.private_project._primary_key,
-            user=self.contrib)
+            pid=self.private_project._primary_key, user=self.contrib
+        )
         assert_equal(result, self.private_project)
 
-    def test_must_be_contributor_when_user_is_not_contributor_and_private_project_raise_error(self):
+    def test_must_be_contributor_when_user_is_not_contributor_and_private_project_raise_error(
+        self,
+    ):
         with assert_raises(HTTPError):
             view_that_needs_contributor_or_public_but_not_anonymized(
-                pid=self.private_project._primary_key,
-                user=self.non_contrib
+                pid=self.private_project._primary_key, user=self.non_contrib
             )
 
     def test_must_be_contributor_no_user_and_public_project(self):
         res = view_that_needs_contributor_or_public_but_not_anonymized(
-            pid=self.public_project._primary_key,
-            user=None,
+            pid=self.public_project._primary_key, user=None,
         )
         assert_equal(res, self.public_project)
 
     def test_must_be_contributor_no_user_and_private_project(self):
         res = view_that_needs_contributor_or_public_but_not_anonymized(
-            pid=self.private_project._primary_key,
-            user=None,
+            pid=self.private_project._primary_key, user=None,
         )
         assert_is_redirect(res)
         # redirects to login url
@@ -633,9 +698,7 @@ class TestMustBeContributorOrPublicButNotAnonymizedDecorator(AuthAppTestCase):
         user = UserFactory()
         node = NodeFactory(parent=self.public_project, creator=user)
         res = view_that_needs_contributor_or_public_but_not_anonymized(
-            pid=self.public_project._id,
-            nid=node._id,
-            user=self.public_project.creator,
+            pid=self.public_project._id, nid=node._id, user=self.public_project.creator,
         )
         assert_equal(res, node)
 
@@ -652,7 +715,9 @@ class TestMustBeContributorOrPublicButNotAnonymizedDecorator(AuthAppTestCase):
     def test_must_be_contributor_parent_write_public_project(self):
         user = UserFactory()
         node = NodeFactory(parent=self.public_project, creator=user)
-        self.public_project.set_permissions(self.public_project.creator, permissions.WRITE)
+        self.public_project.set_permissions(
+            self.public_project.creator, permissions.WRITE
+        )
         self.public_project.save()
         with assert_raises(HTTPError) as exc_info:
             view_that_needs_contributor_or_public_but_not_anonymized(
@@ -665,7 +730,9 @@ class TestMustBeContributorOrPublicButNotAnonymizedDecorator(AuthAppTestCase):
     def test_must_be_contributor_parent_write_private_project(self):
         user = UserFactory()
         node = NodeFactory(parent=self.private_project, creator=user)
-        self.private_project.set_permissions(self.private_project.creator, permissions.WRITE)
+        self.private_project.set_permissions(
+            self.private_project.creator, permissions.WRITE
+        )
         self.private_project.save()
         with assert_raises(HTTPError) as exc_info:
             view_that_needs_contributor_or_public_but_not_anonymized(
@@ -678,18 +745,25 @@ class TestMustBeContributorOrPublicButNotAnonymizedDecorator(AuthAppTestCase):
     @mock.patch('website.project.decorators.Auth.from_kwargs')
     def test_decorator_does_allow_anonymous_link_public_project(self, mock_from_kwargs):
         mock_from_kwargs.return_value = Auth(user=None)
-        res = self.app.get('/project/{0}'.format(self.public_project._primary_key),
-            {'view_only': self.anonymized_link_to_public_project.key})
+        res = self.app.get(
+            '/project/{0}'.format(self.public_project._primary_key),
+            {'view_only': self.anonymized_link_to_public_project.key},
+        )
         res = res.follow()
         assert_equal(res.status_code, 200)
 
     @mock.patch('website.project.decorators.Auth.from_kwargs')
-    def test_decorator_does_not_allow_anonymous_link_private_project(self, mock_from_kwargs):
+    def test_decorator_does_not_allow_anonymous_link_private_project(
+        self, mock_from_kwargs
+    ):
         mock_from_kwargs.return_value = Auth(user=None)
-        res = self.app.get('/project/{0}'.format(self.private_project._primary_key),
-                           {'view_only': self.anonymized_link_to_private_project.key})
+        res = self.app.get(
+            '/project/{0}'.format(self.private_project._primary_key),
+            {'view_only': self.anonymized_link_to_private_project.key},
+        )
         res = res.follow(expect_errors=True)
         assert_equal(res.status_code, 500)
+
 
 @must_be_logged_in
 def protected(**kwargs):
@@ -702,7 +776,6 @@ def thriller(**kwargs):
 
 
 class TestPermissionDecorators(AuthAppTestCase):
-
     @mock.patch('framework.auth.decorators.Auth.from_kwargs')
     def test_must_be_logged_in_decorator_with_user(self, mock_from_kwargs):
         user = UserFactory()
@@ -722,8 +795,9 @@ class TestPermissionDecorators(AuthAppTestCase):
     def test_must_have_permission_true(self, mock_from_kwargs, mock_to_nodes):
         project = ProjectFactory()
         user = UserFactory()
-        project.add_contributor(user, permissions=permissions.ADMIN,
-                                auth=Auth(project.creator))
+        project.add_contributor(
+            user, permissions=permissions.ADMIN, auth=Auth(project.creator)
+        )
         mock_from_kwargs.return_value = Auth(user=user)
         mock_to_nodes.return_value = (None, project)
         thriller(node=project)
@@ -755,7 +829,6 @@ def needs_addon_view(**kwargs):
 
 
 class TestMustHaveAddonDecorator(AuthAppTestCase):
-
     def setUp(self):
         super(TestMustHaveAddonDecorator, self).setUp()
         self.project = ProjectFactory()
@@ -794,7 +867,6 @@ class TestMustHaveAddonDecorator(AuthAppTestCase):
 
 
 class TestMustBeAddonAuthorizerDecorator(AuthAppTestCase):
-
     def setUp(self):
         super(TestMustBeAddonAuthorizerDecorator, self).setUp()
         self.project = ProjectFactory()

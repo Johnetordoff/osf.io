@@ -31,7 +31,8 @@ class BrandList(PermissionRequiredMixin, ListView):
         query_set = kwargs.pop('object_list', self.object_list)
         page_size = self.get_paginate_by(query_set)
         paginator, page, query_set, is_paginated = self.paginate_queryset(
-            query_set, page_size)
+            query_set, page_size
+        )
         kwargs.setdefault('brands', query_set)
         kwargs.setdefault('page', page)
         return super(BrandList, self).get_context_data(**kwargs)
@@ -55,6 +56,7 @@ class BrandDisplay(PermissionRequiredMixin, DetailView):
 
         return kwargs
 
+
 class BrandChangeForm(PermissionRequiredMixin, UpdateView):
     permission_required = 'osf.modify_brand'
     raise_exception = True
@@ -68,6 +70,7 @@ class BrandChangeForm(PermissionRequiredMixin, UpdateView):
     def get_success_url(self, *args, **kwargs):
         brand_id = self.kwargs.get('brand_id')
         return reverse_lazy('brands:detail', kwargs={'brand_id': brand_id})
+
 
 class BrandDetail(PermissionRequiredMixin, View):
     permission_required = 'osf.view_brand'
@@ -83,11 +86,17 @@ class BrandDetail(PermissionRequiredMixin, View):
         secondary_color = request.POST.get('secondary_color')
 
         if not is_a11y(primary_color):
-            messages.warning(request, """The selected primary color is not a11y compliant.
-                For more information, visit https://color.a11y.com/""")
+            messages.warning(
+                request,
+                """The selected primary color is not a11y compliant.
+                For more information, visit https://color.a11y.com/""",
+            )
         if not is_a11y(secondary_color):
-            messages.warning(request, """The selected secondary color is not a11y compliant.
-                For more information, visit https://color.a11y.com/""")
+            messages.warning(
+                request,
+                """The selected secondary color is not a11y compliant.
+                For more information, visit https://color.a11y.com/""",
+            )
         return view(request, *args, **kwargs)
 
 

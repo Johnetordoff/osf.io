@@ -6,6 +6,7 @@ from django.db import migrations
 from osf import features
 from osf.utils.migrations import AddWaffleFlags, DeleteWaffleFlags
 
+
 class Migration(migrations.Migration):
 
     dependencies = [

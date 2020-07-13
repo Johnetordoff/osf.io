@@ -7,13 +7,14 @@ import django_extensions.db.fields
 import osf.utils.fields
 from website import settings
 
+
 def populate_blacklisted_domains(state, *args, **kwargs):
     BlacklistedEmailDomain = state.get_model('osf', 'BlacklistedEmailDomain')
     blacklisted_domains = getattr(settings, 'BLACKLISTED_DOMAINS')
-    BlacklistedEmailDomain.objects.bulk_create([
-        BlacklistedEmailDomain(domain=domain)
-        for domain in blacklisted_domains
-    ])
+    BlacklistedEmailDomain.objects.bulk_create(
+        [BlacklistedEmailDomain(domain=domain) for domain in blacklisted_domains]
+    )
+
 
 def remove_blacklisted_domains(state, *args, **kwargs):
     BlacklistedEmailDomain = state.get_model('osf', 'BlacklistedEmailDomain')
@@ -30,15 +31,35 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='BlacklistedEmailDomain',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
-                ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
-                ('domain', osf.utils.fields.LowercaseCharField(db_index=True, max_length=255, unique=True)),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'created',
+                    django_extensions.db.fields.CreationDateTimeField(
+                        auto_now_add=True, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    django_extensions.db.fields.ModificationDateTimeField(
+                        auto_now=True, verbose_name='modified'
+                    ),
+                ),
+                (
+                    'domain',
+                    osf.utils.fields.LowercaseCharField(
+                        db_index=True, max_length=255, unique=True
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={'abstract': False,},
         ),
-        migrations.RunPython(populate_blacklisted_domains, remove_blacklisted_domains)
-
+        migrations.RunPython(populate_blacklisted_domains, remove_blacklisted_domains),
     ]

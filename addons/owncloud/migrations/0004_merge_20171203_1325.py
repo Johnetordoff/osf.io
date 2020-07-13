@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('addons_owncloud', '0003_auto_20170713_1125'),
     ]
 
-    operations = [
-    ]
+    operations = []

@@ -36,11 +36,13 @@ from elasticsearch_metrics.registry import registry as metrics_registry
 
 
 def header(text):
-    return colorize(text, fg='green', opts=('bold', ))
+    return colorize(text, fg='green', opts=('bold',))
+
 
 def format_imported_objects(models, metrics, osf, transaction, other, user):
     def format_dict(d):
         return ', '.join(sorted(d.keys()))
+
     ret = """
 {models_header}
 {models}
@@ -69,8 +71,7 @@ def format_imported_objects(models, metrics, osf, transaction, other, user):
     )
     if user:
         ret += '\n\n{user_header}\n{user}'.format(
-            user_header=header('User Imports:'),
-            user=format_dict(user)
+            user_header=header('User Imports:'), user=format_dict(user)
         )
     return ret
 
@@ -124,7 +125,7 @@ All changes will persist. Transactions must be handled manually."""
         warning = colorize(no_transaction_warning, fg='red')
     return template.format(
         logo=colorize(logo, fg='cyan'),
-        greeting=colorize(greeting, opts=('bold', )),
+        greeting=colorize(greeting, opts=('bold',)),
         imported_objects=imported_objects,
         warning=warning,
     )
@@ -134,9 +135,11 @@ class Command(shell_plus.Command):
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
         parser.add_argument(
-            '--no-transaction', action='store_false', dest='transaction',
+            '--no-transaction',
+            action='store_false',
+            dest='transaction',
             help="Don't run session in transaction. Transactions must be "
-                 'started manually with start_transaction()'
+            'started manually with start_transaction()',
         )
 
     def get_osf_imports(self):
@@ -144,6 +147,7 @@ class Command(shell_plus.Command):
         from osf.management.utils import print_sql
         from website import settings as website_settings
         from framework.auth import Auth, get_user
+
         ret = {
             'print_sql': print_sql,
             'Auth': Auth,
@@ -160,10 +164,7 @@ class Command(shell_plus.Command):
         return ret
 
     def get_metrics(self):
-        return {
-            each.__name__: each
-            for each in metrics_registry.get_metrics()
-        }
+        return {each.__name__: each for each in metrics_registry.get_metrics()}
 
     def get_grouped_imports(self, options):
         """Return a dictionary of grouped import of the form:

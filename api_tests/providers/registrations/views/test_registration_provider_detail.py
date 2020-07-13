@@ -17,17 +17,17 @@ class TestRegistrationProviderExists(ProviderDetailViewTestBaseMixin):
 
     @pytest.fixture()
     def provider_url(self, provider):
-        return '/{}providers/registrations/{}/'.format(
-            API_BASE, provider._id)
+        return '/{}providers/registrations/{}/'.format(API_BASE, provider._id)
 
     @pytest.fixture()
     def provider_url_two(self, provider_two):
-        return '/{}providers/registrations/{}/'.format(
-            API_BASE, provider_two._id)
+        return '/{}providers/registrations/{}/'.format(API_BASE, provider_two._id)
 
     @pytest.fixture()
     def provider_list_url(self, provider):
-        return '/{}providers/registrations/{}/submissions/'.format(API_BASE, provider._id)
+        return '/{}providers/registrations/{}/submissions/'.format(
+            API_BASE, provider._id
+        )
 
     @pytest.fixture()
     def provider_list_url_fake(self, fake_url):
@@ -47,9 +47,12 @@ class TestRegistrationProviderExists(ProviderDetailViewTestBaseMixin):
     @pytest.fixture()
     def provider_url_w_brand(self, provider_with_brand):
         return '/{}providers/registrations/{}/'.format(
-            API_BASE, provider_with_brand._id)
+            API_BASE, provider_with_brand._id
+        )
 
-    def test_registration_provider_with_brand(self, app, provider_with_brand, brand, provider_url_w_brand):
+    def test_registration_provider_with_brand(
+        self, app, provider_with_brand, brand, provider_url_w_brand
+    ):
         # Ensures brand data is included for registration providers
         res = app.get(provider_url_w_brand)
 

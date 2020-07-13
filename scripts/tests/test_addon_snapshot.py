@@ -37,8 +37,7 @@ class TestAddonCount(OsfTestCase):
         self.node_addon.save()
 
         self.user_settings.grant_oauth_access(
-            node=self.node,
-            external_account=self.external_account,
+            node=self.node, external_account=self.external_account,
         )
 
     def test_run_for_all_addon(self):
@@ -71,7 +70,9 @@ class TestAddonCount(OsfTestCase):
     def test_one_user_with_multiple_addons(self):
         results = AddonSnapshot().get_events()
         github_res = [res for res in results if res['provider']['name'] == 'github'][0]
-        googledrive_res = [res for res in results if res['provider']['name'] == 'googledrive'][0]
+        googledrive_res = [
+            res for res in results if res['provider']['name'] == 'googledrive'
+        ][0]
         assert_equal(github_res['users']['enabled'], 1)
         assert_equal(googledrive_res['users']['enabled'], 0)
 
@@ -82,7 +83,9 @@ class TestAddonCount(OsfTestCase):
         self.user.save()
         results = AddonSnapshot().get_events()
         github_res = [res for res in results if res['provider']['name'] == 'github'][0]
-        googledrive_res = [res for res in results if res['provider']['name'] == 'googledrive'][0]
+        googledrive_res = [
+            res for res in results if res['provider']['name'] == 'googledrive'
+        ][0]
         assert_equal(github_res['users']['enabled'], 1)
         assert_equal(googledrive_res['users']['enabled'], 1)
 
@@ -122,7 +125,9 @@ class TestAddonCount(OsfTestCase):
     def test_one_node_with_multiple_addons(self):
         results = AddonSnapshot().get_events()
         github_res = [res for res in results if res['provider']['name'] == 'github'][0]
-        googledrive_res = [res for res in results if res['provider']['name'] == 'googledrive'][0]
+        googledrive_res = [
+            res for res in results if res['provider']['name'] == 'googledrive'
+        ][0]
         assert_equal(github_res['nodes']['total'], 1)
         assert_equal(googledrive_res['nodes']['total'], 0)
 
@@ -140,7 +145,9 @@ class TestAddonCount(OsfTestCase):
         node_addon.save()
         results = AddonSnapshot().get_events()
         github_res = [res for res in results if res['provider']['name'] == 'github'][0]
-        googledrive_res = [res for res in results if res['provider']['name'] == 'googledrive'][0]
+        googledrive_res = [
+            res for res in results if res['provider']['name'] == 'googledrive'
+        ][0]
         assert_equal(github_res['nodes']['total'], 1)
         assert_equal(googledrive_res['nodes']['total'], 1)
 
@@ -195,8 +202,12 @@ class TestAddonCount(OsfTestCase):
     def test_all_users_have_wiki_osfstorage_enabled(self):
         all_user_count = OSFUser.objects.all().count()
         results = AddonSnapshot().get_events()
-        osfstorage_res = [res for res in results if res['provider']['name'] == 'osfstorage'][0]
-        wiki_res = [res for res in results if res['provider']['name'] == 'osfstorage'][0]
+        osfstorage_res = [
+            res for res in results if res['provider']['name'] == 'osfstorage'
+        ][0]
+        wiki_res = [res for res in results if res['provider']['name'] == 'osfstorage'][
+            0
+        ]
 
         assert_equal(osfstorage_res['users']['enabled'], all_user_count)
         assert_equal(wiki_res['users']['enabled'], all_user_count)

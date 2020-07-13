@@ -177,11 +177,13 @@ swap_old_auth_group_table_with_new_auth_group_table = """
     ALTER TABLE osf_preprintgroupobjectpermission ADD CONSTRAINT unique_preprint_group_object_permission UNIQUE ("group_id", "permission_id", "content_object_id");
 """
 
+
 def get_constraint_name():
     with connection.cursor() as cursor:
         cursor.execute(select_auth_group_permissions_auth_group_constraint)
         constraint_name = cursor.fetchone()[0]
         return constraint_name
+
 
 # Reverse migration
 def finalize_reverse_node_guardian_migration():
@@ -203,7 +205,9 @@ def finalize_reverse_node_guardian_migration():
         # Treating some of the tables that point to auth_group differently
         for table_name in related_auth_group_tables:
             if table_name in group_id_constraints:
-                cursor.execute(create_group_id_column_with_constraint.format(table=table_name))
+                cursor.execute(
+                    create_group_id_column_with_constraint.format(table=table_name)
+                )
             else:
                 cursor.execute(create_group_id_column.format(table=table_name))
 
@@ -226,16 +230,29 @@ def finalize_reverse_node_guardian_migration():
 
 def reverse_guardian_migration(state, schema):
     migrations = [
-        {'sql': reset_contributor_perms, 'description': 'Resetting contributor permissions.'},
-        {'sql': repopulate_read_perms, 'description': 'Repopulating read columns on Contributor table'},
-        {'sql': repopulate_write_perms, 'description': 'Repopulating write columns on Contributor table.'},
-        {'sql': repopulate_admin_perms, 'description': 'Repopulating admin columns on Contributor table.'},
+        {
+            'sql': reset_contributor_perms,
+            'description': 'Resetting contributor permissions.',
+        },
+        {
+            'sql': repopulate_read_perms,
+            'description': 'Repopulating read columns on Contributor table',
+        },
+        {
+            'sql': repopulate_write_perms,
+            'description': 'Repopulating write columns on Contributor table.',
+        },
+        {
+            'sql': repopulate_admin_perms,
+            'description': 'Repopulating admin columns on Contributor table.',
+        },
     ]
 
     batch_node_migrations(state, migrations)
     logger.info('Finished restoring Contributor permissions.')
     finalize_reverse_node_guardian_migration()
     return
+
 
 # Forward migration - for each node, create a read, write, and admin Django group
 add_node_read_write_admin_auth_groups = """
@@ -327,13 +344,29 @@ add_admin_contribs_to_admin_groups = """
     AND N.id <= {end};
     """
 
+
 def migrate_nodes_to_guardian(state, schema):
     migrations = [
-        {'sql': add_node_read_write_admin_auth_groups, 'description': 'Creating node admin/write/read django groups:'},
-        {'sql': add_permissions_to_node_groups, 'description': 'Adding permissions to node django groups:'},
-        {'sql': add_read_contribs_to_read_groups, 'description': 'Adding node read contribs to read django groups:'},
-        {'sql': add_write_contribs_to_write_groups, 'description': 'Adding node write contribs to write django groups:'},
-        {'sql': add_admin_contribs_to_admin_groups, 'description': 'Adding node admin contribs to admin django groups:'}
+        {
+            'sql': add_node_read_write_admin_auth_groups,
+            'description': 'Creating node admin/write/read django groups:',
+        },
+        {
+            'sql': add_permissions_to_node_groups,
+            'description': 'Adding permissions to node django groups:',
+        },
+        {
+            'sql': add_read_contribs_to_read_groups,
+            'description': 'Adding node read contribs to read django groups:',
+        },
+        {
+            'sql': add_write_contribs_to_write_groups,
+            'description': 'Adding node write contribs to write django groups:',
+        },
+        {
+            'sql': add_admin_contribs_to_admin_groups,
+            'description': 'Adding node admin contribs to admin django groups:',
+        },
     ]
 
     batch_node_migrations(state, migrations)

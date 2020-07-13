@@ -16,10 +16,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='abstractprovider',
             name='_id',
-            field=models.CharField(db_index=True, default=osf.models.base.generate_object_id, max_length=24),
+            field=models.CharField(
+                db_index=True, default=osf.models.base.generate_object_id, max_length=24
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='abstractprovider',
-            unique_together=set([('_id', 'type')]),
+            name='abstractprovider', unique_together=set([('_id', 'type')]),
         ),
     ]

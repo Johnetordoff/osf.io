@@ -22,12 +22,12 @@ def make_user(username, fullname):
 
 
 def make_payload(
-        institution,
-        username,
-        fullname='Fake User',
-        given_name='',
-        family_name='',
-        department='',
+    institution,
+    username,
+    fullname='Fake User',
+    given_name='',
+    family_name='',
+    department='',
 ):
 
     data = {
@@ -40,27 +40,23 @@ def make_payload(
                 'fullname': fullname,
                 'suffix': '',
                 'username': username,
-                'department': department
-            }
+                'department': department,
+            },
         }
     }
 
     return jwe.encrypt(
         jwt.encode(
-            {
-                'sub': username,
-                'data': json.dumps(data)
-            },
+            {'sub': username, 'data': json.dumps(data)},
             settings.JWT_SECRET,
-            algorithm='HS256'
+            algorithm='HS256',
         ),
-        settings.JWE_SECRET
+        settings.JWE_SECRET,
     )
 
 
 @pytest.mark.django_db
 class TestInstitutionAuth:
-
     @pytest.fixture()
     def institution(self):
         return InstitutionFactory()
@@ -89,7 +85,9 @@ class TestInstitutionAuth:
         assert user.accepted_terms_of_service is not None
         assert institution in user.affiliated_institutions.all()
 
-    def test_existing_user_found_but_not_affiliated(self, app, institution, url_auth_institution):
+    def test_existing_user_found_but_not_affiliated(
+        self, app, institution, url_auth_institution
+    ):
 
         username = 'user_not_affiliated@osf.edu'
         user = make_user(username, 'Foo Bar')
@@ -126,14 +124,16 @@ class TestInstitutionAuth:
         res = app.post(
             url_auth_institution,
             make_payload(institution, username, fullname=''),
-            expect_errors=True
+            expect_errors=True,
         )
         assert res.status_code == 403
 
         user = OSFUser.objects.filter(username=username).first()
         assert not user
 
-    def test_new_user_names_guessed_if_not_provided(self, app, institution, url_auth_institution):
+    def test_new_user_names_guessed_if_not_provided(
+        self, app, institution, url_auth_institution
+    ):
 
         username = 'user_created_with_fullname_only@osf.edu'
         res = app.post(url_auth_institution, make_payload(institution, username))
@@ -146,12 +146,14 @@ class TestInstitutionAuth:
         assert user.given_name == 'Fake'
         assert user.family_name == 'User'
 
-    def test_new_user_names_used_when_provided(self, app, institution, url_auth_institution):
+    def test_new_user_names_used_when_provided(
+        self, app, institution, url_auth_institution
+    ):
 
         username = 'user_created_with_names@osf.edu'
         res = app.post(
             url_auth_institution,
-            make_payload(institution, username, given_name='Foo', family_name='Bar')
+            make_payload(institution, username, given_name='Foo', family_name='Bar'),
         )
         assert res.status_code == 204
 
@@ -179,7 +181,7 @@ class TestInstitutionAuth:
                     given_name='Fake',
                     fullname='Fake User',
                     department='Fake Department',
-                )
+                ),
             )
         assert res.status_code == 204
         assert not mock_signals.signals_sent()
@@ -202,9 +204,7 @@ class TestInstitutionAuth:
         username, fullname = 'user_nclaimed@user.edu', 'Foo Bar'
         project = ProjectFactory()
         user = project.add_unregistered_contributor(
-            fullname=fullname,
-            email=username,
-            auth=Auth(project.creator)
+            fullname=fullname, email=username, auth=Auth(project.creator)
         )
         user.save()
         # Unclaimed user is given an unusable password when being added as a contributor
@@ -220,7 +220,7 @@ class TestInstitutionAuth:
                     given_name='Fake',
                     fullname='Fake User',
                     department='Fake Department',
-                )
+                ),
             )
         assert res.status_code == 204
         assert mock_signals.signals_sent() == set([signals.user_confirmed])
@@ -258,8 +258,8 @@ class TestInstitutionAuth:
                     username,
                     family_name='User',
                     given_name='Fake',
-                    fullname='Fake User'
-                )
+                    fullname='Fake User',
+                ),
             )
         assert res.status_code == 204
         assert mock_signals.signals_sent() == set([signals.user_confirmed])
@@ -300,9 +300,9 @@ class TestInstitutionAuth:
                     username,
                     family_name='User',
                     given_name='Fake',
-                    fullname='Fake User'
+                    fullname='Fake User',
                 ),
-                expect_errors=True
+                expect_errors=True,
             )
         assert res.status_code == 403
         assert not mock_signals.signals_sent()
@@ -320,7 +320,11 @@ class TestInstitutionAuth:
 
         # Create an unconfirmed user with pending external identity
         username, fullname = 'user_external_unconfirmed@osf.edu', 'Foo Bar'
-        external_id_provider, external_id, status = 'ORCID', '1234-1234-1234-1234', 'CREATE'
+        external_id_provider, external_id, status = (
+            'ORCID',
+            '1234-1234-1234-1234',
+            'CREATE',
+        )
         external_identity = {external_id_provider: {external_id: status}}
         accepted_terms_of_service = timezone.now()
         user = OSFUser.create_unconfirmed(
@@ -329,7 +333,7 @@ class TestInstitutionAuth:
             fullname=fullname,
             external_identity=external_identity,
             campaign=None,
-            accepted_terms_of_service=accepted_terms_of_service
+            accepted_terms_of_service=accepted_terms_of_service,
         )
         user.save()
         assert not user.has_usable_password()
@@ -340,7 +344,7 @@ class TestInstitutionAuth:
             user,
             user.username,
             external_id_provider=external_id_provider,
-            external_id=external_id
+            external_id=external_id,
         )
         user.save()
         assert user.email_verifications
@@ -357,7 +361,7 @@ class TestInstitutionAuth:
                     fullname='Fake User',
                     department='Fake User',
                 ),
-                expect_errors=True
+                expect_errors=True,
             )
         assert res.status_code == 403
         assert not mock_signals.signals_sent()

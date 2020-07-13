@@ -5,13 +5,16 @@ import mock
 from tests.base import OsfTestCase
 from osf_tests.factories import ProjectFactory, RegistrationFactory
 
-from website.settings import POPULAR_LINKS_NODE, POPULAR_LINKS_REGISTRATIONS, NEW_AND_NOTEWORTHY_LINKS_NODE
+from website.settings import (
+    POPULAR_LINKS_NODE,
+    POPULAR_LINKS_REGISTRATIONS,
+    NEW_AND_NOTEWORTHY_LINKS_NODE,
+)
 
 from scripts import populate_popular_projects_and_registrations as script
 
 
 class TestPopulateNewAndNoteworthy(OsfTestCase):
-
     def setUp(self):
         super(TestPopulateNewAndNoteworthy, self).setUp()
         self.pop1 = ProjectFactory(is_public=True)
@@ -43,44 +46,23 @@ class TestPopulateNewAndNoteworthy(OsfTestCase):
         popular_registrations = [self.popreg1, self.popreg2]
 
         node_pageviews = [
-            {
-                'result': 5,
-                'node.id': self.pop1._id
-            },
-            {
-                'result': 5,
-                'node.id': self.pop2._id
-            },
-            {
-                'result': 5,
-                'node.id': self.popreg1._id
-            },
-            {
-                'result': 5,
-                'node.id': self.popreg2._id
-            }
+            {'result': 5, 'node.id': self.pop1._id},
+            {'result': 5, 'node.id': self.pop2._id},
+            {'result': 5, 'node.id': self.popreg1._id},
+            {'result': 5, 'node.id': self.popreg2._id},
         ]
 
         node_visits = [
-            {
-                'result': 2,
-                'node.id': self.pop1._id
-            },
-            {
-                'result': 2,
-                'node.id': self.pop2._id
-            },
-            {
-                'result': 2,
-                'node.id': self.popreg1._id
-            },
-            {
-                'result': 2,
-                'node.id': self.popreg2._id
-            }
+            {'result': 2, 'node.id': self.pop1._id},
+            {'result': 2, 'node.id': self.pop2._id},
+            {'result': 2, 'node.id': self.popreg1._id},
+            {'result': 2, 'node.id': self.popreg2._id},
         ]
 
-        mock_client.return_value = {'node_pageviews': node_pageviews, 'node_visits': node_visits}
+        mock_client.return_value = {
+            'node_pageviews': node_pageviews,
+            'node_visits': node_visits,
+        }
 
         assert_equal(len(self.popular_links_node.nodes), 0)
         assert_equal(len(self.popular_links_registrations.nodes), 0)

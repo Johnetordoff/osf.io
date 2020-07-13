@@ -1,8 +1,4 @@
-from admin.osf_groups.views import (
-    OSFGroupsView,
-    OSFGroupsListView,
-    OSFGroupsFormView
-)
+from admin.osf_groups.views import OSFGroupsView, OSFGroupsListView, OSFGroupsFormView
 from admin_tests.utilities import setup_log_view
 from nose import tools as nt
 from django.test import RequestFactory
@@ -12,8 +8,8 @@ from osf_tests.factories import UserFactory, ProjectFactory, OSFGroupFactory
 from osf.utils.permissions import WRITE
 from admin.osf_groups.serializers import serialize_node_for_groups
 
-class TestOSFGroupsView(AdminTestCase):
 
+class TestOSFGroupsView(AdminTestCase):
     def setUp(self):
         super(TestOSFGroupsView, self).setUp()
         self.user = UserFactory()
@@ -39,13 +35,14 @@ class TestOSFGroupsView(AdminTestCase):
         nt.assert_equal(len(group['managers']), 1)
         nt.assert_equal(group['managers'][0]['name'], self.user.fullname)
         nt.assert_equal(group['managers'][0]['id'], self.user._id)
-        nt.assert_equal([serialize_node_for_groups(self.project, self.group)], group['nodes'])
+        nt.assert_equal(
+            [serialize_node_for_groups(self.project, self.group)], group['nodes']
+        )
         nt.assert_equal(group['nodes'][0]['title'], self.project.title)
         nt.assert_equal(group['nodes'][0]['permission'], WRITE)
 
 
 class TestOSFGroupsListView(AdminTestCase):
-
     def setUp(self):
         super(TestOSFGroupsListView, self).setUp()
         self.user = UserFactory()
@@ -79,7 +76,6 @@ class TestOSFGroupsListView(AdminTestCase):
 
 
 class TestOSFGroupsFormView(AdminTestCase):
-
     def setUp(self):
         super(TestOSFGroupsFormView, self).setUp()
         self.user = UserFactory()
@@ -88,7 +84,9 @@ class TestOSFGroupsFormView(AdminTestCase):
         self.view = OSFGroupsFormView()
 
     def test_post_id(self):
-        request = RequestFactory().post('/fake_path', data={'id': self.group._id, 'name': ''})
+        request = RequestFactory().post(
+            '/fake_path', data={'id': self.group._id, 'name': ''}
+        )
         view = setup_log_view(self.view, request)
 
         redirect = view.post(request)

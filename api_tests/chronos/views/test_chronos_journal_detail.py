@@ -5,7 +5,6 @@ from osf_tests.factories import ChronosJournalFactory
 
 @pytest.mark.django_db
 class TestChronosJournalDetail:
-
     @pytest.fixture()
     def journal(self):
         return ChronosJournalFactory()

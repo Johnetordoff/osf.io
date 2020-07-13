@@ -13,7 +13,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterModelOptions(
-            name='subject',
-            options={'base_manager_name': 'objects'},
+            name='subject', options={'base_manager_name': 'objects'},
         ),
     ]

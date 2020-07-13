@@ -16,10 +16,7 @@ from api.nodes.serializers import NodeSerializer
 
 class MeetingSerializer(JSONAPISerializer):
 
-    filterable_fields = frozenset([
-        'name',
-        'location',
-    ])
+    filterable_fields = frozenset(['name', 'location',])
 
     id = IDField(source='endpoint', read_only=True)
     type = TypeField()
@@ -43,14 +40,13 @@ class MeetingSerializer(JSONAPISerializer):
         related_meta={'count': 'get_submissions_count'},
     )
 
-    links = LinksField({
-        'self': 'get_absolute_url',
-        'html': 'get_absolute_html_url',
-    })
+    links = LinksField({'self': 'get_absolute_url', 'html': 'get_absolute_html_url',})
 
     def format_submission_email(self, obj, submission_field):
         if obj.active:
-            return '{}-{}@osf.io'.format(obj.endpoint, obj.field_names.get(submission_field))
+            return '{}-{}@osf.io'.format(
+                obj.endpoint, obj.field_names.get(submission_field),
+            )
         return ''
 
     def get_type_one_submission_email(self, obj):
@@ -60,7 +56,9 @@ class MeetingSerializer(JSONAPISerializer):
         return self.format_submission_email(obj, 'submission2')
 
     def get_absolute_url(self, obj):
-        return absolute_reverse('meetings:meeting-detail', kwargs={'meeting_id': obj.endpoint})
+        return absolute_reverse(
+            'meetings:meeting-detail', kwargs={'meeting_id': obj.endpoint},
+        )
 
     def get_submissions_count(self, obj):
         if getattr(obj, 'submissions_count', None):
@@ -73,11 +71,7 @@ class MeetingSerializer(JSONAPISerializer):
 
 
 class MeetingSubmissionSerializer(NodeSerializer):
-    filterable_fields = frozenset([
-        'title',
-        'meeting_category',
-        'author_name',
-    ])
+    filterable_fields = frozenset(['title', 'meeting_category', 'author_name',])
 
     author_name = ser.SerializerMethodField()
     download_count = ser.SerializerMethodField()
@@ -89,11 +83,13 @@ class MeetingSubmissionSerializer(NodeSerializer):
         read_only=True,
     )
 
-    links = LinksField({
-        'self': 'get_absolute_url',
-        'html': 'get_absolute_html_url',
-        'download': 'get_download_link',
-    })
+    links = LinksField(
+        {
+            'self': 'get_absolute_url',
+            'html': 'get_absolute_html_url',
+            'download': 'get_download_link',
+        },
+    )
 
     def get_author(self, obj):
         contrib_queryset = obj.contributor_set.filter(visible=True).order_by('_order')
@@ -136,7 +132,11 @@ class MeetingSubmissionSerializer(NodeSerializer):
             submission1_name = meeting.field_names.get('submission1')
             submission2_name = meeting.field_names.get('submission2')
             submission_tags = obj.tags.values_list('name', flat=True)
-            return submission1_name if submission1_name in submission_tags else submission2_name
+            return (
+                submission1_name
+                if submission1_name in submission_tags
+                else submission2_name
+            )
 
     def get_download_count(self, obj):
         """
@@ -169,10 +169,7 @@ class MeetingSubmissionSerializer(NodeSerializer):
         meeting_endpoint = self.context['meeting'].endpoint
         return absolute_reverse(
             'meetings:meeting-submission-detail',
-            kwargs={
-                'meeting_id': meeting_endpoint,
-                'submission_id': obj._id,
-            },
+            kwargs={'meeting_id': meeting_endpoint, 'submission_id': obj._id,},
         )
 
     # Overrides SparseFieldsetMixin
@@ -196,7 +193,9 @@ class MeetingSubmissionSerializer(NodeSerializer):
                 continue
             if field_name not in fieldset:
                 self.fields.pop(field_name)
-        return super(MeetingSubmissionSerializer, self).parse_sparse_fields(allow_unsafe, **kwargs)
+        return super(MeetingSubmissionSerializer, self).parse_sparse_fields(
+            allow_unsafe, **kwargs
+        )
 
     class Meta:
         type_ = 'meeting-submissions'

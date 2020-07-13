@@ -3,6 +3,7 @@ from api.base.serializers import JSONAPISerializer, LinksField
 from api.base.utils import absolute_reverse
 from api.base.versioning import get_kebab_snake_case_field
 
+
 class NodeAddonFolderSerializer(JSONAPISerializer):
     class Meta:
         @staticmethod
@@ -16,10 +17,7 @@ class NodeAddonFolderSerializer(JSONAPISerializer):
     path = ser.CharField(read_only=True)
     provider = ser.CharField(source='addon', read_only=True)
 
-    links = LinksField({
-        'children': 'get_absolute_url',
-        'root': 'get_root_folder',
-    })
+    links = LinksField({'children': 'get_absolute_url', 'root': 'get_root_folder',})
 
     def get_absolute_url(self, obj):
         if obj['addon'] in ('s3', 'figshare', 'github', 'mendeley'):
@@ -30,10 +28,7 @@ class NodeAddonFolderSerializer(JSONAPISerializer):
         return absolute_reverse(
             'nodes:node-addon-folders',
             kwargs=self.context['request'].parser_context['kwargs'],
-            query_kwargs={
-                'path': obj['path'],
-                'id': obj['id'],
-            },
+            query_kwargs={'path': obj['path'], 'id': obj['id'],},
         )
 
     def get_root_folder(self, obj):
@@ -42,10 +37,9 @@ class NodeAddonFolderSerializer(JSONAPISerializer):
             kwargs=self.context['request'].parser_context['kwargs'],
         )
 
+
 class AddonSerializer(JSONAPISerializer):
-    filterable_fields = frozenset([
-        'categories',
-    ])
+    filterable_fields = frozenset(['categories',])
 
     class Meta:
         type_ = 'addon'

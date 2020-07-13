@@ -11,6 +11,8 @@ from framework.auth import Auth
 
 
 identity = lambda value: value
+
+
 class Delta(object):
     def __init__(self, getter, checker=None):
         self.getter = getter
@@ -18,7 +20,6 @@ class Delta(object):
 
 
 class AssertDeltas(object):
-
     def __init__(self, *deltas):
         self.deltas = deltas
         self.original = []
@@ -33,7 +34,6 @@ class AssertDeltas(object):
 
 
 class StorageTestCase(OsfTestCase):
-
     def setUp(self):
         super(StorageTestCase, self).setUp()
 
@@ -71,9 +71,7 @@ def make_payload(user, name, **kwargs):
         'user': user._id,
         'name': name,
         'hashes': {'base64': '=='},
-        'worker': {
-            'uname': 'testmachine'
-        },
+        'worker': {'uname': 'testmachine'},
         'settings': {
             'provider': 'filesystem',
             storage_settings.WATERBUTLER_RESOURCE: 'blah',
@@ -82,7 +80,7 @@ def make_payload(user, name, **kwargs):
             'size': 123,
             'name': 'file',
             'provider': 'filesystem',
-            'modified': 'Mon, 16 Feb 2015 18:45:34 GMT'
+            'modified': 'Mon, 16 Feb 2015 18:45:34 GMT',
         },
     }
     payload.update(kwargs)

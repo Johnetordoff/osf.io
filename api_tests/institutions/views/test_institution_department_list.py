@@ -13,7 +13,6 @@ from osf.metrics import UserInstitutionProjectCounts
 @pytest.mark.es
 @pytest.mark.django_db
 class TestInstitutionDepartmentList:
-
     @pytest.fixture()
     def institution(self):
         return InstitutionFactory()
@@ -43,7 +42,7 @@ class TestInstitutionDepartmentList:
             department='Old Department',
             public_project_count=1,
             private_project_count=1,
-            timestamp=datetime.date(2017, 2, 4)
+            timestamp=datetime.date(2017, 2, 4),
         ).save()
 
         # The user has left the department
@@ -61,7 +60,7 @@ class TestInstitutionDepartmentList:
             institution_id=institution._id,
             department='New Department',
             public_project_count=1,
-            private_project_count=1
+            private_project_count=1,
         ).save()
 
         # A new department with a single user to test sorting
@@ -70,7 +69,7 @@ class TestInstitutionDepartmentList:
             institution_id=institution._id,
             department='Smaller Department',
             public_project_count=1,
-            private_project_count=1
+            private_project_count=1,
         ).save()
 
         # A user with no department
@@ -78,7 +77,7 @@ class TestInstitutionDepartmentList:
             user_id=user4._id,
             institution_id=institution._id,
             public_project_count=1,
-            private_project_count=1
+            private_project_count=1,
         ).save()
         time.sleep(5)  # ES is slow
 
@@ -110,36 +109,35 @@ class TestInstitutionDepartmentList:
     def test_get(self, app, url, admin, institution, populate_counts):
         resp = app.get(url, auth=admin.auth)
 
-        assert resp.json['data'] == [{
-            'id': f'{institution._id}-New-Department',
-            'type': 'institution-departments',
-            'attributes': {
-                'name': 'New Department',
-                'number_of_users': 2
+        assert resp.json['data'] == [
+            {
+                'id': f'{institution._id}-New-Department',
+                'type': 'institution-departments',
+                'attributes': {'name': 'New Department', 'number_of_users': 2},
+                'links': {
+                    'self': f'http://localhost:8000/v2/institutions/{institution._id}/metrics/departments/'
+                },
             },
-            'links': {'self': f'http://localhost:8000/v2/institutions/{institution._id}/metrics/departments/'}
-        }, {
-            'id': f'{institution._id}-Smaller-Department',
-            'type': 'institution-departments',
-            'attributes': {
-                'name': 'Smaller Department',
-                'number_of_users': 1
+            {
+                'id': f'{institution._id}-Smaller-Department',
+                'type': 'institution-departments',
+                'attributes': {'name': 'Smaller Department', 'number_of_users': 1},
+                'links': {
+                    'self': f'http://localhost:8000/v2/institutions/{institution._id}/metrics/departments/'
+                },
             },
-            'links': {'self': f'http://localhost:8000/v2/institutions/{institution._id}/metrics/departments/'}
-        }, {
-            'id': f'{institution._id}-{DEFAULT_ES_NULL_VALUE}',
-            'type': 'institution-departments',
-            'attributes': {
-                'name': DEFAULT_ES_NULL_VALUE,
-                'number_of_users': 1
+            {
+                'id': f'{institution._id}-{DEFAULT_ES_NULL_VALUE}',
+                'type': 'institution-departments',
+                'attributes': {'name': DEFAULT_ES_NULL_VALUE, 'number_of_users': 1},
+                'links': {
+                    'self': f'http://localhost:8000/v2/institutions/{institution._id}/metrics/departments/'
+                },
             },
-            'links': {'self': f'http://localhost:8000/v2/institutions/{institution._id}/metrics/departments/'}
-        }]
+        ]
 
         # Tests CSV Export
-        headers = {
-            'accept': 'text/csv'
-        }
+        headers = {'accept': 'text/csv'}
         resp = app.get(url, auth=admin.auth, headers=headers)
 
         assert resp.status_code == 200
@@ -152,22 +150,38 @@ class TestInstitutionDepartmentList:
         na_row = rows[3].split(',')
 
         assert header_row == ['id', 'name', 'number_of_users', 'type']
-        assert new_department_row == [f'{institution._id}-New-Department', 'New Department', '2', 'institution-departments']
-        assert smaller_department_row == [f'{institution._id}-Smaller-Department', 'Smaller Department', '1', 'institution-departments']
-        assert na_row == [f'{institution._id}-N/A', 'N/A', '1', 'institution-departments']
+        assert new_department_row == [
+            f'{institution._id}-New-Department',
+            'New Department',
+            '2',
+            'institution-departments',
+        ]
+        assert smaller_department_row == [
+            f'{institution._id}-Smaller-Department',
+            'Smaller Department',
+            '1',
+            'institution-departments',
+        ]
+        assert na_row == [
+            f'{institution._id}-N/A',
+            'N/A',
+            '1',
+            'institution-departments',
+        ]
 
     def test_pagination(self, app, url, admin, institution, populate_counts):
         resp = app.get(f'{url}?filter[name]=New Department', auth=admin.auth)
 
-        assert resp.json['data'] == [{
-            'id': '{}-{}'.format(institution._id, 'New-Department'),
-            'type': 'institution-departments',
-            'attributes': {
-                'name': 'New Department',
-                'number_of_users': 2
-            },
-            'links': {'self': f'http://localhost:8000/v2/institutions/{institution._id}/metrics/departments/'}
-        }]
+        assert resp.json['data'] == [
+            {
+                'id': '{}-{}'.format(institution._id, 'New-Department'),
+                'type': 'institution-departments',
+                'attributes': {'name': 'New Department', 'number_of_users': 2},
+                'links': {
+                    'self': f'http://localhost:8000/v2/institutions/{institution._id}/metrics/departments/'
+                },
+            }
+        ]
 
         resp = app.get(f'{url}?page[size]=2', auth=admin.auth)
         assert len(resp.json['data']) == 2

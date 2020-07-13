@@ -25,8 +25,10 @@ from lxml import etree
 
 from website import settings
 from website.app import setup_django
+
 setup_django()
 from osf.models.citation import CitationStyle
+
 
 def main():
 
@@ -49,8 +51,10 @@ def main():
             fields = {
                 '_id': os.path.splitext(os.path.basename(style_file))[0],
                 'title': root.find(selector + 'title').text,
-                'has_bibliography': True if root.find(
-                    '{{{ns}}}{tag}'.format(ns=namespace, tag='bibliography')) is not None else False
+                'has_bibliography': True
+                if root.find('{{{ns}}}{tag}'.format(ns=namespace, tag='bibliography'))
+                is not None
+                else False,
             }
 
             # Optional

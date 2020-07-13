@@ -5,6 +5,7 @@ from framework.celery_tasks import app as celery_app
 
 logger = logging.getLogger(__name__)
 
+
 @celery_app.task(ignore_results=True)
 def on_collection_updated(collection_id):
     Collection = apps.get_model('osf.Collection')

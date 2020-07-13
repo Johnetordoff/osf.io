@@ -18,25 +18,24 @@ def add_regions_to_existing_versions(*args, **kwargs):
     Region = apps.get_model('addons_osfstorage.region')
     FileVersion = apps.get_model('osf.fileversion')
     default_region = Region.objects.get(
-        _id=DEFAULT_REGION_ID,
-        name=DEFAULT_REGION_NAME,
+        _id=DEFAULT_REGION_ID, name=DEFAULT_REGION_NAME,
     )
     max_pk = FileVersion.objects.aggregate(models.Max('pk'))['pk__max']
     if max_pk is not None:
         for offset in range(0, max_pk + 1, BATCHSIZE):
-            (FileVersion.objects
-                .filter(pk__gte=offset)
+            (
+                FileVersion.objects.filter(pk__gte=offset)
                 .filter(pk__lt=offset + BATCHSIZE)
                 .filter(basefilenode__provider='osfstorage')
                 .filter(region__isnull=True)
-                .update(region=default_region))
+                .update(region=default_region)
+            )
             logger.info(
                 'Updated osf_fileversions {}-{}/{}'.format(
-                    offset,
-                    offset + BATCHSIZE,
-                    max_pk,
+                    offset, offset + BATCHSIZE, max_pk,
                 )
             )
+
 
 def remove_regions_from_versions(*args, **kwargs):
     # Reverse migration will remove fk field, no need to reset manually
@@ -52,5 +51,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(add_regions_to_existing_versions, remove_regions_from_versions)
+        migrations.RunPython(
+            add_regions_to_existing_versions, remove_regions_from_versions
+        )
     ]

@@ -45,8 +45,7 @@ class TestMultiEmailField(AdminTestCase):
     def test_to_python_more(self):
         field = MultiEmailField()
         res = field.to_python('aaa@email.org, bbb@email.org, ccc@email.org')
-        nt.assert_equal(res,
-                        ['aaa@email.org', 'bbb@email.org', 'ccc@email.org'])
+        nt.assert_equal(res, ['aaa@email.org', 'bbb@email.org', 'ccc@email.org'])
 
 
 class TestMeetingForm(AdminTestCase):
@@ -63,24 +62,37 @@ class TestMeetingForm(AdminTestCase):
 
     def test_clean_admins_okay(self):
         mod_data = dict(data)
-        mod_data.update({'admins': self.user.emails.values_list('address', flat=True).first()})
+        mod_data.update(
+            {'admins': self.user.emails.values_list('address', flat=True).first()}
+        )
         form = MeetingForm(data=mod_data)
         nt.assert_true(form.is_valid())
 
     def test_clean_endpoint_raise_not_exist(self):
         mod_data = dict(data)
-        mod_data.update({'admins': self.user.emails.values_list('address', flat=True).first(), 'edit': 'True'})
+        mod_data.update(
+            {
+                'admins': self.user.emails.values_list('address', flat=True).first(),
+                'edit': 'True',
+            }
+        )
         form = MeetingForm(data=mod_data)
         nt.assert_in('endpoint', form.errors)
-        nt.assert_equal('Meeting not found with this endpoint to update',
-                        form.errors['endpoint'][0])
+        nt.assert_equal(
+            'Meeting not found with this endpoint to update', form.errors['endpoint'][0]
+        )
 
     def test_clean_endpoint_raise_exists(self):
         conf = ConferenceFactory()
         mod_data = dict(data)
-        mod_data.update({'admins': self.user.emails.values_list('address', flat=True).first(),
-                         'endpoint': conf.endpoint})
+        mod_data.update(
+            {
+                'admins': self.user.emails.values_list('address', flat=True).first(),
+                'endpoint': conf.endpoint,
+            }
+        )
         form = MeetingForm(data=mod_data)
         nt.assert_in('endpoint', form.errors)
-        nt.assert_equal('A meeting with this endpoint exists already.',
-                        form.errors['endpoint'][0])
+        nt.assert_equal(
+            'A meeting with this endpoint exists already.', form.errors['endpoint'][0]
+        )

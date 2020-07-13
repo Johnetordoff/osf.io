@@ -14,10 +14,12 @@ class AbstractBaseContributor(models.Model):
     user = models.ForeignKey('OSFUser', on_delete=models.CASCADE)
 
     def __repr__(self):
-        return ('<{self.__class__.__name__}(user={self.user}, '
-                'visible={self.visible}, '
-                'permission={self.permission}'
-                ')>').format(self=self)
+        return (
+            '<{self.__class__.__name__}(user={self.user}, '
+            'visible={self.visible}, '
+            'permission={self.permission}'
+            ')>'
+        ).format(self=self)
 
     class Meta:
         abstract = True
@@ -71,7 +73,9 @@ class InstitutionalContributor(AbstractBaseContributor):
 
 
 class DraftRegistrationContributor(AbstractBaseContributor):
-    draft_registration = models.ForeignKey('DraftRegistration', on_delete=models.CASCADE)
+    draft_registration = models.ForeignKey(
+        'DraftRegistration', on_delete=models.CASCADE
+    )
 
     @property
     def permission(self):
@@ -87,8 +91,12 @@ class DraftRegistrationContributor(AbstractBaseContributor):
 
 
 class RecentlyAddedContributor(models.Model):
-    user = models.ForeignKey('OSFUser', on_delete=models.CASCADE)  # the user who added the contributor
-    contributor = models.ForeignKey('OSFUser', related_name='recently_added_by', on_delete=models.CASCADE)  # the added contributor
+    user = models.ForeignKey(
+        'OSFUser', on_delete=models.CASCADE
+    )  # the user who added the contributor
+    contributor = models.ForeignKey(
+        'OSFUser', related_name='recently_added_by', on_delete=models.CASCADE
+    )  # the added contributor
     date_added = NonNaiveDateTimeField(auto_now=True)
 
     class Meta:
@@ -103,7 +111,9 @@ def get_contributor_permission(contributor, resource):
     write = resource.format_group(permissions.WRITE)
     admin = resource.format_group(permissions.ADMIN)
     # Checking for django group membership allows you to also get the intended permissions of unregistered contributors
-    user_groups = contributor.user.groups.filter(name__in=[read, write, admin]).values_list('name', flat=True)
+    user_groups = contributor.user.groups.filter(
+        name__in=[read, write, admin]
+    ).values_list('name', flat=True)
     if admin in user_groups:
         return permissions.ADMIN
     elif write in user_groups:

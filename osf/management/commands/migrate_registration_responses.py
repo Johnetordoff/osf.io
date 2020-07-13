@@ -16,15 +16,12 @@ logger = logging.getLogger(__name__)
 
 # because Registrations and DraftRegistrations are different
 def get_nested_responses(registration_or_draft, schema_id):
-    nested_responses = getattr(
-        registration_or_draft,
-        'registration_metadata',
-        None,
-    )
+    nested_responses = getattr(registration_or_draft, 'registration_metadata', None,)
     if nested_responses is None:
         registered_meta = registration_or_draft.registered_meta or {}
         nested_responses = registered_meta.get(schema_id, None)
     return nested_responses
+
 
 # because Registrations and DraftRegistrations are different
 def get_registration_schema(registration_or_draft):
@@ -32,6 +29,7 @@ def get_registration_schema(registration_or_draft):
     if schema is None:
         schema = registration_or_draft.registered_schema.first()
     return schema
+
 
 def migrate_registrations(dry_run, rows='all', AbstractNodeModel=None):
     """
@@ -43,12 +41,11 @@ def migrate_registrations(dry_run, rows='all', AbstractNodeModel=None):
     if AbstractNodeModel is None:
         AbstractNodeModel = apps.get_model('osf', 'abstractnode')
 
-    registrations = AbstractNodeModel.objects.filter(
-        type='osf.registration',
-    ).exclude(
+    registrations = AbstractNodeModel.objects.filter(type='osf.registration',).exclude(
         registration_responses_migrated=True,
     )
     return migrate_responses(registrations, 'registrations', dry_run, rows)
+
 
 def migrate_draft_registrations(dry_run, rows='all', DraftRegistrationModel=None):
     """
@@ -64,6 +61,7 @@ def migrate_draft_registrations(dry_run, rows='all', DraftRegistrationModel=None
         registration_responses_migrated=True
     )
     return migrate_responses(draft_registrations, 'draft registrations', dry_run, rows)
+
 
 def migrate_responses(resources, resource_name, dry_run=False, rows='all'):
     """
@@ -84,15 +82,18 @@ def migrate_responses(resources, resource_name, dry_run=False, rows='all'):
         try:
             schema = get_registration_schema(resource)
             resource.registration_responses = flatten_registration_metadata(
-                schema,
-                get_nested_responses(resource, schema._id),
+                schema, get_nested_responses(resource, schema._id),
             )
             resource.registration_responses_migrated = True
             successes_to_save.append(resource)
         except SchemaBlockConversionError as e:
             resource.registration_responses_migrated = False
             errors_to_save.append(resource)
-            logger.error('Unexpected/invalid nested data in resource: {} with error {}'.format(resource, e))
+            logger.error(
+                'Unexpected/invalid nested data in resource: {} with error {}'.format(
+                    resource, e
+                )
+            )
         if progress_bar:
             progress_bar.update()
 
@@ -107,17 +108,32 @@ def migrate_responses(resources, resource_name, dry_run=False, rows='all'):
         logger.info('No {} left to migrate.'.format(resource_name))
         return total_count
 
-    logger.info('Successfully migrated {} out of {} {}.'.format(success_count, total_count, resource_name))
+    logger.info(
+        'Successfully migrated {} out of {} {}.'.format(
+            success_count, total_count, resource_name
+        )
+    )
     if error_count:
-        logger.warn('Encountered errors on {} out of {} {}.'.format(error_count, total_count, resource_name))
+        logger.warn(
+            'Encountered errors on {} out of {} {}.'.format(
+                error_count, total_count, resource_name
+            )
+        )
         if not success_count:
-            sentry.log_message('`migrate_registration_responses` has only errors left ({} errors)'.format(error_count))
+            sentry.log_message(
+                '`migrate_registration_responses` has only errors left ({} errors)'.format(
+                    error_count
+                )
+            )
 
     if dry_run:
         logger.info('DRY RUN; discarding changes.')
     else:
         logger.info('Saving changes...')
-        bulk_update(successes_to_save, update_fields=['registration_responses', 'registration_responses_migrated'])
+        bulk_update(
+            successes_to_save,
+            update_fields=['registration_responses', 'registration_responses_migrated'],
+        )
         bulk_update(errors_to_save, update_fields=['registration_responses_migrated'])
 
     return total_count
@@ -132,8 +148,12 @@ def migrate_registration_responses(dry_run=False, rows=5000):
     registration_count = migrate_registrations(dry_run, rows)
 
     if draft_count == 0 and registration_count == 0:
-        logger.info('Migration complete! No more drafts or registrations need migrating.')
-        sentry.log_message('`migrate_registration_responses` command found nothing to migrate!')
+        logger.info(
+            'Migration complete! No more drafts or registrations need migrating.'
+        )
+        sentry.log_message(
+            '`migrate_registration_responses` command found nothing to migrate!'
+        )
 
     script_finish_time = datetime.datetime.now()
     logger.info('Script finished time: {}'.format(script_finish_time))

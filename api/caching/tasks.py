@@ -22,11 +22,16 @@ def get_varnish_servers():
 
 def get_bannable_urls(instance):
     from osf.models import Comment
+
     bannable_urls = []
     parsed_absolute_url = {}
 
     if not hasattr(instance, 'absolute_api_v2_url'):
-        logger.warning('Tried to ban {}:{} but it didn\'t have a absolute_api_v2_url method'.format(instance.__class__, instance))
+        logger.warning(
+            "Tried to ban {}:{} but it didn't have a absolute_api_v2_url method".format(
+                instance.__class__, instance,
+            ),
+        )
         return [], ''
 
     for host in get_varnish_servers():
@@ -41,7 +46,9 @@ def get_bannable_urls(instance):
         bannable_urls.append(url_string)
         if isinstance(instance, Comment):
             try:
-                parsed_target_url = urlparse(instance.target.referent.absolute_api_v2_url)
+                parsed_target_url = urlparse(
+                    instance.target.referent.absolute_api_v2_url,
+                )
             except AttributeError:
                 # some referents don't have an absolute_api_v2_url
                 # I'm looking at you NodeWikiPage
@@ -56,7 +63,9 @@ def get_bannable_urls(instance):
                 bannable_urls.append(url_string)
 
             try:
-                parsed_root_target_url = urlparse(instance.root_target.referent.absolute_api_v2_url)
+                parsed_root_target_url = urlparse(
+                    instance.root_target.referent.absolute_api_v2_url,
+                )
             except AttributeError:
                 # some root_targets don't have an absolute_api_v2_url
                 pass
@@ -81,25 +90,17 @@ def ban_url(instance):
         for url_to_ban in set(bannable_urls):
             try:
                 response = requests.request(
-                    'BAN', url_to_ban, timeout=timeout, headers=dict(
-                        Host=hostname,
-                    ),
+                    'BAN', url_to_ban, timeout=timeout, headers=dict(Host=hostname,),
                 )
             except Exception as ex:
-                logger.error('Banning {} failed: {}'.format(
-                    url_to_ban,
-                    ex.message,
-                ))
+                logger.error('Banning {} failed: {}'.format(url_to_ban, ex.message,))
             else:
                 if not response.ok:
-                    logger.error('Banning {} failed: {}'.format(
-                        url_to_ban,
-                        response.text,
-                    ))
+                    logger.error(
+                        'Banning {} failed: {}'.format(url_to_ban, response.text,),
+                    )
                 else:
-                    logger.info('Banning {} succeeded'.format(
-                        url_to_ban,
-                    ))
+                    logger.info('Banning {} succeeded'.format(url_to_ban,))
 
 
 @app.task(max_retries=5, default_retry_delay=10)
@@ -137,5 +138,11 @@ def update_storage_usage_cache(target_id, target_guid, per_page=500000):
 def update_storage_usage(target):
     Preprint = apps.get_model('osf.preprint')
 
-    if settings.ENABLE_STORAGE_USAGE_CACHE and not isinstance(target, Preprint) and not target.is_quickfiles:
-        enqueue_postcommit_task(update_storage_usage_cache, (target.id, target._id,), {}, celery=True)
+    if (
+        settings.ENABLE_STORAGE_USAGE_CACHE
+        and not isinstance(target, Preprint)
+        and not target.is_quickfiles
+    ):
+        enqueue_postcommit_task(
+            update_storage_usage_cache, (target.id, target._id,), {}, celery=True,
+        )

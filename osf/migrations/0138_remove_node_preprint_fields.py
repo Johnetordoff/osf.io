@@ -13,19 +13,9 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RemoveField(
-            model_name='abstractnode',
-            name='_has_abandoned_preprint',
+            model_name='abstractnode', name='_has_abandoned_preprint',
         ),
-        migrations.RemoveField(
-            model_name='abstractnode',
-            name='_is_preprint_orphan',
-        ),
-        migrations.RemoveField(
-            model_name='abstractnode',
-            name='preprint_article_doi',
-        ),
-        migrations.RemoveField(
-            model_name='abstractnode',
-            name='preprint_file',
-        ),
+        migrations.RemoveField(model_name='abstractnode', name='_is_preprint_orphan',),
+        migrations.RemoveField(model_name='abstractnode', name='preprint_article_doi',),
+        migrations.RemoveField(model_name='abstractnode', name='preprint_file',),
     ]

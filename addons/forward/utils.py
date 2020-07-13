@@ -11,9 +11,8 @@ def serialize_settings(node_addon):
 
 
 def settings_complete(node_addon):
-    return (
-        node_addon.url is not None
-    )
+    return node_addon.url is not None
+
 
 def serialize_forward_widget(node):
     node_addon = node.get_addon('forward')

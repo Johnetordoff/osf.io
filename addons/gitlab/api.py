@@ -12,11 +12,13 @@ from addons.gitlab.settings import DEFAULT_HOSTS
 https_cache = cachecontrol.CacheControlAdapter()
 default_adapter = HTTPAdapter()
 
-class GitLabClient(object):
 
+class GitLabClient(object):
     def __init__(self, external_account=None, access_token=None, host=None):
         self.access_token = getattr(external_account, 'oauth_key', None) or access_token
-        self.host = getattr(external_account, 'oauth_secret', None) or host or DEFAULT_HOSTS[0]
+        self.host = (
+            getattr(external_account, 'oauth_secret', None) or host or DEFAULT_HOSTS[0]
+        )
 
         if self.access_token:
             self.gitlab = gitlab.Gitlab(self.host, private_token=self.access_token)
@@ -123,8 +125,11 @@ class GitLabClient(object):
     def _get_api_request(self, uri):
         headers = {'PRIVATE-TOKEN': '{}'.format(self.access_token)}
 
-        return requests.get('https://{0}/{1}/{2}'.format(self.host, 'api/v4', uri),
-                            verify=True, headers=headers)
+        return requests.get(
+            'https://{0}/{1}/{2}'.format(self.host, 'api/v4', uri),
+            verify=True,
+            headers=headers,
+        )
 
     def revoke_token(self):
         return False
@@ -132,14 +137,9 @@ class GitLabClient(object):
 
 def ref_to_params(branch=None, sha=None):
 
-    params = urlencode({
-        key: value
-        for key, value in {
-            'branch': branch,
-            'sha': sha,
-        }.items()
-        if value
-    })
+    params = urlencode(
+        {key: value for key, value in {'branch': branch, 'sha': sha,}.items() if value}
+    )
     if params:
         return '?' + params
     return ''

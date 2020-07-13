@@ -6,8 +6,7 @@ from django.db import models
 from framework import sentry
 from framework.exceptions import HTTPError
 from pyzotero import zotero, zotero_errors
-from addons.zotero import \
-    settings  # TODO: Move `settings` to `apps.py` when deleting
+from addons.zotero import settings  # TODO: Move `settings` to `apps.py` when deleting
 from addons.zotero.serializer import ZoteroSerializer
 from website.citations.providers import CitationsOauthProvider
 
@@ -15,6 +14,7 @@ from website.citations.providers import CitationsOauthProvider
 # of citations, requesting the citations may take longer than the UWSGI harakiri time.
 # For now, we load 200 citations max and show a message to the user.
 MAX_CITATION_LOAD = 200
+
 
 class Zotero(CitationsOauthProvider):
     name = 'Zotero'
@@ -37,9 +37,7 @@ class Zotero(CitationsOauthProvider):
         return {
             'display_name': response['username'],
             'provider_id': response['userID'],
-            'profile_url': 'https://zotero.org/users/{}/'.format(
-                response['userID']
-            ),
+            'profile_url': 'https://zotero.org/users/{}/'.format(response['userID']),
         }
 
     def get_list(self, list_id=None, library_id=None):
@@ -82,7 +80,9 @@ class Zotero(CitationsOauthProvider):
         """
         if library_id and library_id != 'personal':
             if not self._library_client:
-                self._library_client = zotero.Zotero(str(library_id), 'group', self.account.oauth_key)
+                self._library_client = zotero.Zotero(
+                    str(library_id), 'group', self.account.oauth_key
+                )
             return self._library_client
         else:
             return self.client
@@ -132,7 +132,9 @@ class Zotero(CitationsOauthProvider):
         more = True
         offset = 0
         while more and len(citations) <= MAX_CITATION_LOAD:
-            page = client.collection_items_top(list_id, content='csljson', limit=100, start=offset)
+            page = client.collection_items_top(
+                list_id, content='csljson', limit=100, start=offset
+            )
             citations = citations + page
             if len(page) == 0 or len(page) < 100:
                 more = False
@@ -155,7 +157,11 @@ class Zotero(CitationsOauthProvider):
             else:
                 offset = offset + len(page)
         # Loops through all items in the library and extracts the keys for unfiled items
-        unfiled_keys = [citation['data']['key'] for citation in client.top() if not citation['data']['collections']]
+        unfiled_keys = [
+            citation['data']['key']
+            for citation in client.top()
+            if not citation['data']['collections']
+        ]
 
         # Return only unfiled items in csljson format
         return [cite for cite in citations if cite['id'].split('/')[1] in unfiled_keys]
@@ -178,7 +184,9 @@ class NodeSettings(BaseCitationsNodeSettings):
     provider_name = 'zotero'
     oauth_provider = Zotero
     serializer = ZoteroSerializer
-    user_settings = models.ForeignKey(UserSettings, null=True, blank=True, on_delete=models.CASCADE)
+    user_settings = models.ForeignKey(
+        UserSettings, null=True, blank=True, on_delete=models.CASCADE
+    )
 
     list_id = models.TextField(blank=True, null=True)
     library_id = models.TextField(blank=True, null=True)
@@ -190,11 +198,16 @@ class NodeSettings(BaseCitationsNodeSettings):
         Boolean indication of addon completeness
         Requires that both library_id and list_id have been defined.
         """
-        return bool(self.has_auth and self.list_id and self.library_id and self.user_settings.verify_oauth_access(
-            node=self.owner,
-            external_account=self.external_account,
-            metadata={'folder': self.list_id, 'library': self.library_id},
-        ))
+        return bool(
+            self.has_auth
+            and self.list_id
+            and self.library_id
+            and self.user_settings.verify_oauth_access(
+                node=self.owner,
+                external_account=self.external_account,
+                metadata={'folder': self.list_id, 'library': self.library_id},
+            )
+        )
 
     @property
     def fetch_library_name(self):
@@ -217,7 +230,9 @@ class NodeSettings(BaseCitationsNodeSettings):
         self.list_id = None
         self.library_id = None
 
-    def serialize_folder(self, kind, id, name, path, parent=None, provider_list_id=None):
+    def serialize_folder(
+        self, kind, id, name, path, parent=None, provider_list_id=None
+    ):
         return {
             'addon': 'zotero',
             'kind': kind,
@@ -225,7 +240,7 @@ class NodeSettings(BaseCitationsNodeSettings):
             'name': name,
             'path': path,
             'parent_list_id': parent,
-            'provider_list_id': provider_list_id or id
+            'provider_list_id': provider_list_id or id,
         }
 
     def get_folders(self, path=None, folder_id=None, **kwargs):
@@ -274,7 +289,11 @@ class NodeSettings(BaseCitationsNodeSettings):
         serialized = []
         for library in libraries[:-1]:
             data = library['data']
-            serialized.append(self.serialize_folder('library', data['id'], data['name'], str(data['id'])))
+            serialized.append(
+                self.serialize_folder(
+                    'library', data['id'], data['name'], str(data['id'])
+                )
+            )
 
         if return_count:
             # Return total number of libraries as last item in list
@@ -282,7 +301,10 @@ class NodeSettings(BaseCitationsNodeSettings):
 
         if append_personal:
             # Append personal library as option alongside group libraries
-            serialized.insert(0, self.serialize_folder('library', 'personal', 'My Library', 'personal'))
+            serialized.insert(
+                0,
+                self.serialize_folder('library', 'personal', 'My Library', 'personal'),
+            )
         return serialized
 
     def get_sub_folders(self, library_id, folder_id=None, **kwargs):
@@ -293,7 +315,9 @@ class NodeSettings(BaseCitationsNodeSettings):
         If a folder_id is specified, only the subfolders within that folder are returned.
         """
         try:
-            sub_folders = self.api._get_folders(library_id=library_id, folder_id=folder_id)
+            sub_folders = self.api._get_folders(
+                library_id=library_id, folder_id=folder_id
+            )
         except zotero_errors.ResourceNotFound:
             raise HTTPError(404)
         except zotero_errors.UserNotAuthorised:
@@ -306,11 +330,21 @@ class NodeSettings(BaseCitationsNodeSettings):
         serialized = []
         for folder in sub_folders:
             data = folder['data']
-            path = folder['library']['id'] if folder['library']['type'] == 'group' else 'personal'
-            serialized.append(self.serialize_folder('folder', data['key'], data['name'], path, data['parentCollection']))
+            path = (
+                folder['library']['id']
+                if folder['library']['type'] == 'group'
+                else 'personal'
+            )
+            serialized.append(
+                self.serialize_folder(
+                    'folder', data['key'], data['name'], path, data['parentCollection']
+                )
+            )
 
         if folder_id:
             return serialized
         else:
-            all_documents = self.serialize_folder('folder', 'ROOT', 'All Documents', library_id, '__', None)
+            all_documents = self.serialize_folder(
+                'folder', 'ROOT', 'All Documents', library_id, '__', None
+            )
             return [all_documents] + serialized

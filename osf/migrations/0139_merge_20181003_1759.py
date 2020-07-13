@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0138_remove_node_preprint_fields'),
     ]
 
-    operations = [
-    ]
+    operations = []

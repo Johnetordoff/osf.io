@@ -18,6 +18,7 @@ from django.urls import resolve, reverse
 
 from osf.models import QuickFilesNode
 
+
 @pytest.fixture()
 def user():
     user = UserFactory()
@@ -74,7 +75,9 @@ def registration(user):
 
 @pytest.fixture()
 def withdrawn_registration(registration):
-    return WithdrawnRegistrationFactory(registration=registration, user=registration.creator)
+    return WithdrawnRegistrationFactory(
+        registration=registration, user=registration.creator
+    )
 
 
 @pytest.fixture()
@@ -96,9 +99,11 @@ def public_project(user):
 def deleted_project(user):
     return ProjectFactory(creator=user, is_deleted=True)
 
+
 @pytest.fixture()
 def group(user):
     return OSFGroupFactory(creator=user, name='Platform')
+
 
 @pytest.fixture()
 def group_project(group):
@@ -113,50 +118,42 @@ def pytest_generate_tests(metafunc):
     if not funcarglist:
         return
     argnames = sorted(funcarglist[0])
-    metafunc.parametrize(argnames, [[funcargs[name] for name in argnames]
-            for funcargs in funcarglist])
+    metafunc.parametrize(
+        argnames, [[funcargs[name] for name in argnames] for funcargs in funcarglist]
+    )
+
 
 @pytest.mark.django_db
 @pytest.mark.enable_quickfiles_creation
 class TestUserSerializer:
 
     params = {
-        'test_related_counts_equal_related_views': [{
-            'field_name': 'nodes',
-            'expected_count': {
-                'user': 5,  # this counts the private nodes created by RegistrationFactory
-                'other_user': 1,
-                'no_auth': 1
+        'test_related_counts_equal_related_views': [
+            {
+                'field_name': 'nodes',
+                'expected_count': {
+                    'user': 5,  # this counts the private nodes created by RegistrationFactory
+                    'other_user': 1,
+                    'no_auth': 1,
+                },
             },
-        }, {
-            'field_name': 'preprints',  # "unpublished" preprints don't appear in api at all
-            'expected_count': {
-                'user': 2,
-                'other_user': 1,
-                'no_auth': 1
+            {
+                'field_name': 'preprints',  # "unpublished" preprints don't appear in api at all
+                'expected_count': {'user': 2, 'other_user': 1, 'no_auth': 1},
             },
-        }, {
-            'field_name': 'registrations',
-            'expected_count': {
-                'user': 2,
-                'other_user': 1,
-                'no_auth': 1
+            {
+                'field_name': 'registrations',
+                'expected_count': {'user': 2, 'other_user': 1, 'no_auth': 1},
             },
-        }, {
-            'field_name': 'institutions',
-            'expected_count': {
-                'user': 1,
-                'other_user': 1,
-                'no_auth': 1
+            {
+                'field_name': 'institutions',
+                'expected_count': {'user': 1, 'other_user': 1, 'no_auth': 1},
             },
-        }, {
-            'field_name': 'quickfiles',
-            'expected_count': {
-                'user': 1,
-                'other_user': 1,
-                'no_auth': 1
+            {
+                'field_name': 'quickfiles',
+                'expected_count': {'user': 1, 'other_user': 1, 'no_auth': 1},
             },
-        }]
+        ]
     }
 
     def get_data(self, user):
@@ -172,15 +169,21 @@ class TestUserSerializer:
         if auth:
             req.user = auth
         result = UserSerializer(user, context={'request': req}).data
-        return result['data']['relationships'][related_field]['links']['related']['meta']['count']
+        return result['data']['relationships'][related_field]['links']['related'][
+            'meta'
+        ]['count']
 
     def get_view_count(self, user, related_field, auth):
         req = make_drf_request_with_version(version='2.0')
         if auth:
             req.user = auth
         view_name = UserSerializer().fields[related_field].field.view_name
-        resolve_match = resolve(reverse(view_name, kwargs={'version': 'v2', 'user_id': user._id}))
-        view = resolve_match.func.view_class(request=req, kwargs={'version': 'v2', 'user_id': user._id})
+        resolve_match = resolve(
+            reverse(view_name, kwargs={'version': 'v2', 'user_id': user._id})
+        )
+        view = resolve_match.func.view_class(
+            request=req, kwargs={'version': 'v2', 'user_id': user._id}
+        )
 
         return view.get_queryset().count()
 
@@ -207,25 +210,27 @@ class TestUserSerializer:
         assert 'registrations' in relationships
         assert 'groups' in relationships
 
-    def test_related_counts_equal_related_views(self,
-                                                request,
-                                                field_name,
-                                                expected_count,
-                                                user,
-                                                user_without_nodes,
-                                                project,
-                                                public_project,
-                                                deleted_project,
-                                                registration,
-                                                private_registration,
-                                                withdrawn_registration,
-                                                preprint,
-                                                private_preprint,
-                                                withdrawn_preprint,
-                                                unpublished_preprint,  # not in the view/related counts by default
-                                                deleted_preprint,
-                                                group,
-                                                group_project):
+    def test_related_counts_equal_related_views(
+        self,
+        request,
+        field_name,
+        expected_count,
+        user,
+        user_without_nodes,
+        project,
+        public_project,
+        deleted_project,
+        registration,
+        private_registration,
+        withdrawn_registration,
+        preprint,
+        private_preprint,
+        withdrawn_preprint,
+        unpublished_preprint,  # not in the view/related counts by default
+        deleted_preprint,
+        group,
+        group_project,
+    ):
 
         view_count = self.get_view_count(user, field_name, auth=user)
         related_count = self.get_related_count(user, field_name, auth=user)
@@ -233,7 +238,9 @@ class TestUserSerializer:
         assert related_count == view_count == expected_count['user']
 
         view_count = self.get_view_count(user, field_name, auth=user_without_nodes)
-        related_count = self.get_related_count(user, field_name, auth=user_without_nodes)
+        related_count = self.get_related_count(
+            user, field_name, auth=user_without_nodes
+        )
 
         assert related_count == view_count == expected_count['other_user']
 

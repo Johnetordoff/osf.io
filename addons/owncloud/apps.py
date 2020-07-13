@@ -3,12 +3,10 @@ from addons.base.apps import BaseAddonAppConfig, generic_root_folder
 from addons.owncloud.settings import MAX_UPLOAD_SIZE
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-TEMPLATE_PATH = os.path.join(
-    HERE,
-    'templates'
-)
+TEMPLATE_PATH = os.path.join(HERE, 'templates')
 
 owncloud_root_folder = generic_root_folder('owncloud')
+
 
 class OwnCloudAddonAppConfig(BaseAddonAppConfig):
 
@@ -33,6 +31,7 @@ class OwnCloudAddonAppConfig(BaseAddonAppConfig):
     @property
     def routes(self):
         from .routes import api_routes
+
         return [api_routes]
 
     @property

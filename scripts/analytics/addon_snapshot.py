@@ -4,6 +4,7 @@ import logging
 
 # App must be initialized before models or ADDONS_AVAILABLE are available
 from website.app import init_app
+
 init_app()
 
 from osf.models import OSFUser, AbstractNode
@@ -37,7 +38,7 @@ def get_enabled_authorized_linked(user_settings_list, has_external_account, shor
             password__isnull=False,
             merged_by__isnull=True,
             date_disabled__isnull=True,
-            date_confirmed__isnull=False
+            date_confirmed__isnull=False,
         ).count()
 
     elif short_name == 'forward':
@@ -50,23 +51,26 @@ def get_enabled_authorized_linked(user_settings_list, has_external_account, shor
             if has_external_account:
                 if user_settings.has_auth:
                     num_enabled += 1
-                    node_settings_list = [AbstractNode.load(guid).get_addon(short_name) for guid in user_settings.oauth_grants.keys()]
+                    node_settings_list = [
+                        AbstractNode.load(guid).get_addon(short_name)
+                        for guid in user_settings.oauth_grants.keys()
+                    ]
             else:
                 num_enabled += 1
-                node_settings_list = [AbstractNode.load(guid).get_addon(short_name) for guid in user_settings.nodes_authorized]
+                node_settings_list = [
+                    AbstractNode.load(guid).get_addon(short_name)
+                    for guid in user_settings.nodes_authorized
+                ]
             if any([ns.has_auth for ns in node_settings_list if ns]):
                 num_authorized += 1
-                if any([(ns.complete and ns.configured) for ns in node_settings_list if ns]):
+                if any(
+                    [(ns.complete and ns.configured) for ns in node_settings_list if ns]
+                ):
                     num_linked += 1
-    return {
-        'enabled': num_enabled,
-        'authorized': num_authorized,
-        'linked': num_linked
-    }
+    return {'enabled': num_enabled, 'authorized': num_authorized, 'linked': num_linked}
 
 
 class AddonSnapshot(SnapshotAnalytics):
-
     @property
     def collection_name(self):
         return 'addon_snapshot'
@@ -75,11 +79,15 @@ class AddonSnapshot(SnapshotAnalytics):
         super(AddonSnapshot, self).get_events(date)
 
         counts = []
-        addons_available = {k: v for k, v in [(addon.short_name, addon) for addon in ADDONS_AVAILABLE]}
+        addons_available = {
+            k: v for k, v in [(addon.short_name, addon) for addon in ADDONS_AVAILABLE]
+        }
 
         for short_name, addon in addons_available.items():
 
-            has_external_account = hasattr(addon.models.get('nodesettings'), 'external_account')
+            has_external_account = hasattr(
+                addon.models.get('nodesettings'), 'external_account'
+            )
 
             connected_count = 0
             deleted_count = 0
@@ -87,37 +95,56 @@ class AddonSnapshot(SnapshotAnalytics):
             node_settings_model = addon.models.get('nodesettings')
             if node_settings_model:
                 for node_settings in paginated(node_settings_model):
-                    if node_settings.owner and not node_settings.owner.all_tags.filter(name='old_node_collection', system=True).exists():
+                    if (
+                        node_settings.owner
+                        and not node_settings.owner.all_tags.filter(
+                            name='old_node_collection', system=True
+                        ).exists()
+                    ):
                         connected_count += 1
-                deleted_count = addon.models['nodesettings'].objects.filter(deleted__isnull=False).count() if addon.models.get('nodesettings') else 0
+                deleted_count = (
+                    addon.models['nodesettings']
+                    .objects.filter(deleted__isnull=False)
+                    .count()
+                    if addon.models.get('nodesettings')
+                    else 0
+                )
                 if has_external_account:
-                    disconnected_count = addon.models['nodesettings'].objects.filter(external_account__isnull=True, is_deleted=False).count() if addon.models.get('nodesettings') else 0
+                    disconnected_count = (
+                        addon.models['nodesettings']
+                        .objects.filter(external_account__isnull=True, is_deleted=False)
+                        .count()
+                        if addon.models.get('nodesettings')
+                        else 0
+                    )
                 else:
                     if addon.models.get('nodesettings'):
-                        for nsm in addon.models['nodesettings'].objects.filter(deleted__isnull=True):
+                        for nsm in addon.models['nodesettings'].objects.filter(
+                            deleted__isnull=True
+                        ):
                             if nsm.configured and not nsm.complete:
                                 disconnected_count += 1
             total = connected_count + deleted_count + disconnected_count
-            usage_counts = get_enabled_authorized_linked(addon.models.get('usersettings'), has_external_account, addon.short_name)
+            usage_counts = get_enabled_authorized_linked(
+                addon.models.get('usersettings'), has_external_account, addon.short_name
+            )
 
-            counts.append({
-                'provider': {
-                    'name': short_name
-                },
-                'users': usage_counts,
-                'nodes': {
-                    'total': total,
-                    'connected': connected_count,
-                    'deleted': deleted_count,
-                    'disconnected': disconnected_count
+            counts.append(
+                {
+                    'provider': {'name': short_name},
+                    'users': usage_counts,
+                    'nodes': {
+                        'total': total,
+                        'connected': connected_count,
+                        'deleted': deleted_count,
+                        'disconnected': disconnected_count,
+                    },
                 }
-            })
+            )
 
             logger.info(
                 '{} counted. Users with a linked node: {}, Total connected nodes: {}.'.format(
-                    addon.short_name,
-                    usage_counts['linked'],
-                    total
+                    addon.short_name, usage_counts['linked'], total
                 )
             )
         return counts

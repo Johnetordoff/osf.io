@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0101_osfuser_accepted_terms_of_service'),
     ]
 
-    operations = [
-    ]
+    operations = []

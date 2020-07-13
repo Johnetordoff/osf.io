@@ -21,7 +21,7 @@ from addons.bitbucket.models import NodeSettings
 from addons.bitbucket.tests.factories import (
     BitbucketAccountFactory,
     BitbucketNodeSettingsFactory,
-    BitbucketUserSettingsFactory
+    BitbucketUserSettingsFactory,
 )
 from addons.base.tests import models
 
@@ -45,7 +45,7 @@ class TestNodeSettings(models.OAuthAddonNodeSettingsTestSuiteMixin, unittest.Tes
             'user_settings': self.user_settings,
             'repo': 'mock',
             'user': 'abc',
-            'owner': self.node
+            'owner': self.node,
         }
 
     def test_set_folder(self):
@@ -62,7 +62,7 @@ class TestNodeSettings(models.OAuthAddonNodeSettingsTestSuiteMixin, unittest.Tes
 
     @mock.patch(
         'addons.bitbucket.models.UserSettings.revoke_remote_oauth_access',
-        mock.PropertyMock()
+        mock.PropertyMock(),
     )
     def test_complete_has_auth_not_verified(self):
         super(TestNodeSettings, self).test_complete_has_auth_not_verified()
@@ -107,11 +107,13 @@ class TestUserSettings(models.OAuthAddonUserSettingTestSuiteMixin, unittest.Test
     ExternalAccountFactory = BitbucketAccountFactory
 
     def test_public_id(self):
-        assert_equal(self.user.external_accounts.first().display_name, self.user_settings.public_id)
+        assert_equal(
+            self.user.external_accounts.first().display_name,
+            self.user_settings.public_id,
+        )
 
 
 class TestCallbacks(OsfTestCase):
-
     def setUp(self):
 
         super(TestCallbacks, self).setUp()
@@ -120,8 +122,7 @@ class TestCallbacks(OsfTestCase):
         self.consolidated_auth = Auth(self.project.creator)
         self.non_authenticator = UserFactory()
         self.project.add_contributor(
-            contributor=self.non_authenticator,
-            auth=self.consolidated_auth,
+            contributor=self.non_authenticator, auth=self.consolidated_auth,
         )
 
         self.project.add_addon('bitbucket', auth=self.consolidated_auth)
@@ -136,7 +137,9 @@ class TestCallbacks(OsfTestCase):
         self.node_settings.external_account = self.external_account
         self.node_settings.save()
         self.node_settings.set_auth
-        self.user_settings.oauth_grants[self.project._id] = {self.external_account._id: []}
+        self.user_settings.oauth_grants[self.project._id] = {
+            self.external_account._id: []
+        }
         self.user_settings.save()
 
     @mock.patch('addons.bitbucket.api.BitbucketClient.repo')
@@ -151,10 +154,11 @@ class TestCallbacks(OsfTestCase):
         self.project.is_public = True
         self.project.save()
         mock_repo.return_value = {'is_private': False}
-        message = self.node_settings.before_page_load(self.project, self.project.creator)
+        message = self.node_settings.before_page_load(
+            self.project, self.project.creator
+        )
         mock_repo.assert_called_with(
-            user=self.node_settings.user,
-            repo=self.node_settings.repo,
+            user=self.node_settings.user, repo=self.node_settings.repo,
         )
         assert_false(message)
 
@@ -163,23 +167,28 @@ class TestCallbacks(OsfTestCase):
         self.project.is_public = True
         self.project.save()
         mock_repo.return_value = {'is_private': True}
-        message = self.node_settings.before_page_load(self.project, self.project.creator)
+        message = self.node_settings.before_page_load(
+            self.project, self.project.creator
+        )
         mock_repo.assert_called_with(
-            user=self.node_settings.user,
-            repo=self.node_settings.repo,
+            user=self.node_settings.user, repo=self.node_settings.repo,
         )
         assert_true(message)
-        assert_in('Users can view the contents of this private Bitbucket repository through this public project.', message[0])
+        assert_in(
+            'Users can view the contents of this private Bitbucket repository through this public project.',
+            message[0],
+        )
 
     @mock.patch('addons.bitbucket.api.BitbucketClient.repo')
     def test_before_page_load_repo_deleted(self, mock_repo):
         self.project.is_public = True
         self.project.save()
         mock_repo.return_value = None
-        message = self.node_settings.before_page_load(self.project, self.project.creator)
+        message = self.node_settings.before_page_load(
+            self.project, self.project.creator
+        )
         mock_repo.assert_called_with(
-            user=self.node_settings.user,
-            repo=self.node_settings.repo,
+            user=self.node_settings.user, repo=self.node_settings.repo,
         )
         assert_true(message)
         assert_in('has been deleted.', message[0])
@@ -187,21 +196,25 @@ class TestCallbacks(OsfTestCase):
     @mock.patch('addons.bitbucket.api.BitbucketClient.repo')
     def test_before_page_load_osf_private_bb_public(self, mock_repo):
         mock_repo.return_value = {'is_private': False}
-        message = self.node_settings.before_page_load(self.project, self.project.creator)
+        message = self.node_settings.before_page_load(
+            self.project, self.project.creator
+        )
         mock_repo.assert_called_with(
-            user=self.node_settings.user,
-            repo=self.node_settings.repo,
+            user=self.node_settings.user, repo=self.node_settings.repo,
         )
         assert_true(message)
-        assert_in('The files in this Bitbucket repo can be viewed on Bitbucket', message[0])
+        assert_in(
+            'The files in this Bitbucket repo can be viewed on Bitbucket', message[0]
+        )
 
     @mock.patch('addons.bitbucket.api.BitbucketClient.repo')
     def test_before_page_load_osf_private_bb_private(self, mock_repo):
         mock_repo.return_value = {'is_private': True}
-        message = self.node_settings.before_page_load(self.project, self.project.creator)
+        message = self.node_settings.before_page_load(
+            self.project, self.project.creator
+        )
         mock_repo.assert_called_with(
-            user=self.node_settings.user,
-            repo=self.node_settings.repo,
+            user=self.node_settings.user, repo=self.node_settings.repo,
         )
         assert_false(message)
 
@@ -229,10 +242,7 @@ class TestCallbacks(OsfTestCase):
         message = self.node_settings.after_remove_contributor(
             self.project, self.project.creator, self.consolidated_auth
         )
-        assert_equal(
-            self.node_settings.user_settings,
-            None
-        )
+        assert_equal(self.node_settings.user_settings, None)
         assert_true(message)
         assert_not_in('You can re-authenticate', message)
 
@@ -241,10 +251,7 @@ class TestCallbacks(OsfTestCase):
         message = self.node_settings.after_remove_contributor(
             self.project, self.project.creator, auth
         )
-        assert_equal(
-            self.node_settings.user_settings,
-            None
-        )
+        assert_equal(self.node_settings.user_settings, None)
         assert_true(message)
         assert_in('You can re-authenticate', message)
 
@@ -253,18 +260,14 @@ class TestCallbacks(OsfTestCase):
             self.project, self.non_authenticator, self.consolidated_auth
         )
         assert_not_equal(
-            self.node_settings.user_settings,
-            None,
+            self.node_settings.user_settings, None,
         )
 
     def test_after_fork_authenticator(self):
         fork = ProjectFactory()
-        clone = self.node_settings.after_fork(
-            self.project, fork, self.project.creator,
-        )
+        clone = self.node_settings.after_fork(self.project, fork, self.project.creator,)
         assert_equal(
-            self.node_settings.user_settings,
-            clone.user_settings,
+            self.node_settings.user_settings, clone.user_settings,
         )
 
     def test_after_fork_not_authenticator(self):
@@ -273,8 +276,7 @@ class TestCallbacks(OsfTestCase):
             self.project, fork, self.non_authenticator,
         )
         assert_equal(
-            clone.user_settings,
-            None,
+            clone.user_settings, None,
         )
 
     def test_after_delete(self):

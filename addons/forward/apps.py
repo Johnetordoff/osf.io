@@ -3,11 +3,8 @@ import os
 from addons.base.apps import BaseAddonAppConfig
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-NODE_SETTINGS_TEMPLATE = os.path.join(
-    HERE,
-    'templates',
-    'forward_node_settings.mako',
-)
+NODE_SETTINGS_TEMPLATE = os.path.join(HERE, 'templates', 'forward_node_settings.mako',)
+
 
 class ForwardAddonAppConfig(BaseAddonAppConfig):
 
@@ -24,11 +21,12 @@ class ForwardAddonAppConfig(BaseAddonAppConfig):
 
     URL_CHANGED = 'forward_url_changed'
 
-    actions = (URL_CHANGED, )
+    actions = (URL_CHANGED,)
 
     @property
     def routes(self):
         from . import routes
+
         return [routes.api_routes]
 
     @property

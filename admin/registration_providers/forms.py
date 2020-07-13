@@ -13,16 +13,26 @@ from admin.base.utils import (
 
 class RegistrationProviderForm(forms.ModelForm):
     _id = forms.SlugField(
-        required=True,
-        help_text='URL Slug',
-        validators=[validate_slug]
+        required=True, help_text='URL Slug', validators=[validate_slug]
     )
 
     class Meta:
         model = RegistrationProvider
-        exclude = ['primary_identifier_name', 'primary_collection', 'type', 'allow_commenting', 'advisory_board',
-                   'example', 'domain', 'domain_redirect_enabled', 'reviews_comments_anonymous',
-                   'reviews_comments_private', 'reviews_workflow', 'collected_type_choices', 'status_choices']
+        exclude = [
+            'primary_identifier_name',
+            'primary_collection',
+            'type',
+            'allow_commenting',
+            'advisory_board',
+            'example',
+            'domain',
+            'domain_redirect_enabled',
+            'reviews_comments_anonymous',
+            'reviews_comments_private',
+            'reviews_workflow',
+            'collected_type_choices',
+            'status_choices',
+        ]
         widgets = {
             'licenses_acceptable': forms.CheckboxSelectMultiple(),
         }
@@ -44,7 +54,7 @@ class RegistrationProviderForm(forms.ModelForm):
             tags=['a', 'br', 'em', 'p', 'span', 'strong'],
             attributes=['class', 'style', 'href', 'title', 'target'],
             styles=['text-align', 'vertical-align'],
-            strip=True
+            strip=True,
         )
 
     def clean_footer_links(self, *args, **kwargs):
@@ -55,12 +65,17 @@ class RegistrationProviderForm(forms.ModelForm):
             tags=['a', 'br', 'div', 'em', 'p', 'span', 'strong'],
             attributes=['class', 'style', 'href', 'title', 'target'],
             styles=['text-align', 'vertical-align'],
-            strip=True
+            strip=True,
         )
+
 
 class RegistrationProviderCustomTaxonomyForm(forms.Form):
     add_missing = forms.BooleanField(required=False)
-    custom_taxonomy_json = forms.CharField(widget=forms.Textarea, initial='{"include": [], "exclude": [], "custom": {}, "merge": {}}', required=False)
+    custom_taxonomy_json = forms.CharField(
+        widget=forms.Textarea,
+        initial='{"include": [], "exclude": [], "custom": {}, "merge": {}}',
+        required=False,
+    )
     provider_id = forms.IntegerField(widget=forms.HiddenInput())
     include = forms.ChoiceField(choices=[], required=False)
     exclude = forms.ChoiceField(choices=[], required=False)
@@ -73,7 +88,12 @@ class RegistrationProviderCustomTaxonomyForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super(RegistrationProviderCustomTaxonomyForm, self).__init__(*args, **kwargs)
-        subject_choices = [(x, x) for x in Subject.objects.filter(bepress_subject__isnull=True).values_list('text', flat=True)]
+        subject_choices = [
+            (x, x)
+            for x in Subject.objects.filter(bepress_subject__isnull=True).values_list(
+                'text', flat=True
+            )
+        ]
         for name, field in self.fields.items():
             if hasattr(field, 'choices'):
                 if field.choices == []:

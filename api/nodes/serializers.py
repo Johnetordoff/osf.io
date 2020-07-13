@@ -2,24 +2,36 @@ from django.db import connection
 from distutils.version import StrictVersion
 
 from api.base.exceptions import (
-    Conflict, EndpointNotImplementedError,
+    Conflict,
+    EndpointNotImplementedError,
     InvalidModelValueError,
     RelationshipPostMakesNoChanges,
 )
 from api.base.serializers import (
-    VersionedDateTimeField, HideIfRegistration, IDField,
+    VersionedDateTimeField,
+    HideIfRegistration,
+    IDField,
     JSONAPIRelationshipSerializer,
-    JSONAPISerializer, LinksField,
-    NodeFileHyperLinkField, RelationshipField,
-    ShowIfVersion, TargetTypeField, TypeField,
-    WaterbutlerLink, relationship_diff, BaseAPISerializer,
-    HideIfWikiDisabled, ShowIfAdminScopeOrAnonymous,
+    JSONAPISerializer,
+    LinksField,
+    NodeFileHyperLinkField,
+    RelationshipField,
+    ShowIfVersion,
+    TargetTypeField,
+    TypeField,
+    WaterbutlerLink,
+    relationship_diff,
+    BaseAPISerializer,
+    HideIfWikiDisabled,
+    ShowIfAdminScopeOrAnonymous,
     ValuesListField,
 )
 from api.base.settings import ADDONS_FOLDER_CONFIGURABLE
 from api.base.utils import (
-    absolute_reverse, get_object_or_error,
-    get_user_auth, is_truthy,
+    absolute_reverse,
+    get_object_or_error,
+    get_user_auth,
+    is_truthy,
 )
 from api.base.versioning import get_kebab_snake_case_field
 from api.taxonomies.serializers import TaxonomizableSerializerMixin
@@ -35,9 +47,17 @@ from addons.base.exceptions import InvalidAuthError, InvalidFolderError
 from addons.osfstorage.models import Region
 from osf.exceptions import NodeStateError
 from osf.models import (
-    Comment, DraftRegistration, ExternalAccount, Institution,
-    RegistrationSchema, AbstractNode, PrivateLink, Preprint,
-    RegistrationProvider, OSFGroup, NodeLicense,
+    Comment,
+    DraftRegistration,
+    ExternalAccount,
+    Institution,
+    RegistrationSchema,
+    AbstractNode,
+    PrivateLink,
+    Preprint,
+    RegistrationProvider,
+    OSFGroup,
+    NodeLicense,
 )
 from website.project import new_private_link
 from website.project.model import NodeUpdateError
@@ -52,6 +72,7 @@ class RegistrationProviderRelationshipField(RelationshipField):
         provider = self.get_object(data)
         return {'provider': provider}
 
+
 def get_institutions_to_add_remove(institutions, new_institutions):
     diff = relationship_diff(
         current_items={inst._id: inst for inst in institutions.all()},
@@ -62,7 +83,9 @@ def get_institutions_to_add_remove(institutions, new_institutions):
     for inst_id in diff['add']:
         inst = Institution.load(inst_id)
         if not inst:
-            raise exceptions.NotFound(detail='Institution with id "{}" was not found'.format(inst_id))
+            raise exceptions.NotFound(
+                detail='Institution with id "{}" was not found'.format(inst_id),
+            )
         insts_to_add.append(inst)
 
     return insts_to_add, diff['remove'].values()
@@ -70,8 +93,7 @@ def get_institutions_to_add_remove(institutions, new_institutions):
 
 def update_institutions(node, new_institutions, user, post=False):
     add, remove = get_institutions_to_add_remove(
-        institutions=node.affiliated_institutions,
-        new_institutions=new_institutions,
+        institutions=node.affiliated_institutions, new_institutions=new_institutions,
     )
 
     if post and not len(add):
@@ -79,7 +101,9 @@ def update_institutions(node, new_institutions, user, post=False):
 
     if not post:
         for inst in remove:
-            if not user.is_affiliated_with_institution(inst) and not node.has_permission(user, osf_permissions.ADMIN):
+            if not user.is_affiliated_with_institution(
+                inst,
+            ) and not node.has_permission(user, osf_permissions.ADMIN):
                 raise exceptions.PermissionDenied(
                     detail='User needs to be affiliated with {}'.format(inst.name),
                 )
@@ -94,12 +118,15 @@ def update_institutions(node, new_institutions, user, post=False):
 
 
 class RegionRelationshipField(RelationshipField):
-
     def to_internal_value(self, data):
         try:
-            region_id = Region.objects.filter(_id=data).values_list('id', flat=True).get()
+            region_id = (
+                Region.objects.filter(_id=data).values_list('id', flat=True).get()
+            )
         except Region.DoesNotExist:
-            raise exceptions.ValidationError(detail='Region {} is invalid.'.format(data))
+            raise exceptions.ValidationError(
+                detail='Region {} is invalid.'.format(data),
+            )
         return {'region_id': region_id}
 
 
@@ -149,13 +176,14 @@ class NodeLicenseSerializer(BaseAPISerializer):
 
 
 class NodeLicenseRelationshipField(RelationshipField):
-
     def lookup_attribute(self, obj, lookup_field):
         """
         Returns node license id and caches license in serializer context for optimization purposes.
         """
         license = get_or_add_license_to_serializer_context(self, obj)
-        return license.node_license._id if getattr(license, 'node_license', None) else None
+        return (
+            license.node_license._id if getattr(license, 'node_license', None) else None
+        )
 
     def to_internal_value(self, license_id):
         node_license = NodeLicense.load(license_id)
@@ -188,6 +216,7 @@ class NodeCitationSerializer(JSONAPISerializer):
     class Meta:
         type_ = 'node-citation'
 
+
 class NodeCitationStyleSerializer(JSONAPISerializer):
 
     id = ser.CharField(read_only=True)
@@ -199,20 +228,27 @@ class NodeCitationStyleSerializer(JSONAPISerializer):
     class Meta:
         type_ = 'styled-citations'
 
+
 def get_license_details(node, validated_data):
     if node:
         license = node.license if isinstance(node, Preprint) else node.node_license
     else:
         license = None
-    if ('license_type' not in validated_data and not (license and license.node_license.license_id)):
-        raise exceptions.ValidationError(detail='License ID must be provided for a Node License.')
+    if 'license_type' not in validated_data and not (
+        license and license.node_license.license_id
+    ):
+        raise exceptions.ValidationError(
+            detail='License ID must be provided for a Node License.',
+        )
     license_id = license.node_license.license_id if license else None
     license_year = license.year if license else None
     license_holders = license.copyright_holders if license else []
 
     if 'license' in validated_data:
         license_year = validated_data['license'].get('year', license_year)
-        license_holders = validated_data['license'].get('copyright_holders', license_holders)
+        license_holders = validated_data['license'].get(
+            'copyright_holders', license_holders,
+        )
     if 'license_type' in validated_data:
         license_id = validated_data['license_type'].license_id
 
@@ -222,25 +258,28 @@ def get_license_details(node, validated_data):
         'copyrightHolders': license_holders,
     }
 
+
 class NodeSerializer(TaxonomizableSerializerMixin, JSONAPISerializer):
     # TODO: If we have to redo this implementation in any of the other serializers, subclass ChoiceField and make it
     # handle blank choices properly. Currently DRF ChoiceFields ignore blank options, which is incorrect in this
     # instance
-    filterable_fields = frozenset([
-        'id',
-        'title',
-        'description',
-        'public',
-        'tags',
-        'category',
-        'date_created',
-        'date_modified',
-        'root',
-        'parent',
-        'contributors',
-        'preprint',
-        'subjects',
-    ])
+    filterable_fields = frozenset(
+        [
+            'id',
+            'title',
+            'description',
+            'public',
+            'tags',
+            'category',
+            'date_created',
+            'date_modified',
+            'root',
+            'parent',
+            'contributors',
+            'preprint',
+            'subjects',
+        ],
+    )
 
     # If you add a field to this serializer, be sure to add to this
     # list if it doesn't expose user data
@@ -295,11 +334,15 @@ class NodeSerializer(TaxonomizableSerializerMixin, JSONAPISerializer):
     type = TypeField()
 
     category_choices = list(settings.NODE_CATEGORY_MAP.items())
-    category_choices_string = ', '.join(["'{}'".format(choice[0]) for choice in category_choices])
+    category_choices_string = ', '.join(
+        ["'{}'".format(choice[0]) for choice in category_choices],
+    )
 
     title = ser.CharField(required=True)
     description = ser.CharField(required=False, allow_blank=True, allow_null=True)
-    category = ser.ChoiceField(choices=category_choices, help_text='Choices: ' + category_choices_string)
+    category = ser.ChoiceField(
+        choices=category_choices, help_text='Choices: ' + category_choices_string,
+    )
 
     custom_citation = ser.CharField(allow_blank=True, required=False)
     date_created = VersionedDateTimeField(source='created', read_only=True)
@@ -309,19 +352,29 @@ class NodeSerializer(TaxonomizableSerializerMixin, JSONAPISerializer):
     fork = ser.BooleanField(read_only=True, source='is_fork')
     collection = ser.BooleanField(read_only=True, source='is_collection')
     tags = ValuesListField(attr_name='name', child=ser.CharField(), required=False)
-    access_requests_enabled = ShowIfVersion(ser.BooleanField(read_only=False, required=False), min_version='2.0', max_version='2.8')
-    node_license = NodeLicenseSerializer(required=False, source='license')
-    analytics_key = ShowIfAdminScopeOrAnonymous(ser.CharField(read_only=True, source='keenio_read_key'))
-    template_from = ser.CharField(
-        required=False, allow_blank=False, allow_null=False,
-        help_text='Specify a node id for a node you would like to use as a template for the '
-                  'new node. Templating is like forking, except that you do not copy the '
-                  'files, only the project structure. Some information is changed on the top '
-                  'level project by submitting the appropriate fields in the request body, '
-                  'and some information will not change. By default, the description will '
-                  'be cleared and the project will be made private.',
+    access_requests_enabled = ShowIfVersion(
+        ser.BooleanField(read_only=False, required=False),
+        min_version='2.0',
+        max_version='2.8',
     )
-    current_user_can_comment = ser.SerializerMethodField(help_text='Whether the current user is allowed to post comments')
+    node_license = NodeLicenseSerializer(required=False, source='license')
+    analytics_key = ShowIfAdminScopeOrAnonymous(
+        ser.CharField(read_only=True, source='keenio_read_key'),
+    )
+    template_from = ser.CharField(
+        required=False,
+        allow_blank=False,
+        allow_null=False,
+        help_text='Specify a node id for a node you would like to use as a template for the '
+        'new node. Templating is like forking, except that you do not copy the '
+        'files, only the project structure. Some information is changed on the top '
+        'level project by submitting the appropriate fields in the request body, '
+        'and some information will not change. By default, the description will '
+        'be cleared and the project will be made private.',
+    )
+    current_user_can_comment = ser.SerializerMethodField(
+        help_text='Whether the current user is allowed to post comments',
+    )
     current_user_permissions = ser.SerializerMethodField(
         help_text='List of strings representing the permissions '
         'for the current user on this node. As of version 2.11, this field will only return the permissions '
@@ -333,16 +386,19 @@ class NodeSerializer(TaxonomizableSerializerMixin, JSONAPISerializer):
     current_user_is_contributor_or_group_member = ser.SerializerMethodField(
         help_text='Whether the current user is a contributor or group member on this node.',
     )
-    wiki_enabled = ser.SerializerMethodField(help_text='Whether the wiki addon is enabled')
+    wiki_enabled = ser.SerializerMethodField(
+        help_text='Whether the wiki addon is enabled',
+    )
 
     # Public is only write-able by admins--see update method
     public = ser.BooleanField(
-        source='is_public', required=False,
+        source='is_public',
+        required=False,
         help_text='Nodes that are made public will give read-only access '
-                  'to everyone. Private nodes require explicit read '
-                  'permission. Write and admin access are the same for '
-                  'public and private nodes. Administrators on a parent '
-                  'node have implicit read permissions for all child nodes',
+        'to everyone. Private nodes require explicit read '
+        'permission. Write and admin access are the same for '
+        'public and private nodes. Administrators on a parent '
+        'node have implicit read permissions for all child nodes',
     )
 
     links = LinksField({'html': 'get_absolute_html_url'})
@@ -390,18 +446,21 @@ class NodeSerializer(TaxonomizableSerializerMixin, JSONAPISerializer):
     )
 
     settings = RelationshipField(
-        related_view='nodes:node-settings',
-        related_view_kwargs={'node_id': '<_id>'},
+        related_view='nodes:node-settings', related_view_kwargs={'node_id': '<_id>'},
     )
 
-    wikis = HideIfWikiDisabled(RelationshipField(
-        related_view='nodes:node-wikis',
-        related_view_kwargs={'node_id': '<_id>'},
-        related_meta={'count': 'get_wiki_page_count'},
-    ))
+    wikis = HideIfWikiDisabled(
+        RelationshipField(
+            related_view='nodes:node-wikis',
+            related_view_kwargs={'node_id': '<_id>'},
+            related_meta={'count': 'get_wiki_page_count'},
+        ),
+    )
 
     forked_from = RelationshipField(
-        related_view=lambda n: 'registrations:registration-detail' if getattr(n, 'is_registration', False) else 'nodes:node-detail',
+        related_view=lambda n: 'registrations:registration-detail'
+        if getattr(n, 'is_registration', False)
+        else 'nodes:node-detail',
         related_view_kwargs={'node_id': '<forked_from_guid>'},
     )
 
@@ -417,8 +476,7 @@ class NodeSerializer(TaxonomizableSerializerMixin, JSONAPISerializer):
     )
 
     groups = RelationshipField(
-        related_view='nodes:node-groups',
-        related_view_kwargs={'node_id': '<_id>'},
+        related_view='nodes:node-groups', related_view_kwargs={'node_id': '<_id>'},
     )
 
     node_links = ShowIfVersion(
@@ -427,7 +485,9 @@ class NodeSerializer(TaxonomizableSerializerMixin, JSONAPISerializer):
             related_view_kwargs={'node_id': '<_id>'},
             related_meta={'count': 'get_pointers_count'},
             help_text='This feature is deprecated as of version 2.1. Use linked_nodes instead.',
-        ), min_version='2.0', max_version='2.0',
+        ),
+        min_version='2.0',
+        max_version='2.0',
     )
 
     linked_by_nodes = RelationshipField(
@@ -449,8 +509,7 @@ class NodeSerializer(TaxonomizableSerializerMixin, JSONAPISerializer):
     )
 
     identifiers = RelationshipField(
-        related_view='nodes:identifier-list',
-        related_view_kwargs={'node_id': '<_id>'},
+        related_view='nodes:identifier-list', related_view_kwargs={'node_id': '<_id>'},
     )
 
     affiliated_institutions = RelationshipField(
@@ -463,17 +522,21 @@ class NodeSerializer(TaxonomizableSerializerMixin, JSONAPISerializer):
         required=False,
     )
 
-    draft_registrations = HideIfRegistration(RelationshipField(
-        related_view='nodes:node-draft-registrations',
-        related_view_kwargs={'node_id': '<_id>'},
-        related_meta={'count': 'get_draft_registration_count'},
-    ))
+    draft_registrations = HideIfRegistration(
+        RelationshipField(
+            related_view='nodes:node-draft-registrations',
+            related_view_kwargs={'node_id': '<_id>'},
+            related_meta={'count': 'get_draft_registration_count'},
+        ),
+    )
 
-    registrations = HideIfRegistration(RelationshipField(
-        related_view='nodes:node-registrations',
-        related_view_kwargs={'node_id': '<_id>'},
-        related_meta={'count': 'get_registration_count'},
-    ))
+    registrations = HideIfRegistration(
+        RelationshipField(
+            related_view='nodes:node-registrations',
+            related_view_kwargs={'node_id': '<_id>'},
+            related_meta={'count': 'get_registration_count'},
+        ),
+    )
 
     region = RegionRelationshipField(
         related_view='regions:region-detail',
@@ -482,8 +545,7 @@ class NodeSerializer(TaxonomizableSerializerMixin, JSONAPISerializer):
     )
 
     root = RelationshipField(
-        related_view='nodes:node-detail',
-        related_view_kwargs={'node_id': '<root._id>'},
+        related_view='nodes:node-detail', related_view_kwargs={'node_id': '<root._id>'},
     )
 
     logs = RelationshipField(
@@ -516,14 +578,15 @@ class NodeSerializer(TaxonomizableSerializerMixin, JSONAPISerializer):
     )
 
     citation = RelationshipField(
-        related_view='nodes:node-citation',
-        related_view_kwargs={'node_id': '<_id>'},
+        related_view='nodes:node-citation', related_view_kwargs={'node_id': '<_id>'},
     )
 
-    preprints = HideIfRegistration(RelationshipField(
-        related_view='nodes:node-preprints',
-        related_view_kwargs={'node_id': '<_id>'},
-    ))
+    preprints = HideIfRegistration(
+        RelationshipField(
+            related_view='nodes:node-preprints',
+            related_view_kwargs={'node_id': '<_id>'},
+        ),
+    )
 
     @property
     def subjects_related_view(self):
@@ -548,14 +611,22 @@ class NodeSerializer(TaxonomizableSerializerMixin, JSONAPISerializer):
         """
         user = self.context['request'].user
         request_version = self.context['request'].version
-        default_perm = [osf_permissions.READ] if StrictVersion(request_version) < StrictVersion('2.11') else []
+        default_perm = (
+            [osf_permissions.READ]
+            if StrictVersion(request_version) < StrictVersion('2.11')
+            else []
+        )
         if user.is_anonymous:
             return default_perm
 
         if hasattr(obj, 'has_admin'):
             user_perms = []
             if obj.has_admin:
-                user_perms = [osf_permissions.ADMIN, osf_permissions.WRITE, osf_permissions.READ]
+                user_perms = [
+                    osf_permissions.ADMIN,
+                    osf_permissions.WRITE,
+                    osf_permissions.READ,
+                ]
             elif obj.has_write:
                 user_perms = [osf_permissions.WRITE, osf_permissions.READ]
             elif obj.has_read:
@@ -575,8 +646,7 @@ class NodeSerializer(TaxonomizableSerializerMixin, JSONAPISerializer):
         if hasattr(obj, 'has_read'):
             if obj.comment_level == 'public':
                 return auth.logged_in and (
-                    obj.is_public or
-                    (auth.user and obj.has_read)
+                    obj.is_public or (auth.user and obj.has_read)
                 )
             return obj.has_read or False
         else:
@@ -589,7 +659,9 @@ class NodeSerializer(TaxonomizableSerializerMixin, JSONAPISerializer):
             return obj.has_viewable_preprints
         else:
             user = self.context['request'].user
-            return Preprint.objects.can_view(base_queryset=obj.preprints, user=user).exists()
+            return Preprint.objects.can_view(
+                base_queryset=obj.preprints, user=user,
+            ).exists()
 
     def get_current_user_is_contributor(self, obj):
         # Returns whether user is a contributor (does not include group members)
@@ -675,7 +747,8 @@ class NodeSerializer(TaxonomizableSerializerMixin, JSONAPISerializer):
                   )
                   OR (osf_privatelink.key = %s AND osf_privatelink.is_deleted = FALSE)
                 );
-            """, [obj.id, obj.id, user_id, obj.id, user_id, auth.private_key],
+            """,
+                [obj.id, obj.id, user_id, obj.id, user_id, auth.private_key],
             )
 
             return int(cursor.fetchone()[0])
@@ -701,22 +774,36 @@ class NodeSerializer(TaxonomizableSerializerMixin, JSONAPISerializer):
 
     def get_node_links_count(self, obj):
         auth = get_user_auth(self.context['request'])
-        linked_nodes = obj.linked_nodes.filter(is_deleted=False).exclude(type='osf.collection').exclude(type='osf.registration')
+        linked_nodes = (
+            obj.linked_nodes.filter(is_deleted=False)
+            .exclude(type='osf.collection')
+            .exclude(type='osf.registration')
+        )
         return linked_nodes.can_view(auth.user, auth.private_link).count()
 
     def get_registration_links_count(self, obj):
         auth = get_user_auth(self.context['request'])
-        linked_registrations = obj.linked_nodes.filter(is_deleted=False, type='osf.registration').exclude(type='osf.collection')
+        linked_registrations = obj.linked_nodes.filter(
+            is_deleted=False, type='osf.registration',
+        ).exclude(type='osf.collection')
         return linked_registrations.can_view(auth.user, auth.private_link).count()
 
     def get_linked_by_nodes_count(self, obj):
-        return obj._parents.filter(is_node_link=True, parent__is_deleted=False, parent__type='osf.node').count()
+        return obj._parents.filter(
+            is_node_link=True, parent__is_deleted=False, parent__type='osf.node',
+        ).count()
 
     def get_linked_by_registrations_count(self, obj):
-        return obj._parents.filter(is_node_link=True, parent__type='osf.registration', parent__retraction__isnull=True).count()
+        return obj._parents.filter(
+            is_node_link=True,
+            parent__type='osf.registration',
+            parent__retraction__isnull=True,
+        ).count()
 
     def get_forks_count(self, obj):
-        return obj.forks.exclude(type='osf.registration').exclude(is_deleted=True).count()
+        return (
+            obj.forks.exclude(type='osf.registration').exclude(is_deleted=True).count()
+        )
 
     def get_unread_comments_count(self, obj):
         user = get_user_auth(self.context['request']).user
@@ -737,7 +824,11 @@ class NodeSerializer(TaxonomizableSerializerMixin, JSONAPISerializer):
         return region_id
 
     def get_wiki_enabled(self, obj):
-        return obj.has_wiki_addon if hasattr(obj, 'has_wiki_addon') else obj.has_addon('wiki')
+        return (
+            obj.has_wiki_addon
+            if hasattr(obj, 'has_wiki_addon')
+            else obj.has_addon('wiki')
+        )
 
     def create(self, validated_data):
         request = self.context['request']
@@ -761,18 +852,24 @@ class NodeSerializer(TaxonomizableSerializerMixin, JSONAPISerializer):
         if 'tags' in validated_data:
             tags = validated_data.pop('tags')
             for tag in tags:
-                tag_instance, created = Tag.objects.get_or_create(name=tag, defaults=dict(system=False))
+                tag_instance, created = Tag.objects.get_or_create(
+                    name=tag, defaults=dict(system=False),
+                )
                 tag_instances.append(tag_instance)
         if 'template_from' in validated_data:
             template_from = validated_data.pop('template_from')
             template_node = Node.load(template_from)
             if template_node is None:
                 raise exceptions.NotFound
-            if not template_node.has_permission(user, osf_permissions.READ, check_parent=False):
+            if not template_node.has_permission(
+                user, osf_permissions.READ, check_parent=False,
+            ):
                 raise exceptions.PermissionDenied
             validated_data.pop('creator')
             changed_data = {template_from: validated_data}
-            node = template_node.use_as_template(auth=get_user_auth(request), changes=changed_data)
+            node = template_node.use_as_template(
+                auth=get_user_auth(request), changes=changed_data,
+            )
         else:
             node = Node(**validated_data)
         try:
@@ -780,35 +877,48 @@ class NodeSerializer(TaxonomizableSerializerMixin, JSONAPISerializer):
         except ValidationError as e:
             raise InvalidModelValueError(detail=e.messages[0])
         if affiliated_institutions:
-            new_institutions = [{'_id': institution} for institution in affiliated_institutions]
+            new_institutions = [
+                {'_id': institution} for institution in affiliated_institutions
+            ]
             update_institutions(node, new_institutions, user, post=True)
             node.save()
         if len(tag_instances):
             for tag in tag_instances:
                 node.tags.add(tag)
-        if is_truthy(request.GET.get('inherit_contributors')) and validated_data['parent'].has_permission(user, osf_permissions.WRITE):
+        if is_truthy(request.GET.get('inherit_contributors')) and validated_data[
+            'parent'
+        ].has_permission(user, osf_permissions.WRITE):
             auth = get_user_auth(request)
             parent = validated_data['parent']
             contributors = []
             for contributor in parent.contributor_set.exclude(user=user):
-                contributors.append({
-                    'user': contributor.user,
-                    'permissions': contributor.permission,
-                    'visible': contributor.visible,
-                })
+                contributors.append(
+                    {
+                        'user': contributor.user,
+                        'permissions': contributor.permission,
+                        'visible': contributor.visible,
+                    },
+                )
                 if not contributor.user.is_registered:
                     try:
                         node.add_unregistered_contributor(
-                            fullname=contributor.user.fullname, email=contributor.user.email, auth=auth,
-                            permissions=contributor.permission, existing_user=contributor.user,
+                            fullname=contributor.user.fullname,
+                            email=contributor.user.email,
+                            auth=auth,
+                            permissions=contributor.permission,
+                            existing_user=contributor.user,
                         )
                     except ValidationError as e:
                         raise InvalidModelValueError(detail=list(e)[0])
             node.add_contributors(contributors, auth=auth, log=True, save=True)
             for group in parent.osf_groups:
                 if group.is_manager(user):
-                    node.add_osf_group(group, group.get_permission_to_node(parent), auth=auth)
-        if is_truthy(request.GET.get('inherit_subjects')) and validated_data['parent'].has_permission(user, osf_permissions.WRITE):
+                    node.add_osf_group(
+                        group, group.get_permission_to_node(parent), auth=auth,
+                    )
+        if is_truthy(request.GET.get('inherit_subjects')) and validated_data[
+            'parent'
+        ].has_permission(user, osf_permissions.WRITE):
             parent = validated_data['parent']
             node.subjects.add(parent.subjects.all())
             node.save()
@@ -817,9 +927,12 @@ class NodeSerializer(TaxonomizableSerializerMixin, JSONAPISerializer):
             try:
                 node.set_node_license(
                     {
-                        'id': license_details.get('id') if license_details.get('id') else 'NONE',
+                        'id': license_details.get('id')
+                        if license_details.get('id')
+                        else 'NONE',
                         'year': license_details.get('year'),
-                        'copyrightHolders': license_details.get('copyrightHolders') or license_details.get('copyright_holders', []),
+                        'copyrightHolders': license_details.get('copyrightHolders')
+                        or license_details.get('copyright_holders', []),
                     },
                     auth=get_user_auth(request),
                     save=True,
@@ -857,7 +970,9 @@ class NodeSerializer(TaxonomizableSerializerMixin, JSONAPISerializer):
                 validated_data['node_license'] = license_details
             if 'affiliated_institutions' in validated_data:
                 institutions_list = validated_data.pop('affiliated_institutions')
-                new_institutions = [{'_id': institution} for institution in institutions_list]
+                new_institutions = [
+                    {'_id': institution} for institution in institutions_list
+                ]
 
                 update_institutions(node, new_institutions, user)
                 node.save()
@@ -888,7 +1003,9 @@ class NodeAddonSettingsSerializerBase(JSONAPISerializer):
     id = ser.CharField(source='config.short_name', read_only=True)
     node_has_auth = ser.BooleanField(source='has_auth', read_only=True)
     configured = ser.BooleanField(read_only=True)
-    external_account_id = ser.CharField(source='external_account._id', required=False, allow_null=True)
+    external_account_id = ser.CharField(
+        source='external_account._id', required=False, allow_null=True,
+    )
     folder_id = ser.CharField(required=False, allow_null=True)
     folder_path = ser.CharField(required=False, allow_null=True)
 
@@ -896,19 +1013,16 @@ class NodeAddonSettingsSerializerBase(JSONAPISerializer):
     label = ser.CharField(required=False, allow_blank=True)
     url = ser.URLField(required=False, allow_blank=True)
 
-    links = LinksField({
-        'self': 'get_absolute_url',
-    })
+    links = LinksField({'self': 'get_absolute_url',})
 
     def get_absolute_url(self, obj):
         kwargs = self.context['request'].parser_context['kwargs']
-        if 'provider' not in kwargs or (obj and obj.config.short_name != kwargs.get('provider')):
+        if 'provider' not in kwargs or (
+            obj and obj.config.short_name != kwargs.get('provider')
+        ):
             kwargs.update({'provider': obj.config.short_name})
 
-        return absolute_reverse(
-            'nodes:node-addon-detail',
-            kwargs=kwargs,
-        )
+        return absolute_reverse('nodes:node-addon-detail', kwargs=kwargs,)
 
     def create(self, validated_data):
         auth = Auth(self.context['request'].user)
@@ -917,8 +1031,8 @@ class NodeAddonSettingsSerializerBase(JSONAPISerializer):
 
         return node.get_or_add_addon(addon, auth=auth)
 
-class ForwardNodeAddonSettingsSerializer(NodeAddonSettingsSerializerBase):
 
+class ForwardNodeAddonSettingsSerializer(NodeAddonSettingsSerializerBase):
     def update(self, instance, validated_data):
         request = self.context['request']
         user = request.user
@@ -974,9 +1088,8 @@ class ForwardNodeAddonSettingsSerializer(NodeAddonSettingsSerializerBase):
 
 
 class NodeAddonSettingsSerializer(NodeAddonSettingsSerializerBase):
-
     def check_for_update_errors(self, node_settings, folder_info, external_account_id):
-        if (not node_settings.has_auth and folder_info and not external_account_id):
+        if not node_settings.has_auth and folder_info and not external_account_id:
             raise Conflict('Cannot set folder without authorization')
 
     def get_account_info(self, data):
@@ -1004,7 +1117,11 @@ class NodeAddonSettingsSerializer(NodeAddonSettingsSerializerBase):
                 folder_path = None
 
             if (folder_id or folder_path) and not (folder_id and folder_path):
-                raise exceptions.ValidationError(detail='Must specify both folder_id and folder_path for {}'.format(addon_name))
+                raise exceptions.ValidationError(
+                    detail='Must specify both folder_id and folder_path for {}'.format(
+                        addon_name,
+                    ),
+                )
 
             folder_info = {
                 'id': folder_id,
@@ -1017,26 +1134,44 @@ class NodeAddonSettingsSerializer(NodeAddonSettingsSerializerBase):
         if not external_account:
             raise exceptions.NotFound('Unable to find requested account.')
         if not auth.user.external_accounts.filter(id=external_account.id).exists():
-            raise exceptions.PermissionDenied('Requested action requires account ownership.')
+            raise exceptions.PermissionDenied(
+                'Requested action requires account ownership.',
+            )
         if external_account.provider != addon_name:
-            raise Conflict('Cannot authorize the {} addon with an account for {}'.format(addon_name, external_account.provider))
+            raise Conflict(
+                'Cannot authorize the {} addon with an account for {}'.format(
+                    addon_name, external_account.provider,
+                ),
+            )
         return external_account
 
     def should_call_set_folder(self, folder_info, instance, auth, node_settings):
-        if (folder_info and not (   # If we have folder information to set
-                instance and getattr(instance, 'folder_id', False) and (  # and the settings aren't already configured with this folder
-                    instance.folder_id == folder_info or (hasattr(folder_info, 'get') and instance.folder_id == folder_info.get('id', False))
+        if folder_info and not (  # If we have folder information to set
+            instance
+            and getattr(instance, 'folder_id', False)
+            and (  # and the settings aren't already configured with this folder
+                instance.folder_id == folder_info
+                or (
+                    hasattr(folder_info, 'get')
+                    and instance.folder_id == folder_info.get('id', False)
                 )
-        )):
-            if auth.user._id != node_settings.user_settings.owner._id:  # And the user is allowed to do this
-                raise exceptions.PermissionDenied('Requested action requires addon ownership.')
+            )
+        ):
+            if (
+                auth.user._id != node_settings.user_settings.owner._id
+            ):  # And the user is allowed to do this
+                raise exceptions.PermissionDenied(
+                    'Requested action requires addon ownership.',
+                )
             return True
         return False
 
     def update(self, instance, validated_data):
         addon_name = instance.config.short_name
         if addon_name not in ADDONS_FOLDER_CONFIGURABLE:
-            raise EndpointNotImplementedError('Requested addon not currently configurable via API.')
+            raise EndpointNotImplementedError(
+                'Requested addon not currently configurable via API.',
+            )
 
         auth = get_user_auth(self.context['request'])
 
@@ -1058,12 +1193,17 @@ class NodeAddonSettingsSerializer(NodeAddonSettingsSerializerBase):
         elif external_account_id:
             # Settings may or may not be authorized, user requesting to set instance.external_account
             account = self.get_account_or_error(addon_name, external_account_id, auth)
-            if instance.external_account and external_account_id != instance.external_account._id:
+            if (
+                instance.external_account
+                and external_account_id != instance.external_account._id
+            ):
                 # Ensure node settings are deauthorized first, logs
                 instance.deauthorize(auth=auth)
             instance.set_auth(account, auth.user)
 
-        if set_folder and self.should_call_set_folder(folder_info, instance, auth, instance):
+        if set_folder and self.should_call_set_folder(
+            folder_info, instance, auth, instance,
+        ):
             # Enabled, user requesting to set folder
             try:
                 instance.set_folder(folder_info, auth)
@@ -1080,16 +1220,23 @@ class NodeDetailSerializer(NodeSerializer):
     """
     Overrides NodeSerializer to make id required.
     """
+
     id = IDField(source='_id', required=True)
 
 
 class NodeForksSerializer(NodeSerializer):
 
     category_choices = list(settings.NODE_CATEGORY_MAP.items())
-    category_choices_string = ', '.join(["'{}'".format(choice[0]) for choice in category_choices])
+    category_choices_string = ', '.join(
+        ["'{}'".format(choice[0]) for choice in category_choices],
+    )
 
     title = ser.CharField(required=False)
-    category = ser.ChoiceField(read_only=True, choices=category_choices, help_text='Choices: ' + category_choices_string)
+    category = ser.ChoiceField(
+        read_only=True,
+        choices=category_choices,
+        help_text='Choices: ' + category_choices_string,
+    )
     forked_date = VersionedDateTimeField(read_only=True)
 
     def create(self, validated_data):
@@ -1112,7 +1259,10 @@ class CompoundIDField(IDField):
 
     def __init__(self, *args, **kwargs):
         kwargs['source'] = kwargs.pop('source', '_id')
-        kwargs['help_text'] = kwargs.get('help_text', 'Unique ID that is a compound of two objects. Has the form "<resource-id>-<related-id>". Example: "abc12-xyz34"')
+        kwargs['help_text'] = kwargs.get(
+            'help_text',
+            'Unique ID that is a compound of two objects. Has the form "<resource-id>-<related-id>". Example: "abc12-xyz34"',
+        )
         super(CompoundIDField, self).__init__(*args, **kwargs)
 
     def _get_resource_id(self):
@@ -1133,16 +1283,12 @@ class CompoundIDField(IDField):
 class NodeContributorsSerializer(JSONAPISerializer):
     """ Separate from UserSerializer due to necessity to override almost every field as read only
     """
+
     non_anonymized_fields = [
         'bibliographic',
         'permission',
     ]
-    filterable_fields = frozenset([
-        'id',
-        'bibliographic',
-        'permission',
-        'index',
-    ])
+    filterable_fields = frozenset(['id', 'bibliographic', 'permission', 'index',])
 
     id = IDField(source='_id', read_only=True)
     type = TypeField()
@@ -1153,15 +1299,15 @@ class NodeContributorsSerializer(JSONAPISerializer):
         default=True,
     )
     permission = ser.ChoiceField(
-        choices=osf_permissions.API_CONTRIBUTOR_PERMISSIONS, required=False, allow_null=True,
+        choices=osf_permissions.API_CONTRIBUTOR_PERMISSIONS,
+        required=False,
+        allow_null=True,
         default=osf_permissions.WRITE,
         help_text='User permission level. Must be "read", "write", or "admin". Defaults to "write".',
     )
     unregistered_contributor = ser.SerializerMethodField()
 
-    links = LinksField({
-        'self': 'get_absolute_url',
-    })
+    links = LinksField({'self': 'get_absolute_url',})
 
     users = RelationshipField(
         related_view='users:user-detail',
@@ -1170,8 +1316,7 @@ class NodeContributorsSerializer(JSONAPISerializer):
     )
 
     node = RelationshipField(
-        related_view='nodes:node-detail',
-        related_view_kwargs={'node_id': '<node._id>'},
+        related_view='nodes:node-detail', related_view_kwargs={'node_id': '<node._id>'},
     )
 
     class Meta:
@@ -1192,7 +1337,9 @@ class NodeContributorsSerializer(JSONAPISerializer):
         if hasattr(obj, 'preprint'):
             unclaimed_records = obj.user.unclaimed_records.get(obj.preprint._id, None)
         elif hasattr(obj, 'draft_registration'):
-            unclaimed_records = obj.user.unclaimed_records.get(obj.draft_registration._id, None)
+            unclaimed_records = obj.user.unclaimed_records.get(
+                obj.draft_registration._id, None,
+            )
         else:
             unclaimed_records = obj.user.unclaimed_records.get(obj.node._id, None)
         if unclaimed_records:
@@ -1219,15 +1366,26 @@ class NodeContributorsCreateSerializer(NodeContributorsSerializer):
     email_preferences = ['default', 'false']
 
     def get_proposed_permissions(self, validated_data):
-        return validated_data.get('permission') or osf_permissions.DEFAULT_CONTRIBUTOR_PERMISSIONS
+        return (
+            validated_data.get('permission')
+            or osf_permissions.DEFAULT_CONTRIBUTOR_PERMISSIONS
+        )
 
     def validate_data(self, node, user_id=None, full_name=None, email=None, index=None):
         if not user_id and not full_name:
-            raise exceptions.ValidationError(detail='A user ID or full name must be provided to add a contributor.')
+            raise exceptions.ValidationError(
+                detail='A user ID or full name must be provided to add a contributor.',
+            )
         if user_id and email:
-            raise exceptions.ValidationError(detail='Do not provide an email when providing this user_id.')
+            raise exceptions.ValidationError(
+                detail='Do not provide an email when providing this user_id.',
+            )
         if index is not None and index > len(node.contributors):
-            raise exceptions.ValidationError(detail='{} is not a valid contributor index for node with id {}'.format(index, node._id))
+            raise exceptions.ValidationError(
+                detail='{} is not a valid contributor index for node with id {}'.format(
+                    index, node._id,
+                ),
+            )
 
     def create(self, validated_data):
         id = validated_data.get('_id')
@@ -1239,18 +1397,31 @@ class NodeContributorsCreateSerializer(NodeContributorsSerializer):
         auth = Auth(self.context['request'].user)
         full_name = validated_data.get('full_name')
         bibliographic = validated_data.get('bibliographic')
-        send_email = self.context['request'].GET.get('send_email') or self.context['default_email']
+        send_email = (
+            self.context['request'].GET.get('send_email')
+            or self.context['default_email']
+        )
         permissions = self.get_proposed_permissions(validated_data)
 
-        self.validate_data(node, user_id=id, full_name=full_name, email=email, index=index)
+        self.validate_data(
+            node, user_id=id, full_name=full_name, email=email, index=index,
+        )
 
         if send_email not in self.email_preferences:
-            raise exceptions.ValidationError(detail='{} is not a valid email preference.'.format(send_email))
+            raise exceptions.ValidationError(
+                detail='{} is not a valid email preference.'.format(send_email),
+            )
 
         try:
             contributor_dict = {
-                'auth': auth, 'user_id': id, 'email': email, 'full_name': full_name, 'send_email': send_email,
-                'bibliographic': bibliographic, 'index': index, 'save': True,
+                'auth': auth,
+                'user_id': id,
+                'email': email,
+                'full_name': full_name,
+                'send_email': send_email,
+                'bibliographic': bibliographic,
+                'index': index,
+                'save': True,
             }
 
             contributor_dict['permissions'] = permissions
@@ -1266,6 +1437,7 @@ class NodeContributorDetailSerializer(NodeContributorsSerializer):
     """
     Overrides node contributor serializer to add additional methods
     """
+
     id = IDField(required=True, source='_id')
     index = ser.IntegerField(required=False, read_only=False, source='_order')
 
@@ -1285,7 +1457,9 @@ class NodeContributorDetailSerializer(NodeContributorsSerializer):
         try:
             if index is not None:
                 node.move_contributor(instance.user, auth, index, save=True)
-            node.update_contributor(instance.user, permission, bibliographic, auth, save=True)
+            node.update_contributor(
+                instance.user, permission, bibliographic, auth, save=True,
+            )
         except node.state_error as e:
             raise exceptions.ValidationError(detail=str(e))
         except ValueError as e:
@@ -1309,16 +1483,14 @@ class NodeLinksSerializer(JSONAPISerializer):
         related_view='nodes:node-detail',
         related_view_kwargs={'node_id': '<child._id>'},
         always_embed=True,
-
     )
+
     class Meta:
         @staticmethod
         def get_type(request):
             return get_kebab_snake_case_field(request.version, 'node-links')
 
-    links = LinksField({
-        'self': 'get_absolute_url',
-    })
+    links = LinksField({'self': 'get_absolute_url',})
 
     def get_absolute_url(self, obj):
         return absolute_reverse(
@@ -1340,7 +1512,7 @@ class NodeLinksSerializer(JSONAPISerializer):
         if not pointer_node or pointer_node.is_collection:
             raise InvalidModelValueError(
                 source={'pointer': '/data/relationships/node_links/data/id'},
-                detail='Target Node \'{}\' not found.'.format(target_node_id),
+                detail="Target Node '{}' not found.".format(target_node_id),
             )
         try:
             pointer = node.add_pointer(pointer_node, auth, save=True)
@@ -1364,15 +1536,21 @@ class NodeStorageProviderSerializer(JSONAPISerializer):
     provider = ser.CharField(read_only=True)
     files = NodeFileHyperLinkField(
         related_view='nodes:node-files',
-        related_view_kwargs={'node_id': '<node._id>', 'path': '<path>', 'provider': '<provider>'},
+        related_view_kwargs={
+            'node_id': '<node._id>',
+            'path': '<path>',
+            'provider': '<provider>',
+        },
         kind='folder',
         never_embed=True,
     )
-    links = LinksField({
-        'upload': WaterbutlerLink(),
-        'new_folder': WaterbutlerLink(kind='folder'),
-        'storage_addons': 'get_storage_addons_url',
-    })
+    links = LinksField(
+        {
+            'upload': WaterbutlerLink(),
+            'new_folder': WaterbutlerLink(kind='folder'),
+            'storage_addons': 'get_storage_addons_url',
+        },
+    )
     root_folder = RelationshipField(
         related_view='files:file-detail',
         related_view_kwargs={'file_id': '<root_folder._id>'},
@@ -1402,23 +1580,20 @@ class NodeStorageProviderSerializer(JSONAPISerializer):
             kwargs={
                 'version': self.context['request'].parser_context['kwargs']['version'],
             },
-            query_kwargs={
-                'filter[categories]': 'storage',
-            },
+            query_kwargs={'filter[categories]': 'storage',},
         )
+
 
 class InstitutionRelated(JSONAPIRelationshipSerializer):
     id = ser.CharField(source='_id', required=False, allow_null=True)
+
     class Meta:
         type_ = 'institutions'
 
 
 class NodeInstitutionsRelationshipSerializer(BaseAPISerializer):
     data = ser.ListField(child=InstitutionRelated())
-    links = LinksField({
-        'self': 'get_self_url',
-        'html': 'get_related_url',
-    })
+    links = LinksField({'self': 'get_self_url', 'html': 'get_related_url',})
 
     def get_self_url(self, obj):
         return obj['self'].institutions_relationship_url
@@ -1452,13 +1627,19 @@ class NodeInstitutionsRelationshipSerializer(BaseAPISerializer):
 
         return self.make_instance_obj(node)
 
-class RegistrationSchemaRelationshipField(RelationshipField):
 
+class RegistrationSchemaRelationshipField(RelationshipField):
     def to_internal_value(self, registration_schema_id):
-        schema = get_object_or_error(RegistrationSchema, registration_schema_id, self.context['request'])
-        latest_version = RegistrationSchema.objects.get_latest_version(schema.name).schema_version
+        schema = get_object_or_error(
+            RegistrationSchema, registration_schema_id, self.context['request'],
+        )
+        latest_version = RegistrationSchema.objects.get_latest_version(
+            schema.name,
+        ).schema_version
         if latest_version != schema.schema_version or not schema.active:
-            raise exceptions.ValidationError('Registration supplement must be an active schema.')
+            raise exceptions.ValidationError(
+                'Registration supplement must be an active schema.',
+            )
         return {'registration_schema': schema}
 
 
@@ -1478,7 +1659,9 @@ class DraftRegistrationLegacySerializer(JSONAPISerializer):
     )
 
     branched_from = RelationshipField(
-        related_view=lambda n: 'draft_nodes:draft-node-detail' if getattr(n, 'type', False) == 'osf.draftnode' else 'nodes:node-detail',
+        related_view=lambda n: 'draft_nodes:draft-node-detail'
+        if getattr(n, 'type', False) == 'osf.draftnode'
+        else 'nodes:node-detail',
         related_view_kwargs={'node_id': '<branched_from._id>'},
     )
 
@@ -1496,9 +1679,7 @@ class DraftRegistrationLegacySerializer(JSONAPISerializer):
         required=False,
     )
 
-    links = LinksField({
-        'html': 'get_absolute_url',
-    })
+    links = LinksField({'html': 'get_absolute_url',})
 
     def get_absolute_url(self, obj):
         return obj.absolute_url
@@ -1506,27 +1687,36 @@ class DraftRegistrationLegacySerializer(JSONAPISerializer):
     def update_metadata(self, draft, metadata, reviewer=False, required_fields=False):
         try:
             # Required fields are only required when creating the actual registration, not updating the draft.
-            draft.validate_metadata(metadata=metadata, reviewer=reviewer, required_fields=required_fields)
+            draft.validate_metadata(
+                metadata=metadata, reviewer=reviewer, required_fields=required_fields,
+            )
         except ValidationError as e:
             raise exceptions.ValidationError(e.message)
         draft.update_metadata(metadata)
         draft.save()
 
-    def update_registration_responses(self, draft, registration_responses, required_fields=False):
+    def update_registration_responses(
+        self, draft, registration_responses, required_fields=False,
+    ):
         # New workflow - at some point `registration_metadata` will be deprecated, but for now,
         # we support data coming in on either field, registration_metadata (expanded) or registration_responses (flat)
         try:
-            draft.validate_registration_responses(registration_responses=registration_responses, required_fields=required_fields)
+            draft.validate_registration_responses(
+                registration_responses=registration_responses,
+                required_fields=required_fields,
+            )
         except ValidationError as e:
             raise exceptions.ValidationError(e.message)
         draft.update_registration_responses(registration_responses)
         draft.save()
 
-    def enforce_metadata_or_registration_responses(self, metadata=None, registration_responses=None):
+    def enforce_metadata_or_registration_responses(
+        self, metadata=None, registration_responses=None,
+    ):
         if metadata and registration_responses:
             raise exceptions.ValidationError(
-                'You cannot include both `registration_metadata` and `registration_responses` in your request. Please use' +
-                ' `registration_responses` as `registration_metadata` will be deprecated in the future.',
+                'You cannot include both `registration_metadata` and `registration_responses` in your request. Please use'
+                + ' `registration_responses` as `registration_metadata` will be deprecated in the future.',
             )
 
     def get_node(self, validated_data=None):
@@ -1540,14 +1730,20 @@ class DraftRegistrationLegacySerializer(JSONAPISerializer):
         registration_responses = validated_data.pop('registration_responses', None)
         schema = validated_data.pop('registration_schema')
 
-        provider = validated_data.pop('provider', None) or RegistrationProvider.load('osf')
+        provider = validated_data.pop('provider', None) or RegistrationProvider.load(
+            'osf',
+        )
         # TODO: this
         # if not provider.schemas_acceptable.filter(id=schema.id).exists():
         #     raise exceptions.ValidationError('Invalid schema for provider.')
 
-        self.enforce_metadata_or_registration_responses(metadata, registration_responses)
+        self.enforce_metadata_or_registration_responses(
+            metadata, registration_responses,
+        )
 
-        draft = DraftRegistration.create_from_node(node=node, user=initiator, schema=schema, provider=provider)
+        draft = DraftRegistration.create_from_node(
+            node=node, user=initiator, schema=schema, provider=provider,
+        )
 
         if metadata:
             self.update_metadata(draft, metadata)
@@ -1573,6 +1769,7 @@ class DraftRegistrationDetailLegacySerializer(DraftRegistrationLegacySerializer)
     Either pass in registration_metadata (old workflow) or registration_responses
     (new workflow), not both.  registration_metadata will eventually be deprecated.
     """
+
     id = IDField(source='_id', required=True)
 
     registration_schema = RelationshipField(
@@ -1593,7 +1790,9 @@ class DraftRegistrationDetailLegacySerializer(DraftRegistrationLegacySerializer)
         metadata = validated_data.pop('registration_metadata', None)
         registration_responses = validated_data.pop('registration_responses', None)
 
-        self.enforce_metadata_or_registration_responses(metadata, registration_responses)
+        self.enforce_metadata_or_registration_responses(
+            metadata, registration_responses,
+        )
 
         if metadata:
             self.update_metadata(draft, metadata)
@@ -1613,11 +1812,7 @@ class NodeVOL(ser.Field):
 
 
 class NodeViewOnlyLinkSerializer(JSONAPISerializer):
-    filterable_fields = frozenset([
-        'anonymous',
-        'name',
-        'date_created',
-    ])
+    filterable_fields = frozenset(['anonymous', 'name', 'date_created',])
 
     key = ser.CharField(read_only=True)
     id = IDField(source='_id', read_only=True)
@@ -1625,9 +1820,7 @@ class NodeViewOnlyLinkSerializer(JSONAPISerializer):
     anonymous = ser.BooleanField(required=False, default=False)
     name = ser.CharField(required=False, default='Shared project link')
 
-    links = LinksField({
-        'self': 'get_absolute_url',
-    })
+    links = LinksField({'self': 'get_absolute_url',})
 
     creator = RelationshipField(
         related_view='users:user-detail',
@@ -1649,10 +1842,7 @@ class NodeViewOnlyLinkSerializer(JSONAPISerializer):
 
         try:
             view_only_link = new_private_link(
-                name=name,
-                user=user,
-                nodes=[node],
-                anonymous=anonymous,
+                name=name, user=user, nodes=[node], anonymous=anonymous,
             )
         except ValidationError:
             raise exceptions.ValidationError('Invalid link name.')
@@ -1679,6 +1869,7 @@ class NodeViewOnlyLinkUpdateSerializer(NodeViewOnlyLinkSerializer):
     """
     Overrides NodeViewOnlyLinkSerializer to not default name and anonymous on update.
     """
+
     name = ser.CharField(required=False)
     anonymous = ser.BooleanField(required=False)
 
@@ -1710,9 +1901,7 @@ class NodeSettingsSerializer(JSONAPISerializer):
         related_view_kwargs={'node_id': '<_id>'},
     )
 
-    links = LinksField({
-        'self': 'get_absolute_url',
-    })
+    links = LinksField({'self': 'get_absolute_url',})
 
     def get_anyone_can_comment(self, obj):
         return obj.comment_level == 'public'
@@ -1775,7 +1964,9 @@ class NodeSettingsUpdateSerializer(NodeSettingsSerializer):
             'wiki_enabled',
         ]
 
-        if set(validated_data.keys()).intersection(set(admin_only_field_names)) and not obj.has_permission(user, osf_permissions.ADMIN):
+        if set(validated_data.keys()).intersection(
+            set(admin_only_field_names),
+        ) and not obj.has_permission(user, osf_permissions.ADMIN):
             raise exceptions.PermissionDenied
 
         self.update_node_fields(obj, validated_data, auth)
@@ -1807,15 +1998,21 @@ class NodeSettingsUpdateSerializer(NodeSettingsSerializer):
 
         if anyone_can_edit_wiki is not None:
             if not obj.is_public and anyone_can_edit_wiki:
-                raise exceptions.ValidationError(detail='To allow all OSF users to edit the wiki, the project must be public.')
+                raise exceptions.ValidationError(
+                    detail='To allow all OSF users to edit the wiki, the project must be public.',
+                )
             if wiki_addon:
                 try:
-                    wiki_addon.set_editing(permissions=anyone_can_edit_wiki, auth=auth, log=True)
+                    wiki_addon.set_editing(
+                        permissions=anyone_can_edit_wiki, auth=auth, log=True,
+                    )
                 except NodeStateError:
                     return
                 wiki_addon.save()
             else:
-                raise exceptions.ValidationError(detail='You must have the wiki enabled before changing wiki settings.')
+                raise exceptions.ValidationError(
+                    detail='You must have the wiki enabled before changing wiki settings.',
+                )
 
     def update_forward_fields(self, obj, validated_data, auth):
         redirect_link_enabled = validated_data.get('redirect_link_enabled')
@@ -1827,19 +2024,23 @@ class NodeSettingsUpdateSerializer(NodeSettingsSerializer):
 
         if redirect_link_enabled is not None:
             if not redirect_link_url and redirect_link_enabled:
-                raise exceptions.ValidationError(detail='You must include a redirect URL to enable a redirect.')
-            forward_addon = self.enable_or_disable_addon(obj, redirect_link_enabled, 'forward', auth)
+                raise exceptions.ValidationError(
+                    detail='You must include a redirect URL to enable a redirect.',
+                )
+            forward_addon = self.enable_or_disable_addon(
+                obj, redirect_link_enabled, 'forward', auth,
+            )
 
         if redirect_link_url is not None:
             if not forward_addon:
-                raise exceptions.ValidationError(detail='You must first set redirect_link_enabled to True before specifying a redirect link URL.')
+                raise exceptions.ValidationError(
+                    detail='You must first set redirect_link_enabled to True before specifying a redirect link URL.',
+                )
             forward_addon.url = redirect_link_url
             obj.add_log(
                 action='forward_url_changed',
                 params=dict(
-                    node=obj._id,
-                    project=obj.parent_id,
-                    forward_url=redirect_link_url,
+                    node=obj._id, project=obj.parent_id, forward_url=redirect_link_url,
                 ),
                 auth=auth,
             )
@@ -1847,7 +2048,9 @@ class NodeSettingsUpdateSerializer(NodeSettingsSerializer):
 
         if redirect_link_label is not None:
             if not forward_addon:
-                raise exceptions.ValidationError(detail='You must first set redirect_link_enabled to True before specifying a redirect link label.')
+                raise exceptions.ValidationError(
+                    detail='You must first set redirect_link_enabled to True before specifying a redirect link label.',
+                )
             forward_addon.label = redirect_link_label
             save_forward = True
 
@@ -1861,22 +2064,20 @@ class NodeSettingsUpdateSerializer(NodeSettingsSerializer):
         """
         Returns addon, if exists, otherwise returns None
         """
-        addon = obj.get_or_add_addon(addon_name, auth=auth) if should_enable else obj.delete_addon(addon_name, auth)
+        addon = (
+            obj.get_or_add_addon(addon_name, auth=auth)
+            if should_enable
+            else obj.delete_addon(addon_name, auth)
+        )
         if type(addon) == bool:
             addon = None
         return addon
 
 
 class NodeGroupsSerializer(JSONAPISerializer):
-    filterable_fields = frozenset([
-        'name',
-        'permission',
-        'date_created',
-    ])
+    filterable_fields = frozenset(['name', 'permission', 'date_created',])
 
-    writeable_method_fields = frozenset([
-        'permission',
-    ])
+    writeable_method_fields = frozenset(['permission',])
 
     non_anonymized_fields = [
         'type',
@@ -1896,14 +2097,13 @@ class NodeGroupsSerializer(JSONAPISerializer):
         required=False,
     )
 
-    links = LinksField({
-        'self': 'get_absolute_url',
-    })
+    links = LinksField({'self': 'get_absolute_url',})
 
     def get_absolute_url(self, obj):
         node = self.context['node']
         return absolute_reverse(
-            'nodes:node-group-detail', kwargs={
+            'nodes:node-group-detail',
+            kwargs={
                 'group_id': obj._id,
                 'node_id': node._id,
                 'version': self.context['request'].parser_context['kwargs']['version'],
@@ -1925,6 +2125,7 @@ class NodeGroupsCreateSerializer(NodeGroupsSerializer):
     so _id field needs to be writeable so it's not dropped from validated_data)
 
     """
+
     id = IDField(source='_id', required=False, allow_null=True)
 
     groups = RelationshipField(
@@ -1935,7 +2136,9 @@ class NodeGroupsCreateSerializer(NodeGroupsSerializer):
 
     def load_osf_group(self, _id):
         if not _id:
-            raise exceptions.ValidationError(detail='Group relationship must be specified.')
+            raise exceptions.ValidationError(
+                detail='Group relationship must be specified.',
+            )
         try:
             osf_group = OSFGroup.objects.get(_id=_id)
         except OSFGroup.DoesNotExist:
@@ -1945,11 +2148,15 @@ class NodeGroupsCreateSerializer(NodeGroupsSerializer):
     def create(self, validated_data):
         auth = get_user_auth(self.context['request'])
         node = self.context['node']
-        permission = validated_data.get('permission', osf_permissions.DEFAULT_CONTRIBUTOR_PERMISSIONS)
+        permission = validated_data.get(
+            'permission', osf_permissions.DEFAULT_CONTRIBUTOR_PERMISSIONS,
+        )
         group = self.load_osf_group(validated_data.get('_id'))
         if group in node.osf_groups:
             raise exceptions.ValidationError(
-                'The group {} has already been added to the node {}'.format(group._id, node._id),
+                'The group {} has already been added to the node {}'.format(
+                    group._id, node._id,
+                ),
             )
 
         try:
@@ -1966,6 +2173,7 @@ class NodeGroupsDetailSerializer(NodeGroupsSerializer):
     """
     Overrides NodeGroupsSerializer to make id required.  Adds update method here.
     """
+
     id = CompoundIDField(source='_id', required=True)
 
     def update(self, obj, validated_data):

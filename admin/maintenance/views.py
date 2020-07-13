@@ -40,8 +40,14 @@ class MaintenanceDisplay(PermissionRequiredMixin, TemplateView):
     def post(self, request, *args, **kwargs):
         data = request.POST
 
-        start = convert_eastern_to_utc(data['start']).isoformat() if data.get('start') else None
-        end = convert_eastern_to_utc(data['end']).isoformat() if data.get('end') else None
+        start = (
+            convert_eastern_to_utc(data['start']).isoformat()
+            if data.get('start')
+            else None
+        )
+        end = (
+            convert_eastern_to_utc(data['end']).isoformat() if data.get('end') else None
+        )
 
         maintenance.set_maintenance(data.get('message', ''), data['level'], start, end)
         return redirect('maintenance:display')

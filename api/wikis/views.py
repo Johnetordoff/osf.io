@@ -48,7 +48,10 @@ class WikiMixin(object):
         if wiki.deleted:
             raise Gone(detail='The wiki for this node has been deleted.')
 
-        if wiki.node.is_registration and self.request.method not in drf_permissions.SAFE_METHODS:
+        if (
+            wiki.node.is_registration
+            and self.request.method not in drf_permissions.SAFE_METHODS
+        ):
             raise MethodNotAllowed(method=self.request.method)
 
         if check_permissions:
@@ -123,6 +126,7 @@ class WikiDetail(JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView, WikiMix
     #This Request/Response
 
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -170,7 +174,7 @@ class WikiContent(JSONAPIBaseView, generics.RetrieveAPIView, WikiMixin):
     required_read_scopes = [CoreScopes.WIKI_BASE_READ]
     required_write_scopes = [CoreScopes.NULL]
 
-    renderer_classes = (PlainTextRenderer, )
+    renderer_classes = (PlainTextRenderer,)
     view_category = 'wikis'
     view_name = 'wiki-content'
 
@@ -211,6 +215,7 @@ class WikiVersionDetail(JSONAPIBaseView, generics.RetrieveAPIView, WikiMixin):
     """
     Details about a specific wiki version. *Read-only*.
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -246,7 +251,7 @@ class WikiVersionContent(JSONAPIBaseView, generics.RetrieveAPIView, WikiMixin):
     required_read_scopes = [CoreScopes.WIKI_BASE_READ]
     required_write_scopes = [CoreScopes.NULL]
 
-    renderer_classes = (PlainTextRenderer, )
+    renderer_classes = (PlainTextRenderer,)
     view_category = 'wikis'
     view_name = 'wiki-version-content'
 

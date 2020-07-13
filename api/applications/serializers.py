@@ -6,14 +6,25 @@ from rest_framework import exceptions, serializers as ser
 from osf.exceptions import ValidationError
 from osf.models import ApiOAuth2Application
 
-from api.base.serializers import JSONAPISerializer, LinksField, IDField, TypeField, VersionedDateTimeField
+from api.base.serializers import (
+    JSONAPISerializer,
+    LinksField,
+    IDField,
+    TypeField,
+    VersionedDateTimeField,
+)
 from api.base.utils import absolute_reverse
 from api.base.exceptions import format_validation_error
 
 
 class ApiOAuthApplicationBaseSerializer(JSONAPISerializer):
     """Base serializer class for OAuth2 applications """
-    id = IDField(source='client_id', read_only=True, help_text='The client ID for this application (automatically generated)')
+
+    id = IDField(
+        source='client_id',
+        read_only=True,
+        help_text='The client ID for this application (automatically generated)',
+    )
 
     type = TypeField()
 
@@ -27,10 +38,7 @@ class ApiOAuthApplicationBaseSerializer(JSONAPISerializer):
         read_only=True,
     )  # TODO: May change this later
 
-    links = LinksField({
-        'html': 'absolute_url',
-        'reset': 'reset_url',
-    })
+    links = LinksField({'html': 'absolute_url', 'reset': 'reset_url',})
 
     def absolute_url(self, obj):
         return obj.absolute_url
@@ -41,9 +49,12 @@ class ApiOAuthApplicationBaseSerializer(JSONAPISerializer):
     def reset_url(self, obj):
         if StrictVersion(self.context['request'].version) < StrictVersion('2.15'):
             return absolute_reverse(
-                'applications:application-reset', kwargs={
+                'applications:application-reset',
+                kwargs={
                     'client_id': obj.client_id,
-                    'version': self.context['request'].parser_context['kwargs']['version'],
+                    'version': self.context['request'].parser_context['kwargs'][
+                        'version'
+                    ],
                 },
             )
 
@@ -54,13 +65,16 @@ class ApiOAuthApplicationBaseSerializer(JSONAPISerializer):
 class ApiOAuth2ApplicationSerializer(ApiOAuthApplicationBaseSerializer):
     """Serialize data about a registered OAuth2 application"""
 
-    id = IDField(source='client_id', read_only=True, help_text='The client ID for this application (automatically generated)')
+    id = IDField(
+        source='client_id',
+        read_only=True,
+        help_text='The client ID for this application (automatically generated)',
+    )
 
     type = TypeField()
 
     name = ser.CharField(
-        help_text='A short, descriptive name for this application',
-        required=True,
+        help_text='A short, descriptive name for this application', required=True,
     )
 
     description = ser.CharField(
@@ -89,7 +103,8 @@ class ApiOAuth2ApplicationSerializer(ApiOAuthApplicationBaseSerializer):
     )
 
     date_created = VersionedDateTimeField(
-        source='created', help_text='The date this application was generated (automatically filled in)',
+        source='created',
+        help_text='The date this application was generated (automatically filled in)',
         read_only=True,
     )
 
@@ -109,7 +124,11 @@ class ApiOAuth2ApplicationDetailSerializer(ApiOAuth2ApplicationSerializer):
     and client_secret writable to reset the secret via API patch request
     """
 
-    id = IDField(source='client_id', required=True, help_text='The client ID for this application (automatically generated)')
+    id = IDField(
+        source='client_id',
+        required=True,
+        help_text='The client ID for this application (automatically generated)',
+    )
 
     client_secret = ser.CharField(
         help_text='The client secret for this application (automatically generated)',
@@ -118,7 +137,9 @@ class ApiOAuth2ApplicationDetailSerializer(ApiOAuth2ApplicationSerializer):
     )
 
     def update(self, instance, validated_data):
-        assert isinstance(instance, ApiOAuth2Application), 'instance must be an ApiOAuth2Application'
+        assert isinstance(
+            instance, ApiOAuth2Application,
+        ), 'instance must be an ApiOAuth2Application'
         client_secret = validated_data.pop('client_secret', None)
         if client_secret == '':
             instance.reset_secret(save=True)
@@ -133,14 +154,14 @@ class ApiOAuth2ApplicationDetailSerializer(ApiOAuth2ApplicationSerializer):
 
 
 class ApiOAuth2ApplicationResetSerializer(ApiOAuth2ApplicationDetailSerializer):
-
     def absolute_url(self, obj):
         obj = ApiOAuth2Application.objects.get(client_id=obj['client_id'])
         return obj.absolute_url
 
     def reset_url(self, obj):
         return absolute_reverse(
-            'applications:application-reset', kwargs={
+            'applications:application-reset',
+            kwargs={
                 'client_id': obj['client_id'],
                 'version': self.context['request'].parser_context['kwargs']['version'],
             },

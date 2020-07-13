@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0096_modify_noderequestaction_noderequest'),
     ]
 
-    operations = [
-    ]
+    operations = []

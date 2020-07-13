@@ -29,6 +29,7 @@ from api.nodes.permissions import ContributorOrPublic, AdminDeletePermissions
 from api.subjects.views import SubjectRelationshipBaseView, BaseResourceSubjectsList
 from osf.models import DraftRegistrationContributor
 
+
 class DraftRegistrationMixin(DraftMixin):
     """
     Old DraftMixin was built under the assumption that a node was provided from the start.
@@ -94,7 +95,10 @@ class DraftInstitutionsList(NodeInstitutionsList, DraftRegistrationMixin):
         base_permissions.TokenHasScope,
     )
 
-    required_read_scopes = [CoreScopes.INSTITUTION_READ, CoreScopes.DRAFT_REGISTRATIONS_READ]
+    required_read_scopes = [
+        CoreScopes.INSTITUTION_READ,
+        CoreScopes.DRAFT_REGISTRATIONS_READ,
+    ]
 
     view_category = 'draft_registrations'
     view_name = 'draft-registration-institutions'
@@ -104,7 +108,9 @@ class DraftInstitutionsList(NodeInstitutionsList, DraftRegistrationMixin):
         return self.get_draft()
 
 
-class DraftInstitutionsRelationship(NodeInstitutionsRelationship, DraftRegistrationMixin):
+class DraftInstitutionsRelationship(
+    NodeInstitutionsRelationship, DraftRegistrationMixin,
+):
     permission_classes = (
         ContributorOrPublic,
         drf_permissions.IsAuthenticatedOrReadOnly,
@@ -223,7 +229,9 @@ class DraftContributorDetail(NodeContributorDetail, DraftRegistrationMixin):
         try:
             return draft_registration.draftregistrationcontributor_set.get(user=user)
         except DraftRegistrationContributor.DoesNotExist:
-            raise exceptions.NotFound('{} cannot be found in the list of contributors.'.format(user))
+            raise exceptions.NotFound(
+                '{} cannot be found in the list of contributors.'.format(user),
+            )
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

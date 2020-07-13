@@ -22,7 +22,9 @@ class CitationStyle(BaseModel):
     date_parsed = NonNaiveDateTimeField(default=timezone.now)
 
     short_title = models.CharField(max_length=2048, null=True, blank=True)
-    summary = models.CharField(max_length=4200, null=True, blank=True)  # longest value was 3,812 8/23/2016
+    summary = models.CharField(
+        max_length=4200, null=True, blank=True
+    )  # longest value was 3,812 8/23/2016
     has_bibliography = models.BooleanField(default=False)
     parent_style = models.CharField(max_length=255, null=True, blank=True)
 
@@ -36,7 +38,7 @@ class CitationStyle(BaseModel):
             'short_title': self.short_title,
             'summary': self.summary,
             'has_bibliography': self.has_bibliography,
-            'parent_style': self.parent_style
+            'parent_style': self.parent_style,
         }
 
     @property

@@ -11,8 +11,7 @@ from addons.base import exceptions
 from framework.exceptions import HTTPError
 from mendeley.exception import MendeleyApiException
 from oauthlib.oauth2 import InvalidGrantError
-from addons.mendeley import \
-    settings  # TODO: Move `settings` to `apps.py` when deleting
+from addons.mendeley import settings  # TODO: Move `settings` to `apps.py` when deleting
 from addons.mendeley.api import APISession
 from addons.mendeley.serializer import MendeleySerializer
 from website.citations.providers import CitationsOauthProvider
@@ -57,9 +56,11 @@ class Mendeley(CitationsOauthProvider):
         partial = mendeley.Mendeley(
             client_id=self.client_id,
             client_secret=self.client_secret,
-            redirect_uri=web_url_for('oauth_callback',
-                                     service_name='mendeley',
-                                     _absolute=True) if has_app_context() else None,
+            redirect_uri=web_url_for(
+                'oauth_callback', service_name='mendeley', _absolute=True
+            )
+            if has_app_context()
+            else None,
         )
         credentials = credentials or {
             'access_token': self.account.oauth_key,
@@ -70,7 +71,7 @@ class Mendeley(CitationsOauthProvider):
         return APISession(partial, credentials)
 
     def _verify_client_validity(self):
-        #Check if Mendeley can be accessed
+        # Check if Mendeley can be accessed
         try:
             self._client.folders.list()
         except MendeleyApiException as error:
@@ -98,12 +99,10 @@ class Mendeley(CitationsOauthProvider):
         folder = self.client.folders.get(list_id)
 
         document_ids = [
-            document.id
-            for document in folder.documents.iter(page_size=500)
+            document.id for document in folder.documents.iter(page_size=500)
         ]
         citations = {
-            citation['id']: citation
-            for citation in self._citations_for_user()
+            citation['id']: citation for citation in self._citations_for_user()
         }
         return [citations[id] for id in document_ids]
 
@@ -111,8 +110,7 @@ class Mendeley(CitationsOauthProvider):
 
         documents = self.client.documents.iter(page_size=500)
         return [
-            self._citation_for_mendeley_document(document)
-            for document in documents
+            self._citation_for_mendeley_document(document) for document in documents
         ]
 
     def _citation_for_mendeley_document(self, document):
@@ -121,9 +119,7 @@ class Mendeley(CitationsOauthProvider):
             An instance of ``mendeley.models.base_document.BaseDocument``
         :return Citation:
         """
-        csl = {
-            'id': document.json.get('id')
-        }
+        csl = {'id': document.json.get('id')}
 
         CSL_TYPE_MAP = {
             'book_section': 'chapter',
@@ -140,7 +136,7 @@ class Mendeley(CitationsOauthProvider):
             'statute': 'legislation',
             'television_broadcast': 'broadcast',
             'web_page': 'webpage',
-            'working_paper': 'report'
+            'working_paper': 'report',
         }
 
         csl_type = document.json.get('type')
@@ -159,17 +155,17 @@ class Mendeley(CitationsOauthProvider):
 
         if document.json.get('authors'):
             csl['author'] = [
-                {
-                    'given': person.get('first_name'),
-                    'family': person.get('last_name'),
-                } for person in document.json.get('authors')
+                {'given': person.get('first_name'), 'family': person.get('last_name'),}
+                for person in document.json.get('authors')
             ]
 
         if document.json.get('chapter'):
             csl['chapter-number'] = document.json.get('chapter')
 
         if document.json.get('city') and document.json.get('country'):
-            csl['publisher-place'] = document.json.get('city') + ', ' + document.json.get('country')
+            csl['publisher-place'] = (
+                document.json.get('city') + ', ' + document.json.get('country')
+            )
 
         elif document.json.get('city'):
             csl['publisher-place'] = document.json.get('city')
@@ -182,10 +178,8 @@ class Mendeley(CitationsOauthProvider):
 
         if document.json.get('editors'):
             csl['editor'] = [
-                {
-                    'given': person.get('first_name'),
-                    'family': person.get('last_name'),
-                } for person in document.json.get('editors')
+                {'given': person.get('first_name'), 'family': person.get('last_name'),}
+                for person in document.json.get('editors')
             ]
 
         if document.json.get('genre'):
@@ -261,7 +255,9 @@ class NodeSettings(BaseCitationsNodeSettings):
     provider_name = 'mendeley'
     oauth_provider = Mendeley
     serializer = MendeleySerializer
-    user_settings = models.ForeignKey(UserSettings, null=True, blank=True, on_delete=models.CASCADE)
+    user_settings = models.ForeignKey(
+        UserSettings, null=True, blank=True, on_delete=models.CASCADE
+    )
 
     list_id = models.TextField(blank=True, null=True)
     _api = None
@@ -281,17 +277,20 @@ class NodeSettings(BaseCitationsNodeSettings):
                     'id': 'ROOT',
                     'parent_list_id': '__',
                     'kind': 'folder',
-                    'addon': 'mendeley'
-                }
-                serialized_folders = [{
                     'addon': 'mendeley',
-                    'kind': 'folder',
-                    'id': folder.json['id'],
-                    'name': folder.json['name'],
-                    'path': folder.json.get('parent_id', '/'),
-                    'parent_list_id': folder.json.get('parent_id', None),
-                    'provider_list_id': folder.json['id']
-                } for folder in folders]
+                }
+                serialized_folders = [
+                    {
+                        'addon': 'mendeley',
+                        'kind': 'folder',
+                        'id': folder.json['id'],
+                        'name': folder.json['name'],
+                        'path': folder.json.get('parent_id', '/'),
+                        'parent_list_id': folder.json.get('parent_id', None),
+                        'provider_list_id': folder.json['id'],
+                    }
+                    for folder in folders
+                ]
                 if show_root:
                     serialized_folders.insert(0, serialized_root_folder)
                 return serialized_folders

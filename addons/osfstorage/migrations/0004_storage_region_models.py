@@ -23,41 +23,106 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Region',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
                 ('_id', models.CharField(db_index=True, max_length=255)),
                 ('name', models.CharField(max_length=200)),
-                ('waterbutler_credentials', osf.utils.fields.EncryptedJSONField(default=dict)),
+                (
+                    'waterbutler_credentials',
+                    osf.utils.fields.EncryptedJSONField(default=dict),
+                ),
                 ('waterbutler_url', models.URLField(default=WATERBUTLER_URL)),
-                ('waterbutler_settings', osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONField(default=dict, encoder=osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONEncoder)),
+                (
+                    'waterbutler_settings',
+                    osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONField(
+                        default=dict,
+                        encoder=osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONEncoder,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
             name='UserSettings',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
-                ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
-                ('_id', models.CharField(db_index=True, default=osf.models.base.generate_object_id, max_length=24, unique=True)),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'created',
+                    django_extensions.db.fields.CreationDateTimeField(
+                        auto_now_add=True, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    django_extensions.db.fields.ModificationDateTimeField(
+                        auto_now=True, verbose_name='modified'
+                    ),
+                ),
+                (
+                    '_id',
+                    models.CharField(
+                        db_index=True,
+                        default=osf.models.base.generate_object_id,
+                        max_length=24,
+                        unique=True,
+                    ),
+                ),
                 ('deleted', models.BooleanField(default=False)),
-                ('default_region', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='addons_osfstorage.Region')),
-                ('owner', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='addons_osfstorage_user_settings', to=settings.AUTH_USER_MODEL)),
+                (
+                    'default_region',
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to='addons_osfstorage.Region',
+                    ),
+                ),
+                (
+                    'owner',
+                    models.OneToOneField(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='addons_osfstorage_user_settings',
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={'abstract': False,},
         ),
         migrations.AlterUniqueTogether(
-            name='region',
-            unique_together=set([('_id', 'name')]),
+            name='region', unique_together=set([('_id', 'name')]),
         ),
         migrations.AddField(
             model_name='nodesettings',
             name='region',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='addons_osfstorage.Region'),
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to='addons_osfstorage.Region',
+            ),
         ),
         migrations.AddField(
             model_name='nodesettings',
             name='user_settings',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='addons_osfstorage.UserSettings'),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to='addons_osfstorage.UserSettings',
+            ),
         ),
     ]

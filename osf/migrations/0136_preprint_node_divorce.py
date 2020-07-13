@@ -12,6 +12,7 @@ from bulk_update.helper import bulk_update
 
 logger = logging.getLogger(__name__)
 
+
 def reverse_func(apps, schema_editor):
     PreprintContributor = apps.get_model('osf', 'PreprintContributor')
     PreprintTags = apps.get_model('osf', 'Preprint_Tags')
@@ -49,13 +50,27 @@ def reverse_func(apps, schema_editor):
         if preprint.primary_file:
             preprint_file = BaseFileNode.objects.get(id=preprint.primary_file.id)
             preprint_file.target_object_id = node.id
-            preprint_file.target_content_type_id = ContentType.objects.get_for_model(AbstractNode).id
-            preprint_file.parent_id = NodeSettings.objects.get(owner_id=node.id).root_node_id
+            preprint_file.target_content_type_id = ContentType.objects.get_for_model(
+                AbstractNode
+            ).id
+            preprint_file.parent_id = NodeSettings.objects.get(
+                owner_id=node.id
+            ).root_node_id
 
-            node_id = Guid.objects.get(content_type=ContentType.objects.get_for_model(AbstractNode).id, object_id=node.id)._id
-            preprint_id = Guid.objects.get(content_type=ContentType.objects.get_for_model(Preprint).id, object_id=preprint.id)._id
-            PageCounter.objects.filter(Q(_id__contains=preprint_id) & Q(_id__contains=preprint_file._id)).update(
-                _id=Func(F('_id'), Value(preprint_id), Value(node_id), function='replace')
+            node_id = Guid.objects.get(
+                content_type=ContentType.objects.get_for_model(AbstractNode).id,
+                object_id=node.id,
+            )._id
+            preprint_id = Guid.objects.get(
+                content_type=ContentType.objects.get_for_model(Preprint).id,
+                object_id=preprint.id,
+            )._id
+            PageCounter.objects.filter(
+                Q(_id__contains=preprint_id) & Q(_id__contains=preprint_file._id)
+            ).update(
+                _id=Func(
+                    F('_id'), Value(preprint_id), Value(node_id), function='replace'
+                )
             )
 
         node.preprint_file = preprint_file
@@ -76,18 +91,44 @@ def reverse_func(apps, schema_editor):
 
     PreprintContributor.objects.all().delete()
     PreprintTags.objects.all().delete()
-    bulk_update(preprints, update_fields=['title', 'description', 'creator', 'article_doi', 'is_public', 'region_id', 'deleted', 'migrated', 'modified', 'primary_file', 'spam_status', 'spam_pro_tip', 'spam_data', 'date_last_reported', 'reports'])
+    bulk_update(
+        preprints,
+        update_fields=[
+            'title',
+            'description',
+            'creator',
+            'article_doi',
+            'is_public',
+            'region_id',
+            'deleted',
+            'migrated',
+            'modified',
+            'primary_file',
+            'spam_status',
+            'spam_pro_tip',
+            'spam_data',
+            'date_last_reported',
+            'reports',
+        ],
+    )
     bulk_update(nodes, update_fields=['preprint_file'])
     bulk_update(files)
     # Order is important - remove the preprint root folders after the files have been saved back onto the nodes
-    BaseFileNode.objects.filter(type='osf.osfstoragefolder', is_root=True, target_content_type_id=ContentType.objects.get_for_model(Preprint).id).delete()
+    BaseFileNode.objects.filter(
+        type='osf.osfstoragefolder',
+        is_root=True,
+        target_content_type_id=ContentType.objects.get_for_model(Preprint).id,
+    ).delete()
     modified_field.auto_now = True
     node_modified_field.auto_now = True
 
+
 group_format = 'preprint_{self.id}_{group}'
+
 
 def format_group(self, name):
     return group_format.format(self=self, group=name)
+
 
 def emit_signals(state, schema):
     # this is to make sure that the permissions created earlier exist!
@@ -418,7 +459,8 @@ class Migration(migrations.Migration):
                 UPDATE osf_preprint
                 SET migrated = current_timestamp
                 WHERE osf_preprint.node_id IS NOT NULL
-                """
-            ], []
-        )
+                """,
+            ],
+            [],
+        ),
     ]

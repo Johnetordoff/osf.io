@@ -13,8 +13,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
-            model_name='notificationdigest',
-            name='message',
-            field=models.TextField(),
+            model_name='notificationdigest', name='message', field=models.TextField(),
         ),
     ]

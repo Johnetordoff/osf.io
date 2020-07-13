@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('addons_zotero', '0003_nodesettings_library_id'),
     ]
 
-    operations = [
-    ]
+    operations = []

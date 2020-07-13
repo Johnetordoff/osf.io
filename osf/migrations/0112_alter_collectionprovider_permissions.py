@@ -14,6 +14,10 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelOptions(
             name='collectionprovider',
-            options={'permissions': (('view_collectionprovider', 'Can view collection provider details'),)},
+            options={
+                'permissions': (
+                    ('view_collectionprovider', 'Can view collection provider details'),
+                )
+            },
         ),
     ]

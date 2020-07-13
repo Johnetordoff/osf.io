@@ -30,6 +30,7 @@ class OSFGroupMixin(object):
     """
     Mixin with convenience method for retrieving the current OSF Group
     """
+
     group_lookup_url_kwarg = 'group_id'
 
     def get_osf_group(self, check_object_permissions=True):
@@ -62,7 +63,7 @@ class GroupList(GroupBaseView, generics.ListCreateAPIView, ListFilterMixin):
 
     serializer_class = GroupSerializer
     view_name = 'group-list'
-    ordering = ('-modified', )
+    ordering = ('-modified',)
 
     @require_flag(OSF_GROUPS)
     def get_default_queryset(self):
@@ -113,6 +114,7 @@ class OSFGroupMemberBaseView(JSONAPIBaseView, OSFGroupMixin):
     """
     Base group used for OSFGroupMemberList and OSFGroupMemberDetail
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -124,7 +126,7 @@ class OSFGroupMemberBaseView(JSONAPIBaseView, OSFGroupMixin):
     model_class = apps.get_model('osf.OSFUser')
     serializer_class = GroupMemberSerializer
     view_category = 'groups'
-    ordering = ('-modified', )
+    ordering = ('-modified',)
 
     def _assert_member_belongs_to_group(self, user):
         group = self.get_osf_group()
@@ -152,7 +154,13 @@ class OSFGroupMemberBaseView(JSONAPIBaseView, OSFGroupMixin):
             raise ValidationError(detail=str(e))
 
 
-class GroupMembersList(OSFGroupMemberBaseView, bulk_views.BulkUpdateJSONAPIView, bulk_views.BulkDestroyJSONAPIView, bulk_views.ListBulkCreateJSONAPIView, ListFilterMixin):
+class GroupMembersList(
+    OSFGroupMemberBaseView,
+    bulk_views.BulkUpdateJSONAPIView,
+    bulk_views.BulkDestroyJSONAPIView,
+    bulk_views.ListBulkCreateJSONAPIView,
+    ListFilterMixin,
+):
     view_name = 'group-members'
 
     # Overrides ListBulkCreateJSONAPIView
@@ -199,7 +207,9 @@ class GroupMembersList(OSFGroupMemberBaseView, bulk_views.BulkUpdateJSONAPIView,
             self._assert_member_belongs_to_group(resource)
 
         if len(resource_object_list) != len(request_data):
-            raise ValidationError({'non_field_errors': 'Could not find all objects to delete.'})
+            raise ValidationError(
+                {'non_field_errors': 'Could not find all objects to delete.'},
+            )
 
         return resource_object_list
 
@@ -207,21 +217,27 @@ class GroupMembersList(OSFGroupMemberBaseView, bulk_views.BulkUpdateJSONAPIView,
     def build_query_from_field(self, field_name, operation):
         if field_name == 'role':
             if operation['op'] != 'eq':
-                raise InvalidFilterOperator(value=operation['op'], valid_operators=['eq'])
+                raise InvalidFilterOperator(
+                    value=operation['op'], valid_operators=['eq'],
+                )
             # operation['value'] should be 'member' or 'manager'
             role = operation['value'].lower().strip()
             if role not in GROUP_ROLES:
                 raise InvalidFilterValue(value=operation['value'])
             group = self.get_osf_group(check_object_permissions=False)
             return Q(id__in=group.managers if role == MANAGER else group.members_only)
-        return super(GroupMembersList, self).build_query_from_field(field_name, operation)
+        return super(GroupMembersList, self).build_query_from_field(
+            field_name, operation,
+        )
 
     @require_flag(OSF_GROUPS)
     def perform_create(self, serializer):
         return super(GroupMembersList, self).perform_create(serializer)
 
 
-class GroupMemberDetail(OSFGroupMemberBaseView, generics.RetrieveUpdateDestroyAPIView, UserMixin):
+class GroupMemberDetail(
+    OSFGroupMemberBaseView, generics.RetrieveUpdateDestroyAPIView, UserMixin,
+):
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,

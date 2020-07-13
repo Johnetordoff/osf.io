@@ -16,11 +16,16 @@ def untransfer_forked_date(state, schema):
     """
     AbstractNode = state.get_model('osf', 'abstractnode')
     newest = NodeLog.objects.filter(node=OuterRef('pk')).order_by('-date')
-    nodes = AbstractNode.objects.filter(is_fork=True, type='osf.node').annotate(latest_log=Subquery(newest.values('action')[:1])).filter(latest_log='node_forked')
+    nodes = (
+        AbstractNode.objects.filter(is_fork=True, type='osf.node')
+        .annotate(latest_log=Subquery(newest.values('action')[:1]))
+        .filter(latest_log='node_forked')
+    )
     for node in nodes:
         node.last_logged = node.logs.order_by('-date')[1].date
 
     bulk_update(nodes, update_fields=['last_logged'])
+
 
 def transfer_forked_date(state, schema):
     """
@@ -28,7 +33,11 @@ def transfer_forked_date(state, schema):
     """
     AbstractNode = state.get_model('osf', 'abstractnode')
     newest = NodeLog.objects.filter(node=OuterRef('pk')).order_by('-date')
-    nodes = AbstractNode.objects.filter(is_fork=True, type='osf.node').annotate(latest_log=Subquery(newest.values('action')[:1])).filter(latest_log='node_forked')
+    nodes = (
+        AbstractNode.objects.filter(is_fork=True, type='osf.node')
+        .annotate(latest_log=Subquery(newest.values('action')[:1]))
+        .filter(latest_log='node_forked')
+    )
     for node in nodes:
         node.last_logged = node.logs.first().date
 
@@ -42,7 +51,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(
-            transfer_forked_date, untransfer_forked_date
-        ),
+        migrations.RunPython(transfer_forked_date, untransfer_forked_date),
     ]

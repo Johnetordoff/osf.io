@@ -16,13 +16,21 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='WhitelistedSHAREPreprintProvider',
             fields=[
-                ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
-                ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
+                (
+                    'created',
+                    django_extensions.db.fields.CreationDateTimeField(
+                        auto_now_add=True, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    django_extensions.db.fields.ModificationDateTimeField(
+                        auto_now=True, verbose_name='modified'
+                    ),
+                ),
                 ('id', models.AutoField(primary_key=True, serialize=False)),
                 ('provider_name', models.CharField(max_length=200, unique=True)),
             ],
-            options={
-                'abstract': False,
-            },
+            options={'abstract': False,},
         ),
     ]

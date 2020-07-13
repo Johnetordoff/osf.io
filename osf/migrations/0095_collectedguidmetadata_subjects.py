@@ -15,6 +15,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='collectedguidmetadata',
             name='subjects',
-            field=models.ManyToManyField(blank=True, related_name='collectedguidmetadatas', to='osf.Subject'),
+            field=models.ManyToManyField(
+                blank=True, related_name='collectedguidmetadatas', to='osf.Subject'
+            ),
         ),
     ]

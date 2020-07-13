@@ -17,11 +17,15 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='abstractnode',
             name='creator',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='nodes_created', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name='nodes_created',
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.RenameField(
-            model_name='comment',
-            old_name='modified',
-            new_name='edited'
+            model_name='comment', old_name='modified', new_name='edited'
         ),
     ]

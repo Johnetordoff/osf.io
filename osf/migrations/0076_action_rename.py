@@ -12,10 +12,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RenameModel(
-            old_name='Action',
-            new_name='ReviewAction',
-        ),
+        migrations.RenameModel(old_name='Action', new_name='ReviewAction',),
         migrations.RenameField(
             model_name='preprintservice',
             old_name='reviews_state',

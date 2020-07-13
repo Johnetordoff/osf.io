@@ -36,60 +36,57 @@ def populate_institution_metrics(users, institutions, dates):
     for date in dates:
 
         for institution in institutions:
-            institution_public_project_count = institution_public_project_count - int(5 * random())
-            institution_private_project_count = institution_private_project_count - int(5 * random())
+            institution_public_project_count = institution_public_project_count - int(
+                5 * random()
+            )
+            institution_private_project_count = institution_private_project_count - int(
+                5 * random()
+            )
 
             InstitutionProjectCounts.record_institution_project_counts(
                 institution=institution,
                 public_project_count=institution_public_project_count,
                 private_project_count=institution_private_project_count,
-                timestamp=date
+                timestamp=date,
             )
 
             for user in users:
-                user_public_project_count = (int(10 * random()))
-                user_private_project_count = (int(10 * random()))
+                user_public_project_count = int(10 * random())
+                user_private_project_count = int(10 * random())
 
                 UserInstitutionProjectCounts.record_user_institution_project_counts(
                     institution=institution,
                     user=user,
                     public_project_count=user_public_project_count,
                     private_project_count=user_private_project_count,
-                    timestamp=date
+                    timestamp=date,
                 )
 
 
 class Command(BaseCommand):
-
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
-        parser.add_argument(
-            '--users',
-            nargs='*',
-            help='Specify user guids'
-        )
+        parser.add_argument('--users', nargs='*', help='Specify user guids')
         parser.add_argument(
             '--num_users',
             type=int,
             default=3,
-            help='Specify number of users to use if not specifying users'
+            help='Specify number of users to use if not specifying users',
         )
         parser.add_argument(
-            '--institutions',
-            nargs='*',
-            help='Specify insitutions guids'
+            '--institutions', nargs='*', help='Specify insitutions guids'
         )
         parser.add_argument(
             '--num_institutions',
             type=int,
             default=1,
-            help='Specify number of institutions to use if not specifying institutions'
+            help='Specify number of institutions to use if not specifying institutions',
         )
         parser.add_argument(
             '--days',
             type=int,
             default=7,
-            help='Specify number of past days to write metrics data for'
+            help='Specify number of past days to write metrics data for',
         )
 
     def handle(self, *args, **options):
@@ -103,11 +100,15 @@ class Command(BaseCommand):
             users = OSFUser.objects.all()[:num_users]
 
         if options.get('institutions'):
-            institutions = Institution.objects.filter(_id__in=options.get('institutions'))
+            institutions = Institution.objects.filter(
+                _id__in=options.get('institutions')
+            )
         else:
             institutions = Institution.objects.all()[:num_institutions]
 
         today = dt.datetime.today()
-        last_x_days = [(today - dt.timedelta(days=num_days)) for num_days in range(0, days)]
+        last_x_days = [
+            (today - dt.timedelta(days=num_days)) for num_days in range(0, days)
+        ]
 
         populate_institution_metrics(users, institutions, last_x_days)

@@ -2,11 +2,17 @@ from rest_framework import serializers as ser
 
 from distutils.version import StrictVersion
 
-from api.base.serializers import JSONAPISerializer, LinksField, ShowIfVersion, RelationshipField
+from api.base.serializers import (
+    JSONAPISerializer,
+    LinksField,
+    ShowIfVersion,
+    RelationshipField,
+)
 from api.subjects.serializers import UpdateSubjectsMixin
 from osf.models import Subject
 
 subjects_as_relationships_version = '2.16'
+
 
 class TaxonomyField(ser.Field):
     def to_representation(self, subject):
@@ -29,9 +35,8 @@ class TaxonomizableSerializerMixin(ser.Serializer, UpdateSubjectsMixin):
     Note: subclasses will need to update `filterable_fields` and `update`
     to handle subjects correctly.
     """
-    writeable_method_fields = frozenset([
-        'subjects',
-    ])
+
+    writeable_method_fields = frozenset(['subjects',])
 
     def __init__(self, *args, **kwargs):
         super(TaxonomizableSerializerMixin, self).__init__(*args, **kwargs)
@@ -92,10 +97,10 @@ class TaxonomizableSerializerMixin(ser.Serializer, UpdateSubjectsMixin):
         serialized under attributes
         """
         from api.taxonomies.serializers import TaxonomyField
+
         return [
-            [
-                TaxonomyField().to_representation(subj) for subj in hier
-            ] for hier in obj.subject_hierarchy
+            [TaxonomyField().to_representation(subj) for subj in hier]
+            for hier in obj.subject_hierarchy
         ]
 
     # Overrides UpdateSubjectsMixin
@@ -120,35 +125,28 @@ class TaxonomizableSerializerMixin(ser.Serializer, UpdateSubjectsMixin):
         :param object request: Request object
         :return bool: Subjects should be serialized as relationships
         """
-        return StrictVersion(getattr(request, 'version', '2.0')) >= StrictVersion(subjects_as_relationships_version)
+        return StrictVersion(getattr(request, 'version', '2.0')) >= StrictVersion(
+            subjects_as_relationships_version,
+        )
 
 
 class TaxonomySerializer(JSONAPISerializer):
     """
     Will be deprecated in the future and replaced by SubjectSerializer
     """
-    filterable_fields = frozenset([
-        'text',
-        'parents',
-        'parent',
-        'id',
-    ])
+
+    filterable_fields = frozenset(['text', 'parents', 'parent', 'id',])
     id = ser.CharField(source='_id', required=True)
     text = ser.CharField(max_length=200)
     parents = ShowIfVersion(
-        ser.SerializerMethodField(),
-        min_version='2.0',
-        max_version='2.3',
+        ser.SerializerMethodField(), min_version='2.0', max_version='2.3',
     )
     parent = TaxonomyField()
     child_count = ser.SerializerMethodField()
     share_title = ser.CharField(source='provider.share_title', read_only=True)
     path = ser.CharField(read_only=True)
 
-    links = LinksField({
-        'parents': 'get_parent_urls',
-        'self': 'get_absolute_url',
-    })
+    links = LinksField({'parents': 'get_parent_urls', 'self': 'get_absolute_url',})
 
     def get_child_count(self, obj):
         children_count = getattr(obj, 'children_count', None)

@@ -15,7 +15,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='maintenancestate',
             name='level',
-            field=models.IntegerField(choices=[(1, 'info'), (2, 'warning'), (3, 'danger')], default=1),
+            field=models.IntegerField(
+                choices=[(1, 'info'), (2, 'warning'), (3, 'danger')], default=1
+            ),
         ),
         migrations.AddField(
             model_name='maintenancestate',

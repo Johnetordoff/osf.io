@@ -14,6 +14,7 @@ from osf.models import NodeLicense
 class LicenseDetail(JSONAPIBaseView, generics.RetrieveAPIView):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/licenses_read).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -42,6 +43,7 @@ class LicenseDetail(JSONAPIBaseView, generics.RetrieveAPIView):
 class LicenseList(JSONAPIBaseView, generics.ListAPIView, ListFilterMixin):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/license_list).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -55,7 +57,7 @@ class LicenseList(JSONAPIBaseView, generics.ListAPIView, ListFilterMixin):
     view_category = 'licenses'
     view_name = 'license-list'
 
-    ordering = ('name', )  # default ordering
+    ordering = ('name',)  # default ordering
 
     def get_default_queryset(self):
         # excludes CCBYNCND and CCBYSA40

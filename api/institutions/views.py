@@ -43,7 +43,11 @@ from api.institutions.serializers import (
     InstitutionUserMetricsSerializer,
 )
 from api.institutions.permissions import UserIsAffiliated
-from api.institutions.renderers import InstitutionDepartmentMetricsCSVRenderer, InstitutionUserMetricsCSVRenderer, MetricsCSVRenderer
+from api.institutions.renderers import (
+    InstitutionDepartmentMetricsCSVRenderer,
+    InstitutionUserMetricsCSVRenderer,
+    MetricsCSVRenderer,
+)
 
 
 class InstitutionMixin(object):
@@ -65,6 +69,7 @@ class InstitutionMixin(object):
 class InstitutionList(JSONAPIBaseView, generics.ListAPIView, ListFilterMixin):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/institutions_list).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -79,7 +84,7 @@ class InstitutionList(JSONAPIBaseView, generics.ListAPIView, ListFilterMixin):
     view_category = 'institutions'
     view_name = 'institution-list'
 
-    ordering = ('name', )
+    ordering = ('name',)
 
     def get_default_queryset(self):
         return Institution.objects.filter(_id__isnull=False, is_deleted=False)
@@ -92,6 +97,7 @@ class InstitutionList(JSONAPIBaseView, generics.ListAPIView, ListFilterMixin):
 class InstitutionDetail(JSONAPIBaseView, generics.RetrieveAPIView, InstitutionMixin):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/institutions_detail).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -110,9 +116,12 @@ class InstitutionDetail(JSONAPIBaseView, generics.RetrieveAPIView, InstitutionMi
         return self.get_institution()
 
 
-class InstitutionNodeList(JSONAPIBaseView, generics.ListAPIView, InstitutionMixin, NodesFilterMixin):
+class InstitutionNodeList(
+    JSONAPIBaseView, generics.ListAPIView, InstitutionMixin, NodesFilterMixin,
+):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/institutions_node_list).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -126,7 +135,7 @@ class InstitutionNodeList(JSONAPIBaseView, generics.ListAPIView, InstitutionMixi
     view_category = 'institutions'
     view_name = 'institution-nodes'
 
-    ordering = ('-modified', )
+    ordering = ('-modified',)
 
     # overrides NodesFilterMixin
     def get_default_queryset(self):
@@ -134,7 +143,9 @@ class InstitutionNodeList(JSONAPIBaseView, generics.ListAPIView, InstitutionMixi
         return (
             institution.nodes.filter(is_public=True, is_deleted=False, type='osf.node')
             .select_related('node_license')
-            .include('contributor__user__guids', 'root__guids', 'tags', limit_includes=10)
+            .include(
+                'contributor__user__guids', 'root__guids', 'tags', limit_includes=10,
+            )
             .annotate(region=F('addons_osfstorage_node_settings__region___id'))
         )
 
@@ -145,9 +156,12 @@ class InstitutionNodeList(JSONAPIBaseView, generics.ListAPIView, InstitutionMixi
         return self.get_queryset_from_request()
 
 
-class InstitutionUserList(JSONAPIBaseView, ListFilterMixin, generics.ListAPIView, InstitutionMixin):
+class InstitutionUserList(
+    JSONAPIBaseView, ListFilterMixin, generics.ListAPIView, InstitutionMixin,
+):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/institutions_users_list).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -183,6 +197,7 @@ class InstitutionAuth(JSONAPIBaseView, generics.CreateAPIView):
     a new one.  Everything happens in the API authentication class and the ``post()`` simply returns
     a 204 if the auth passes. (See ``api.institutions.authenticationInstitutionAuthentication``)
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticated,
         base_permissions.TokenHasScope,
@@ -192,7 +207,7 @@ class InstitutionAuth(JSONAPIBaseView, generics.CreateAPIView):
 
     required_read_scopes = [CoreScopes.NULL]
     required_write_scopes = [CoreScopes.NULL]
-    authentication_classes = (InstitutionAuthentication, )
+    authentication_classes = (InstitutionAuthentication,)
     view_category = 'institutions'
     view_name = 'institution-auth'
 
@@ -203,19 +218,31 @@ class InstitutionAuth(JSONAPIBaseView, generics.CreateAPIView):
 class InstitutionRegistrationList(InstitutionNodeList):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/institutions_registration_list).
     """
+
     serializer_class = RegistrationSerializer
     view_name = 'institution-registrations'
 
-    ordering = ('-modified', )
+    ordering = ('-modified',)
 
     def get_default_queryset(self):
         institution = self.get_institution()
-        return institution.nodes.filter(is_deleted=False, is_public=True, type='osf.registration', retraction__isnull=True)
+        return institution.nodes.filter(
+            is_deleted=False,
+            is_public=True,
+            type='osf.registration',
+            retraction__isnull=True,
+        )
 
     def get_queryset(self):
         return self.get_queryset_from_request()
 
-class InstitutionRegistrationsRelationship(JSONAPIBaseView, generics.RetrieveDestroyAPIView, generics.CreateAPIView, InstitutionMixin):
+
+class InstitutionRegistrationsRelationship(
+    JSONAPIBaseView,
+    generics.RetrieveDestroyAPIView,
+    generics.CreateAPIView,
+    InstitutionMixin,
+):
     """ Relationship Endpoint for Institution -> Registrations Relationship
 
     Used to set, remove, update and retrieve the affiliated_institution of registrations with this institution
@@ -253,15 +280,22 @@ class InstitutionRegistrationsRelationship(JSONAPIBaseView, generics.RetrieveDes
 
     This requires write permissions in the registrations requested.
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
         UserIsAffiliated,
     )
-    required_read_scopes = [CoreScopes.NODE_REGISTRATIONS_READ, CoreScopes.INSTITUTION_READ]
+    required_read_scopes = [
+        CoreScopes.NODE_REGISTRATIONS_READ,
+        CoreScopes.INSTITUTION_READ,
+    ]
     required_write_scopes = [CoreScopes.NODE_REGISTRATIONS_WRITE]
     serializer_class = InstitutionRegistrationsRelationshipSerializer
-    parser_classes = (JSONAPIRelationshipParser, JSONAPIRelationshipParserForRegularJSON, )
+    parser_classes = (
+        JSONAPIRelationshipParser,
+        JSONAPIRelationshipParserForRegularJSON,
+    )
 
     view_category = 'institutions'
     view_name = 'institution-relationships-registrations'
@@ -269,7 +303,9 @@ class InstitutionRegistrationsRelationship(JSONAPIBaseView, generics.RetrieveDes
     def get_object(self):
         inst = self.get_institution()
         auth = get_user_auth(self.request)
-        registrations = inst.nodes.filter(is_deleted=False, type='osf.registration').can_view(user=auth.user, private_link=auth.private_link)
+        registrations = inst.nodes.filter(
+            is_deleted=False, type='osf.registration',
+        ).can_view(user=auth.user, private_link=auth.private_link)
         ret = {
             'data': registrations,
             'self': inst,
@@ -285,7 +321,9 @@ class InstitutionRegistrationsRelationship(JSONAPIBaseView, generics.RetrieveDes
         for id_ in ids:
             registration = Registration.load(id_)
             if not registration.has_permission(user, osf_permissions.WRITE):
-                raise exceptions.PermissionDenied(detail='Write permission on registration {} required'.format(id_))
+                raise exceptions.PermissionDenied(
+                    detail='Write permission on registration {} required'.format(id_),
+                )
             registrations.append(registration)
 
         for registration in registrations:
@@ -294,12 +332,20 @@ class InstitutionRegistrationsRelationship(JSONAPIBaseView, generics.RetrieveDes
 
     def create(self, *args, **kwargs):
         try:
-            ret = super(InstitutionRegistrationsRelationship, self).create(*args, **kwargs)
+            ret = super(InstitutionRegistrationsRelationship, self).create(
+                *args, **kwargs
+            )
         except RelationshipPostMakesNoChanges:
             return Response(status=status.HTTP_204_NO_CONTENT)
         return ret
 
-class InstitutionNodesRelationship(JSONAPIBaseView, generics.RetrieveDestroyAPIView, generics.CreateAPIView, InstitutionMixin):
+
+class InstitutionNodesRelationship(
+    JSONAPIBaseView,
+    generics.RetrieveDestroyAPIView,
+    generics.CreateAPIView,
+    InstitutionMixin,
+):
     """ Relationship Endpoint for Institution -> Nodes Relationship
 
     Used to set, remove, update and retrieve the affiliated_institution of nodes with this institution
@@ -337,6 +383,7 @@ class InstitutionNodesRelationship(JSONAPIBaseView, generics.RetrieveDestroyAPIV
 
     This requires write permissions in the nodes requested.
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -345,7 +392,10 @@ class InstitutionNodesRelationship(JSONAPIBaseView, generics.RetrieveDestroyAPIV
     required_read_scopes = [CoreScopes.NODE_BASE_READ, CoreScopes.INSTITUTION_READ]
     required_write_scopes = [CoreScopes.NODE_BASE_WRITE]
     serializer_class = InstitutionNodesRelationshipSerializer
-    parser_classes = (JSONAPIRelationshipParser, JSONAPIRelationshipParserForRegularJSON, )
+    parser_classes = (
+        JSONAPIRelationshipParser,
+        JSONAPIRelationshipParserForRegularJSON,
+    )
 
     view_category = 'institutions'
     view_name = 'institution-relationships-nodes'
@@ -353,7 +403,9 @@ class InstitutionNodesRelationship(JSONAPIBaseView, generics.RetrieveDestroyAPIV
     def get_object(self):
         inst = self.get_institution()
         auth = get_user_auth(self.request)
-        nodes = inst.nodes.filter(is_deleted=False, type='osf.node').can_view(user=auth.user, private_link=auth.private_link)
+        nodes = inst.nodes.filter(is_deleted=False, type='osf.node').can_view(
+            user=auth.user, private_link=auth.private_link,
+        )
         ret = {
             'data': nodes,
             'self': inst,
@@ -369,7 +421,9 @@ class InstitutionNodesRelationship(JSONAPIBaseView, generics.RetrieveDestroyAPIV
         for id_ in ids:
             node = Node.load(id_)
             if not node.has_permission(user, osf_permissions.WRITE):
-                raise exceptions.PermissionDenied(detail='Write permission on node {} required'.format(id_))
+                raise exceptions.PermissionDenied(
+                    detail='Write permission on node {} required'.format(id_),
+                )
             nodes.append(node)
 
         for node in nodes:
@@ -384,7 +438,9 @@ class InstitutionNodesRelationship(JSONAPIBaseView, generics.RetrieveDestroyAPIV
         return ret
 
 
-class InstitutionSummaryMetrics(JSONAPIBaseView, generics.RetrieveAPIView, InstitutionMixin):
+class InstitutionSummaryMetrics(
+    JSONAPIBaseView, generics.RetrieveAPIView, InstitutionMixin,
+):
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -402,10 +458,14 @@ class InstitutionSummaryMetrics(JSONAPIBaseView, generics.RetrieveAPIView, Insti
     # overrides RetrieveAPIView
     def get_object(self):
         institution = self.get_institution()
-        return InstitutionProjectCounts.get_latest_institution_project_document(institution)
+        return InstitutionProjectCounts.get_latest_institution_project_document(
+            institution,
+        )
 
 
-class InstitutionImpactList(JSONAPIBaseView, ListFilterMixin, generics.ListAPIView, InstitutionMixin):
+class InstitutionImpactList(
+    JSONAPIBaseView, ListFilterMixin, generics.ListAPIView, InstitutionMixin,
+):
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -472,16 +532,24 @@ class InstitutionDepartmentList(InstitutionImpactList):
     view_name = 'institution-department-metrics'
 
     serializer_class = InstitutionDepartmentMetricsSerializer
-    renderer_classes = tuple(api_settings.DEFAULT_RENDERER_CLASSES, ) + (InstitutionDepartmentMetricsCSVRenderer, )
+    renderer_classes = tuple(api_settings.DEFAULT_RENDERER_CLASSES,) + (
+        InstitutionDepartmentMetricsCSVRenderer,
+    )
 
-    ordering = ('-number_of_users', 'name',)
+    ordering = (
+        '-number_of_users',
+        'name',
+    )
 
     def _format_search(self, search, default_kwargs=None):
         results = search.execute()
 
         if results.aggregations:
             buckets = results.aggregations['date_range']['departments'].buckets
-            department_data = [{'name': bucket['key'], 'number_of_users': bucket['doc_count']} for bucket in buckets]
+            department_data = [
+                {'name': bucket['key'], 'number_of_users': bucket['doc_count']}
+                for bucket in buckets
+            ]
             return department_data
         else:
             return []
@@ -496,7 +564,9 @@ class InstitutionUserMetricsList(InstitutionImpactList):
     view_name = 'institution-user-metrics'
 
     serializer_class = InstitutionUserMetricsSerializer
-    renderer_classes = tuple(api_settings.DEFAULT_RENDERER_CLASSES, ) + (InstitutionUserMetricsCSVRenderer, )
+    renderer_classes = tuple(api_settings.DEFAULT_RENDERER_CLASSES,) + (
+        InstitutionUserMetricsCSVRenderer,
+    )
 
     ordering = ('user_name',)
 
@@ -518,4 +588,6 @@ class InstitutionUserMetricsList(InstitutionImpactList):
     def get_default_queryset(self):
         institution = self.get_institution()
         search = UserInstitutionProjectCounts.get_current_user_metrics(institution)
-        return self._make_elasticsearch_results_filterable(search, id=institution._id, department=DEFAULT_ES_NULL_VALUE)
+        return self._make_elasticsearch_results_filterable(
+            search, id=institution._id, department=DEFAULT_ES_NULL_VALUE,
+        )

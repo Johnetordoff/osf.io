@@ -34,13 +34,11 @@ def set_maintenance(message, level=1, start=None, end=None):
     unset_maintenance()
 
     state = MaintenanceState.objects.create(
-        level=level,
-        start=start,
-        end=end,
-        message=message
+        level=level, start=start, end=end, message=message
     )
 
     return {'start': state.start, 'end': state.end}
+
 
 def get_maintenance():
     """Get the current start and end times for the maintenance state.
@@ -48,6 +46,7 @@ def get_maintenance():
     """
     maintenance = MaintenanceState.objects.all().first()
     return MaintenanceStateSerializer(maintenance).data if maintenance else None
+
 
 def unset_maintenance():
     MaintenanceState.objects.all().delete()

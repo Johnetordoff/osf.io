@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from osf_tests.factories import (
-    AuthUserFactory,
-    NodeFactory
-)
+from osf_tests.factories import AuthUserFactory, NodeFactory
 
 from api_tests.nodes.views.test_node_contributors_list import NodeCRUDTestCase
 
 
 @pytest.mark.django_db
 class TestSparseNodeDetail:
-
     @pytest.fixture()
     def user(self):
         return AuthUserFactory()
@@ -66,7 +62,6 @@ class TestSparseNodeDetail:
 
 @pytest.mark.django_db
 class TestSparseNodeUpdate(NodeCRUDTestCase):
-
     @pytest.fixture()
     def sparse_url_public(self, project_public):
         return f'/v2/sparse/nodes/{project_public._id}/'
@@ -87,15 +82,18 @@ class TestSparseNodeUpdate(NodeCRUDTestCase):
                 payload_data['data']['relationships'] = relationships
 
             return payload_data
+
         return payload
 
-    def test_update_errors(self, app, user, project_public, sparse_url_public, make_sparse_node_payload):
+    def test_update_errors(
+        self, app, user, project_public, sparse_url_public, make_sparse_node_payload
+    ):
         #   test_cannot_update_sparse
         res = app.patch_json_api(
             sparse_url_public,
             make_sparse_node_payload(project_public, {'public': False}),
             auth=user.auth,
-            expect_errors=True
+            expect_errors=True,
         )
         assert res.status_code == 405
 
@@ -103,17 +101,13 @@ class TestSparseNodeUpdate(NodeCRUDTestCase):
 @pytest.mark.django_db
 @pytest.mark.enable_bookmark_creation
 class TestSparseNodeDelete(NodeCRUDTestCase):
-
     @pytest.fixture()
     def sparse_url_public(self, project_public):
         return f'/v2/sparse/nodes/{project_public._id}/'
 
     def test_deletes_node_errors(self, app, user, project_public, sparse_url_public):
         #   test_deletes_from_sparse_fails
-        res = app.delete_json_api(
-            sparse_url_public,
-            auth=user.auth,
-            expect_errors=True)
+        res = app.delete_json_api(sparse_url_public, auth=user.auth, expect_errors=True)
         project_public.reload()
         assert res.status_code == 405
         assert project_public.is_deleted is False

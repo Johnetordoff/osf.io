@@ -11,6 +11,7 @@ from tests.base import OsfTestCase
 
 pytestmark = pytest.mark.django_db
 
+
 class TestS3Serializer(StorageAddonSerializerTestSuiteMixin, OsfTestCase):
     addon_short_name = 's3'
     Serializer = S3Serializer

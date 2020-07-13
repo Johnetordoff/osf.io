@@ -2,14 +2,11 @@ import pytest
 
 from api.base.settings.defaults import API_BASE
 from osf.models import FileMetadataSchema
-from osf_tests.factories import (
-    AuthUserFactory,
-)
+from osf_tests.factories import AuthUserFactory
 
 
 @pytest.mark.django_db
 class TestFileMetadataSchemaDetail:
-
     @pytest.fixture()
     def user(self):
         return AuthUserFactory()

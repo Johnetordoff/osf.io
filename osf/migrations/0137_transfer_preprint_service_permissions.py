@@ -12,10 +12,20 @@ def unmigrate_preprint_service_permissions(state, schema):
     Permission = state.get_model('auth', 'permission')
 
     # New permission groups
-    Permission.objects.filter(codename='add_preprint').update(codename='add_preprintservice', name='Can add preprint service')
-    Permission.objects.filter(codename='change_preprint').update(codename='change_preprintservice', name='Can change preprint service')
-    Permission.objects.filter(codename='delete_preprint').update(codename='delete_preprintservice', name='Can delete preprint service')
-    Permission.objects.filter(codename='view_preprint').update(codename='view_preprintservice', name='Can view preprint service details in the admin app.')
+    Permission.objects.filter(codename='add_preprint').update(
+        codename='add_preprintservice', name='Can add preprint service'
+    )
+    Permission.objects.filter(codename='change_preprint').update(
+        codename='change_preprintservice', name='Can change preprint service'
+    )
+    Permission.objects.filter(codename='delete_preprint').update(
+        codename='delete_preprintservice', name='Can delete preprint service'
+    )
+    Permission.objects.filter(codename='view_preprint').update(
+        codename='view_preprintservice',
+        name='Can view preprint service details in the admin app.',
+    )
+
 
 def migrate_preprint_service_permissions(state, schema):
     """
@@ -32,10 +42,19 @@ def migrate_preprint_service_permissions(state, schema):
     Permission.objects.filter(codename='view_preprint').delete()
 
     # Old permission groups
-    Permission.objects.filter(codename='add_preprintservice').update(codename='add_preprint', name='Can add preprint')
-    Permission.objects.filter(codename='change_preprintservice').update(codename='change_preprint', name='Can change preprint')
-    Permission.objects.filter(codename='delete_preprintservice').update(codename='delete_preprint', name='Can delete preprint')
-    Permission.objects.filter(codename='view_preprintservice').update(codename='view_preprint', name='Can view preprint details in the admin app')
+    Permission.objects.filter(codename='add_preprintservice').update(
+        codename='add_preprint', name='Can add preprint'
+    )
+    Permission.objects.filter(codename='change_preprintservice').update(
+        codename='change_preprint', name='Can change preprint'
+    )
+    Permission.objects.filter(codename='delete_preprintservice').update(
+        codename='delete_preprint', name='Can delete preprint'
+    )
+    Permission.objects.filter(codename='view_preprintservice').update(
+        codename='view_preprint', name='Can view preprint details in the admin app'
+    )
+
 
 class Migration(migrations.Migration):
 
@@ -44,5 +63,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(migrate_preprint_service_permissions, unmigrate_preprint_service_permissions),
+        migrations.RunPython(
+            migrate_preprint_service_permissions, unmigrate_preprint_service_permissions
+        ),
     ]

@@ -3,6 +3,7 @@ import logging.config
 
 try:
     import colorlog
+
     use_color = True
 except ImportError:
     use_color = False
@@ -21,9 +22,7 @@ if settings.DEBUG_MODE and use_color:
         log_colors=log_colors,
     )
 else:
-    formatter = logging.Formatter(
-        '[%(name)s]  %(levelname)s: %(message)s',
-    )
+    formatter = logging.Formatter('[%(name)s]  %(levelname)s: %(message)s',)
 
 handler.setFormatter(formatter)
 

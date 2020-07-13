@@ -19,11 +19,13 @@ class GoogleDriveAccountFactory(ExternalAccountFactory):
     oauth_secret = factory.Sequence(lambda n: 'secret-{0}'.format(n))
     expires_at = timezone.now() + relativedelta(days=1)
 
+
 class GoogleDriveUserSettingsFactory(DjangoModelFactory):
     class Meta:
         model = UserSettings
 
     owner = factory.SubFactory(UserFactory)
+
 
 class GoogleDriveNodeSettingsFactory(DjangoModelFactory):
     class Meta:

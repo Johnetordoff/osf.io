@@ -1,6 +1,7 @@
 from __future__ import division
 
 import django
+
 django.setup()
 from keen import KeenClient
 import logging
@@ -38,7 +39,6 @@ def count_user_logs(user):
 
 
 class UserSummary(SummaryAnalytics):
-
     @property
     def collection_name(self):
         return 'user_summary'
@@ -54,16 +54,19 @@ class UserSummary(SummaryAnalytics):
         last_thirty = client.count_unique(
             event_collection='pageviews',
             # beginning of yesterday - 29 days = 30 total days
-            timeframe={'start': (time_one - timedelta(days=29)).isoformat(), 'end': time_two_iso},
+            timeframe={
+                'start': (time_one - timedelta(days=29)).isoformat(),
+                'end': time_two_iso,
+            },
             target_property='user.id',
-            timezone='UTC'
+            timezone='UTC',
         )
 
         last_one = client.count_unique(
             event_collection='pageviews',
             timeframe={'start': time_one.isoformat(), 'end': time_two_iso},
             target_property='user.id',
-            timezone='UTC'
+            timezone='UTC',
         )
 
         # avoid unlikely divide by 0 error
@@ -75,16 +78,18 @@ class UserSummary(SummaryAnalytics):
         super(UserSummary, self).get_events(date)
 
         # Convert to a datetime at midnight for queries and the timestamp
-        timestamp_datetime = datetime(date.year, date.month, date.day).replace(tzinfo=pytz.UTC)
+        timestamp_datetime = datetime(date.year, date.month, date.day).replace(
+            tzinfo=pytz.UTC
+        )
         query_datetime = timestamp_datetime + timedelta(days=1)
 
         active_user_query = (
-            Q(is_registered=True) &
-            Q(password__isnull=False) &
-            Q(merged_by__isnull=True) &
-            Q(date_disabled__isnull=True) &
-            Q(date_confirmed__isnull=False) &
-            Q(date_confirmed__lt=query_datetime)
+            Q(is_registered=True)
+            & Q(password__isnull=False)
+            & Q(merged_by__isnull=True)
+            & Q(date_disabled__isnull=True)
+            & Q(date_confirmed__isnull=False)
+            & Q(date_confirmed__lt=query_datetime)
         )
 
         active_users = 0
@@ -98,28 +103,47 @@ class UserSummary(SummaryAnalytics):
                 depth_users += 1
             if user.social or user.schools or user.jobs:
                 profile_edited += 1
-        new_users = OSFUser.objects.filter(is_active=True, date_confirmed__gte=timestamp_datetime, date_confirmed__lt=query_datetime)
+        new_users = OSFUser.objects.filter(
+            is_active=True,
+            date_confirmed__gte=timestamp_datetime,
+            date_confirmed__lt=query_datetime,
+        )
         counts = {
-            'keen': {
-                'timestamp': timestamp_datetime.isoformat()
-            },
+            'keen': {'timestamp': timestamp_datetime.isoformat()},
             'status': {
                 'active': active_users,
                 'depth': depth_users,
                 'new_users_daily': new_users.count(),
-                'new_users_with_institution_daily': new_users.filter(affiliated_institutions__isnull=False).count(),
-                'unconfirmed': OSFUser.objects.filter(date_registered__lt=query_datetime, date_confirmed__isnull=True).count(),
-                'deactivated': OSFUser.objects.filter(date_disabled__isnull=False, date_disabled__lt=query_datetime).count(),
-                'merged': OSFUser.objects.filter(date_registered__lt=query_datetime, merged_by__isnull=False).count(),
+                'new_users_with_institution_daily': new_users.filter(
+                    affiliated_institutions__isnull=False
+                ).count(),
+                'unconfirmed': OSFUser.objects.filter(
+                    date_registered__lt=query_datetime, date_confirmed__isnull=True
+                ).count(),
+                'deactivated': OSFUser.objects.filter(
+                    date_disabled__isnull=False, date_disabled__lt=query_datetime
+                ).count(),
+                'merged': OSFUser.objects.filter(
+                    date_registered__lt=query_datetime, merged_by__isnull=False
+                ).count(),
                 'profile_edited': profile_edited,
-            }
+            },
         }
 
         try:
             # Because this data reads from Keen it could fail if Keen read api fails while writing is still allowed
-            counts['status']['stickiness'] = self.calculate_stickiness(timestamp_datetime, query_datetime)
-        except (requests.exceptions.ConnectionError, keen_exceptions.InvalidProjectIdError):
-            sentry.log_message('Unable to read from Keen. stickiness metric not collected for date {}'.format(timestamp_datetime.isoformat()))
+            counts['status']['stickiness'] = self.calculate_stickiness(
+                timestamp_datetime, query_datetime
+            )
+        except (
+            requests.exceptions.ConnectionError,
+            keen_exceptions.InvalidProjectIdError,
+        ):
+            sentry.log_message(
+                'Unable to read from Keen. stickiness metric not collected for date {}'.format(
+                    timestamp_datetime.isoformat()
+                )
+            )
 
         logger.info(
             'Users counted. Active: {}, Depth: {}, Unconfirmed: {}, Deactivated: {}, Merged: {}, Profile Edited: {}'.format(
@@ -128,7 +152,7 @@ class UserSummary(SummaryAnalytics):
                 counts['status']['unconfirmed'],
                 counts['status']['deactivated'],
                 counts['status']['merged'],
-                counts['status']['profile_edited']
+                counts['status']['profile_edited'],
             )
         )
         return [counts]

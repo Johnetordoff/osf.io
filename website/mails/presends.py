@@ -3,15 +3,30 @@ from django.utils import timezone
 
 from website import settings
 
+
 def no_addon(email):
-    return len([addon for addon in email.user.get_addons() if addon.config.short_name != 'osfstorage']) == 0
+    return (
+        len(
+            [
+                addon
+                for addon in email.user.get_addons()
+                if addon.config.short_name != 'osfstorage'
+            ]
+        )
+        == 0
+    )
+
 
 def no_login(email):
     from osf.models.queued_mail import QueuedMail, NO_LOGIN_TYPE
-    sent = QueuedMail.objects.filter(user=email.user, email_type=NO_LOGIN_TYPE).exclude(_id=email._id)
+
+    sent = QueuedMail.objects.filter(user=email.user, email_type=NO_LOGIN_TYPE).exclude(
+        _id=email._id
+    )
     if sent.exists():
         return False
     return email.user.date_last_login < timezone.now() - settings.NO_LOGIN_WAIT_TIME
+
 
 def new_public_project(email):
     """ Will check to make sure the project that triggered this presend is still public
@@ -44,8 +59,12 @@ def welcome_osf4m(email):
     """
     # In line import to prevent circular importing
     from addons.osfstorage.models import OsfStorageFileNode
+
     if email.user.date_last_login:
-        if email.user.date_last_login > timezone.now() - settings.WELCOME_OSF4M_WAIT_TIME_GRACE:
+        if (
+            email.user.date_last_login
+            > timezone.now() - settings.WELCOME_OSF4M_WAIT_TIME_GRACE
+        ):
             return False
     upload = OsfStorageFileNode.load(email.data['fid'])
     if upload:

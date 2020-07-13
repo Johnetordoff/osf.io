@@ -12,13 +12,8 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='preprintservice',
-            name='subjects',
-        ),
+        migrations.RemoveField(model_name='preprintservice', name='subjects',),
         migrations.RenameField(
-            model_name='preprintservice',
-            old_name='_subjects',
-            new_name='subjects'
+            model_name='preprintservice', old_name='_subjects', new_name='subjects'
         ),
     ]

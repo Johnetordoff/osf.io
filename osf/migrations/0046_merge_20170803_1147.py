@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0045_add_view_subject_permissions'),
     ]
 
-    operations = [
-    ]
+    operations = []

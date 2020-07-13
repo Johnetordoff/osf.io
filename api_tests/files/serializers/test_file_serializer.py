@@ -4,7 +4,11 @@ import pytest
 from pytz import utc
 
 from addons.base.utils import get_mfr_url
-from api.files.serializers import FileSerializer, get_file_download_link, get_file_render_link
+from api.files.serializers import (
+    FileSerializer,
+    get_file_download_link,
+    get_file_render_link,
+)
 from api_tests import utils
 from osf_tests.factories import (
     UserFactory,
@@ -14,9 +18,11 @@ from osf_tests.factories import (
 from tests.utils import make_drf_request_with_version
 from website import settings
 
+
 @pytest.fixture()
 def user():
     return UserFactory()
+
 
 def build_expected_render_link(mfr_url, download_url, with_version=True):
     if with_version:
@@ -27,7 +33,6 @@ def build_expected_render_link(mfr_url, download_url, with_version=True):
 
 @pytest.mark.django_db
 class TestFileSerializer:
-
     @pytest.fixture()
     def node(self, user):
         return NodeFactory(creator=user)
@@ -63,9 +68,10 @@ class TestFileSerializer:
         # test_date_modified_formats_to_new_format
         req = make_drf_request_with_version(version='2.2')
         data = FileSerializer(file_one, context={'request': req}).data['data']
-        assert datetime.strftime(
-            modified, new_format
-        ) == data['attributes']['date_modified']
+        assert (
+            datetime.strftime(modified, new_format)
+            == data['attributes']['date_modified']
+        )
 
         # test_date_created_formats_to_old_format
         req = make_drf_request_with_version(version='2.0')
@@ -75,9 +81,9 @@ class TestFileSerializer:
         # test_date_created_formats_to_new_format
         req = make_drf_request_with_version(version='2.2')
         data = FileSerializer(file_one, context={'request': req}).data['data']
-        assert datetime.strftime(
-            created, new_format
-        ) == data['attributes']['date_created']
+        assert (
+            datetime.strftime(created, new_format) == data['attributes']['date_created']
+        )
 
         # check download file link with path
         assert download_base.format(path) in data['links']['download']
@@ -97,7 +103,9 @@ class TestFileSerializer:
         assert mfr_url in data['links']['render']
 
         # check html link in file serializer
-        assert data['links']['html'] == '{}{}/files/osfstorage/{}'.format(settings.DOMAIN, node._id, file_one._id)
+        assert data['links']['html'] == '{}{}/files/osfstorage/{}'.format(
+            settings.DOMAIN, node._id, file_one._id
+        )
 
         # check download/render/html link for folder
         folder = node.get_addon('osfstorage').get_root().append_folder('Test_folder')
@@ -115,17 +123,23 @@ class TestFileSerializer:
 
         # Check render file link with path
         download_link = data['links']['download']
-        assert data['links']['render'] == build_expected_render_link(mfr_url, download_link, with_version=False)
+        assert data['links']['render'] == build_expected_render_link(
+            mfr_url, download_link, with_version=False
+        )
 
         # Check render file link with guid
         primary_file.get_guid(create=True)._id
         req = make_drf_request_with_version()
         data = FileSerializer(primary_file, context={'request': req}).data['data']
         download_link = data['links']['download']
-        assert data['links']['render'] == build_expected_render_link(mfr_url, download_link, with_version=False)
+        assert data['links']['render'] == build_expected_render_link(
+            mfr_url, download_link, with_version=False
+        )
 
         # Check html link
-        assert data['links']['html'] == '{}{}/files/osfstorage/{}'.format(settings.DOMAIN, preprint._id, primary_file._id)
+        assert data['links']['html'] == '{}{}/files/osfstorage/{}'.format(
+            settings.DOMAIN, preprint._id, primary_file._id
+        )
 
     def test_get_file_download_and_render_links(self, file_one, node):
         mfr_link = get_mfr_url(file_one.target, 'osfstorage')
@@ -133,23 +147,37 @@ class TestFileSerializer:
         # file links with path
         download_link = get_file_download_link(file_one)
         assert download_link == '{}download/{}/'.format(settings.DOMAIN, file_one._id)
-        assert get_file_render_link(mfr_link, download_link) == build_expected_render_link(mfr_link, download_link, with_version=False)
+        assert get_file_render_link(
+            mfr_link, download_link
+        ) == build_expected_render_link(mfr_link, download_link, with_version=False)
 
         # file versions link with path
         download_link = get_file_download_link(file_one, version=2)
-        assert download_link == '{}download/{}/?revision=2'.format(settings.DOMAIN, file_one._id)
-        assert get_file_render_link(mfr_link, download_link, version=2) == build_expected_render_link(mfr_link, download_link)
+        assert download_link == '{}download/{}/?revision=2'.format(
+            settings.DOMAIN, file_one._id
+        )
+        assert get_file_render_link(
+            mfr_link, download_link, version=2
+        ) == build_expected_render_link(mfr_link, download_link)
 
         # file links with guid
         file_one.get_guid(create=True)
         download_link = get_file_download_link(file_one)
-        assert download_link == '{}download/{}/'.format(settings.DOMAIN, file_one.get_guid()._id)
-        assert get_file_render_link(mfr_link, download_link) == build_expected_render_link(mfr_link, download_link, with_version=False)
+        assert download_link == '{}download/{}/'.format(
+            settings.DOMAIN, file_one.get_guid()._id
+        )
+        assert get_file_render_link(
+            mfr_link, download_link
+        ) == build_expected_render_link(mfr_link, download_link, with_version=False)
 
         # file version links with guid
         download_link = get_file_download_link(file_one, version=2)
-        assert download_link == '{}download/{}/?revision=2'.format(settings.DOMAIN, file_one.get_guid()._id)
-        assert get_file_render_link(mfr_link, download_link, version=2) == build_expected_render_link(mfr_link, download_link)
+        assert download_link == '{}download/{}/?revision=2'.format(
+            settings.DOMAIN, file_one.get_guid()._id
+        )
+        assert get_file_render_link(
+            mfr_link, download_link, version=2
+        ) == build_expected_render_link(mfr_link, download_link)
 
     def test_no_node_relationship_after_version_2_7(self, file_one):
         req_2_7 = make_drf_request_with_version(version='2.7')

@@ -15,7 +15,6 @@ logging.basicConfig(level=logging.INFO)
 
 
 class NodeLogEvents(EventAnalytics):
-
     @property
     def collection_name(self):
         return 'node_log_events'
@@ -29,9 +28,11 @@ class NodeLogEvents(EventAnalytics):
         # In the end, turn the date back into a datetime at midnight for queries
         date = datetime(date.year, date.month, date.day).replace(tzinfo=pytz.UTC)
 
-        logger.info('Gathering node logs between {} and {}'.format(
-            date, (date + timedelta(1)).isoformat()
-        ))
+        logger.info(
+            'Gathering node logs between {} and {}'.format(
+                date, (date + timedelta(1)).isoformat()
+            )
+        )
 
         node_log_query = Q(date__lt=date + timedelta(1)) & Q(date__gte=date)
 
@@ -42,7 +43,7 @@ class NodeLogEvents(EventAnalytics):
             event = {
                 'keen': {'timestamp': log_date.isoformat()},
                 'date': log_date.isoformat(),
-                'action': node_log.action
+                'action': node_log.action,
             }
 
             if node_log.user:

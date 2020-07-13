@@ -19,9 +19,7 @@ from osf.utils.permissions import GROUP_ROLES, MEMBER, MANAGER
 
 
 class GroupSerializer(JSONAPISerializer):
-    filterable_fields = frozenset([
-        'name',
-    ])
+    filterable_fields = frozenset(['name',])
 
     non_anonymized_fields = [
         'type',
@@ -33,16 +31,13 @@ class GroupSerializer(JSONAPISerializer):
     date_created = VersionedDateTimeField(source='created', read_only=True)
     date_modified = VersionedDateTimeField(source='modified', read_only=True)
 
-    links = LinksField({
-        'self': 'get_absolute_url',
-    })
+    links = LinksField({'self': 'get_absolute_url',})
 
     def get_absolute_url(self, obj):
         return obj.get_absolute_url()
 
     members = RelationshipField(
-        related_view='groups:group-members',
-        related_view_kwargs={'group_id': '<_id>'},
+        related_view='groups:group-members', related_view_kwargs={'group_id': '<_id>'},
     )
 
     class Meta:
@@ -64,6 +59,7 @@ class GroupDetailSerializer(GroupSerializer):
     """
     Overrides GroupSerializer to make id required.
     """
+
     id = IDField(source='_id', required=True)
 
 
@@ -73,13 +69,8 @@ class GroupCompoundIDField(CompoundIDField):
 
 
 class GroupMemberSerializer(JSONAPISerializer):
-    filterable_fields = frozenset([
-        'role',
-        'full_name',
-    ])
-    writeable_method_fields = frozenset([
-        'role',
-    ])
+    filterable_fields = frozenset(['role', 'full_name',])
+    writeable_method_fields = frozenset(['role',])
     non_anonymized_fields = [
         'type',
         'role',
@@ -92,13 +83,10 @@ class GroupMemberSerializer(JSONAPISerializer):
     full_name = ser.CharField(read_only=True, source='fullname')
 
     users = RelationshipField(
-        related_view='users:user-detail',
-        related_view_kwargs={'user_id': '<_id>'},
+        related_view='users:user-detail', related_view_kwargs={'user_id': '<_id>'},
     )
 
-    links = LinksField({
-        'self': 'get_absolute_url',
-    })
+    links = LinksField({'self': 'get_absolute_url',})
 
     def get_role(self, user):
         return user.group_role(self.context['group'])
@@ -118,7 +106,9 @@ class GroupMemberSerializer(JSONAPISerializer):
     def get_group_role(self, validated_data, default_role):
         role = validated_data.get('role', default_role)
         if role not in GROUP_ROLES:
-            raise exceptions.ValidationError('{} is not a valid role; choose manager or member.'.format(role))
+            raise exceptions.ValidationError(
+                '{} is not a valid role; choose manager or member.'.format(role),
+            )
         return role
 
     class Meta:
@@ -129,7 +119,9 @@ class GroupMemberSerializer(JSONAPISerializer):
             'groups:group-member-detail',
             kwargs={
                 'user_id': obj._id,
-                'group_id': self.context['request'].parser_context['kwargs']['group_id'],
+                'group_id': self.context['request'].parser_context['kwargs'][
+                    'group_id'
+                ],
                 'version': self.context['request'].parser_context['kwargs']['version'],
             },
         )
@@ -153,9 +145,13 @@ class GroupMemberCreateSerializer(GroupMemberSerializer):
         if user_id:
             user = OSFUser.load(user_id)
             if not user:
-                raise exceptions.NotFound(detail='User with id {} not found.'.format(user_id))
+                raise exceptions.NotFound(
+                    detail='User with id {} not found.'.format(user_id),
+                )
             if group.has_permission(user, 'member'):
-                raise exceptions.ValidationError(detail='User is already a member of this group.')
+                raise exceptions.ValidationError(
+                    detail='User is already a member of this group.',
+                )
             return user
         return user_id
 
@@ -172,7 +168,9 @@ class GroupMemberCreateSerializer(GroupMemberSerializer):
                 self.get_member_method(group, role)(user, auth)
             else:
                 if not full_name or not email:
-                    raise exceptions.ValidationError(detail='You must provide a full_name/email combination to add an unconfirmed member.')
+                    raise exceptions.ValidationError(
+                        detail='You must provide a full_name/email combination to add an unconfirmed member.',
+                    )
                 else:
                     user = group.add_unregistered_member(full_name, email, auth, role)
         except ValueError as e:

@@ -30,7 +30,6 @@ urlpatterns = [
         views.SparseLinkedRegistrationsList.as_view(),
         name=views.SparseLinkedRegistrationsList.view_name,
     ),
-
     url(
         r'^registrations/$',
         views.SparseRegistrationList.as_view(),
@@ -56,7 +55,6 @@ urlpatterns = [
         views.SparseLinkedRegistrationsList.as_view(),
         name=views.SparseLinkedRegistrationsList.view_name,
     ),
-
     url(
         r'^users/(?P<user_id>\w+)/nodes/$',
         views.SparseUserNodeList.as_view(),

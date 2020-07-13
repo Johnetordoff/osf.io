@@ -17,6 +17,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='fileversion',
             name='region',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='addons_osfstorage.Region'),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to='addons_osfstorage.Region',
+            ),
         ),
     ]

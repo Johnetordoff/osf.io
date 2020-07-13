@@ -35,4 +35,7 @@ FIGSHARE_IDS_TO_TYPES = {
 # automatically converted to create "dataset"s.  Pre-exisiting "fileset"s retain the same id.  To
 # preserve backcompat, the addon now allows both type 3 and type 4 articles to be valid root
 # folders.
-FIGSHARE_FOLDER_TYPES = {3, 4, }
+FIGSHARE_FOLDER_TYPES = {
+    3,
+    4,
+}

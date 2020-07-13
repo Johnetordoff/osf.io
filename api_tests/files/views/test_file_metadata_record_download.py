@@ -2,14 +2,11 @@ import pytest
 
 from api.base.settings.defaults import API_BASE
 from api_tests import utils
-from osf_tests.factories import (
-    AuthUserFactory,
-    ProjectFactory
-)
+from osf_tests.factories import AuthUserFactory, ProjectFactory
+
 
 @pytest.mark.django_db
 class TestFileMetadataRecordDownload:
-
     @pytest.fixture()
     def user(self):
         return AuthUserFactory()
@@ -17,7 +14,9 @@ class TestFileMetadataRecordDownload:
     @pytest.fixture()
     def private_record(self, user):
         private_node = ProjectFactory(creator=user)
-        private_file = utils.create_test_file(private_node, user, filename='private_file')
+        private_file = utils.create_test_file(
+            private_node, user, filename='private_file'
+        )
         return private_file.records.get(schema___id='datacite')
 
     @pytest.fixture()
@@ -27,7 +26,9 @@ class TestFileMetadataRecordDownload:
         return public_file.records.get(schema___id='datacite')
 
     def get_url(self, record):
-        return '/{}files/{}/metadata_records/{}/download/'.format(API_BASE, record.file._id, record._id)
+        return '/{}files/{}/metadata_records/{}/download/'.format(
+            API_BASE, record.file._id, record._id
+        )
 
     def test_metadata_record_download(self, app, user, public_record, private_record):
 
@@ -52,7 +53,9 @@ class TestFileMetadataRecordDownload:
 
         # test_unauthorized_cannot_download_private_file_metadata_record
         unauth = AuthUserFactory()
-        res = app.get(self.get_url(private_record), auth=unauth.auth, expect_errors=True)
+        res = app.get(
+            self.get_url(private_record), auth=unauth.auth, expect_errors=True
+        )
         res.status_code == 403
 
         # test_can_download_as_xml
@@ -65,4 +68,7 @@ class TestFileMetadataRecordDownload:
         url = self.get_url(public_record) + '?export=dinosaur'
         res = app.get(url, expect_errors=True)
         assert res.status_code == 400
-        assert res.json['errors'][0]['detail'] == 'Format "dinosaur" is not supported for metadata file export.'
+        assert (
+            res.json['errors'][0]['detail']
+            == 'Format "dinosaur" is not supported for metadata file export.'
+        )

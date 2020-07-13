@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from nose.tools import (assert_false, assert_equal, assert_in, assert_true)
+from nose.tools import assert_false, assert_equal, assert_in, assert_true
 import mock
 import pytest
 import unittest
@@ -10,7 +10,9 @@ from rest_framework import status as http_status
 from addons.base.tests.views import OAuthAddonConfigViewsTestCaseMixin
 from addons.dataverse.models import DataverseProvider
 from addons.dataverse.tests.utils import (
-    create_mock_connection, DataverseAddonTestCase, create_external_account,
+    create_mock_connection,
+    DataverseAddonTestCase,
+    create_external_account,
 )
 from framework.auth.decorators import Auth
 from osf_tests.factories import AuthUserFactory
@@ -20,11 +22,10 @@ from website.util import api_url_for
 
 pytestmark = pytest.mark.django_db
 
-class TestAuthViews(DataverseAddonTestCase, OsfTestCase, unittest.TestCase):
 
+class TestAuthViews(DataverseAddonTestCase, OsfTestCase, unittest.TestCase):
     def test_deauthorize(self):
-        url = api_url_for('dataverse_deauthorize_node',
-                          pid=self.project._primary_key)
+        url = api_url_for('dataverse_deauthorize_node', pid=self.project._primary_key)
         self.app.delete(url, auth=self.user.auth)
 
         self.node_settings.reload()
@@ -60,14 +61,19 @@ class TestAuthViews(DataverseAddonTestCase, OsfTestCase, unittest.TestCase):
         result = res.json.get('result')
         assert_true(result['userHasAuth'])
 
-class TestConfigViews(DataverseAddonTestCase, OAuthAddonConfigViewsTestCaseMixin, OsfTestCase):
+
+class TestConfigViews(
+    DataverseAddonTestCase, OAuthAddonConfigViewsTestCaseMixin, OsfTestCase
+):
     connection = create_mock_connection()
     Serializer = DataverseSerializer
     client = DataverseProvider
 
     def setUp(self):
         super(TestConfigViews, self).setUp()
-        self.mock_ser_api = mock.patch('addons.dataverse.serializer.client.connect_from_settings')
+        self.mock_ser_api = mock.patch(
+            'addons.dataverse.serializer.client.connect_from_settings'
+        )
         self.mock_ser_api.return_value = create_mock_connection()
         self.mock_ser_api.start()
 
@@ -77,7 +83,7 @@ class TestConfigViews(DataverseAddonTestCase, OAuthAddonConfigViewsTestCaseMixin
 
     @mock.patch('addons.dataverse.views.client.connect_from_settings')
     def test_folder_list(self, mock_connection):
-        #test_get_datasets
+        # test_get_datasets
         mock_connection.return_value = self.connection
 
         url = api_url_for('dataverse_get_datasets', pid=self.project._primary_key)
@@ -94,19 +100,29 @@ class TestConfigViews(DataverseAddonTestCase, OAuthAddonConfigViewsTestCaseMixin
         mock_connection.return_value = self.connection
 
         url = self.project.api_url_for('{0}_set_config'.format(self.ADDON_SHORT_NAME))
-        res = self.app.post_json(url, {
-            'dataverse': {'alias': 'ALIAS3'},
-            'dataset': {'doi': 'doi:12.3456/DVN/00003'},
-        }, auth=self.user.auth)
+        res = self.app.post_json(
+            url,
+            {
+                'dataverse': {'alias': 'ALIAS3'},
+                'dataset': {'doi': 'doi:12.3456/DVN/00003'},
+            },
+            auth=self.user.auth,
+        )
         assert_equal(res.status_code, http_status.HTTP_200_OK)
         self.project.reload()
         assert_equal(
             self.project.logs.latest().action,
-            '{0}_dataset_linked'.format(self.ADDON_SHORT_NAME)
+            '{0}_dataset_linked'.format(self.ADDON_SHORT_NAME),
         )
-        assert_equal(res.json['dataverse'], self.connection.get_dataverse('ALIAS3').title)
-        assert_equal(res.json['dataset'],
-            self.connection.get_dataverse('ALIAS3').get_dataset_by_doi('doi:12.3456/DVN/00003').title)
+        assert_equal(
+            res.json['dataverse'], self.connection.get_dataverse('ALIAS3').title
+        )
+        assert_equal(
+            res.json['dataset'],
+            self.connection.get_dataverse('ALIAS3')
+            .get_dataset_by_doi('doi:12.3456/DVN/00003')
+            .title,
+        )
 
     def test_get_config(self):
         url = self.project.api_url_for('{0}_get_config'.format(self.ADDON_SHORT_NAME))
@@ -114,8 +130,7 @@ class TestConfigViews(DataverseAddonTestCase, OAuthAddonConfigViewsTestCaseMixin
         assert_equal(res.status_code, http_status.HTTP_200_OK)
         assert_in('result', res.json)
         serialized = self.Serializer().serialize_settings(
-            self.node_settings,
-            self.user,
+            self.node_settings, self.user,
         )
         assert_equal(serialized, res.json['result'])
 
@@ -124,16 +139,14 @@ class TestConfigViews(DataverseAddonTestCase, OAuthAddonConfigViewsTestCaseMixin
         mock_connection.return_value = self.connection
         num_old_logs = self.project.logs.count()
 
-        url = api_url_for('dataverse_set_config',
-                          pid=self.project._primary_key)
+        url = api_url_for('dataverse_set_config', pid=self.project._primary_key)
         params = {
             'dataverse': {'alias': 'ALIAS3'},
-            'dataset': {},    # The dataverse has no datasets
+            'dataset': {},  # The dataverse has no datasets
         }
 
         # Select a different dataset
-        res = self.app.post_json(url, params, auth=self.user.auth,
-                                 expect_errors=True)
+        res = self.app.post_json(url, params, auth=self.user.auth, expect_errors=True)
         self.node_settings.reload()
 
         # Old settings did not change
@@ -148,7 +161,6 @@ class TestConfigViews(DataverseAddonTestCase, OAuthAddonConfigViewsTestCaseMixin
 
 
 class TestHgridViews(DataverseAddonTestCase, OsfTestCase, unittest.TestCase):
-
     @mock.patch('addons.dataverse.views.client.get_custom_publish_text')
     @mock.patch('addons.dataverse.views.client.connect_from_settings')
     @mock.patch('addons.dataverse.views.client.get_files')
@@ -170,8 +182,7 @@ class TestHgridViews(DataverseAddonTestCase, OsfTestCase, unittest.TestCase):
         self.node_settings.dataset_doi = doi
         self.node_settings.save()
 
-        url = api_url_for('dataverse_root_folder',
-                          pid=self.project._primary_key)
+        url = api_url_for('dataverse_root_folder', pid=self.project._primary_key)
 
         # Contributor can select between states, current state is correct
         res = self.app.get(url, auth=self.user.auth)
@@ -207,8 +218,7 @@ class TestHgridViews(DataverseAddonTestCase, OsfTestCase, unittest.TestCase):
         self.node_settings.dataset_doi = doi
         self.node_settings.save()
 
-        url = api_url_for('dataverse_root_folder',
-                          pid=self.project._primary_key)
+        url = api_url_for('dataverse_root_folder', pid=self.project._primary_key)
 
         # Contributor gets draft, no options
         res = self.app.get(url, auth=self.user.auth)
@@ -227,8 +237,7 @@ class TestHgridViews(DataverseAddonTestCase, OsfTestCase, unittest.TestCase):
         mock_connection.return_value = create_mock_connection()
         mock_files.return_value = ['mock_file']
 
-        url = api_url_for('dataverse_root_folder',
-                          pid=self.project._primary_key)
+        url = api_url_for('dataverse_root_folder', pid=self.project._primary_key)
 
         mock_connection.return_value = None
         res = self.app.get(url, auth=self.user.auth)
@@ -238,23 +247,22 @@ class TestHgridViews(DataverseAddonTestCase, OsfTestCase, unittest.TestCase):
         self.node_settings.dataset_doi = None
         self.node_settings.save()
 
-        url = api_url_for('dataverse_root_folder',
-                  pid=self.project._primary_key)
+        url = api_url_for('dataverse_root_folder', pid=self.project._primary_key)
 
         res = self.app.get(url, auth=self.user.auth)
         assert_equal(res.json, [])
 
 
 class TestCrudViews(DataverseAddonTestCase, OsfTestCase, unittest.TestCase):
-
     @mock.patch('addons.dataverse.views.client.connect_from_settings_or_401')
     @mock.patch('addons.dataverse.views.client.publish_dataset')
     @mock.patch('addons.dataverse.views.client.publish_dataverse')
-    def test_dataverse_publish_dataset(self, mock_publish_dv, mock_publish_ds, mock_connection):
+    def test_dataverse_publish_dataset(
+        self, mock_publish_dv, mock_publish_ds, mock_connection
+    ):
         mock_connection.return_value = create_mock_connection()
 
-        url = api_url_for('dataverse_publish_dataset',
-                          pid=self.project._primary_key)
+        url = api_url_for('dataverse_publish_dataset', pid=self.project._primary_key)
         self.app.put_json(url, params={'publish_both': False}, auth=self.user.auth)
 
         # Only dataset was published
@@ -264,11 +272,12 @@ class TestCrudViews(DataverseAddonTestCase, OsfTestCase, unittest.TestCase):
     @mock.patch('addons.dataverse.views.client.connect_from_settings_or_401')
     @mock.patch('addons.dataverse.views.client.publish_dataset')
     @mock.patch('addons.dataverse.views.client.publish_dataverse')
-    def test_dataverse_publish_both(self, mock_publish_dv, mock_publish_ds, mock_connection):
+    def test_dataverse_publish_both(
+        self, mock_publish_dv, mock_publish_ds, mock_connection
+    ):
         mock_connection.return_value = create_mock_connection()
 
-        url = api_url_for('dataverse_publish_dataset',
-                          pid=self.project._primary_key)
+        url = api_url_for('dataverse_publish_dataset', pid=self.project._primary_key)
         self.app.put_json(url, params={'publish_both': True}, auth=self.user.auth)
 
         # Both Dataverse and dataset were published
@@ -277,7 +286,6 @@ class TestCrudViews(DataverseAddonTestCase, OsfTestCase, unittest.TestCase):
 
 
 class TestDataverseRestrictions(DataverseAddonTestCase, OsfTestCase):
-
     def setUp(self):
 
         super(DataverseAddonTestCase, self).setUp()
@@ -301,6 +309,7 @@ class TestDataverseRestrictions(DataverseAddonTestCase, OsfTestCase):
             'dataverse': {'alias': 'ALIAS1'},
             'dataset': {'doi': 'doi:12.3456/DVN/00002'},
         }
-        res = self.app.post_json(url, params, auth=self.contrib.auth,
-                                 expect_errors=True)
+        res = self.app.post_json(
+            url, params, auth=self.contrib.auth, expect_errors=True
+        )
         assert_equal(res.status_code, http_status.HTTP_403_FORBIDDEN)

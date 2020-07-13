@@ -1,7 +1,12 @@
 import mock
 from nose.tools import (
-    assert_equal, assert_raises, assert_true,
-    assert_false, assert_in, assert_is, assert_is_none
+    assert_equal,
+    assert_raises,
+    assert_true,
+    assert_false,
+    assert_in,
+    assert_is,
+    assert_is_none,
 )
 import pytest
 import unittest
@@ -13,8 +18,15 @@ from addons.dataverse.models import NodeSettings
 from addons.dataverse.tests.utils import DataverseAddonTestCase, create_external_account
 from framework.exceptions import HTTPError
 from addons.dataverse.client import (
-    _connect, get_files, publish_dataset, get_datasets, get_dataset,
-    get_dataverses, get_dataverse, connect_from_settings, connect_or_error,
+    _connect,
+    get_files,
+    publish_dataset,
+    get_datasets,
+    get_dataset,
+    get_dataverses,
+    get_dataverse,
+    connect_from_settings,
+    connect_or_error,
     connect_from_settings_or_401,
 )
 from addons.dataverse import settings
@@ -23,7 +35,6 @@ pytestmark = pytest.mark.django_db
 
 
 class TestClient(DataverseAddonTestCase, unittest.TestCase):
-
     def setUp(self):
         super(TestClient, self).setUp()
 
@@ -64,7 +75,9 @@ class TestClient(DataverseAddonTestCase, unittest.TestCase):
         assert_true(c)
 
     @mock.patch('addons.dataverse.client.Connection')
-    def test_connect_or_error_returns_401_when_client_raises_unauthorized_error(self, mock_connection):
+    def test_connect_or_error_returns_401_when_client_raises_unauthorized_error(
+        self, mock_connection
+    ):
         mock_connection.side_effect = UnauthorizedError()
         with assert_raises(HTTPError) as cm:
             connect_or_error(self.host, self.token)
@@ -75,9 +88,7 @@ class TestClient(DataverseAddonTestCase, unittest.TestCase):
     @mock.patch('addons.dataverse.client._connect')
     def test_connect_from_settings(self, mock_connect):
         node_settings = NodeSettings()
-        node_settings.external_account = create_external_account(
-            self.host, self.token,
-        )
+        node_settings.external_account = create_external_account(self.host, self.token,)
 
         connection = connect_from_settings(node_settings)
         assert_true(connection)
@@ -90,9 +101,7 @@ class TestClient(DataverseAddonTestCase, unittest.TestCase):
     @mock.patch('addons.dataverse.client._connect')
     def test_connect_from_settings_or_401(self, mock_connect):
         node_settings = NodeSettings()
-        node_settings.external_account = create_external_account(
-            self.host, self.token,
-        )
+        node_settings.external_account = create_external_account(self.host, self.token,)
 
         connection = connect_from_settings_or_401(node_settings)
         assert_true(connection)
@@ -106,9 +115,7 @@ class TestClient(DataverseAddonTestCase, unittest.TestCase):
     def test_connect_from_settings_or_401_forbidden(self, mock_connection):
         mock_connection.side_effect = UnauthorizedError()
         node_settings = NodeSettings()
-        node_settings.external_account = create_external_account(
-            self.host, self.token,
-        )
+        node_settings.external_account = create_external_account(self.host, self.token,)
 
         with assert_raises(HTTPError) as e:
             connect_from_settings_or_401(node_settings)
@@ -146,11 +153,18 @@ class TestClient(DataverseAddonTestCase, unittest.TestCase):
         mock_dataset2.get_state.return_value = 'RELEASED'
         mock_dataset3.get_state.return_value = 'DEACCESSIONED'
         self.mock_dataverse.get_datasets.return_value = [
-            mock_dataset1, mock_dataset2, mock_dataset3
+            mock_dataset1,
+            mock_dataset2,
+            mock_dataset3,
         ]
 
         datasets = get_datasets(self.mock_dataverse)
-        assert_is(self.mock_dataverse.get_datasets.assert_called_once_with(timeout=settings.REQUEST_TIMEOUT), None)
+        assert_is(
+            self.mock_dataverse.get_datasets.assert_called_once_with(
+                timeout=settings.REQUEST_TIMEOUT
+            ),
+            None,
+        )
         assert_in(mock_dataset1, datasets)
         assert_in(mock_dataset2, datasets)
         assert_in(mock_dataset3, datasets)
@@ -164,7 +178,12 @@ class TestClient(DataverseAddonTestCase, unittest.TestCase):
         self.mock_dataverse.get_dataset_by_doi.return_value = self.mock_dataset
 
         s = get_dataset(self.mock_dataverse, 'My hdl')
-        assert_is(self.mock_dataverse.get_dataset_by_doi.assert_called_once_with('My hdl', timeout=settings.REQUEST_TIMEOUT), None)
+        assert_is(
+            self.mock_dataverse.get_dataset_by_doi.assert_called_once_with(
+                'My hdl', timeout=settings.REQUEST_TIMEOUT
+            ),
+            None,
+        )
 
         assert_equal(s, self.mock_dataset)
 
@@ -179,7 +198,12 @@ class TestClient(DataverseAddonTestCase, unittest.TestCase):
 
         with assert_raises(Exception) as e:
             get_dataset(dataverse, 'My hdl')
-        assert_is(mock_requests.get.assert_called_once_with('123', auth='me', timeout=settings.REQUEST_TIMEOUT), None)
+        assert_is(
+            mock_requests.get.assert_called_once_with(
+                '123', auth='me', timeout=settings.REQUEST_TIMEOUT
+            ),
+            None,
+        )
         assert_equal(str(e.exception), 'Done Testing')
 
     def test_get_deaccessioned_dataset(self):
@@ -189,7 +213,12 @@ class TestClient(DataverseAddonTestCase, unittest.TestCase):
         with assert_raises(HTTPError) as e:
             get_dataset(self.mock_dataverse, 'My hdl')
 
-        assert_is(self.mock_dataverse.get_dataset_by_doi.assert_called_once_with('My hdl', timeout=settings.REQUEST_TIMEOUT), None)
+        assert_is(
+            self.mock_dataverse.get_dataset_by_doi.assert_called_once_with(
+                'My hdl', timeout=settings.REQUEST_TIMEOUT
+            ),
+            None,
+        )
         assert_equal(e.exception.code, 410)
 
     def test_get_bad_dataset(self):
@@ -199,7 +228,12 @@ class TestClient(DataverseAddonTestCase, unittest.TestCase):
 
         with assert_raises(HTTPError) as e:
             get_dataset(self.mock_dataverse, 'My hdl')
-        assert_is(self.mock_dataverse.get_dataset_by_doi.assert_called_once_with('My hdl', timeout=settings.REQUEST_TIMEOUT), None)
+        assert_is(
+            self.mock_dataverse.get_dataset_by_doi.assert_called_once_with(
+                'My hdl', timeout=settings.REQUEST_TIMEOUT
+            ),
+            None,
+        )
         assert_equal(e.exception.code, 406)
 
     def test_get_dataverses(self):
@@ -208,7 +242,8 @@ class TestClient(DataverseAddonTestCase, unittest.TestCase):
         type(published_dv).is_published = mock.PropertyMock(return_value=True)
         type(unpublished_dv).is_published = mock.PropertyMock(return_value=False)
         self.mock_connection.get_dataverses.return_value = [
-            published_dv, unpublished_dv
+            published_dv,
+            unpublished_dv,
         ]
 
         dvs = get_dataverses(self.mock_connection)

@@ -5,7 +5,10 @@ from django.core.exceptions import ObjectDoesNotExist
 from api.base.views import JSONAPIBaseView
 from api.base.filters import ListFilterMixin
 from api.base.pagination import NoMaxPageSizePagination
-from api.base.parsers import JSONAPIRelationshipParser, JSONAPIRelationshipParserForRegularJSON
+from api.base.parsers import (
+    JSONAPIRelationshipParser,
+    JSONAPIRelationshipParserForRegularJSON,
+)
 from api.base import permissions as base_permissions
 from api.subjects.serializers import SubjectSerializer, SubjectsRelationshipSerializer
 from api.taxonomies.utils import optimize_subject_query
@@ -17,6 +20,7 @@ class SubjectMixin(object):
     """Mixin with convenience methods for retrieving the current subject based on the
     current URL. By default, fetches the current subject based on the subject_id kwarg.
     """
+
     subject_lookup_url_kwarg = 'subject_id'
 
     def get_subject(self, check_object_permissions=True):
@@ -76,8 +80,12 @@ class SubjectRelationshipBaseView(JSONAPIBaseView, generics.RetrieveUpdateAPIVie
         subjects not listed, meaning a data: [] payload deletes all the subjects.
 
     """
+
     serializer_class = SubjectsRelationshipSerializer
-    parser_classes = (JSONAPIRelationshipParser, JSONAPIRelationshipParserForRegularJSON, )
+    parser_classes = (
+        JSONAPIRelationshipParser,
+        JSONAPIRelationshipParserForRegularJSON,
+    )
 
     def get_resource(self, check_object_permissions=True):
         raise NotImplementedError()
@@ -132,6 +140,7 @@ class SubjectList(JSONAPIBaseView, generics.ListAPIView, ListFilterMixin):
 class SubjectDetail(JSONAPIBaseView, generics.RetrieveAPIView, SubjectMixin):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/subjects_read).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -148,9 +157,12 @@ class SubjectDetail(JSONAPIBaseView, generics.RetrieveAPIView, SubjectMixin):
         return self.get_subject()
 
 
-class SubjectChildrenList(JSONAPIBaseView, generics.ListAPIView, SubjectMixin, ListFilterMixin):
+class SubjectChildrenList(
+    JSONAPIBaseView, generics.ListAPIView, SubjectMixin, ListFilterMixin,
+):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/subject_children_list).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,

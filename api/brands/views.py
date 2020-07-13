@@ -36,6 +36,7 @@ class BrandMixin(object):
 class BrandList(JSONAPIBaseView, generics.ListAPIView, BrandMixin):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/institutions_list).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -49,7 +50,7 @@ class BrandList(JSONAPIBaseView, generics.ListAPIView, BrandMixin):
     view_category = 'brands'
     view_name = 'brand-list'
 
-    ordering = ('name', )
+    ordering = ('name',)
 
     # overrides ListAPIView
     def get_queryset(self):
@@ -59,6 +60,7 @@ class BrandList(JSONAPIBaseView, generics.ListAPIView, BrandMixin):
 class BrandDetail(JSONAPIBaseView, generics.RetrieveAPIView, BrandMixin):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/subjects_read).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,

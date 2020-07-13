@@ -8,8 +8,12 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils import timezone
 from flask import request
-from oauthlib.oauth2 import (AccessDeniedError, InvalidGrantError,
-    TokenExpiredError, MissingTokenError)
+from oauthlib.oauth2 import (
+    AccessDeniedError,
+    InvalidGrantError,
+    TokenExpiredError,
+    MissingTokenError,
+)
 from requests.exceptions import HTTPError as RequestsHTTPError
 from requests_oauthlib import OAuth1Session, OAuth2Session
 
@@ -29,6 +33,7 @@ OAUTH1 = 1
 OAUTH2 = 2
 
 generate_client_secret = functools.partial(random_string, length=40)
+
 
 class ExternalAccount(base.ObjectIDMixin, base.BaseModel):
     """An account on an external service.
@@ -74,8 +79,7 @@ class ExternalAccount(base.ObjectIDMixin, base.BaseModel):
     profile_url = EncryptedTextField(blank=True, null=True)
 
     def __repr__(self):
-        return '<ExternalAccount: {}/{}>'.format(self.provider,
-                                                 self.provider_id)
+        return '<ExternalAccount: {}/{}>'.format(self.provider, self.provider_id)
 
     def _natural_key(self):
         if self.pk:
@@ -83,9 +87,7 @@ class ExternalAccount(base.ObjectIDMixin, base.BaseModel):
         return hash(str(self.provider_id) + str(self.provider))
 
     class Meta:
-        unique_together = [
-            ('provider', 'provider_id',)
-        ]
+        unique_together = [('provider', 'provider_id',)]
 
 
 class ExternalProviderMeta(abc.ABCMeta):
@@ -127,7 +129,7 @@ class ExternalProvider(object, with_metaclass(ExternalProviderMeta)):
     def __repr__(self):
         return '<{name}: {status}>'.format(
             name=self.__class__.__name__,
-            status=self.account.provider_id if self.account else 'anonymous'
+            status=self.account.provider_id if self.account else 'anonymous',
         )
 
     @abc.abstractproperty
@@ -159,15 +161,11 @@ class ExternalProvider(object, with_metaclass(ExternalProviderMeta)):
                 redirect_uri = None
             else:
                 redirect_uri = web_url_for(
-                    'oauth_callback',
-                    service_name=self.short_name,
-                    _absolute=True
+                    'oauth_callback', service_name=self.short_name, _absolute=True
                 )
             # build the URL
             oauth = OAuth2Session(
-                self.client_id,
-                redirect_uri=redirect_uri,
-                scope=self.default_scopes,
+                self.client_id, redirect_uri=redirect_uri, scope=self.default_scopes,
             )
 
             url, state = oauth.authorization_url(self.auth_url_base)
@@ -178,8 +176,7 @@ class ExternalProvider(object, with_metaclass(ExternalProviderMeta)):
         elif self._oauth_version == OAUTH1:
             # get a request token
             oauth = OAuth1Session(
-                client_key=self.client_id,
-                client_secret=self.client_secret,
+                client_key=self.client_id, client_secret=self.client_secret,
             )
 
             # request temporary credentials from the provider
@@ -269,13 +266,10 @@ class ExternalProvider(object, with_metaclass(ExternalProviderMeta)):
                     redirect_uri = None
                 else:
                     redirect_uri = web_url_for(
-                        'oauth_callback',
-                        service_name=self.short_name,
-                        _absolute=True
+                        'oauth_callback', service_name=self.short_name, _absolute=True
                     )
                 response = OAuth2Session(
-                    self.client_id,
-                    redirect_uri=redirect_uri,
+                    self.client_id, redirect_uri=redirect_uri,
                 ).fetch_token(
                     self.callback_url,
                     client_secret=self.client_secret,
@@ -293,8 +287,7 @@ class ExternalProvider(object, with_metaclass(ExternalProviderMeta)):
     def _set_external_account(self, user, info):
 
         self.account, created = ExternalAccount.objects.get_or_create(
-            provider=self.short_name,
-            provider_id=info['provider_id'],
+            provider=self.short_name, provider_id=info['provider_id'],
         )
 
         # ensure that provider_name is correct
@@ -360,9 +353,7 @@ class ExternalProvider(object, with_metaclass(ExternalProviderMeta)):
             if refresh_token:
                 values['refresh_token'] = refresh_token
             if expires_at:
-                values['expires_at'] = dt.datetime.fromtimestamp(
-                    float(expires_at)
-                )
+                values['expires_at'] = dt.datetime.fromtimestamp(float(expires_at))
 
             return values
 
@@ -382,8 +373,14 @@ class ExternalProvider(object, with_metaclass(ExternalProviderMeta)):
         """
         pass
 
-    def refresh_oauth_key(self, force=False, extra=None, resp_auth_token_key='access_token',
-                          resp_refresh_token_key='refresh_token', resp_expiry_fn=None):
+    def refresh_oauth_key(
+        self,
+        force=False,
+        extra=None,
+        resp_auth_token_key='access_token',
+        resp_refresh_token_key='refresh_token',
+        resp_expiry_fn=None,
+    ):
         """Handles the refreshing of an oauth_key for account associated with this provider.
            Not all addons need to use this, as some do not have oauth_keys that expire.
 
@@ -416,7 +413,8 @@ class ExternalProvider(object, with_metaclass(ExternalProviderMeta)):
             return False
 
         resp_expiry_fn = resp_expiry_fn or (
-            lambda x: timezone.now() + timezone.timedelta(seconds=float(x['expires_in']))
+            lambda x: timezone.now()
+            + timezone.timedelta(seconds=float(x['expires_in']))
         )
 
         client = OAuth2Session(
@@ -426,19 +424,13 @@ class ExternalProvider(object, with_metaclass(ExternalProviderMeta)):
                 'refresh_token': self.account.refresh_token,
                 'token_type': 'Bearer',
                 'expires_in': '-30',
-            }
+            },
         )
 
-        extra.update({
-            'client_id': self.client_id,
-            'client_secret': self.client_secret
-        })
+        extra.update({'client_id': self.client_id, 'client_secret': self.client_secret})
 
         try:
-            token = client.refresh_token(
-                self.auto_refresh_url,
-                **extra
-            )
+            token = client.refresh_token(self.auto_refresh_url, **extra)
         except (AccessDeniedError, InvalidGrantError, TokenExpiredError):
             if not force:
                 return False
@@ -459,7 +451,9 @@ class ExternalProvider(object, with_metaclass(ExternalProviderMeta)):
         return bool: True if needs_refresh
         """
         if self.refresh_time and self.account.expires_at:
-            return (self.account.expires_at - timezone.now()).total_seconds() < self.refresh_time
+            return (
+                self.account.expires_at - timezone.now()
+            ).total_seconds() < self.refresh_time
         return False
 
     @property
@@ -470,8 +464,11 @@ class ExternalProvider(object, with_metaclass(ExternalProviderMeta)):
         return bool: True if cannot be refreshed
         """
         if self.expiry_time and self.account.expires_at:
-            return (timezone.now() - self.account.expires_at).total_seconds() > self.expiry_time
+            return (
+                timezone.now() - self.account.expires_at
+            ).total_seconds() > self.expiry_time
         return False
+
 
 class BasicAuthProviderMixin(object):
     """
@@ -494,7 +491,7 @@ class BasicAuthProviderMixin(object):
                 provider_id='{}:{}'.format(host, username),
                 profile_url=host,
                 provider=self.short_name,
-                provider_name=self.name
+                provider_name=self.name,
             )
         else:
             self.account = None

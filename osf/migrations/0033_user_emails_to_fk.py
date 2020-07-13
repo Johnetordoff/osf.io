@@ -17,14 +17,18 @@ def create_emails(user, Email):
     active = user['is_active']
     if active or not Email.objects.filter(address=primary_email).exists():
         _, created = Email.objects.get_or_create(address=primary_email, user_id=uid)
-        assert created, 'Email object for username {} already exists'.format(primary_email)
+        assert created, 'Email object for username {} already exists'.format(
+            primary_email
+        )
     for email in emails:
         if email == primary_email:
             # Already created above
             continue
         if active or not Email.objects.filter(address=email).exists():
             _, created = Email.objects.get_or_create(address=email, user_id=uid)
-            assert created, 'Email object for email {} on user {} already exists'.format(email, uid)
+            assert (
+                created
+            ), 'Email object for email {} on user {} already exists'.format(email, uid)
 
 
 def populate_email_model(state, schema):
@@ -32,10 +36,14 @@ def populate_email_model(state, schema):
     # If not, this will error
     OSFUser = state.get_model('osf', 'osfuser')
     Email = state.get_model('osf', 'email')
-    for user in OSFUser.objects.filter(is_active=True).values('id', 'username', 'emails', 'is_active'):
+    for user in OSFUser.objects.filter(is_active=True).values(
+        'id', 'username', 'emails', 'is_active'
+    ):
         # Give priority to active users
         create_emails(user, Email)
-    for user in OSFUser.objects.filter(is_active=False, merged_by__isnull=True).values('id', 'username', 'emails', 'is_active'):
+    for user in OSFUser.objects.filter(is_active=False, merged_by__isnull=True).values(
+        'id', 'username', 'emails', 'is_active'
+    ):
         create_emails(user, Email)
 
 
@@ -47,6 +55,7 @@ def restore_old_emails(state, schema):
             email.user.emails.append(email.address)
             email.user.save()
 
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -57,21 +66,45 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Email',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', CreationDateTimeField(auto_now_add=True, verbose_name='created')),
-                ('modified', ModificationDateTimeField(auto_now=True, verbose_name='modified')),
-                ('address', LowercaseEmailField(max_length=254, unique=True, db_index=True, validators=[validate_email])),
-                ('user', models.ForeignKey(blank=False, null=False, on_delete=CASCADE, related_name='_emails', to=settings.AUTH_USER_MODEL)),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'created',
+                    CreationDateTimeField(auto_now_add=True, verbose_name='created'),
+                ),
+                (
+                    'modified',
+                    ModificationDateTimeField(auto_now=True, verbose_name='modified'),
+                ),
+                (
+                    'address',
+                    LowercaseEmailField(
+                        max_length=254,
+                        unique=True,
+                        db_index=True,
+                        validators=[validate_email],
+                    ),
+                ),
+                (
+                    'user',
+                    models.ForeignKey(
+                        blank=False,
+                        null=False,
+                        on_delete=CASCADE,
+                        related_name='_emails',
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={'abstract': False,},
         ),
-        migrations.RunPython(
-            populate_email_model, restore_old_emails
-        ),
-        migrations.RemoveField(
-            model_name='osfuser',
-            name='emails'
-        ),
+        migrations.RunPython(populate_email_model, restore_old_emails),
+        migrations.RemoveField(model_name='osfuser', name='emails'),
     ]

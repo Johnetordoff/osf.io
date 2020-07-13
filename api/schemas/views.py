@@ -19,6 +19,7 @@ class RegistrationSchemaList(JSONAPIBaseView, generics.ListAPIView, ListFilterMi
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/metaschemas_list).
 
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -44,6 +45,7 @@ class RegistrationSchemaList(JSONAPIBaseView, generics.ListAPIView, ListFilterMi
 class RegistrationSchemaDetail(JSONAPIBaseView, generics.RetrieveAPIView):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/metaschemas_read).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -141,4 +143,6 @@ class RegistrationSchemaBlockDetail(JSONAPIBaseView, generics.RetrieveAPIView):
     view_name = 'registration-schema-form-block-detail'
 
     def get_object(self):
-        return get_object_or_error(RegistrationSchemaBlock, self.kwargs.get('schema_block_id'), self.request)
+        return get_object_or_error(
+            RegistrationSchemaBlock, self.kwargs.get('schema_block_id'), self.request,
+        )

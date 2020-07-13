@@ -21,8 +21,10 @@ from .utils import pip_install, bin_prefix
 try:
     from tasks import local  # noqa
 except ImportError:
-    print('No tasks/local.py file found. '
-          'Did you remember to copy local-dist.py to local.py?')
+    print(
+        'No tasks/local.py file found. '
+        'Did you remember to copy local-dist.py to local.py?'
+    )
 
 logging.getLogger('invoke').setLevel(logging.CRITICAL)
 
@@ -35,12 +37,14 @@ ns = Collection()
 
 try:
     from tasks import local as local_tasks
+
     ns.add_collection(Collection.from_module(local_tasks), name='local')
 except ImportError:
     pass
 
 try:
     from admin import tasks as admin_tasks
+
     ns.add_collection(Collection.from_module(admin_tasks), name='admin')
 except ImportError:
     pass
@@ -59,6 +63,7 @@ def task(*args, **kwargs):
         new_task = invoke.task(f, *args, **kwargs)
         ns.add_task(new_task)
         return new_task
+
     return decorator
 
 
@@ -68,13 +73,21 @@ def server(ctx, host=None, port=5000, debug=True, gitlogs=False):
     if os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or not debug:
         if os.environ.get('WEB_REMOTE_DEBUG', None):
             import pydevd
+
             # e.g. '127.0.0.1:5678'
             remote_parts = os.environ.get('WEB_REMOTE_DEBUG').split(':')
-            pydevd.settrace(remote_parts[0], port=int(remote_parts[1]), suspend=False, stdoutToServer=True, stderrToServer=True)
+            pydevd.settrace(
+                remote_parts[0],
+                port=int(remote_parts[1]),
+                suspend=False,
+                stdoutToServer=True,
+                stderrToServer=True,
+            )
 
         if gitlogs:
             git_logs(ctx)
         from website.app import init_app
+
         os.environ['DJANGO_SETTINGS_MODULE'] = 'api.base.settings'
         app = init_app(set_backends=True, routes=True)
         settings.API_SERVER_PORT = port
@@ -84,12 +97,20 @@ def server(ctx, host=None, port=5000, debug=True, gitlogs=False):
     context = None
     if settings.SECURE_MODE:
         context = (settings.OSF_SERVER_CERT, settings.OSF_SERVER_KEY)
-    app.run(host=host, port=port, debug=debug, threaded=debug, extra_files=[settings.ASSET_HASH_PATH], ssl_context=context)
+    app.run(
+        host=host,
+        port=port,
+        debug=debug,
+        threaded=debug,
+        extra_files=[settings.ASSET_HASH_PATH],
+        ssl_context=context,
+    )
 
 
 @task
 def git_logs(ctx, branch=None):
     from scripts.meta import gatherer
+
     gatherer.main(branch=branch)
 
 
@@ -97,13 +118,16 @@ def git_logs(ctx, branch=None):
 def apiserver(ctx, port=8000, wait=True, autoreload=True, host='127.0.0.1', pty=True):
     """Run the API server."""
     env = os.environ.copy()
-    cmd = 'DJANGO_SETTINGS_MODULE=api.base.settings {} manage.py runserver {}:{} --nothreading'\
-        .format(sys.executable, host, port)
+    cmd = 'DJANGO_SETTINGS_MODULE=api.base.settings {} manage.py runserver {}:{} --nothreading'.format(
+        sys.executable, host, port
+    )
     if not autoreload:
         cmd += ' --noreload'
     if settings.SECURE_MODE:
         cmd = cmd.replace('runserver', 'runsslserver')
-        cmd += ' --certificate {} --key {}'.format(settings.OSF_SERVER_CERT, settings.OSF_SERVER_KEY)
+        cmd += ' --certificate {} --key {}'.format(
+            settings.OSF_SERVER_CERT, settings.OSF_SERVER_KEY
+        )
 
     if wait:
         return ctx.run(cmd, echo=True, pty=pty)
@@ -119,8 +143,11 @@ def adminserver(ctx, port=8001, host='127.0.0.1', pty=True):
     cmd = '{} python3 manage.py runserver {}:{} --nothreading'.format(env, host, port)
     if settings.SECURE_MODE:
         cmd = cmd.replace('runserver', 'runsslserver')
-        cmd += ' --certificate {} --key {}'.format(settings.OSF_SERVER_CERT, settings.OSF_SERVER_KEY)
+        cmd += ' --certificate {} --key {}'.format(
+            settings.OSF_SERVER_CERT, settings.OSF_SERVER_KEY
+        )
     ctx.run(cmd, echo=True, pty=pty)
+
 
 @task
 def shell(ctx, transaction=True, print_sql=False, notebook=False):
@@ -154,7 +181,15 @@ def sharejs(ctx, host=None, port=None, db_url=None, cors_allow_origin=None):
 
 
 @task(aliases=['celery'])
-def celery_worker(ctx, level='debug', hostname=None, beat=False, queues=None, concurrency=None, max_tasks_per_child=None):
+def celery_worker(
+    ctx,
+    level='debug',
+    hostname=None,
+    beat=False,
+    queues=None,
+    concurrency=None,
+    max_tasks_per_child=None,
+):
     """Run the Celery process."""
     os.environ['DJANGO_SETTINGS_MODULE'] = 'api.base.settings'
     cmd = 'celery worker -A framework.celery_tasks -Ofair -l {0}'.format(level)
@@ -182,10 +217,12 @@ def celery_beat(ctx, level='debug', schedule=None):
         cmd = cmd + ' --schedule={}'.format(schedule)
     ctx.run(bin_prefix(cmd), pty=True)
 
+
 @task
 def migrate_search(ctx, delete=True, remove=False, index=settings.ELASTIC_INDEX):
     """Migrate the search-enabled models."""
     from website.app import init_app
+
     init_app(routes=False, set_backends=False)
     from website.search_migration.migrate import migrate
 
@@ -196,6 +233,7 @@ def migrate_search(ctx, delete=True, remove=False, index=settings.ELASTIC_INDEX)
         logging.getLogger(logger).setLevel(logging.ERROR)
 
     migrate(delete, remove=remove, index=index)
+
 
 @task
 def rebuild_search(ctx):
@@ -255,60 +293,71 @@ def requirements(ctx, base=False, addons=False, release=False, dev=False, all=Fa
         base = True
         addons = True
         dev = True
-    if not(addons or dev):
+    if not (addons or dev):
         base = True
     if release or addons:
         addon_requirements(ctx)
     # "release" takes precedence
     if release:
         req_file = os.path.join(HERE, 'requirements', 'release.txt')
-        ctx.run(
-            pip_install(req_file, constraints_file=CONSTRAINTS_PATH),
-            echo=True
-        )
+        ctx.run(pip_install(req_file, constraints_file=CONSTRAINTS_PATH), echo=True)
     else:
         if dev:  # then dev requirements
             req_file = os.path.join(HERE, 'requirements', 'dev.txt')
-            ctx.run(
-                pip_install(req_file, constraints_file=CONSTRAINTS_PATH),
-                echo=True
-            )
+            ctx.run(pip_install(req_file, constraints_file=CONSTRAINTS_PATH), echo=True)
 
         if base:  # then base requirements
             req_file = os.path.join(HERE, 'requirements.txt')
-            ctx.run(
-                pip_install(req_file, constraints_file=CONSTRAINTS_PATH),
-                echo=True
-            )
+            ctx.run(pip_install(req_file, constraints_file=CONSTRAINTS_PATH), echo=True)
     # fix URITemplate name conflict h/t @github
     ctx.run('pip3 uninstall uritemplate.py --yes || true')
     ctx.run('pip3 install --no-cache-dir uritemplate.py==0.3.0')
 
 
 @task
-def test_module(ctx, module=None, numprocesses=None, nocapture=False, params=None, coverage=False, testmon=False):
+def test_module(
+    ctx,
+    module=None,
+    numprocesses=None,
+    nocapture=False,
+    params=None,
+    coverage=False,
+    testmon=False,
+):
     """Helper for running tests.
     """
     from past.builtins import basestring
+
     os.environ['DJANGO_SETTINGS_MODULE'] = 'osf_tests.settings'
     import pytest
+
     if not numprocesses:
         from multiprocessing import cpu_count
+
         numprocesses = cpu_count()
     numprocesses = int(numprocesses)
     # NOTE: Subprocess to compensate for lack of thread safety in the httpretty module.
     # https://github.com/gabrielfalcao/HTTPretty/issues/209#issue-54090252
     args = []
     if coverage:
-        args.extend([
-            '--cov-report', 'term-missing',
-            '--cov', 'admin',
-            '--cov', 'addons',
-            '--cov', 'api',
-            '--cov', 'framework',
-            '--cov', 'osf',
-            '--cov', 'website',
-        ])
+        args.extend(
+            [
+                '--cov-report',
+                'term-missing',
+                '--cov',
+                'admin',
+                '--cov',
+                'addons',
+                '--cov',
+                'api',
+                '--cov',
+                'framework',
+                '--cov',
+                'osf',
+                '--cov',
+                'website',
+            ]
+        )
     if not nocapture:
         args += ['-s']
     if numprocesses > 1:
@@ -395,26 +444,52 @@ ADMIN_TESTS = [
 def test_osf(ctx, numprocesses=None, coverage=False, testmon=False):
     """Run the OSF test suite."""
     print('Testing modules "{}"'.format(OSF_TESTS))
-    test_module(ctx, module=OSF_TESTS, numprocesses=numprocesses, coverage=coverage, testmon=testmon)
+    test_module(
+        ctx,
+        module=OSF_TESTS,
+        numprocesses=numprocesses,
+        coverage=coverage,
+        testmon=testmon,
+    )
+
 
 @task
 def test_website(ctx, numprocesses=None, coverage=False, testmon=False):
     """Run the old test suite."""
     print('Testing modules "{}"'.format(WEBSITE_TESTS))
-    test_module(ctx, module=WEBSITE_TESTS, numprocesses=numprocesses, coverage=coverage, testmon=testmon)
+    test_module(
+        ctx,
+        module=WEBSITE_TESTS,
+        numprocesses=numprocesses,
+        coverage=coverage,
+        testmon=testmon,
+    )
+
 
 @task
 def test_api1(ctx, numprocesses=None, coverage=False, testmon=False):
     """Run the API test suite."""
     print('Testing modules "{}"'.format(API_TESTS1 + ADMIN_TESTS))
-    test_module(ctx, module=API_TESTS1 + ADMIN_TESTS, numprocesses=numprocesses, coverage=coverage, testmon=testmon)
+    test_module(
+        ctx,
+        module=API_TESTS1 + ADMIN_TESTS,
+        numprocesses=numprocesses,
+        coverage=coverage,
+        testmon=testmon,
+    )
 
 
 @task
 def test_api2(ctx, numprocesses=None, coverage=False, testmon=False):
     """Run the API test suite."""
     print('Testing modules "{}"'.format(API_TESTS2))
-    test_module(ctx, module=API_TESTS2, numprocesses=numprocesses, coverage=coverage, testmon=testmon)
+    test_module(
+        ctx,
+        module=API_TESTS2,
+        numprocesses=numprocesses,
+        coverage=coverage,
+        testmon=testmon,
+    )
 
 
 @task
@@ -422,14 +497,26 @@ def test_api3(ctx, numprocesses=None, coverage=False, testmon=False):
     """Run the API test suite."""
     print('Testing modules "{}"'.format(API_TESTS3 + OSF_TESTS))
     # NOTE: There may be some concurrency issues with ES
-    test_module(ctx, module=API_TESTS3 + OSF_TESTS, numprocesses=numprocesses, coverage=coverage, testmon=testmon)
+    test_module(
+        ctx,
+        module=API_TESTS3 + OSF_TESTS,
+        numprocesses=numprocesses,
+        coverage=coverage,
+        testmon=testmon,
+    )
 
 
 @task
 def test_admin(ctx, numprocesses=None, coverage=False, testmon=False):
     """Run the Admin test suite."""
     print('Testing module "admin_tests"')
-    test_module(ctx, module=ADMIN_TESTS, numprocesses=numprocesses, coverage=coverage, testmon=testmon)
+    test_module(
+        ctx,
+        module=ADMIN_TESTS,
+        numprocesses=numprocesses,
+        coverage=coverage,
+        testmon=testmon,
+    )
 
 
 @task
@@ -437,7 +524,13 @@ def test_addons(ctx, numprocesses=None, coverage=False, testmon=False):
     """Run all the tests in the addons directory.
     """
     print('Testing modules "{}"'.format(ADDON_TESTS))
-    test_module(ctx, module=ADDON_TESTS, numprocesses=numprocesses, coverage=coverage, testmon=testmon)
+    test_module(
+        ctx,
+        module=ADDON_TESTS,
+        numprocesses=numprocesses,
+        coverage=coverage,
+        testmon=testmon,
+    )
 
 
 @task
@@ -459,6 +552,7 @@ def test(ctx, all=False, lint=False):
         test_admin(ctx)
         karma(ctx)
 
+
 @task
 def remove_failures_from_testmon(ctx, db_path=None):
 
@@ -466,17 +560,26 @@ def remove_failures_from_testmon(ctx, db_path=None):
     tests_decached = conn.execute("delete from node where result <> '{}'").rowcount
     ctx.run('echo {} failures purged from travis cache'.format(tests_decached))
 
+
 @task
 def travis_setup(ctx):
     ctx.run('npm install -g bower', echo=True)
 
     with open('package.json', 'r') as fobj:
         package_json = json.load(fobj)
-        ctx.run('npm install @centerforopenscience/list-of-licenses@{}'.format(package_json['dependencies']['@centerforopenscience/list-of-licenses']), echo=True)
+        ctx.run(
+            'npm install @centerforopenscience/list-of-licenses@{}'.format(
+                package_json['dependencies']['@centerforopenscience/list-of-licenses']
+            ),
+            echo=True,
+        )
 
     with open('bower.json', 'r') as fobj:
         bower_json = json.load(fobj)
-        ctx.run('bower install {}'.format(bower_json['dependencies']['styles']), echo=True)
+        ctx.run(
+            'bower install {}'.format(bower_json['dependencies']['styles']), echo=True
+        )
+
 
 @task
 def test_travis_addons(ctx, numprocesses=None, coverage=False, testmon=False):
@@ -486,6 +589,7 @@ def test_travis_addons(ctx, numprocesses=None, coverage=False, testmon=False):
     travis_setup(ctx)
     syntax(ctx)
     test_addons(ctx, numprocesses=numprocesses, coverage=coverage, testmon=testmon)
+
 
 @task
 def test_travis_website(ctx, numprocesses=None, coverage=False, testmon=False):
@@ -514,6 +618,7 @@ def test_travis_api2(ctx, numprocesses=None, coverage=False, testmon=False):
 def test_travis_api3_and_osf(ctx, numprocesses=None, coverage=False, testmon=False):
     travis_setup(ctx)
     test_api3(ctx, numprocesses=numprocesses, coverage=coverage, testmon=testmon)
+
 
 @task
 def karma(ctx, travis=False):
@@ -566,7 +671,7 @@ def addon_requirements(ctx):
             print('Installing requirements for {0}'.format(directory))
             ctx.run(
                 pip_install(requirements_file, constraints_file=CONSTRAINTS_PATH),
-                echo=True
+                echo=True,
             )
 
     print('Finished installing addon requirements')
@@ -625,8 +730,12 @@ def docker_init(ctx):
     else:
         print('Your system is not recognized, you will have to setup docker manually')
 
+
 def ensure_docker_env_setup(ctx):
-    if hasattr(os.environ, 'DOCKER_ENV_SETUP') and os.environ['DOCKER_ENV_SETUP'] == '1':
+    if (
+        hasattr(os.environ, 'DOCKER_ENV_SETUP')
+        and os.environ['DOCKER_ENV_SETUP'] == '1'
+    ):
         pass
     else:
         os.environ['WEB_REMOTE_DEBUG'] = '192.168.168.167:11000'
@@ -635,30 +744,37 @@ def ensure_docker_env_setup(ctx):
         os.environ['DOCKER_ENV_SETUP'] = '1'
         docker_init(ctx)
 
+
 @task
 def docker_requirements(ctx):
     ensure_docker_env_setup(ctx)
     ctx.run('docker-compose up requirements requirements_mfr requirements_wb')
+
 
 @task
 def docker_appservices(ctx):
     ensure_docker_env_setup(ctx)
     ctx.run('docker-compose up assets fakecas elasticsearch tokumx postgres')
 
+
 @task
 def docker_osf(ctx):
     ensure_docker_env_setup(ctx)
     ctx.run('docker-compose up mfr wb web api')
 
+
 @task
 def clear_sessions(ctx, months=1, dry_run=False):
     from website.app import init_app
+
     init_app(routes=False, set_backends=True)
     from scripts import clear_sessions
+
     clear_sessions.clear_sessions_relative(months=months, dry_run=dry_run)
 
 
 # Release tasks
+
 
 @task
 def hotfix(ctx, name, finish=False, push=False):
@@ -678,7 +794,9 @@ def hotfix(ctx, name, finish=False, push=False):
     ctx.run('git checkout {}'.format(name), echo=True)
     ctx.run('git branch -m {}'.format(new_branch_name), echo=True)
     if finish:
-        ctx.run('git flow hotfix finish {}'.format(next_patch_version), echo=True, pty=True)
+        ctx.run(
+            'git flow hotfix finish {}'.format(next_patch_version), echo=True, pty=True
+        )
     if push:
         ctx.run('git push --follow-tags origin master', echo=True)
         ctx.run('git push origin develop', echo=True)
@@ -702,15 +820,14 @@ def latest_tag_info():
         # subprocess.check_output(["git", "update-index", "--refresh"])
 
         # get info about the latest tag in git
-        describe_out = subprocess.check_output([
-            'git',
-            'describe',
-            '--dirty',
-            '--tags',
-            '--long',
-            '--abbrev=40'
-        ], stderr=subprocess.STDOUT
-        ).decode().split('-')
+        describe_out = (
+            subprocess.check_output(
+                ['git', 'describe', '--dirty', '--tags', '--long', '--abbrev=40'],
+                stderr=subprocess.STDOUT,
+            )
+            .decode()
+            .split('-')
+        )
     except subprocess.CalledProcessError as err:
         raise err
         # logger.warn("Error when running git describe")
@@ -735,6 +852,7 @@ def latest_tag_info():
 # Tasks for generating and bundling SSL certificates
 # See http://cosdev.readthedocs.org/en/latest/osf/ops.html for details
 
+
 @task
 def generate_key(ctx, domain, bits=2048):
     cmd = 'openssl genrsa -des3 -out {0}.key {1}'.format(domain, bits)
@@ -743,9 +861,7 @@ def generate_key(ctx, domain, bits=2048):
 
 @task
 def generate_key_nopass(ctx, domain):
-    cmd = 'openssl rsa -in {domain}.key -out {domain}.key.nopass'.format(
-        domain=domain
-    )
+    cmd = 'openssl rsa -in {domain}.key -out {domain}.key.nopass'.format(domain=domain)
     ctx.run(cmd)
 
 
@@ -781,14 +897,8 @@ def bundle_certs(ctx, domain, cert_path):
         'COMODORSAAddTrustCA.crt',
         'AddTrustExternalCARoot.crt',
     ]
-    certs = ' '.join(
-        os.path.join(cert_path, cert_file)
-        for cert_file in cert_files
-    )
-    cmd = 'cat {certs} > {domain}.bundle.crt'.format(
-        certs=certs,
-        domain=domain,
-    )
+    certs = ' '.join(os.path.join(cert_path, cert_file) for cert_file in cert_files)
+    cmd = 'cat {certs} > {domain}.bundle.crt'.format(certs=certs, domain=domain,)
     ctx.run(cmd)
 
 
@@ -818,8 +928,11 @@ def webpack(ctx, clean=False, watch=False, dev=False, colors=False):
 @task()
 def build_js_config_files(ctx):
     from website import settings
+
     print('Building JS config files...')
-    with open(os.path.join(settings.STATIC_FOLDER, 'built', 'nodeCategories.json'), 'w') as fp:
+    with open(
+        os.path.join(settings.STATIC_FOLDER, 'built', 'nodeCategories.json'), 'w'
+    ) as fp:
         json.dump(settings.NODE_CATEGORY_MAP, fp)
     print('...Done.')
 
@@ -852,6 +965,7 @@ def generate_self_signed(ctx, domain):
 @task
 def update_citation_styles(ctx):
     from scripts import parse_citation_styles
+
     total = parse_citation_styles.main()
     print('Parsed {} styles'.format(total))
 
@@ -868,11 +982,14 @@ def usage(ctx):
 
 ### Maintenance Tasks ###
 
+
 @task
 def set_maintenance(ctx, message='', level=1, start=None, end=None):
     from website.app import setup_django
+
     setup_django()
     from website.maintenance import set_maintenance
+
     """Display maintenance notice across OSF applications (incl. preprints, registries, etc.)
 
     start - Start time for the maintenance period
@@ -895,8 +1012,10 @@ def set_maintenance(ctx, message='', level=1, start=None, end=None):
 @task
 def unset_maintenance(ctx):
     from website.app import setup_django
+
     setup_django()
     from website.maintenance import unset_maintenance
+
     print('Taking down maintenance notice...')
     unset_maintenance()
     print('...Done.')

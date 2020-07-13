@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0134_abstractnode_custom_citation'),
     ]
 
-    operations = [
-    ]
+    operations = []

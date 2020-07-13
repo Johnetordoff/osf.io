@@ -23,21 +23,19 @@ from addons.zotero.tests.factories import ZoteroAccountFactory
 
 class UserAddonListMixin(object):
     def set_setting_list_url(self):
-        self.setting_list_url = '/{}users/{}/addons/'.format(
-            API_BASE, self.user._id
-        )
+        self.setting_list_url = '/{}users/{}/addons/'.format(API_BASE, self.user._id)
 
     def test_settings_list_GET_returns_user_settings_if_present(self):
         wrong_type = self.should_expect_errors()
-        res = self.app.get(
-            self.setting_list_url,
-            auth=self.user.auth)
+        res = self.app.get(self.setting_list_url, auth=self.user.auth)
 
         if not wrong_type:
             addon_data = res.json['data'][0]
             assert_true(addon_data['attributes']['user_has_auth'])
             assert_in(
-                self.node._id, addon_data['links']['accounts'][self.account_id]['nodes_connected'][0])
+                self.node._id,
+                addon_data['links']['accounts'][self.account_id]['nodes_connected'][0],
+            )
         if wrong_type:
             assert_equal(res.status_code, 200)
             assert_equal(res.json['data'], [])
@@ -50,9 +48,7 @@ class UserAddonListMixin(object):
         except ValueError:
             # If addon was mandatory -- OSFStorage
             pass
-        res = self.app.get(
-            self.setting_list_url,
-            auth=self.user.auth)
+        res = self.app.get(self.setting_list_url, auth=self.user.auth)
 
         addon_data = res.json['data']
         assert_equal(addon_data, [])
@@ -60,44 +56,36 @@ class UserAddonListMixin(object):
     def test_settings_list_raises_error_if_PUT(self):
         res = self.app.put_json_api(
             self.setting_list_url,
-            {
-                'id': self.short_name,
-                'type': 'user-addons'
-            },
+            {'id': self.short_name, 'type': 'user-addons'},
             auth=self.user.auth,
-            expect_errors=True)
+            expect_errors=True,
+        )
         assert_equal(res.status_code, 405)
 
     def test_settings_list_raises_error_if_PATCH(self):
         res = self.app.patch_json_api(
             self.setting_list_url,
-            {
-                'id': self.short_name,
-                'type': 'user-addons'
-            },
+            {'id': self.short_name, 'type': 'user-addons'},
             auth=self.user.auth,
-            expect_errors=True)
+            expect_errors=True,
+        )
         assert_equal(res.status_code, 405)
 
     def test_settings_list_raises_error_if_DELETE(self):
         res = self.app.delete(
-            self.setting_list_url,
-            auth=self.user.auth,
-            expect_errors=True)
+            self.setting_list_url, auth=self.user.auth, expect_errors=True
+        )
         assert_equal(res.status_code, 405)
 
     def test_settings_list_raises_error_if_nonauthenticated(self):
-        res = self.app.get(
-            self.setting_list_url,
-            expect_errors=True)
+        res = self.app.get(self.setting_list_url, expect_errors=True)
         assert_equal(res.status_code, 401)
 
     def test_settings_list_user_cannot_view_other_user(self):
         other_user = AuthUserFactory()
         res = self.app.get(
-            self.setting_list_url,
-            auth=other_user.auth,
-            expect_errors=True)
+            self.setting_list_url, auth=other_user.auth, expect_errors=True
+        )
         assert_equal(res.status_code, 403)
 
 
@@ -110,16 +98,15 @@ class UserAddonDetailMixin(object):
     def test_settings_detail_GET_returns_user_settings_if_present(self):
         wrong_type = self.should_expect_errors()
         res = self.app.get(
-            self.setting_detail_url,
-            auth=self.user.auth,
-            expect_errors=wrong_type)
+            self.setting_detail_url, auth=self.user.auth, expect_errors=wrong_type
+        )
 
         if not wrong_type:
             addon_data = res.json['data']
             assert_true(addon_data['attributes']['user_has_auth'])
             assert_in(
                 self.node._id,
-                addon_data['links']['accounts'][self.account_id]['nodes_connected'][0]
+                addon_data['links']['accounts'][self.account_id]['nodes_connected'][0],
             )
         if wrong_type:
             assert_equal(res.status_code, 404)
@@ -134,56 +121,52 @@ class UserAddonDetailMixin(object):
             # If addon was mandatory -- OSFStorage
             pass
         res = self.app.get(
-            self.setting_detail_url,
-            auth=self.user.auth,
-            expect_errors=True)
+            self.setting_detail_url, auth=self.user.auth, expect_errors=True
+        )
 
         assert_equal(res.status_code, 404)
         if not wrong_type:
-            assert_in(
-                'Requested addon not enabled',
-                res.json['errors'][0]['detail'])
+            assert_in('Requested addon not enabled', res.json['errors'][0]['detail'])
         if wrong_type:
             assert re.match(
                 r'Requested addon un(available|recognized)',
-                (res.json['errors'][0]['detail']))
+                (res.json['errors'][0]['detail']),
+            )
 
     def test_settings_detail_raises_error_if_PUT(self):
-        res = self.app.put_json_api(self.setting_detail_url, {
-            'id': self.short_name,
-            'type': 'user-addon-detail'
-        }, auth=self.user.auth,
-            expect_errors=True)
+        res = self.app.put_json_api(
+            self.setting_detail_url,
+            {'id': self.short_name, 'type': 'user-addon-detail'},
+            auth=self.user.auth,
+            expect_errors=True,
+        )
         assert_equal(res.status_code, 405)
 
     def test_settings_detail_raises_error_if_PATCH(self):
-        res = self.app.patch_json_api(self.setting_detail_url, {
-            'id': self.short_name,
-            'type': 'user-addon-detail'
-        }, auth=self.user.auth,
-            expect_errors=True)
+        res = self.app.patch_json_api(
+            self.setting_detail_url,
+            {'id': self.short_name, 'type': 'user-addon-detail'},
+            auth=self.user.auth,
+            expect_errors=True,
+        )
         assert_equal(res.status_code, 405)
 
     def test_settings_detail_raises_error_if_DELETE(self):
         res = self.app.delete(
-            self.setting_detail_url,
-            auth=self.user.auth,
-            expect_errors=True)
+            self.setting_detail_url, auth=self.user.auth, expect_errors=True
+        )
         assert_equal(res.status_code, 405)
 
     def test_settings_detail_raises_error_if_nonauthenticated(self):
-        res = self.app.get(
-            self.setting_detail_url,
-            expect_errors=True)
+        res = self.app.get(self.setting_detail_url, expect_errors=True)
 
         assert_equal(res.status_code, 401)
 
     def test_settings_detail_user_cannot_view_other_user(self):
         other_user = AuthUserFactory()
         res = self.app.get(
-            self.setting_detail_url,
-            auth=other_user.auth,
-            expect_errors=True)
+            self.setting_detail_url, auth=other_user.auth, expect_errors=True
+        )
         assert_equal(res.status_code, 403)
 
 
@@ -196,22 +179,19 @@ class UserAddonAccountListMixin(object):
     def test_account_list_GET_returns_accounts_if_present(self):
         wrong_type = self.should_expect_errors()
         res = self.app.get(
-            self.account_list_url,
-            auth=self.user.auth,
-            expect_errors=wrong_type)
+            self.account_list_url, auth=self.user.auth, expect_errors=wrong_type
+        )
 
         if not wrong_type:
             addon_data = res.json['data'][0]
             assert_equal(addon_data['id'], self.account._id)
             assert_equal(
-                addon_data['attributes']['display_name'],
-                self.account.display_name)
+                addon_data['attributes']['display_name'], self.account.display_name
+            )
+            assert_equal(addon_data['attributes']['provider'], self.account.provider)
             assert_equal(
-                addon_data['attributes']['provider'],
-                self.account.provider)
-            assert_equal(
-                addon_data['attributes']['profile_url'],
-                self.account.profile_url)
+                addon_data['attributes']['profile_url'], self.account.profile_url
+            )
         if wrong_type:
             assert_equal(res.status_code, 404)
 
@@ -225,56 +205,52 @@ class UserAddonAccountListMixin(object):
             # If addon was mandatory -- OSFStorage
             pass
         res = self.app.get(
-            self.account_list_url,
-            auth=self.user.auth,
-            expect_errors=True)
+            self.account_list_url, auth=self.user.auth, expect_errors=True
+        )
 
         assert_equal(res.status_code, 404)
         if not wrong_type:
-            assert_in(
-                'Requested addon not enabled',
-                res.json['errors'][0]['detail'])
+            assert_in('Requested addon not enabled', res.json['errors'][0]['detail'])
         if wrong_type:
             assert re.match(
                 r'Requested addon un(available|recognized)',
-                (res.json['errors'][0]['detail']))
+                (res.json['errors'][0]['detail']),
+            )
 
     def test_account_list_raises_error_if_PUT(self):
-        res = self.app.put_json_api(self.account_list_url, {
-            'id': self.short_name,
-            'type': 'user-external_accounts'
-        }, auth=self.user.auth,
-            expect_errors=True)
+        res = self.app.put_json_api(
+            self.account_list_url,
+            {'id': self.short_name, 'type': 'user-external_accounts'},
+            auth=self.user.auth,
+            expect_errors=True,
+        )
         assert_equal(res.status_code, 405)
 
     def test_account_list_raises_error_if_PATCH(self):
-        res = self.app.patch_json_api(self.account_list_url, {
-            'id': self.short_name,
-            'type': 'user-external_accounts'
-        }, auth=self.user.auth,
-            expect_errors=True)
+        res = self.app.patch_json_api(
+            self.account_list_url,
+            {'id': self.short_name, 'type': 'user-external_accounts'},
+            auth=self.user.auth,
+            expect_errors=True,
+        )
         assert_equal(res.status_code, 405)
 
     def test_account_list_raises_error_if_DELETE(self):
         res = self.app.delete(
-            self.account_list_url,
-            auth=self.user.auth,
-            expect_errors=True)
+            self.account_list_url, auth=self.user.auth, expect_errors=True
+        )
         assert_equal(res.status_code, 405)
 
     def test_account_list_raises_error_if_nonauthenticated(self):
-        res = self.app.get(
-            self.account_list_url,
-            expect_errors=True)
+        res = self.app.get(self.account_list_url, expect_errors=True)
 
         assert_equal(res.status_code, 401)
 
     def test_account_list_user_cannot_view_other_user(self):
         other_user = AuthUserFactory()
         res = self.app.get(
-            self.account_list_url,
-            auth=other_user.auth,
-            expect_errors=True)
+            self.account_list_url, auth=other_user.auth, expect_errors=True
+        )
         assert_equal(res.status_code, 403)
 
 
@@ -287,22 +263,19 @@ class UserAddonAccountDetailMixin(object):
     def test_account_detail_GET_returns_account_if_enabled(self):
         wrong_type = self.should_expect_errors()
         res = self.app.get(
-            self.account_detail_url,
-            auth=self.user.auth,
-            expect_errors=wrong_type)
+            self.account_detail_url, auth=self.user.auth, expect_errors=wrong_type
+        )
 
         if not wrong_type:
             addon_data = res.json['data']
             assert_equal(addon_data['id'], self.account._id)
             assert_equal(
-                addon_data['attributes']['display_name'],
-                self.account.display_name)
+                addon_data['attributes']['display_name'], self.account.display_name
+            )
+            assert_equal(addon_data['attributes']['provider'], self.account.provider)
             assert_equal(
-                addon_data['attributes']['provider'],
-                self.account.provider)
-            assert_equal(
-                addon_data['attributes']['profile_url'],
-                self.account.profile_url)
+                addon_data['attributes']['profile_url'], self.account.profile_url
+            )
         if wrong_type:
             assert_equal(res.status_code, 404)
 
@@ -316,71 +289,68 @@ class UserAddonAccountDetailMixin(object):
             # If addon was mandatory -- OSFStorage
             pass
         res = self.app.get(
-            self.account_detail_url,
-            auth=self.user.auth,
-            expect_errors=True)
+            self.account_detail_url, auth=self.user.auth, expect_errors=True
+        )
 
         assert_equal(res.status_code, 404)
         if not wrong_type:
-            assert_in(
-                'Requested addon not enabled',
-                res.json['errors'][0]['detail'])
+            assert_in('Requested addon not enabled', res.json['errors'][0]['detail'])
         if wrong_type:
             assert re.match(
                 r'Requested addon un(available|recognized)',
-                (res.json['errors'][0]['detail']))
+                (res.json['errors'][0]['detail']),
+            )
 
     def test_account_detail_raises_error_if_PUT(self):
-        res = self.app.put_json_api(self.account_detail_url, {
-            'id': self.short_name,
-            'type': 'user-external_account-detail'
-        }, auth=self.user.auth,
-            expect_errors=True)
+        res = self.app.put_json_api(
+            self.account_detail_url,
+            {'id': self.short_name, 'type': 'user-external_account-detail'},
+            auth=self.user.auth,
+            expect_errors=True,
+        )
         assert_equal(res.status_code, 405)
 
     def test_account_detail_raises_error_if_PATCH(self):
-        res = self.app.patch_json_api(self.account_detail_url, {
-            'id': self.short_name,
-            'type': 'user-external_account-detail'
-        }, auth=self.user.auth,
-            expect_errors=True)
+        res = self.app.patch_json_api(
+            self.account_detail_url,
+            {'id': self.short_name, 'type': 'user-external_account-detail'},
+            auth=self.user.auth,
+            expect_errors=True,
+        )
         assert_equal(res.status_code, 405)
 
     def test_account_detail_raises_error_if_DELETE(self):
         res = self.app.delete(
-            self.account_detail_url,
-            auth=self.user.auth,
-            expect_errors=True)
+            self.account_detail_url, auth=self.user.auth, expect_errors=True
+        )
         assert_equal(res.status_code, 405)
 
     def test_account_detail_raises_error_if_nonauthenticated(self):
-        res = self.app.get(
-            self.account_detail_url,
-            expect_errors=True)
+        res = self.app.get(self.account_detail_url, expect_errors=True)
 
         assert_equal(res.status_code, 401)
 
     def test_account_detail_user_cannot_view_other_user(self):
         other_user = AuthUserFactory()
         res = self.app.get(
-            self.account_detail_url,
-            auth=other_user.auth,
-            expect_errors=True)
+            self.account_detail_url, auth=other_user.auth, expect_errors=True
+        )
         assert_equal(res.status_code, 403)
 
 
 class UserAddonTestSuiteMixin(
-        UserAddonListMixin,
-        UserAddonDetailMixin,
-        UserAddonAccountListMixin,
-        UserAddonAccountDetailMixin):
+    UserAddonListMixin,
+    UserAddonDetailMixin,
+    UserAddonAccountListMixin,
+    UserAddonAccountDetailMixin,
+):
     def set_urls(self):
         self.set_setting_list_url()
         self.set_setting_detail_url()
         self.set_account_list_url()
         self.set_account_detail_url()
 
-    def should_expect_errors(self, success_types=('OAUTH', )):
+    def should_expect_errors(self, success_types=('OAUTH',)):
         return self.addon_type not in success_types
 
 
@@ -395,24 +365,19 @@ class UserOAuthAddonTestSuiteMixin(UserAddonTestSuiteMixin):
 class UserUnmanageableAddonTestSuiteMixin(UserAddonTestSuiteMixin):
     addon_type = 'UNMANAGEABLE'
 
+
 # UNMANAGEABLE
 
 
-class TestUserForwardAddon(
-        UserUnmanageableAddonTestSuiteMixin,
-        ApiAddonTestCase):
+class TestUserForwardAddon(UserUnmanageableAddonTestSuiteMixin, ApiAddonTestCase):
     short_name = 'forward'
 
 
-class TestUserOsfStorageAddon(
-        UserUnmanageableAddonTestSuiteMixin,
-        ApiAddonTestCase):
+class TestUserOsfStorageAddon(UserUnmanageableAddonTestSuiteMixin, ApiAddonTestCase):
     short_name = 'osfstorage'
 
 
-class TestUserTwoFactorAddon(
-        UserUnmanageableAddonTestSuiteMixin,
-        ApiAddonTestCase):
+class TestUserTwoFactorAddon(UserUnmanageableAddonTestSuiteMixin, ApiAddonTestCase):
     short_name = 'twofactor'
 
 

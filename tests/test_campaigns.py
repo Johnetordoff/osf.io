@@ -31,7 +31,6 @@ def set_preprint_providers():
 
 # tests for campaign initialization and update
 class TestCampaignInitialization(OsfTestCase):
-
     def setUp(self):
         super(TestCampaignInitialization, self).setUp()
         set_preprint_providers()
@@ -47,7 +46,9 @@ class TestCampaignInitialization(OsfTestCase):
             'osf-registered-reports',
         ]
         self.refresh = timezone.now()
-        campaigns.CAMPAIGNS = None  # force campaign refresh now that preprint providers are populated
+        campaigns.CAMPAIGNS = (
+            None  # force campaign refresh now that preprint providers are populated
+        )
         campaigns.CAMPAIGNS_LAST_REFRESHED = self.refresh
 
     def test_get_campaigns_init(self):
@@ -73,7 +74,6 @@ class TestCampaignInitialization(OsfTestCase):
 
 # tests for campaign helper methods
 class TestCampaignMethods(OsfTestCase):
-
     def setUp(self):
         super(TestCampaignMethods, self).setUp()
         set_preprint_providers()
@@ -87,7 +87,9 @@ class TestCampaignMethods(OsfTestCase):
             'psyarxiv-preprints',
         ]
         self.invalid_campaign = 'invalid_campaign'
-        campaigns.CAMPAIGNS = None  # force campaign refresh now that preprint providers are populated
+        campaigns.CAMPAIGNS = (
+            None  # force campaign refresh now that preprint providers are populated
+        )
 
     def test_is_institution_login(self):
         for campaign in self.campaign_lists:
@@ -163,17 +165,16 @@ class TestCampaignMethods(OsfTestCase):
 
 # tests for prereg, erpc, which follow similar auth login/register logic
 class TestCampaignsAuthViews(OsfTestCase):
-
     def setUp(self):
         super(TestCampaignsAuthViews, self).setUp()
         self.campaigns = {
             'prereg': {
                 'title_register': 'OSF Preregistration',
-                'title_landing': 'Welcome to the OSF Preregistration!'
+                'title_landing': 'Welcome to the OSF Preregistration!',
             },
             'erpc': {
                 'title_register': 'Election Research Preacceptance Competition',
-                'title_landing': 'The Election Research Preacceptance Competition is Now Closed'
+                'title_landing': 'The Election Research Preacceptance Competition is Now Closed',
             },
         }
         for key, value in self.campaigns.items():
@@ -219,7 +220,6 @@ class TestCampaignsAuthViews(OsfTestCase):
 
 # tests for registration through campaigns
 class TestRegistrationThroughCampaigns(OsfTestCase):
-
     def setUp(self):
         super(TestRegistrationThroughCampaigns, self).setUp()
         campaigns.get_campaigns()  # Set up global CAMPAIGNS
@@ -241,7 +241,6 @@ class TestRegistrationThroughCampaigns(OsfTestCase):
 
 # tests for institution
 class TestCampaignsCASInstitutionLogin(OsfTestCase):
-
     def setUp(self):
         super(TestCampaignsCASInstitutionLogin, self).setUp()
         self.url_login = web_url_for('auth_login', campaign='institution')
@@ -252,7 +251,10 @@ class TestCampaignsCASInstitutionLogin(OsfTestCase):
     def test_institution_not_logged_in(self):
         resp = self.app.get(self.url_login)
         assert_equal(resp.status_code, http_status.HTTP_302_FOUND)
-        assert_in(cas.get_login_url(self.service_url, campaign='institution'), resp.headers['Location'])
+        assert_in(
+            cas.get_login_url(self.service_url, campaign='institution'),
+            resp.headers['Location'],
+        )
         # register behave the same as login
         resp2 = self.app.get(self.url_register)
         assert_equal(resp.headers['Location'], resp2.headers['Location'])

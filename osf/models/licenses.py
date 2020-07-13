@@ -12,7 +12,9 @@ def _serialize(fields, instance):
         for field in fields
     }
 
+
 serialize_node_license = functools.partial(_serialize, ('id', 'name', 'text'))
+
 
 def serialize_node_license_record(node_license_record):
     if node_license_record is None:
@@ -52,12 +54,16 @@ class NodeLicense(ObjectIDMixin, BaseModel):
 
 
 class NodeLicenseRecord(ObjectIDMixin, BaseModel):
-    node_license = models.ForeignKey('NodeLicense', null=True, blank=True, on_delete=models.SET_NULL)
+    node_license = models.ForeignKey(
+        'NodeLicense', null=True, blank=True, on_delete=models.SET_NULL
+    )
     # Deliberately left as a CharField to support year ranges (e.g. 2012-2015)
     year = models.CharField(max_length=128, null=True, blank=True)
     copyright_holders = ArrayField(
         models.CharField(max_length=256, blank=True, null=True),
-        default=list, blank=True)
+        default=list,
+        blank=True,
+    )
 
     def __unicode__(self):
         if self.node_license:
@@ -87,7 +93,7 @@ class NodeLicenseRecord(ObjectIDMixin, BaseModel):
         copied = NodeLicenseRecord(
             node_license=self.node_license,
             year=self.year,
-            copyright_holders=self.copyright_holders
+            copyright_holders=self.copyright_holders,
         )
         copied.save()
         return copied

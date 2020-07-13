@@ -9,12 +9,22 @@ from django.utils import timezone
 from nose.tools import *  # noqa
 
 from framework.auth import Auth
-from addons.osfstorage.models import OsfStorageFile, OsfStorageFileNode, OsfStorageFolder
+from addons.osfstorage.models import (
+    OsfStorageFile,
+    OsfStorageFileNode,
+    OsfStorageFolder,
+)
 from osf.models import BaseFileNode
 from osf.exceptions import ValidationError
 from osf.utils.permissions import WRITE, ADMIN
 
-from osf_tests.factories import ProjectFactory, UserFactory, PreprintFactory, RegionFactory, NodeFactory
+from osf_tests.factories import (
+    ProjectFactory,
+    UserFactory,
+    PreprintFactory,
+    RegionFactory,
+    NodeFactory,
+)
 
 from addons.osfstorage.tests import factories
 from addons.osfstorage.tests.utils import StorageTestCase
@@ -65,71 +75,77 @@ class TestOsfstorageFileNode(StorageTestCase):
         file = OsfStorageFile(name='MOAR PYLONS', target=self.node_settings.owner)
         file.save()
 
-        assert_equals(file.serialize(), {
-            u'id': file._id,
-            u'path': file.path,
-            u'created': None,
-            u'name': u'MOAR PYLONS',
-            u'kind': 'file',
-            u'version': 0,
-            u'downloads': 0,
-            u'size': None,
-            u'modified': None,
-            u'contentType': None,
-            u'checkout': None,
-            u'md5': None,
-            u'sha256': None,
-        })
+        assert_equals(
+            file.serialize(),
+            {
+                'id': file._id,
+                'path': file.path,
+                'created': None,
+                'name': 'MOAR PYLONS',
+                'kind': 'file',
+                'version': 0,
+                'downloads': 0,
+                'size': None,
+                'modified': None,
+                'contentType': None,
+                'checkout': None,
+                'md5': None,
+                'sha256': None,
+            },
+        )
 
         version = file.create_version(
             self.user,
             {
-                u'service': u'cloud',
-                settings.WATERBUTLER_RESOURCE: u'osf',
-                u'object': u'06d80e',
-            }, {
-                u'size': 1234,
-                u'contentType': u'text/plain'
-            })
+                'service': 'cloud',
+                settings.WATERBUTLER_RESOURCE: 'osf',
+                'object': '06d80e',
+            },
+            {'size': 1234, 'contentType': 'text/plain'},
+        )
 
-        assert_equals(file.serialize(), {
-            u'id': file._id,
-            u'path': file.path,
-            u'created': version.created.isoformat(),
-            u'name': u'MOAR PYLONS',
-            u'kind': u'file',
-            u'version': 1,
-            u'downloads': 0,
-            u'size': 1234,
-            u'modified': version.created.isoformat(),
-            u'contentType': u'text/plain',
-            u'checkout': None,
-            u'md5': None,
-            u'sha256': None,
-        })
+        assert_equals(
+            file.serialize(),
+            {
+                'id': file._id,
+                'path': file.path,
+                'created': version.created.isoformat(),
+                'name': 'MOAR PYLONS',
+                'kind': 'file',
+                'version': 1,
+                'downloads': 0,
+                'size': 1234,
+                'modified': version.created.isoformat(),
+                'contentType': 'text/plain',
+                'checkout': None,
+                'md5': None,
+                'sha256': None,
+            },
+        )
 
         date = timezone.now()
-        version.update_metadata({
-            u'modified': date.isoformat()
-        })
+        version.update_metadata({'modified': date.isoformat()})
 
-        assert_equals(file.serialize(), {
-            u'id': file._id,
-            u'path': file.path,
-            u'created': version.created.isoformat(),
-            u'name': u'MOAR PYLONS',
-            u'kind': u'file',
-            u'version': 1,
-            u'downloads': 0,
-            u'size': 1234,
-            # modified date is the creation date of latest version
-            # see https://github.com/CenterForOpenScience/osf.io/pull/7155
-            u'modified': version.created.isoformat(),
-            u'contentType': u'text/plain',
-            u'checkout': None,
-            u'md5': None,
-            u'sha256': None,
-        })
+        assert_equals(
+            file.serialize(),
+            {
+                'id': file._id,
+                'path': file.path,
+                'created': version.created.isoformat(),
+                'name': 'MOAR PYLONS',
+                'kind': 'file',
+                'version': 1,
+                'downloads': 0,
+                'size': 1234,
+                # modified date is the creation date of latest version
+                # see https://github.com/CenterForOpenScience/osf.io/pull/7155
+                'modified': version.created.isoformat(),
+                'contentType': 'text/plain',
+                'checkout': None,
+                'md5': None,
+                'sha256': None,
+            },
+        )
 
     def test_get_child_by_name(self):
         child = self.node_settings.get_root().append_file('Test')
@@ -174,7 +190,10 @@ class TestOsfstorageFileNode(StorageTestCase):
             for x in range(100)
         ]
 
-        assert_equals(sorted(kids, key=lambda kid: kid.name), list(self.node_settings.get_root().children.order_by('name')))
+        assert_equals(
+            sorted(kids, key=lambda kid: kid.name),
+            list(self.node_settings.get_root().children.order_by('name')),
+        )
 
     def test_download_count_file_defaults(self):
         child = self.node_settings.get_root().append_file('Test')
@@ -219,10 +238,7 @@ class TestOsfstorageFileNode(StorageTestCase):
         assert_equals(tcount + 11, models.TrashedFileNode.objects.count())
 
         for kid in kids:
-            assert_is(
-                OsfStorageFileNode.load(kid._id),
-                None
-            )
+            assert_is(OsfStorageFileNode.load(kid._id), None)
 
     def test_delete_root_node(self):
         root = self.node_settings.get_root()
@@ -238,7 +254,11 @@ class TestOsfstorageFileNode(StorageTestCase):
 
     def test_delete_file(self):
         child = self.node_settings.get_root().append_file('Test')
-        field_names = [f.name for f in child._meta.get_fields() if not f.is_relation and f.name not in ['id', 'content_type_pk']]
+        field_names = [
+            f.name
+            for f in child._meta.get_fields()
+            if not f.is_relation and f.name not in ['id', 'content_type_pk']
+        ]
         child_data = {f: getattr(child, f) for f in field_names}
         child.delete()
 
@@ -249,8 +269,23 @@ class TestOsfstorageFileNode(StorageTestCase):
         trashed_storage['parent'] = trashed.parent._id
         child_storage['materialized_path'] = child.materialized_path
         assert_equal(trashed.path, '/' + child._id)
-        trashed_field_names = [f.name for f in child._meta.get_fields() if not f.is_relation and
-                               f.name not in ['id', '_materialized_path', 'content_type_pk', '_path', 'deleted', 'deleted_on', 'deleted_by', 'type', 'modified']]
+        trashed_field_names = [
+            f.name
+            for f in child._meta.get_fields()
+            if not f.is_relation
+            and f.name
+            not in [
+                'id',
+                '_materialized_path',
+                'content_type_pk',
+                '_path',
+                'deleted',
+                'deleted_on',
+                'deleted_by',
+                'type',
+                'modified',
+            ]
+        ]
         for f, value in child_data.items():
             if f in trashed_field_names:
                 assert_equal(getattr(trashed, f), value)
@@ -295,7 +330,9 @@ class TestOsfstorageFileNode(StorageTestCase):
         child = self.node_settings.get_root().append_file('Test')
         self.node.remove_node(auth=Auth(self.user))
 
-        mock_enqueue.assert_called_with(delete_files_task, (self.node._id, ), {}, celery=True)
+        mock_enqueue.assert_called_with(
+            delete_files_task, (self.node._id,), {}, celery=True
+        )
 
     def test_materialized_path(self):
         child = self.node_settings.get_root().append_file('Test')
@@ -318,18 +355,22 @@ class TestOsfstorageFileNode(StorageTestCase):
                 'service': 'cloud',
                 settings.WATERBUTLER_RESOURCE: 'osf',
                 'object': '06d80e',
-            }, {
-                'sha256': 'existing',
-                'vault': 'the cloud',
-                'archive': 'erchiv'
-            })
-        assert_equal(to_copy.versions.first().get_basefilenode_version(to_copy).version_name, 'Carp')
+            },
+            {'sha256': 'existing', 'vault': 'the cloud', 'archive': 'erchiv'},
+        )
+        assert_equal(
+            to_copy.versions.first().get_basefilenode_version(to_copy).version_name,
+            'Carp',
+        )
 
         copied = to_copy.copy_under(copy_to)
 
         assert_not_equal(copied, to_copy)
         assert_equal(copied.parent, copy_to)
-        assert_equal(copied.versions.first().get_basefilenode_version(copied).version_name, 'Carp')
+        assert_equal(
+            copied.versions.first().get_basefilenode_version(copied).version_name,
+            'Carp',
+        )
         assert_equal(to_copy.parent, self.node_settings.get_root())
 
     def test_copy_node_file_to_preprint(self):
@@ -368,7 +409,9 @@ class TestOsfstorageFileNode(StorageTestCase):
         component_node_settings.save()
 
         move_to = component_node_settings.get_root()
-        to_move = self.node_settings.get_root().append_folder('Aaah').append_folder('Woop')
+        to_move = (
+            self.node_settings.get_root().append_folder('Aaah').append_folder('Woop')
+        )
         child = to_move.append_file('There it is')
 
         for _ in range(2):
@@ -393,15 +436,18 @@ class TestOsfstorageFileNode(StorageTestCase):
                 'service': 'cloud',
                 settings.WATERBUTLER_RESOURCE: 'osf',
                 'object': '06d80e',
-            }, {
-                'sha256': 'existing',
-                'vault': 'the cloud',
-                'archive': 'erchiv'
-            })
-        assert_equal(to_copy.versions.first().get_basefilenode_version(to_copy).version_name, 'Carp')
+            },
+            {'sha256': 'existing', 'vault': 'the cloud', 'archive': 'erchiv'},
+        )
+        assert_equal(
+            to_copy.versions.first().get_basefilenode_version(to_copy).version_name,
+            'Carp',
+        )
 
         copied = to_copy.copy_under(copy_to, name='But')
-        assert_equal(copied.versions.first().get_basefilenode_version(copied).version_name, 'But')
+        assert_equal(
+            copied.versions.first().get_basefilenode_version(copied).version_name, 'But'
+        )
 
         assert_equal(copied.name, 'But')
         assert_not_equal(copied, to_copy)
@@ -426,19 +472,22 @@ class TestOsfstorageFileNode(StorageTestCase):
                 'service': 'cloud',
                 settings.WATERBUTLER_RESOURCE: 'osf',
                 'object': '06d80e',
-            }, {
-                'sha256': 'existing',
-                'vault': 'the cloud',
-                'archive': 'erchiv'
-            })
+            },
+            {'sha256': 'existing', 'vault': 'the cloud', 'archive': 'erchiv'},
+        )
         move_to = self.node_settings.get_root().append_folder('Cloud')
-        assert_equal(to_move.versions.first().get_basefilenode_version(to_move).version_name, 'Carp')
+        assert_equal(
+            to_move.versions.first().get_basefilenode_version(to_move).version_name,
+            'Carp',
+        )
 
         moved = to_move.move_under(move_to, name='Tuna')
 
         assert_equal(to_move, moved)
         assert_equal(to_move.name, 'Tuna')
-        assert_equal(moved.versions.first().get_basefilenode_version(moved).version_name, 'Tuna')
+        assert_equal(
+            moved.versions.first().get_basefilenode_version(moved).version_name, 'Tuna'
+        )
         assert_equal(moved.parent, move_to)
 
     def test_move_preprint_primary_file_to_node(self):
@@ -509,7 +558,8 @@ class TestOsfstorageFileNode(StorageTestCase):
 
         assert guid is not None
         assert guid in OsfStorageFileNode.get_file_guids(
-            '/' + file._id, provider='osfstorage', target=node)
+            '/' + file._id, provider='osfstorage', target=node
+        )
 
     def test_get_file_guids_for_live_folder(self):
         node = self.node_settings.owner
@@ -525,7 +575,8 @@ class TestOsfstorageFileNode(StorageTestCase):
         assert len(guids) == len(files)
 
         all_guids = OsfStorageFileNode.get_file_guids(
-            '/' + folder._id, provider='osfstorage', target=node)
+            '/' + folder._id, provider='osfstorage', target=node
+        )
         assert sorted(guids) == sorted(all_guids)
 
     def test_get_file_guids_for_trashed_file(self):
@@ -539,7 +590,8 @@ class TestOsfstorageFileNode(StorageTestCase):
         file.delete()
         assert guid is not None
         assert guid in OsfStorageFileNode.get_file_guids(
-            '/' + file._id, provider='osfstorage', target=node)
+            '/' + file._id, provider='osfstorage', target=node
+        )
 
     def test_get_file_guids_for_trashed_folder(self):
         node = self.node_settings.owner
@@ -557,7 +609,8 @@ class TestOsfstorageFileNode(StorageTestCase):
         folder.delete()
 
         all_guids = OsfStorageFileNode.get_file_guids(
-            '/' + folder._id, provider='osfstorage', target=node)
+            '/' + folder._id, provider='osfstorage', target=node
+        )
         assert sorted(guids) == sorted(all_guids)
 
     def test_get_file_guids_live_file_wo_guid(self):
@@ -565,7 +618,8 @@ class TestOsfstorageFileNode(StorageTestCase):
         file = OsfStorageFile(name='foo', target=node)
         file.save()
         assert [] == OsfStorageFileNode.get_file_guids(
-            '/' + file._id, provider='osfstorage', target=node)
+            '/' + file._id, provider='osfstorage', target=node
+        )
 
     def test_get_file_guids_for_live_folder_wo_guids(self):
         node = self.node_settings.owner
@@ -577,7 +631,8 @@ class TestOsfstorageFileNode(StorageTestCase):
             files.append(folder.append_file('foo.{}'.format(i)))
 
         all_guids = OsfStorageFileNode.get_file_guids(
-            '/' + folder._id, provider='osfstorage', target=node)
+            '/' + folder._id, provider='osfstorage', target=node
+        )
         assert [] == all_guids
 
     def test_get_file_guids_trashed_file_wo_guid(self):
@@ -586,7 +641,8 @@ class TestOsfstorageFileNode(StorageTestCase):
         file.save()
         file.delete()
         assert [] == OsfStorageFileNode.get_file_guids(
-            '/' + file._id, provider='osfstorage', target=node)
+            '/' + file._id, provider='osfstorage', target=node
+        )
 
     def test_get_file_guids_for_trashed_folder_wo_guids(self):
         node = self.node_settings.owner
@@ -600,7 +656,8 @@ class TestOsfstorageFileNode(StorageTestCase):
         folder.delete()
 
         all_guids = OsfStorageFileNode.get_file_guids(
-            '/' + folder._id, provider='osfstorage', target=node)
+            '/' + folder._id, provider='osfstorage', target=node
+        )
         assert [] == all_guids
 
     def test_get_file_guids_for_live_folder_recursive(self):
@@ -622,7 +679,8 @@ class TestOsfstorageFileNode(StorageTestCase):
         assert len(guids) == len(files)
 
         all_guids = OsfStorageFileNode.get_file_guids(
-            '/' + folder._id, provider='osfstorage', target=node)
+            '/' + folder._id, provider='osfstorage', target=node
+        )
         assert sorted(guids) == sorted(all_guids)
 
     def test_get_file_guids_for_trashed_folder_recursive(self):
@@ -646,7 +704,8 @@ class TestOsfstorageFileNode(StorageTestCase):
         folder.delete()
 
         all_guids = OsfStorageFileNode.get_file_guids(
-            '/' + folder._id, provider='osfstorage', target=node)
+            '/' + folder._id, provider='osfstorage', target=node
+        )
         assert sorted(guids) == sorted(all_guids)
 
     def test_get_file_guids_for_live_folder_recursive_wo_guids(self):
@@ -663,7 +722,8 @@ class TestOsfstorageFileNode(StorageTestCase):
             files.append(subfolder.append_file('subfoo.{}'.format(i)))
 
         all_guids = OsfStorageFileNode.get_file_guids(
-            '/' + folder._id, provider='osfstorage', target=node)
+            '/' + folder._id, provider='osfstorage', target=node
+        )
         assert [] == all_guids
 
     def test_get_file_guids_for_trashed_folder_recursive_wo_guids(self):
@@ -682,13 +742,13 @@ class TestOsfstorageFileNode(StorageTestCase):
         folder.delete()
 
         all_guids = OsfStorageFileNode.get_file_guids(
-            '/' + folder._id, provider='osfstorage', target=node)
+            '/' + folder._id, provider='osfstorage', target=node
+        )
         assert [] == all_guids
 
 
 @pytest.mark.django_db
 class TestNodeSettingsModel:
-
     @pytest.fixture()
     def region(self):
         return RegionFactory()
@@ -760,7 +820,9 @@ class TestNodeSettingsModel:
         assert list(cloned_record.versions.all()) == list(record.versions.all())
         assert fork_node_settings.root_node
 
-    def test_fork_reverts_to_node_storage_region(self, user2, region, region2, node, child_node_with_different_region):
+    def test_fork_reverts_to_node_storage_region(
+        self, user2, region, region2, node, child_node_with_different_region
+    ):
         """
         Despite different user regions defaults, the forked node always stay in the same region as it's orginal node.
         """
@@ -772,7 +834,9 @@ class TestNodeSettingsModel:
         assert child_fork.forked_from == child_node_with_different_region
         assert child_fork.get_addon('osfstorage').region_id == region2.id
 
-    def test_region_wb_url_from_creators_defaults(self, user, region, user_settings, node):
+    def test_region_wb_url_from_creators_defaults(
+        self, user, region, user_settings, node
+    ):
         user_settings.default_region = region
         user_settings.save()
 
@@ -781,12 +845,7 @@ class TestNodeSettingsModel:
         assert node_settings.region_id == region.id
 
     def test_encrypted_json_field(self, region):
-        new_test_creds = {
-            'storage': {
-                'go': 'science',
-                'hey': ['woo', 'yeah', 'great']
-            }
-        }
+        new_test_creds = {'storage': {'go': 'science', 'hey': ['woo', 'yeah', 'great']}}
         region.waterbutler_credentials = new_test_creds
         region.save()
 
@@ -803,16 +862,14 @@ class TestOsfStorageFileVersion(StorageTestCase):
 
     def test_fields(self):
         version = factories.FileVersionFactory(
-            size=1024,
-            content_type='application/json',
-            modified=timezone.now(),
+            size=1024, content_type='application/json', modified=timezone.now(),
         )
         retrieved = models.FileVersion.load(version._id)
         assert_true(retrieved.creator)
         assert_true(retrieved.location)
         assert_true(retrieved.size)
         # sometimes identifiers are strings, so this always has to be a string, sql is funny about that.
-        assert_equal(retrieved.identifier, u'0')
+        assert_equal(retrieved.identifier, '0')
         assert_true(retrieved.content_type)
         assert_true(retrieved.modified)
 
@@ -842,7 +899,9 @@ class TestOsfStorageFileVersion(StorageTestCase):
 
     def test_validate_location(self):
         creator = factories.AuthUserFactory()
-        version = factories.FileVersionFactory.build(creator=creator, location={'invalid': True})
+        version = factories.FileVersionFactory.build(
+            creator=creator, location={'invalid': True}
+        )
         with assert_raises(ValidationError):
             version.save()
         version.location = {
@@ -855,7 +914,12 @@ class TestOsfStorageFileVersion(StorageTestCase):
     def test_update_metadata(self):
         version = factories.FileVersionFactory()
         version.update_metadata(
-            {'archive': 'glacier', 'size': 123, 'modified': 'Mon, 16 Feb 2015 18:45:34 GMT'})
+            {
+                'archive': 'glacier',
+                'size': 123,
+                'modified': 'Mon, 16 Feb 2015 18:45:34 GMT',
+            }
+        )
         version.reload()
         assert_in('archive', version.metadata)
         assert_equal(version.metadata['archive'], 'glacier')
@@ -867,7 +931,7 @@ class TestOsfStorageFileVersion(StorageTestCase):
                 settings.WATERBUTLER_RESOURCE: 'osf',
                 'object': 'd077f2',
             },
-            metadata={'sha256': 'existing'}
+            metadata={'sha256': 'existing'},
         )
         factories.FileVersionFactory(
             location={
@@ -875,11 +939,7 @@ class TestOsfStorageFileVersion(StorageTestCase):
                 settings.WATERBUTLER_RESOURCE: 'osf',
                 'object': '06d80e',
             },
-            metadata={
-                'sha256': 'existing',
-                'vault': 'the cloud',
-                'archive': 'erchiv'
-            }
+            metadata={'sha256': 'existing', 'vault': 'the cloud', 'archive': 'erchiv'},
         )
 
         assert_is(version._find_matching_archive(), True)
@@ -897,11 +957,9 @@ class TestOsfStorageFileVersion(StorageTestCase):
                 'service': 'cloud',
                 settings.WATERBUTLER_RESOURCE: 'osf',
                 'object': '06d80e',
-            }, {
-                'sha256': 'existing',
-                'vault': 'the cloud',
-                'archive': 'erchiv'
-            })
+            },
+            {'sha256': 'existing', 'vault': 'the cloud', 'archive': 'erchiv'},
+        )
 
         assert_equal(version.archive, 'erchiv')
 
@@ -911,22 +969,25 @@ class TestOsfStorageFileVersion(StorageTestCase):
                 'service': 'cloud',
                 settings.WATERBUTLER_RESOURCE: 'osf',
                 'object': '07d80a',
-            }, {
-                'sha256': 'existing',
-            })
+            },
+            {'sha256': 'existing',},
+        )
 
         assert_equal(version2.archive, 'erchiv')
 
     def test_no_matching_archive(self):
         models.FileVersion.objects.all().delete()
-        assert_is(False, factories.FileVersionFactory(
-            location={
-                'service': 'cloud',
-                settings.WATERBUTLER_RESOURCE: 'osf',
-                'object': 'd077f2',
-            },
-            metadata={'sha256': 'existing'}
-        )._find_matching_archive())
+        assert_is(
+            False,
+            factories.FileVersionFactory(
+                location={
+                    'service': 'cloud',
+                    settings.WATERBUTLER_RESOURCE: 'osf',
+                    'object': 'd077f2',
+                },
+                metadata={'sha256': 'existing'},
+            )._find_matching_archive(),
+        )
 
 
 @pytest.mark.django_db
@@ -1011,11 +1072,7 @@ class TestOsfStorageCheckout(StorageTestCase):
 
     def test_remove_contributor_with_checked_file(self):
         user = factories.AuthUserFactory()
-        models.Contributor.objects.create(
-            node=self.node,
-            user=user,
-            visible=True
-        )
+        models.Contributor.objects.create(node=self.node, user=user, visible=True)
         self.node.add_permission(user, ADMIN)
         self.file.check_in_or_out(self.user, self.user, save=True)
         self.file.reload()

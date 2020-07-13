@@ -8,15 +8,21 @@ from osf.models import ChronosJournal
 from osf.models import ChronosSubmission
 from osf.utils.workflows import ChronosSubmissionStatus, ReviewStates
 from website.settings import (
-    CHRONOS_USE_FAKE_FILE, CHRONOS_FAKE_FILE_URL,
-    CHRONOS_API_KEY, CHRONOS_USERNAME, CHRONOS_PASSWORD, CHRONOS_HOST, VERIFY_CHRONOS_SSL_CERT
+    CHRONOS_USE_FAKE_FILE,
+    CHRONOS_FAKE_FILE_URL,
+    CHRONOS_API_KEY,
+    CHRONOS_USERNAME,
+    CHRONOS_PASSWORD,
+    CHRONOS_HOST,
+    VERIFY_CHRONOS_SSL_CERT,
 )
 
 
 class ChronosSerializer(object):
-
     @classmethod
-    def serialize_manuscript(cls, journal_id, preprint, status=ChronosSubmissionStatus.DRAFT.value):
+    def serialize_manuscript(
+        cls, journal_id, preprint, status=ChronosSubmissionStatus.DRAFT.value
+    ):
         """Serialize an OSF preprint for submission to Chronos
 
         It is currently unclear what ARTICLE_TYPE should be:
@@ -56,11 +62,11 @@ class ChronosSerializer(object):
         return {
             'AUTHORS': [
                 cls.serialize_author(contrib)
-                for contrib in preprint.contributor_set.filter(visible=True).select_related('user')
+                for contrib in preprint.contributor_set.filter(
+                    visible=True
+                ).select_related('user')
             ],
-            'MANUSCRIPT_FILES': [
-                cls.serialize_file(preprint, preprint.primary_file)
-            ],
+            'MANUSCRIPT_FILES': [cls.serialize_file(preprint, preprint.primary_file)],
             'STATUS_CODE': status,
             'ABSTRACT': preprint.description,
             'ARTICLE_TYPE': 'research-article',  # ??
@@ -77,25 +83,37 @@ class ChronosSerializer(object):
                     'DATA_VALUE': preprint.provider.name,
                 }
             ],
-            'UNDERLYING_DATASET_URL': preprint.node.absolute_url if preprint.node else '',
-            'LICENSE': preprint.license.node_license.name.upper() if preprint.license and preprint.license.node_license.name != 'No license' else 'NL',
+            'UNDERLYING_DATASET_URL': preprint.node.absolute_url
+            if preprint.node
+            else '',
+            'LICENSE': preprint.license.node_license.name.upper()
+            if preprint.license and preprint.license.node_license.name != 'No license'
+            else 'NL',
         }
 
     @classmethod
     def serialize_user(cls, user):
 
-        username = user.given_name if user.given_name and user.family_name else user.fullname
+        username = (
+            user.given_name if user.given_name and user.family_name else user.fullname
+        )
         if not bool(user.given_name) and not bool(user.family_name):
             raise ValueError(
-                'Cannot submit because user {} requires a given and family name be set in your OSF profile.'.format(username)
+                'Cannot submit because user {} requires a given and family name be set in your OSF profile.'.format(
+                    username
+                )
             )
         if not bool(user.given_name):
             raise ValueError(
-                'Cannot submit because user {} requires a given name be set in your OSF profile.'.format(username)
+                'Cannot submit because user {} requires a given name be set in your OSF profile.'.format(
+                    username
+                )
             )
         if not bool(user.family_name):
             raise ValueError(
-                'Cannot submit because user {} requires a family name be set in your OSF profile.'.format(username)
+                'Cannot submit because user {} requires a family name be set in your OSF profile.'.format(
+                    username
+                )
             )
 
         return {
@@ -116,10 +134,9 @@ class ChronosSerializer(object):
             contribution = 'firstAuthor'
         else:
             contribution = 'Author'
-        ret.update({
-            'CONTRIBUTION': contribution,
-            'ORGANIZATION': '',
-        })
+        ret.update(
+            {'CONTRIBUTION': contribution, 'ORGANIZATION': '',}
+        )
 
         return ret
 
@@ -161,8 +178,8 @@ class ChronosSerializer(object):
             'MANUSCRIPT_FILE_CATEGORY': 'Publication Files',
         }
 
-class ChronosClient(object):
 
+class ChronosClient(object):
     def __init__(self, username=None, password=None, api_key=None, host=None):
         username = username or CHRONOS_USERNAME
         password = password or CHRONOS_PASSWORD
@@ -173,24 +190,28 @@ class ChronosClient(object):
     def sync_journals(self):
         journals = []
         for journal in self._client.get_journals():
-            journals.append(ChronosJournal.objects.update_or_create(journal_id=journal['JOURNAL_ID'], defaults={
-                'raw_response': journal,
-                'title': journal['TITLE'],
-                'name': journal['PUBLISHER_NAME'],
-                # Other Available fields: (Not currently used for anything so they are not parsed)
-                # 'E_ISSN':
-                # 'ISSN':
-                # 'JOURNAL_ID':
-                # 'JOURNAL_URL':
-                # 'PUBLISHER_ID':
-                # 'PUBLISHER_NAME':
-            })[0])
+            journals.append(
+                ChronosJournal.objects.update_or_create(
+                    journal_id=journal['JOURNAL_ID'],
+                    defaults={
+                        'raw_response': journal,
+                        'title': journal['TITLE'],
+                        'name': journal['PUBLISHER_NAME'],
+                        # Other Available fields: (Not currently used for anything so they are not parsed)
+                        # 'E_ISSN':
+                        # 'ISSN':
+                        # 'JOURNAL_ID':
+                        # 'JOURNAL_URL':
+                        # 'PUBLISHER_ID':
+                        # 'PUBLISHER_NAME':
+                    },
+                )[0]
+            )
         return journals
 
     def sync_manuscript(self, submission):
         return self._sync_manuscript(
-            submission,
-            self._client.get_manuscript(submission.publication_id)
+            submission, self._client.get_manuscript(submission.publication_id)
         )
 
     def get_journals(self):
@@ -199,7 +220,11 @@ class ChronosClient(object):
     def submit_manuscript(self, journal, preprint, submitter):
         submission_qs = ChronosSubmission.objects.filter(preprint=preprint)
         if submission_qs.filter(journal=journal).exists():
-            raise ValueError('This preprint already has an existing submission to {!r}.'.format(str(journal.title)))
+            raise ValueError(
+                'This preprint already has an existing submission to {!r}.'.format(
+                    str(journal.title)
+                )
+            )
 
         # 1 = draft, 2 = submitted, 3 = accepted, 4 = published
         # Disallow submission if the current preprint has submissions that are submitted, accepted or publishes
@@ -211,7 +236,9 @@ class ChronosClient(object):
         if submission_qs.filter(status=4).exists():
             raise ValueError('Cannot submit because your submission was published')
         if preprint.machine_state != ReviewStates.ACCEPTED.value:
-            raise ValueError('Cannot submit to Chronos if the preprint is not accepted by moderators')
+            raise ValueError(
+                'Cannot submit to Chronos if the preprint is not accepted by moderators'
+            )
 
         body = ChronosSerializer.serialize_manuscript(journal.journal_id, preprint)
         body['USER'] = ChronosSerializer.serialize_user(submitter)
@@ -233,7 +260,10 @@ class ChronosClient(object):
             submitter.chronos_user_id = response['USER']['CHRONOS_USER_ID']
             submitter.save()
 
-            for contrib, author in zip(preprint.contributor_set.filter(visible=True).select_related('user'), response['AUTHORS']):
+            for contrib, author in zip(
+                preprint.contributor_set.filter(visible=True).select_related('user'),
+                response['AUTHORS'],
+            ):
                 assert author['PARTNER_USER_ID'] == contrib.user._id
                 contrib.user.chronos_user_id = author['CHRONOS_USER_ID']
                 contrib.user.save()
@@ -241,14 +271,13 @@ class ChronosClient(object):
         return submission
 
     def update_manuscript(self, submission):
-        body = ChronosSerializer.serialize_manuscript(submission.journal.journal_id, submission.preprint, status=submission.status)
+        body = ChronosSerializer.serialize_manuscript(
+            submission.journal.journal_id, submission.preprint, status=submission.status
+        )
         body['USER'] = ChronosSerializer.serialize_user(submission.submitter)
         body['PUBLICATION_ID'] = submission.publication_id
 
-        return self._sync_manuscript(
-            submission,
-            self._client.update_manuscript(body),
-        )
+        return self._sync_manuscript(submission, self._client.update_manuscript(body),)
 
     def _sync_manuscript(self, submission, response):
         with transaction.atomic():
@@ -262,8 +291,9 @@ class ChronosClient(object):
 
 
 class ChronosRestClient(object):
-
-    def __init__(self, username, password, api_key, host='https://sandbox.api.chronos-oa.com'):
+    def __init__(
+        self, username, password, api_key, host='https://sandbox.api.chronos-oa.com'
+    ):
         self._auth_key = None
         self._session = requests.Session()
         self._session.verify = VERIFY_CHRONOS_SSL_CERT
@@ -283,7 +313,9 @@ class ChronosRestClient(object):
         return self._do_request('POST', '/partners/manuscript', json=body).json()
 
     def get_manuscript(self, manuscript_id):
-        return self._do_request('GET', '/partners/manuscript/{}'.format(manuscript_id)).json()
+        return self._do_request(
+            'GET', '/partners/manuscript/{}'.format(manuscript_id)
+        ).json()
 
     def get_journals_by_publisher(self, publisher):
         raise NotImplementedError
@@ -295,13 +327,8 @@ class ChronosRestClient(object):
         if not self._auth_key:
             resp = self._session.post(
                 '{}/partners/login'.format(self._host),
-                json={
-                    'password': self._password,
-                    'username': self._username,
-                },
-                headers={
-                    'api_key': self._api_key,
-                },
+                json={'password': self._password, 'username': self._username,},
+                headers={'api_key': self._api_key,},
             )
             resp.raise_for_status()
             self._auth_key = resp.json()['auth_key']
@@ -314,10 +341,7 @@ class ChronosRestClient(object):
             method,
             '{}{}'.format(self._host, path),
             json=json,
-            headers={
-                'api_key': self._api_key,
-                'auth_key': self._auth_key,
-            }
+            headers={'api_key': self._api_key, 'auth_key': self._auth_key,},
         )
 
         resp.raise_for_status()

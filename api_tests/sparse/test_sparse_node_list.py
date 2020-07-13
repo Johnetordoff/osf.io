@@ -28,7 +28,6 @@ def non_contrib():
 
 @pytest.mark.django_db
 class TestNodeList:
-
     @pytest.fixture()
     def deleted_project(self):
         return ProjectFactory(is_deleted=True)
@@ -57,8 +56,16 @@ class TestNodeList:
         return DraftNodeFactory(creator=user)
 
     def test_return(
-            self, app, user, non_contrib, deleted_project, draft_node,
-            private_project, public_project, sparse_url):
+        self,
+        app,
+        user,
+        non_contrib,
+        deleted_project,
+        draft_node,
+        private_project,
+        public_project,
+        sparse_url,
+    ):
 
         #   test_only_returns_non_deleted_public_projects
         res = app.get(sparse_url)
@@ -141,7 +148,6 @@ class TestNodeList:
 @pytest.mark.enable_quickfiles_creation
 @pytest.mark.enable_bookmark_creation
 class TestNodeFiltering:
-
     @pytest.fixture()
     def user_one(self):
         return AuthUserFactory()
@@ -161,53 +167,48 @@ class TestNodeFiltering:
     @pytest.fixture()
     def public_project_one(self, tag_one, tag_two):
         public_project_one = ProjectFactory(
-            title='Public Project One',
-            description='One',
-            is_public=True)
+            title='Public Project One', description='One', is_public=True
+        )
         public_project_one.add_tag(
-            tag_one,
-            Auth(public_project_one.creator),
-            save=False)
+            tag_one, Auth(public_project_one.creator), save=False
+        )
         public_project_one.add_tag(
-            tag_two,
-            Auth(public_project_one.creator),
-            save=False)
+            tag_two, Auth(public_project_one.creator), save=False
+        )
         public_project_one.save()
         return public_project_one
 
     @pytest.fixture()
     def public_project_two(self, tag_one):
         public_project_two = ProjectFactory(
-            title='Public Project Two',
-            description='One or Two',
-            is_public=True)
-        public_project_two.add_tag(
-            tag_one,
-            Auth(public_project_two.creator),
-            save=True)
+            title='Public Project Two', description='One or Two', is_public=True
+        )
+        public_project_two.add_tag(tag_one, Auth(public_project_two.creator), save=True)
         return public_project_two
 
     @pytest.fixture()
     def public_project_three(self):
-        return ProjectFactory(title='Unique Test Title', description='three', is_public=True)
+        return ProjectFactory(
+            title='Unique Test Title', description='three', is_public=True
+        )
 
     @pytest.fixture()
     def user_one_private_project(self, user_one):
         return ProjectFactory(
-            title='User One Private Project',
-            is_public=False,
-            creator=user_one)
+            title='User One Private Project', is_public=False, creator=user_one
+        )
 
     @pytest.fixture()
     def user_two_private_project(self, user_two):
         return ProjectFactory(
-            title='User Two Private Project',
-            is_public=False,
-            creator=user_two)
+            title='User Two Private Project', is_public=False, creator=user_two
+        )
 
     @pytest.fixture()
     def preprint(self, user_one):
-        return PreprintFactory(project=ProjectFactory(creator=user_one), creator=user_one)
+        return PreprintFactory(
+            project=ProjectFactory(creator=user_one), creator=user_one
+        )
 
     @pytest.fixture()
     def folder(self):
@@ -222,10 +223,17 @@ class TestNodeFiltering:
         return f'/{API_BASE}sparse/nodes/'
 
     def test_filtering(
-            self, app, user_one, public_project_one,
-            public_project_two, public_project_three,
-            user_one_private_project, user_two_private_project,
-            preprint, sparse_url):
+        self,
+        app,
+        user_one,
+        public_project_one,
+        public_project_two,
+        public_project_three,
+        user_one_private_project,
+        user_two_private_project,
+        preprint,
+        sparse_url,
+    ):
 
         #   test_filtering_by_id
         filter_url = f'{sparse_url}?filter[id]={public_project_one._id}'
@@ -237,7 +245,9 @@ class TestNodeFiltering:
         assert len(ids) == 1
 
         #   test_filtering_by_multiple_ids
-        filter_url = f'{sparse_url}?filter[id]={public_project_one._id},{public_project_two._id}'
+        filter_url = (
+            f'{sparse_url}?filter[id]={public_project_one._id},{public_project_two._id}'
+        )
         res = app.get(filter_url, auth=user_one.auth)
         assert res.status_code == 200
         ids = [each['id'] for each in res.json['data']]
@@ -298,7 +308,6 @@ class TestNodeFiltering:
 @pytest.mark.enable_quickfiles_creation
 @pytest.mark.enable_implicit_clean
 class TestNodeCreate:
-
     @pytest.fixture()
     def institution(self):
         return InstitutionFactory()
@@ -326,17 +335,14 @@ class TestNodeCreate:
                 },
                 'relationships': {
                     'affiliated_institutions': {
-                        'data': [
-                            {
-                                'type': 'institutions',
-                                'id': institution._id,
-                            }
-                        ]
+                        'data': [{'type': 'institutions', 'id': institution._id,}]
                     }
                 },
             }
         }
 
     def test_create_node_errors(self, app, user, public_project_payload, sparse_url):
-        res = app.post_json_api(sparse_url, public_project_payload, expect_errors=True, auth=user.auth)
+        res = app.post_json_api(
+            sparse_url, public_project_payload, expect_errors=True, auth=user.auth
+        )
         assert res.status_code == 405

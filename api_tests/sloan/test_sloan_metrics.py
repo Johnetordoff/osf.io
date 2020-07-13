@@ -20,11 +20,7 @@ from website.util import api_url_for
 from waffle.testutils import override_switch
 
 from osf.models import Session
-from osf.features import (
-    ELASTICSEARCH_METRICS,
-    SLOAN_COI_DISPLAY,
-    SLOAN_DATA_DISPLAY
-)
+from osf.features import ELASTICSEARCH_METRICS, SLOAN_COI_DISPLAY, SLOAN_DATA_DISPLAY
 
 from api.base.settings.defaults import SLOAN_ID_COOKIE_NAME
 from tests.json_api_test_app import JSONAPITestApp
@@ -34,7 +30,6 @@ django_app = JSONAPITestApp()
 
 
 class TestSloanMetrics(OsfTestCase):
-
     def setUp(self):
         super(TestSloanMetrics, self).setUp()
         self.user = AuthUserFactory()
@@ -42,17 +37,39 @@ class TestSloanMetrics(OsfTestCase):
         self.preprint = PreprintFactory(creator=self.user, is_public=True)
         self.session = Session(data={'auth_user_id': self.user._id})
         self.session.save()
-        self.cookie = itsdangerous.Signer(settings.SECRET_KEY).sign(self.session._id).decode()
-        self.JWE_KEY = jwe.kdf(settings.WATERBUTLER_JWE_SECRET.encode('utf-8'), settings.WATERBUTLER_JWE_SALT.encode('utf-8'))
+        self.cookie = (
+            itsdangerous.Signer(settings.SECRET_KEY).sign(self.session._id).decode()
+        )
+        self.JWE_KEY = jwe.kdf(
+            settings.WATERBUTLER_JWE_SECRET.encode('utf-8'),
+            settings.WATERBUTLER_JWE_SALT.encode('utf-8'),
+        )
 
     def build_url(self, **kwargs):
-        options = {'payload': jwe.encrypt(jwt.encode({'data': dict(dict(
-            action='download',
-            nid=self.preprint._id,
-            metrics={'uri': settings.MFR_SERVER_URL},
-            provider='osfstorage'), **kwargs),
-            'exp': timezone.now() + datetime.timedelta(seconds=settings.WATERBUTLER_JWT_EXPIRATION),
-        }, settings.WATERBUTLER_JWT_SECRET, algorithm=settings.WATERBUTLER_JWT_ALGORITHM), self.JWE_KEY)}
+        options = {
+            'payload': jwe.encrypt(
+                jwt.encode(
+                    {
+                        'data': dict(
+                            dict(
+                                action='download',
+                                nid=self.preprint._id,
+                                metrics={'uri': settings.MFR_SERVER_URL},
+                                provider='osfstorage',
+                            ),
+                            **kwargs,
+                        ),
+                        'exp': timezone.now()
+                        + datetime.timedelta(
+                            seconds=settings.WATERBUTLER_JWT_EXPIRATION
+                        ),
+                    },
+                    settings.WATERBUTLER_JWT_SECRET,
+                    algorithm=settings.WATERBUTLER_JWT_ALGORITHM,
+                ),
+                self.JWE_KEY,
+            )
+        }
         return api_url_for('get_auth', **options)
 
     @mock.patch('osf.metrics.PreprintDownload.record_for_preprint')
@@ -84,7 +101,6 @@ class TestSloanMetrics(OsfTestCase):
 
 @pytest.mark.django_db
 class TestSloanQueries:
-
     @pytest.fixture()
     def preprint(self):
         return PreprintFactory()
@@ -115,20 +131,11 @@ class TestSloanQueries:
             path='/MalcolmJenkinsKnockedBrandinCooksOutColdInTheSuperbowl',
             sloan_id='my_sloan_id',
             slaon_coi=True,
-            timestamp=timestamp
+            timestamp=timestamp,
         ).save()
 
         data = {
-            'data': {
-                'size': 0,
-                'aggs': {
-                    'users': {
-                        'terms': {
-                            'field': 'sloan_id',
-                        },
-                    }
-                }
-            }
+            'data': {'size': 0, 'aggs': {'users': {'terms': {'field': 'sloan_id',},}}}
         }
         time.sleep(2)  # ES is slow
         res = app.post_json_api(url, data, auth=admin.auth)
@@ -143,5 +150,5 @@ class TestSloanQueries:
             'version': 1,
             'path': '/MalcolmJenkinsKnockedBrandinCooksOutColdInTheSuperbowl',
             'sloan_id': 'my_sloan_id',
-            'slaon_coi': True
+            'slaon_coi': True,
         }

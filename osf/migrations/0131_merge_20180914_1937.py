@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0130_merge_20180914_1414'),
     ]
 
-    operations = [
-    ]
+    operations = []

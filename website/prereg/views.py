@@ -9,6 +9,7 @@ Other resources that are a part of the OSF Preregistration:
 """
 from website.registries import views
 
+
 def prereg_landing_page(**kwargs):
     """Landing page for osf prereg"""
     return views._view_registries_landing_page('prereg', **kwargs)

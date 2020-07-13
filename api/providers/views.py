@@ -14,18 +14,43 @@ from api.base.pagination import MaxSizePagination, IncreasedPageSizePagination
 from api.base.utils import get_object_or_error, get_user_auth, is_truthy
 from api.licenses.views import LicenseList
 from api.collections.permissions import CanSubmitToCollectionOrPublic
-from api.collections.serializers import CollectionSubmissionSerializer, CollectionSubmissionCreateSerializer
+from api.collections.serializers import (
+    CollectionSubmissionSerializer,
+    CollectionSubmissionCreateSerializer,
+)
 from api.requests.serializers import PreprintRequestSerializer
 from api.preprints.permissions import PreprintPublishedOrAdmin
 from api.preprints.serializers import PreprintSerializer
-from api.providers.permissions import CanAddModerator, CanDeleteModerator, CanUpdateModerator, CanSetUpProvider, MustBeModerator
-from api.providers.serializers import CollectionProviderSerializer, PreprintProviderSerializer, ModeratorSerializer, RegistrationProviderSerializer
+from api.providers.permissions import (
+    CanAddModerator,
+    CanDeleteModerator,
+    CanUpdateModerator,
+    CanSetUpProvider,
+    MustBeModerator,
+)
+from api.providers.serializers import (
+    CollectionProviderSerializer,
+    PreprintProviderSerializer,
+    ModeratorSerializer,
+    RegistrationProviderSerializer,
+)
 from api.subjects.views import SubjectList
 from api.subjects.serializers import SubjectSerializer
 from api.taxonomies.serializers import TaxonomySerializer
 from api.taxonomies.utils import optimize_subject_query
 from framework.auth.oauth_scopes import CoreScopes
-from osf.models import AbstractNode, CollectionProvider, CollectionSubmission, NodeLicense, OSFUser, RegistrationProvider, Subject, PreprintRequest, PreprintProvider, WhitelistedSHAREPreprintProvider
+from osf.models import (
+    AbstractNode,
+    CollectionProvider,
+    CollectionSubmission,
+    NodeLicense,
+    OSFUser,
+    RegistrationProvider,
+    Subject,
+    PreprintRequest,
+    PreprintProvider,
+    WhitelistedSHAREPreprintProvider,
+)
 from osf.utils.permissions import REVIEW_PERMISSIONS, ADMIN
 from osf.utils.workflows import RequestTypes
 from osf.metrics import PreprintDownload, PreprintView
@@ -41,7 +66,7 @@ class GenericProviderList(JSONAPIBaseView, generics.ListAPIView, ListFilterMixin
     required_write_scopes = [CoreScopes.NULL]
 
     pagination_class = MaxSizePagination
-    ordering = ('name', )
+    ordering = ('name',)
 
     def get_default_queryset(self):
         return self.model_class.objects.all()
@@ -79,7 +104,9 @@ class PreprintProviderList(MetricsViewMixin, GenericProviderList):
     }
 
     # overrides MetricsViewMixin
-    def get_annotated_queryset_with_metrics(self, queryset, metric_class, metric_name, after):
+    def get_annotated_queryset_with_metrics(
+        self, queryset, metric_class, metric_name, after,
+    ):
         return metric_class.get_top_by_count(
             qs=queryset,
             model_field='_id',
@@ -92,14 +119,18 @@ class PreprintProviderList(MetricsViewMixin, GenericProviderList):
     def get_renderer_context(self):
         context = super(PreprintProviderList, self).get_renderer_context()
         context['meta'] = {
-            'whitelisted_providers': WhitelistedSHAREPreprintProvider.objects.all().values_list('provider_name', flat=True),
+            'whitelisted_providers': WhitelistedSHAREPreprintProvider.objects.all().values_list(
+                'provider_name', flat=True,
+            ),
         }
         return context
 
     def build_query_from_field(self, field_name, operation):
         if field_name == 'permissions':
             if operation['op'] != 'eq':
-                raise InvalidFilterOperator(value=operation['op'], valid_operators=['eq'])
+                raise InvalidFilterOperator(
+                    value=operation['op'], valid_operators=['eq'],
+                )
             auth = get_user_auth(self.request)
             auth_user = getattr(auth, 'user', None)
             if not auth_user:
@@ -109,10 +140,20 @@ class PreprintProviderList(MetricsViewMixin, GenericProviderList):
             perm_options = [perm[0] for perm in REVIEW_PERMISSIONS]
             if not set(permissions).issubset(set(perm_options)):
                 valid_permissions = ', '.join(perm_options)
-                raise InvalidFilterValue('Invalid permission! Valid values are: {}'.format(valid_permissions))
-            return Q(id__in=get_objects_for_user(auth_user, permissions, PreprintProvider, any_perm=True))
+                raise InvalidFilterValue(
+                    'Invalid permission! Valid values are: {}'.format(
+                        valid_permissions,
+                    ),
+                )
+            return Q(
+                id__in=get_objects_for_user(
+                    auth_user, permissions, PreprintProvider, any_perm=True,
+                ),
+            )
 
-        return super(PreprintProviderList, self).build_query_from_field(field_name, operation)
+        return super(PreprintProviderList, self).build_query_from_field(
+            field_name, operation,
+        )
 
 
 class GenericProviderDetail(JSONAPIBaseView, generics.RetrieveAPIView):
@@ -125,9 +166,15 @@ class GenericProviderDetail(JSONAPIBaseView, generics.RetrieveAPIView):
     required_write_scopes = [CoreScopes.PROVIDERS_WRITE]
 
     def get_object(self):
-        provider = get_object_or_error(self.model_class, self.kwargs['provider_id'], self.request, display_name=self.model_class.__name__)
+        provider = get_object_or_error(
+            self.model_class,
+            self.kwargs['provider_id'],
+            self.request,
+            display_name=self.model_class.__name__,
+        )
         self.check_object_permissions(self.request, provider)
         return provider
+
 
 class CollectionProviderDetail(GenericProviderDetail):
     model_class = CollectionProvider
@@ -146,6 +193,7 @@ class RegistrationProviderDetail(GenericProviderDetail):
 class PreprintProviderDetail(GenericProviderDetail, generics.UpdateAPIView):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/preprint_provider_detail).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -158,7 +206,9 @@ class PreprintProviderDetail(GenericProviderDetail, generics.UpdateAPIView):
 
     def perform_update(self, serializer):
         if serializer.instance.is_reviewed:
-            raise Conflict('Reviews settings may be set only once. Contact support@osf.io if you need to update them.')
+            raise Conflict(
+                'Reviews settings may be set only once. Contact support@osf.io if you need to update them.',
+            )
         super(PreprintProviderDetail, self).perform_update(serializer)
 
 
@@ -178,12 +228,21 @@ class GenericProviderTaxonomies(JSONAPIBaseView, generics.ListAPIView):
     ordering = ('-id',)
 
     def get_queryset(self):
-        parent = self.request.query_params.get('filter[parents]', None) or self.request.query_params.get('filter[parent]', None)
-        provider = get_object_or_error(self.provider_class, self.kwargs['provider_id'], self.request, display_name=self.provider_class.__name__)
+        parent = self.request.query_params.get(
+            'filter[parents]', None,
+        ) or self.request.query_params.get('filter[parent]', None)
+        provider = get_object_or_error(
+            self.provider_class,
+            self.kwargs['provider_id'],
+            self.request,
+            display_name=self.provider_class.__name__,
+        )
         if parent:
             if parent == 'null':
                 return provider.top_level_subjects
-            return optimize_subject_query(provider.all_subjects.filter(parent___id=parent))
+            return optimize_subject_query(
+                provider.all_subjects.filter(parent___id=parent),
+            )
         return optimize_subject_query(provider.all_subjects)
 
 
@@ -191,24 +250,29 @@ class CollectionProviderTaxonomies(DeprecatedView, GenericProviderTaxonomies):
     """
     To be deprecated: In favor of CollectionProviderSubjects
     """
+
     view_category = 'collection-providers'
     provider_class = CollectionProvider  # Not actually the model being serialized, privatize to avoid issues
 
     max_version = '2.14'
 
+
 class RegistrationProviderTaxonomies(DeprecatedView, GenericProviderTaxonomies):
     """
     To be deprecated: In favor of RegistrationProviderSubjects
     """
+
     view_category = 'registration-providers'
     provider_class = RegistrationProvider  # Not actually the model being serialized, privatize to avoid issues
 
     max_version = '2.14'
 
+
 class PreprintProviderTaxonomies(GenericProviderTaxonomies):
     """
     To be deprecated: In favor of PreprintProviderSubjects
     """
+
     view_category = 'preprint-providers'
     provider_class = PreprintProvider  # Not actually the model being serialized, privatize to avoid issues
 
@@ -221,11 +285,18 @@ class BaseProviderSubjects(SubjectList):
 
     def get_default_queryset(self):
         parent = self.request.query_params.get('filter[parent]', None)
-        provider = get_object_or_error(self.provider_class, self.kwargs['provider_id'], self.request, display_name=self.provider_class.__name__)
+        provider = get_object_or_error(
+            self.provider_class,
+            self.kwargs['provider_id'],
+            self.request,
+            display_name=self.provider_class.__name__,
+        )
         if parent:
             if parent == 'null':
                 return provider.top_level_subjects
-            return optimize_subject_query(provider.all_subjects.filter(parent___id=parent))
+            return optimize_subject_query(
+                provider.all_subjects.filter(parent___id=parent),
+            )
         return optimize_subject_query(provider.all_subjects)
 
 
@@ -242,6 +313,7 @@ class RegistrationProviderSubjects(BaseProviderSubjects):
 class PreprintProviderSubjects(BaseProviderSubjects):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/preprint_provider_subjects_list).
     """
+
     view_category = 'preprint-providers'
     provider_class = PreprintProvider  # Not actually the model being serialized, privatize to avoid issues
 
@@ -260,34 +332,52 @@ class GenericProviderHighlightedTaxonomyList(JSONAPIBaseView, generics.ListAPIVi
     serializer_class = TaxonomySerializer
 
     def get_queryset(self):
-        provider = get_object_or_error(self.provider_class, self.kwargs['provider_id'], self.request, display_name=self.provider_class.__name__)
-        return optimize_subject_query(Subject.objects.filter(id__in=[s.id for s in provider.highlighted_subjects]).order_by('text'))
+        provider = get_object_or_error(
+            self.provider_class,
+            self.kwargs['provider_id'],
+            self.request,
+            display_name=self.provider_class.__name__,
+        )
+        return optimize_subject_query(
+            Subject.objects.filter(
+                id__in=[s.id for s in provider.highlighted_subjects],
+            ).order_by('text'),
+        )
 
 
-class CollectionProviderHighlightedTaxonomyList(DeprecatedView, GenericProviderHighlightedTaxonomyList):
+class CollectionProviderHighlightedTaxonomyList(
+    DeprecatedView, GenericProviderHighlightedTaxonomyList,
+):
     """
     To be deprecated: In favor of CollectionProviderHighlightedSubjectList
     """
+
     view_category = 'collection-providers'
     provider_class = CollectionProvider
 
     max_version = '2.14'
 
 
-class RegistrationProviderHighlightedTaxonomyList(DeprecatedView, GenericProviderHighlightedTaxonomyList):
+class RegistrationProviderHighlightedTaxonomyList(
+    DeprecatedView, GenericProviderHighlightedTaxonomyList,
+):
     """
     To be deprecated: In favor of RegistrationProviderHighlightedSubjectList
     """
+
     view_category = 'registration-providers'
     provider_class = RegistrationProvider
 
     max_version = '2.14'
 
 
-class PreprintProviderHighlightedTaxonomyList(DeprecatedView, GenericProviderHighlightedTaxonomyList):
+class PreprintProviderHighlightedTaxonomyList(
+    DeprecatedView, GenericProviderHighlightedTaxonomyList,
+):
     """
     To be deprecated: In favor of PreprintProviderHighlightedSubjectList
     """
+
     view_category = 'preprint-providers'
     provider_class = PreprintProvider
 
@@ -317,6 +407,7 @@ class PreprintProviderHighlightedSubjectList(GenericProviderHighlightedSubjectLi
 class GenericProviderLicenseList(LicenseList):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/preprint_provider_licenses_list)
     """
+
     ordering = ()  # TODO: should be ordered once the frontend for selecting default licenses no longer relies on order
 
     def get_default_queryset(self):
@@ -361,16 +452,19 @@ class PreprintProviderLicenseList(GenericProviderLicenseList):
     provider_class = PreprintProvider
 
 
-class PreprintProviderPreprintList(JSONAPIBaseView, generics.ListAPIView, PreprintFilterMixin):
+class PreprintProviderPreprintList(
+    JSONAPIBaseView, generics.ListAPIView, PreprintFilterMixin,
+):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/preprint_providers_preprints_list).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
         PreprintPublishedOrAdmin,
     )
 
-    ordering = ('-created')
+    ordering = '-created'
 
     serializer_class = PreprintSerializer
     model_class = AbstractNode
@@ -384,7 +478,12 @@ class PreprintProviderPreprintList(JSONAPIBaseView, generics.ListAPIView, Prepri
     def get_default_queryset(self):
         auth = get_user_auth(self.request)
         auth_user = getattr(auth, 'user', None)
-        provider = get_object_or_error(PreprintProvider, self.kwargs['provider_id'], self.request, display_name='PreprintProvider')
+        provider = get_object_or_error(
+            PreprintProvider,
+            self.kwargs['provider_id'],
+            self.request,
+            display_name='PreprintProvider',
+        )
 
         # Permissions on the list objects are handled by the query
         return self.preprints_queryset(provider.preprints.all(), auth_user)
@@ -396,19 +495,29 @@ class PreprintProviderPreprintList(JSONAPIBaseView, generics.ListAPIView, Prepri
     # overrides APIView
     def get_renderer_context(self):
         context = super(PreprintProviderPreprintList, self).get_renderer_context()
-        show_counts = is_truthy(self.request.query_params.get('meta[reviews_state_counts]', False))
+        show_counts = is_truthy(
+            self.request.query_params.get('meta[reviews_state_counts]', False),
+        )
         if show_counts:
             # TODO don't duplicate the above
             auth = get_user_auth(self.request)
             auth_user = getattr(auth, 'user', None)
-            provider = get_object_or_error(PreprintProvider, self.kwargs['provider_id'], self.request, display_name='PreprintProvider')
+            provider = get_object_or_error(
+                PreprintProvider,
+                self.kwargs['provider_id'],
+                self.request,
+                display_name='PreprintProvider',
+            )
             if auth_user and auth_user.has_perm('view_submissions', provider):
                 context['meta'] = {
                     'reviews_state_counts': provider.get_reviewable_state_counts(),
                 }
         return context
 
-class CollectionProviderSubmissionList(JSONAPIBaseView, generics.ListCreateAPIView, ListFilterMixin):
+
+class CollectionProviderSubmissionList(
+    JSONAPIBaseView, generics.ListCreateAPIView, ListFilterMixin,
+):
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         CanSubmitToCollectionOrPublic,
@@ -429,7 +538,12 @@ class CollectionProviderSubmissionList(JSONAPIBaseView, generics.ListCreateAPIVi
             return CollectionSubmissionSerializer
 
     def get_default_queryset(self):
-        provider = get_object_or_error(CollectionProvider, self.kwargs['provider_id'], self.request, display_name='CollectionProvider')
+        provider = get_object_or_error(
+            CollectionProvider,
+            self.kwargs['provider_id'],
+            self.request,
+            display_name='CollectionProvider',
+        )
         if provider and provider.primary_collection:
             return provider.primary_collection.collectionsubmission_set.all()
         return CollectionSubmission.objects.none()
@@ -439,13 +553,22 @@ class CollectionProviderSubmissionList(JSONAPIBaseView, generics.ListCreateAPIVi
 
     def perform_create(self, serializer):
         user = self.request.user
-        provider = get_object_or_error(CollectionProvider, self.kwargs['provider_id'], self.request, display_name='CollectionProvider')
+        provider = get_object_or_error(
+            CollectionProvider,
+            self.kwargs['provider_id'],
+            self.request,
+            display_name='CollectionProvider',
+        )
         if provider and provider.primary_collection:
             return serializer.save(creator=user, collection=provider.primary_collection)
-        raise ValidationError('Provider {} has no primary collection to submit to.'.format(provider.name))
+        raise ValidationError(
+            'Provider {} has no primary collection to submit to.'.format(provider.name),
+        )
 
 
-class RegistrationProviderSubmissionList(JSONAPIBaseView, generics.ListCreateAPIView, ListFilterMixin):
+class RegistrationProviderSubmissionList(
+    JSONAPIBaseView, generics.ListCreateAPIView, ListFilterMixin,
+):
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         CanSubmitToCollectionOrPublic,
@@ -466,7 +589,12 @@ class RegistrationProviderSubmissionList(JSONAPIBaseView, generics.ListCreateAPI
             return CollectionSubmissionSerializer
 
     def get_default_queryset(self):
-        provider = get_object_or_error(RegistrationProvider, self.kwargs['provider_id'], self.request, display_name='RegistrationProvider')
+        provider = get_object_or_error(
+            RegistrationProvider,
+            self.kwargs['provider_id'],
+            self.request,
+            display_name='RegistrationProvider',
+        )
         if provider and provider.primary_collection:
             return provider.primary_collection.collectionsubmission_set.all()
         return CollectionSubmission.objects.none()
@@ -476,13 +604,22 @@ class RegistrationProviderSubmissionList(JSONAPIBaseView, generics.ListCreateAPI
 
     def perform_create(self, serializer):
         user = self.request.user
-        provider = get_object_or_error(RegistrationProvider, self.kwargs['provider_id'], self.request, display_name='RegistrationProvider')
+        provider = get_object_or_error(
+            RegistrationProvider,
+            self.kwargs['provider_id'],
+            self.request,
+            display_name='RegistrationProvider',
+        )
         if provider and provider.primary_collection:
             return serializer.save(creator=user, collection=provider.primary_collection)
-        raise ValidationError('Provider {} has no primary collection to submit to.'.format(provider.name))
+        raise ValidationError(
+            'Provider {} has no primary collection to submit to.'.format(provider.name),
+        )
 
 
-class PreprintProviderWithdrawRequestList(JSONAPIBaseView, generics.ListAPIView, ListFilterMixin):
+class PreprintProviderWithdrawRequestList(
+    JSONAPIBaseView, generics.ListAPIView, ListFilterMixin,
+):
     permission_classes = (
         drf_permissions.IsAuthenticated,
         base_permissions.TokenHasScope,
@@ -498,7 +635,12 @@ class PreprintProviderWithdrawRequestList(JSONAPIBaseView, generics.ListAPIView,
 
     def get_provider(self):
         # used in perms class
-        return get_object_or_error(PreprintProvider, self.kwargs['provider_id'], self.request, display_name='PreprintProvider')
+        return get_object_or_error(
+            PreprintProvider,
+            self.kwargs['provider_id'],
+            self.request,
+            display_name='PreprintProvider',
+        )
 
     def get_default_queryset(self):
         return PreprintRequest.objects.filter(
@@ -509,8 +651,12 @@ class PreprintProviderWithdrawRequestList(JSONAPIBaseView, generics.ListAPIView,
         )
 
     def get_renderer_context(self):
-        context = super(PreprintProviderWithdrawRequestList, self).get_renderer_context()
-        if is_truthy(self.request.query_params.get('meta[requests_state_counts]', False)):
+        context = super(
+            PreprintProviderWithdrawRequestList, self,
+        ).get_renderer_context()
+        if is_truthy(
+            self.request.query_params.get('meta[requests_state_counts]', False),
+        ):
             auth = get_user_auth(self.request)
             auth_user = getattr(auth, 'user', None)
             provider = self.get_provider()
@@ -523,11 +669,17 @@ class PreprintProviderWithdrawRequestList(JSONAPIBaseView, generics.ListAPIView,
     def get_queryset(self):
         return self.get_queryset_from_request()
 
+
 class ModeratorMixin(object):
     model_class = OSFUser
 
     def get_provider(self):
-        return get_object_or_error(PreprintProvider, self.kwargs['provider_id'], self.request, display_name='PreprintProvider')
+        return get_object_or_error(
+            PreprintProvider,
+            self.kwargs['provider_id'],
+            self.request,
+            display_name='PreprintProvider',
+        )
 
     def get_serializer_context(self, *args, **kwargs):
         ctx = super(ModeratorMixin, self).get_serializer_context(*args, **kwargs)
@@ -535,7 +687,9 @@ class ModeratorMixin(object):
         return ctx
 
 
-class PreprintProviderModeratorsList(ModeratorMixin, JSONAPIBaseView, generics.ListCreateAPIView, ListFilterMixin):
+class PreprintProviderModeratorsList(
+    ModeratorMixin, JSONAPIBaseView, generics.ListCreateAPIView, ListFilterMixin,
+):
     permission_classes = (
         drf_permissions.IsAuthenticated,
         base_permissions.TokenHasScope,
@@ -554,16 +708,25 @@ class PreprintProviderModeratorsList(ModeratorMixin, JSONAPIBaseView, generics.L
         provider = self.get_provider()
         admin_group = provider.get_group(ADMIN)
         mod_group = provider.get_group('moderator')
-        return (admin_group.user_set.all() | mod_group.user_set.all()).annotate(permission_group=Case(
-            When(groups=admin_group, then=Value(ADMIN)),
-            default=Value('moderator'),
-            output_field=CharField(),
-        )).order_by('fullname')
+        return (
+            (admin_group.user_set.all() | mod_group.user_set.all())
+            .annotate(
+                permission_group=Case(
+                    When(groups=admin_group, then=Value(ADMIN)),
+                    default=Value('moderator'),
+                    output_field=CharField(),
+                ),
+            )
+            .order_by('fullname')
+        )
 
     def get_queryset(self):
         return self.get_queryset_from_request()
 
-class PreprintProviderModeratorsDetail(ModeratorMixin, JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView):
+
+class PreprintProviderModeratorsDetail(
+    ModeratorMixin, JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView,
+):
     permission_classes = (
         drf_permissions.IsAuthenticated,
         base_permissions.TokenHasScope,
@@ -581,9 +744,20 @@ class PreprintProviderModeratorsDetail(ModeratorMixin, JSONAPIBaseView, generics
 
     def get_object(self):
         provider = self.get_provider()
-        user = get_object_or_error(OSFUser, self.kwargs['moderator_id'], self.request, display_name='OSFUser')
+        user = get_object_or_error(
+            OSFUser, self.kwargs['moderator_id'], self.request, display_name='OSFUser',
+        )
         try:
-            perm_group = user.groups.filter(name__contains=PreprintProvider.group_format.format(self=provider, group='')).order_by('name').first().name.split('_')[-1]
+            perm_group = (
+                user.groups.filter(
+                    name__contains=PreprintProvider.group_format.format(
+                        self=provider, group='',
+                    ),
+                )
+                .order_by('name')
+                .first()
+                .name.split('_')[-1]
+            )
         except AttributeError:
             # Group doesn't exist -- users not moderator
             raise NotFound

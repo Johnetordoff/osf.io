@@ -7,6 +7,7 @@ import logging
 import django
 from django.utils import timezone
 from django.db import transaction
+
 django.setup()
 
 from framework.celery_tasks import app as celery_app
@@ -25,22 +26,27 @@ logging.basicConfig(level=logging.INFO)
 def main(dry_run=True):
     approvals_past_pending = models.RegistrationApproval.objects.filter(
         state=models.RegistrationApproval.UNAPPROVED,
-        initiation_date__lt=timezone.now() - settings.REGISTRATION_APPROVAL_TIME
+        initiation_date__lt=timezone.now() - settings.REGISTRATION_APPROVAL_TIME,
     )
 
     for registration_approval in approvals_past_pending:
         if dry_run:
             logger.warn('Dry run mode')
         try:
-            pending_registration = models.Registration.objects.get(registration_approval=registration_approval)
+            pending_registration = models.Registration.objects.get(
+                registration_approval=registration_approval
+            )
         except models.Registration.DoesNotExist:
             logger.error(
-                'RegistrationApproval {} is not attached to a registration'.format(registration_approval._id)
+                'RegistrationApproval {} is not attached to a registration'.format(
+                    registration_approval._id
+                )
             )
             continue
         logger.warn(
-            'RegistrationApproval {0} automatically approved by system. Making registration {1} public.'
-            .format(registration_approval._id, pending_registration._id)
+            'RegistrationApproval {0} automatically approved by system. Making registration {1} public.'.format(
+                registration_approval._id, pending_registration._id
+            )
         )
         if not dry_run:
             if pending_registration.is_deleted:
@@ -58,7 +64,8 @@ def main(dry_run=True):
                 except Exception as err:
                     logger.error(
                         'Unexpected error raised when approving registration for '
-                        'registration {}. Continuing...'.format(pending_registration))
+                        'registration {}. Continuing...'.format(pending_registration)
+                    )
                     logger.exception(err)
 
 
@@ -68,6 +75,7 @@ def run_main(dry_run=True):
     if not dry_run:
         scripts_utils.add_file_logger(logger, __file__)
     main(dry_run=dry_run)
+
 
 if __name__ == '__main__':
     run_main(dry_run='--dry' in sys.argv)

@@ -14,6 +14,8 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddIndex(
             model_name='wikipage',
-            index=models.Index(fields=['page_name', 'node'], name='addons_wiki_page_na_6d5d96_idx'),
+            index=models.Index(
+                fields=['page_name', 'node'], name='addons_wiki_page_na_6d5d96_idx'
+            ),
         ),
     ]

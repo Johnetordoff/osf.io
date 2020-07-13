@@ -7,7 +7,6 @@ from website.settings import DOMAIN
 
 
 class DevFileSystemStorage(FileSystemStorage):
-
     def url(self, name):
         if self.base_url is None:
             raise ValueError('This file is not accessible via a URL.')
@@ -16,6 +15,7 @@ class DevFileSystemStorage(FileSystemStorage):
             url = url.lstrip('/')
         url = urljoin(DOMAIN, url)
         return urljoin(self.base_url, url)
+
 
 class RequestlessURLGoogleCloudStorage(GoogleCloudStorage):
     def url(self, name, validate=False):

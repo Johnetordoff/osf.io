@@ -4,6 +4,7 @@ from addons.dropbox.settings import MAX_UPLOAD_SIZE
 
 dropbox_root_folder = generic_root_folder('dropbox')
 
+
 class DropboxAddonAppConfig(BaseAddonAppConfig):
 
     name = 'addons.dropbox'
@@ -23,13 +24,18 @@ class DropboxAddonAppConfig(BaseAddonAppConfig):
     @property
     def routes(self):
         from . import routes
+
         return [routes.auth_routes, routes.api_routes]
 
     FOLDER_SELECTED = 'dropbox_folder_selected'
     NODE_AUTHORIZED = 'dropbox_node_authorized'
     NODE_DEAUTHORIZED = 'dropbox_node_deauthorized'
 
-    actions = (FOLDER_SELECTED, NODE_AUTHORIZED, NODE_DEAUTHORIZED, )
+    actions = (
+        FOLDER_SELECTED,
+        NODE_AUTHORIZED,
+        NODE_DEAUTHORIZED,
+    )
 
     @property
     def user_settings(self):

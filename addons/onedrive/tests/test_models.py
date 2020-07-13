@@ -17,6 +17,7 @@ from addons.onedrive.tests.factories import (
 
 pytestmark = pytest.mark.django_db
 
+
 class TestOneDriveProvider(unittest.TestCase):
     def setUp(self):
         super(TestOneDriveProvider, self).setUp()
@@ -51,10 +52,7 @@ class TestNodeSettings(OAuthAddonNodeSettingsTestSuiteMixin, unittest.TestCase):
     UserSettingsFactory = OneDriveUserSettingsFactory
 
     def setUp(self):
-        self.mock_refresh = mock.patch.object(
-            OneDriveProvider,
-            'refresh_oauth_key'
-        )
+        self.mock_refresh = mock.patch.object(OneDriveProvider, 'refresh_oauth_key')
         self.mock_refresh.return_value = True
         self.mock_refresh.start()
         super(TestNodeSettings, self).setUp()
@@ -91,7 +89,7 @@ class TestNodeSettings(OAuthAddonNodeSettingsTestSuiteMixin, unittest.TestCase):
         folder = {
             'id': 'fake-folder-id',
             'name': 'fake-folder-name',
-            'path': 'fake_path'
+            'path': 'fake_path',
         }
         self.node_settings.set_folder(folder, auth=Auth(self.user))
         self.node_settings.save()

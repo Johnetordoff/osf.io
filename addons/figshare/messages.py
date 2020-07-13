@@ -5,7 +5,9 @@ BEFORE_PAGE_LOAD_PUBLIC_NODE_MIXED_FS = 'Warning: This OSF {category} is public 
 
 BEFORE_PAGE_LOAD_PERM_MISMATCH = 'Warning: This OSF {category} is {node_perm}, but the figshare {folder_type} {figshare_id} is {figshare_perm}. '
 
-BEFORE_PAGE_LOAD_PUBLIC_NODE_PRIVATE_FS = 'Users can view the contents of this private figshare {folder_type}. '
+BEFORE_PAGE_LOAD_PUBLIC_NODE_PRIVATE_FS = (
+    'Users can view the contents of this private figshare {folder_type}. '
+)
 # END MODEL MESSAGES
 
 # MFR MESSAGES :views/crud.py
@@ -30,7 +32,9 @@ FIGSHARE_VIEW_FILE_OVERSIZED = 'This figshare file is too large to render; <u><a
 # </form>
 # '''
 
-OAUTH_INVALID = 'Your OAuth key for figshare is no longer valid. Please re-authenticate. '
+OAUTH_INVALID = (
+    'Your OAuth key for figshare is no longer valid. Please re-authenticate. '
+)
 
 FIGSHARE_INTERNAL_SERVER_ERROR = 'Figshare is experiencing technical problems when connecting to the OSF. Please wait while they resolve the problem or contact them at https://support.figshare.com.'
 

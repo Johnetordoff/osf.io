@@ -1,5 +1,9 @@
 import re
-from rest_framework.renderers import JSONRenderer, BrowsableAPIRenderer, StaticHTMLRenderer
+from rest_framework.renderers import (
+    JSONRenderer,
+    BrowsableAPIRenderer,
+    StaticHTMLRenderer,
+)
 
 
 class JSONRendererWithESISupport(JSONRenderer):
@@ -8,9 +12,16 @@ class JSONRendererWithESISupport(JSONRenderer):
     charset = 'utf-8'
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
-        initial_rendering = super(JSONRendererWithESISupport, self).render(data, accepted_media_type, renderer_context)
-        augmented_rendering = re.sub(r'"<esi:include src=\\"(.*?)\\"\/>"', '<esi:include src="\1"/>', initial_rendering.decode())
+        initial_rendering = super(JSONRendererWithESISupport, self).render(
+            data, accepted_media_type, renderer_context,
+        )
+        augmented_rendering = re.sub(
+            r'"<esi:include src=\\"(.*?)\\"\/>"',
+            '<esi:include src="\1"/>',
+            initial_rendering.decode(),
+        )
         return augmented_rendering
+
 
 class JSONAPIRenderer(JSONRendererWithESISupport):
     format = 'jsonapi'
@@ -29,7 +40,9 @@ class JSONAPIRenderer(JSONRendererWithESISupport):
             if warning:
                 meta_dict['warning'] = warning
             data.setdefault('meta', {}).update(meta_dict)
-        return super(JSONAPIRenderer, self).render(data, accepted_media_type, renderer_context)
+        return super(JSONAPIRenderer, self).render(
+            data, accepted_media_type, renderer_context,
+        )
 
 
 class BrowsableAPIRendererNoForms(BrowsableAPIRenderer):

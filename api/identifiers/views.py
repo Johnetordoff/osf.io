@@ -9,7 +9,11 @@ from api.base.views import JSONAPIBaseView
 from api.base.filters import ListFilterMixin
 from api.base.serializers import JSONAPISerializer
 
-from api.identifiers.serializers import NodeIdentifierSerializer, RegistrationIdentifierSerializer, PreprintIdentifierSerializer
+from api.identifiers.serializers import (
+    NodeIdentifierSerializer,
+    RegistrationIdentifierSerializer,
+    PreprintIdentifierSerializer,
+)
 
 from api.nodes.permissions import (
     IsPublic,
@@ -50,6 +54,7 @@ class IdentifierList(JSONAPIBaseView, generics.ListCreateAPIView, ListFilterMixi
     def get_queryset(self):
         return self.get_queryset_from_request()
 
+
 class IdentifierDetail(JSONAPIBaseView, generics.RetrieveAPIView):
     """List of identifiers for a specified node. *Read-only*.
 
@@ -77,6 +82,7 @@ class IdentifierDetail(JSONAPIBaseView, generics.RetrieveAPIView):
     #This Request/Response
 
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -103,7 +109,11 @@ class IdentifierDetail(JSONAPIBaseView, generics.RetrieveAPIView):
 
     def get_object(self):
         identifier = Identifier.load(self.kwargs['identifier_id'])
-        if not identifier or getattr(identifier.referent, 'deleted', False) or getattr(identifier.referent, 'is_deleted', False):
+        if (
+            not identifier
+            or getattr(identifier.referent, 'deleted', False)
+            or getattr(identifier.referent, 'is_deleted', False)
+        ):
             raise NotFound
         self.check_object_permissions(self.request, identifier)
         return identifier

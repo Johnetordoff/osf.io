@@ -23,6 +23,7 @@ class DropboxNodeSettingsFactory(DjangoModelFactory):
     user_settings = factory.SubFactory(DropboxUserSettingsFactory)
     external_account = factory.SubFactory(ExternalAccountFactory)
 
+
 class DropboxAccountFactory(ExternalAccountFactory):
     provider = 'dropbox'
     provider_id = factory.Sequence(lambda n: 'id-{0}'.format(n))

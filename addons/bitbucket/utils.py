@@ -23,7 +23,9 @@ def get_refs(addon, branch=None, sha=None, connection=None):
     :param Bitbucket connection: Bitbucket API object. If None, one will be created
         from the addon's user settings.
     """
-    connection = connection or BitbucketClient(access_token=addon.external_account.oauth_key)
+    connection = connection or BitbucketClient(
+        access_token=addon.external_account.oauth_key
+    )
 
     if sha and not branch:
         raise HTTPError(http_status.HTTP_400_BAD_REQUEST)
@@ -43,7 +45,8 @@ def get_refs(addon, branch=None, sha=None, connection=None):
             sha = each['target']['hash']
             break
 
-    return branch, sha, [
-        {'name': x['name'], 'sha': x['target']['hash']}
-        for x in branches
-    ]
+    return (
+        branch,
+        sha,
+        [{'name': x['name'], 'sha': x['target']['hash']} for x in branches],
+    )

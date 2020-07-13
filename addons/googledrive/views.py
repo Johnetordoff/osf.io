@@ -9,35 +9,24 @@ from addons.googledrive.serializer import GoogleDriveSerializer
 SHORT_NAME = 'googledrive'
 FULL_NAME = 'Google Drive'
 
-googledrive_account_list = generic_views.account_list(
-    SHORT_NAME,
-    GoogleDriveSerializer
-)
+googledrive_account_list = generic_views.account_list(SHORT_NAME, GoogleDriveSerializer)
 
-googledrive_get_config = generic_views.get_config(
-    SHORT_NAME,
-    GoogleDriveSerializer
-)
+googledrive_get_config = generic_views.get_config(SHORT_NAME, GoogleDriveSerializer)
+
 
 def _set_folder(node_addon, folder, auth):
     node_addon.set_folder(folder, auth=auth)
     node_addon.save()
 
+
 googledrive_set_config = generic_views.set_config(
-    SHORT_NAME,
-    FULL_NAME,
-    GoogleDriveSerializer,
-    _set_folder
+    SHORT_NAME, FULL_NAME, GoogleDriveSerializer, _set_folder
 )
 
-googledrive_import_auth = generic_views.import_auth(
-    SHORT_NAME,
-    GoogleDriveSerializer
-)
+googledrive_import_auth = generic_views.import_auth(SHORT_NAME, GoogleDriveSerializer)
 
-googledrive_deauthorize_node = generic_views.deauthorize_node(
-    SHORT_NAME
-)
+googledrive_deauthorize_node = generic_views.deauthorize_node(SHORT_NAME)
+
 
 @must_have_addon(SHORT_NAME, 'node')
 @must_be_addon_authorizer(SHORT_NAME)

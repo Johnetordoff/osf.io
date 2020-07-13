@@ -26,14 +26,9 @@ logger = logging.getLogger(__name__)
 TEMPLATE_DIR = settings.TEMPLATES_PATH
 
 _TPL_LOOKUP = TemplateLookup(
-    default_filters=[
-        'unicode',  # default filter; must set explicitly when overriding
-    ],
-    directories=[
-        TEMPLATE_DIR,
-        settings.ADDON_PATH,
-    ],
-    module_directory='/tmp/mako_modules'
+    default_filters=['unicode',],  # default filter; must set explicitly when overriding
+    directories=[TEMPLATE_DIR, settings.ADDON_PATH,],
+    module_directory='/tmp/mako_modules',
 )
 
 _TPL_LOOKUP_SAFE = TemplateLookup(
@@ -45,10 +40,7 @@ _TPL_LOOKUP_SAFE = TemplateLookup(
     imports=[
         'from website.util.sanitize import temp_ampersand_fixer',  # FIXME: Temporary workaround for data stored in wrong format in DB. Unescape it before it gets re-escaped by Markupsafe. See [#OSF-4432]
     ],
-    directories=[
-        TEMPLATE_DIR,
-        settings.ADDON_PATH,
-    ],
+    directories=[TEMPLATE_DIR, settings.ADDON_PATH,],
     module_directory='/tmp/mako_modules',
 )
 
@@ -56,6 +48,7 @@ REDIRECT_CODES = [
     http_status.HTTP_301_MOVED_PERMANENTLY,
     http_status.HTTP_302_FOUND,
 ]
+
 
 class Rule(object):
     """ Container for routing and rendering rules."""
@@ -66,8 +59,15 @@ class Rule(object):
             return [value]
         return value
 
-    def __init__(self, routes, methods, view_func_or_data, renderer,
-                 view_kwargs=None, endpoint_suffix=''):
+    def __init__(
+        self,
+        routes,
+        methods,
+        view_func_or_data,
+        renderer,
+        view_kwargs=None,
+        endpoint_suffix='',
+    ):
         """Rule constructor.
 
         :param routes: Route or list of routes
@@ -100,6 +100,7 @@ def wrap_with_renderer(fn, renderer, renderer_kwargs=None, debug_mode=True):
     :return: Wrapped view function
 
     """
+
     @functools.wraps(fn)
     def wrapped(*args, **kwargs):
         if session:
@@ -107,10 +108,7 @@ def wrap_with_renderer(fn, renderer, renderer_kwargs=None, debug_mode=True):
         else:
             session_error_code = None
         if session_error_code:
-            return renderer(
-                HTTPError(session_error_code),
-                **renderer_kwargs or {}
-            )
+            return renderer(HTTPError(session_error_code), **renderer_kwargs or {})
         try:
             if renderer_kwargs:
                 kwargs.update(renderer_kwargs)
@@ -124,10 +122,10 @@ def wrap_with_renderer(fn, renderer, renderer_kwargs=None, debug_mode=True):
             if debug_mode:
                 raise
             data = HTTPError(
-                http_status.HTTP_500_INTERNAL_SERVER_ERROR,
-                message=repr(error),
+                http_status.HTTP_500_INTERNAL_SERVER_ERROR, message=repr(error),
             )
         return renderer(data, **renderer_kwargs or {})
+
     return wrapped
 
 
@@ -142,6 +140,7 @@ def data_to_lambda(data):
 
 
 view_functions = {}
+
 
 def process_rules(app, rules, prefix=''):
     """Add URL routes to Flask / Werkzeug lookup table.
@@ -158,14 +157,9 @@ def process_rules(app, rules, prefix=''):
 
             view_func = rule.view_func_or_data
             renderer_name = getattr(
-                rule.renderer,
-                '__name__',
-                rule.renderer.__class__.__name__
+                rule.renderer, '__name__', rule.renderer.__class__.__name__
             )
-            endpoint = '{}__{}'.format(
-                renderer_name,
-                rule.view_func_or_data.__name__
-            )
+            endpoint = '{}__{}'.format(renderer_name, rule.view_func_or_data.__name__)
             view_functions[endpoint] = rule.view_func_or_data
 
         # Handle view data: wrap in lambda and build endpoint from
@@ -173,16 +167,11 @@ def process_rules(app, rules, prefix=''):
         else:
 
             view_func = data_to_lambda(rule.view_func_or_data)
-            endpoint = '__'.join(
-                route.replace('/', '') for route in rule.routes
-            )
+            endpoint = '__'.join(route.replace('/', '') for route in rule.routes)
 
         # Wrap view function with renderer
         wrapped_view_func = wrap_with_renderer(
-            view_func,
-            rule.renderer,
-            rule.view_kwargs,
-            debug_mode=app.debug
+            view_func, rule.renderer, rule.view_kwargs, debug_mode=app.debug
         )
 
         # Add routes
@@ -195,19 +184,29 @@ def process_rules(app, rules, prefix=''):
                     methods=rule.methods,
                 )
             except AssertionError:
-                raise AssertionError('URLRule({}, {})\'s view function name is overwriting an existing endpoint'.format(prefix + url, view_func.__name__ + rule.endpoint_suffix))
+                raise AssertionError(
+                    "URLRule({}, {})'s view function name is overwriting an existing endpoint".format(
+                        prefix + url, view_func.__name__ + rule.endpoint_suffix
+                    )
+                )
 
 
 ### Renderer helpers ###
 
+
 def render_mustache_string(tpl_string, data):
     import pystache
+
     return pystache.render(tpl_string, context=data)
+
 
 def render_jinja_string(tpl, data):
     pass
 
+
 mako_cache = {}
+
+
 def render_mako_string(tpldir, tplname, data, trust=True):
     """Render a mako template to a string.
 
@@ -234,7 +233,9 @@ def render_mako_string(tpldir, tplname, data, trust=True):
             input_encoding='utf-8',
             output_encoding='utf-8',
             default_filters=lookup_obj.template_args['default_filters'],
-            imports=lookup_obj.template_args['imports']  # FIXME: Temporary workaround for data stored in wrong format in DB. Unescape it before it gets re-escaped by Markupsafe. See [#OSF-4432]
+            imports=lookup_obj.template_args[
+                'imports'
+            ],  # FIXME: Temporary workaround for data stored in wrong format in DB. Unescape it before it gets re-escaped by Markupsafe. See [#OSF-4432]
         )
     # Don't cache in debug mode
     if not app.debug:
@@ -295,14 +296,18 @@ def call_url(url, view_kwargs=None):
     rv, _, _, _ = unpack(rv)
 
     # Follow redirects
-    if isinstance(rv, werkzeug.wrappers.BaseResponse) \
-            and rv.status_code in REDIRECT_CODES:
+    if (
+        isinstance(rv, werkzeug.wrappers.BaseResponse)
+        and rv.status_code in REDIRECT_CODES
+    ):
         redirect_url = rv.headers['Location']
         return call_url(redirect_url)
 
     return rv
 
+
 ### Renderers ###
+
 
 class Renderer(object):
 
@@ -342,7 +347,9 @@ class Renderer(object):
 
         # Set content type in headers
         headers = headers or {}
-        headers['Content-Type'] = self.CONTENT_TYPE + '; charset=' + kwargs.get('charset', 'utf-8')
+        headers['Content-Type'] = (
+            self.CONTENT_TYPE + '; charset=' + kwargs.get('charset', 'utf-8')
+        )
 
         # Package as response
         return make_response(rendered, status_code, headers)
@@ -372,6 +379,7 @@ class JSONRenderer(Renderer):
     def render(self, data, redirect_url, *args, **kwargs):
         return json.dumps(data, cls=self.Encoder)
 
+
 # Create a single JSONRenderer instance to avoid repeated construction
 json_renderer = JSONRenderer()
 
@@ -389,6 +397,7 @@ class XMLRenderer(Renderer):
 
     def render(self, data, redirect_url, *args, **kwargs):
         return data
+
 
 # Create a single XMLRenderer instance to avoid repeated construction
 xml_renderer = XMLRenderer()
@@ -413,15 +422,19 @@ class WebRenderer(Renderer):
             return renderer_extension_map[extension]
         except KeyError:
             raise KeyError(
-                'Could not infer renderer from file name: {}'.format(
-                    filename
-                )
+                'Could not infer renderer from file name: {}'.format(filename)
             )
 
-    def __init__(self, template_name,
-                 renderer=None, error_renderer=None,
-                 data=None, detect_render_nested=True,
-                 trust=True, template_dir=TEMPLATE_DIR):
+    def __init__(
+        self,
+        template_name,
+        renderer=None,
+        error_renderer=None,
+        data=None,
+        detect_render_nested=True,
+        trust=True,
+        template_dir=TEMPLATE_DIR,
+    ):
         """Construct WebRenderer.
 
         :param template_name: Name of template file
@@ -443,10 +456,7 @@ class WebRenderer(Renderer):
 
         self.template_dir = template_dir
         self.renderer = self.detect_renderer(renderer, template_name)
-        self.error_renderer = self.detect_renderer(
-            error_renderer,
-            self.error_template
-        )
+        self.error_renderer = self.detect_renderer(error_renderer, self.error_template)
 
     def handle_error(self, error):
         """Handle an HTTPError.
@@ -467,11 +477,7 @@ class WebRenderer(Renderer):
         # Render error page
         # todo: use message / data from exception in error page
         error_data = error.to_data()
-        return self.render(
-            error_data,
-            None,
-            template_name=error_template
-        ), error.code
+        return self.render(error_data, None, template_name=error_template), error.code
 
     def render_element(self, element, data):
         """Render an embedded template.
@@ -487,9 +493,12 @@ class WebRenderer(Renderer):
         try:
             element_meta = json.loads(attributes_string)
         except ValueError:
-            return '<div>No JSON object could be decoded: {}</div>'.format(
-                markupsafe.escape(attributes_string)
-            ), True
+            return (
+                '<div>No JSON object could be decoded: {}</div>'.format(
+                    markupsafe.escape(attributes_string)
+                ),
+                True,
+            )
 
         uri = element_meta.get('uri')
         is_replace = element_meta.get('replace', False)
@@ -508,27 +517,32 @@ class WebRenderer(Renderer):
                 uri_data = call_url(uri, view_kwargs=view_kwargs)
                 render_data.update(uri_data)
             except NotFound:
-                return '<div>URI {} not found</div>'.format(markupsafe.escape(uri)), is_replace
+                return (
+                    '<div>URI {} not found</div>'.format(markupsafe.escape(uri)),
+                    is_replace,
+                )
             except Exception as error:
                 logger.exception(error)
                 if error_msg:
-                    return '<div>{}</div>'.format(markupsafe.escape(str(error_msg))), is_replace
-                return '<div>Error retrieving URI {}: {}</div>'.format(
-                    uri,
-                    repr(error)
-                ), is_replace
+                    return (
+                        '<div>{}</div>'.format(markupsafe.escape(str(error_msg))),
+                        is_replace,
+                    )
+                return (
+                    '<div>Error retrieving URI {}: {}</div>'.format(uri, repr(error)),
+                    is_replace,
+                )
 
         try:
-            template_rendered = self._render(
-                render_data,
-                element_meta['tpl'],
-            )
+            template_rendered = self._render(render_data, element_meta['tpl'],)
         except Exception as error:
             logger.exception(error)
-            return '<div>Error rendering template {}: {}'.format(
-                element_meta['tpl'],
-                repr(error)
-            ), is_replace
+            return (
+                '<div>Error rendering template {}: {}'.format(
+                    element_meta['tpl'], repr(error)
+                ),
+                is_replace,
+            )
 
         return template_rendered, is_replace
 
@@ -555,19 +569,21 @@ class WebRenderer(Renderer):
         # todo: add debug parameter
         try:
             # TODO: Seems like Jinja2 and handlebars renderers would not work with this call sig
-            rendered = renderer(self.template_dir, template_name, data, trust=self.trust)
+            rendered = renderer(
+                self.template_dir, template_name, data, trust=self.trust
+            )
         except IOError:
             return '<div>Template {} not found.</div>'.format(template_name)
 
         ## Parse HTML using html5lib; lxml is too strict and e.g. throws
         ## errors if missing parent container; htmlparser mangles whitespace
         ## and breaks replacement
-        #parsed = BeautifulSoup(rendered, 'html5lib')
-        #subtemplates = parsed.find_all(
+        # parsed = BeautifulSoup(rendered, 'html5lib')
+        # subtemplates = parsed.find_all(
         #    lambda tag: tag.has_attr('mod-meta')
-        #)
+        # )
         #
-        #for element in subtemplates:
+        # for element in subtemplates:
         #
         #    # Extract HTML of original element
         #    element_html = str(element)

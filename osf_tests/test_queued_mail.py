@@ -11,19 +11,23 @@ from .factories import UserFactory, NodeFactory
 
 from osf.features import DISABLE_ENGAGEMENT_EMAILS
 from osf.models.queued_mail import (
-    queue_mail, WELCOME_OSF4M,
-    NO_LOGIN, NO_ADDON, NEW_PUBLIC_PROJECT
+    queue_mail,
+    WELCOME_OSF4M,
+    NO_LOGIN,
+    NO_ADDON,
+    NEW_PUBLIC_PROJECT,
 )
 from website.mails import mails
 from website.settings import DOMAIN
+
 
 @pytest.fixture()
 def user():
     return UserFactory(is_registered=True)
 
+
 @pytest.mark.django_db
 class TestQueuedMail:
-
     def queue_mail(self, mail, user, send_at=None, **kwargs):
         mail = queue_mail(
             to_addr=user.username if user else user.username,
@@ -58,10 +62,7 @@ class TestQueuedMail:
     @mock.patch('osf.models.queued_mail.send_mail')
     def test_new_public_project_presend_for_no_project(self, mock_mail, user):
         mail = self.queue_mail(
-            mail=NEW_PUBLIC_PROJECT,
-            user=user,
-            project_title='Oh noes',
-            nid='',
+            mail=NEW_PUBLIC_PROJECT, user=user, project_title='Oh noes', nid='',
         )
         assert bool(mail.send_mail()) is False
 
@@ -69,10 +70,7 @@ class TestQueuedMail:
     def test_new_public_project_presend_success(self, mock_mail, user):
         node = NodeFactory(is_public=True)
         mail = self.queue_mail(
-            mail=NEW_PUBLIC_PROJECT,
-            user=user,
-            project_title='Oh yass',
-            nid=node._id
+            mail=NEW_PUBLIC_PROJECT, user=user, project_title='Oh yass', nid=node._id
         )
         assert bool(mail.send_mail()) is True
 
@@ -85,27 +83,21 @@ class TestQueuedMail:
             user=user,
             conference='Buttjamz conference',
             fid='',
-            domain=DOMAIN
+            domain=DOMAIN,
         )
         assert bool(mail.send_mail()) is True
         assert mail.data['downloads'] == 0
 
     @mock.patch('osf.models.queued_mail.send_mail')
     def test_finding_other_emails_sent_to_user(self, mock_mail, user):
-        mail = self.queue_mail(
-            user=user,
-            mail=NO_ADDON,
-        )
+        mail = self.queue_mail(user=user, mail=NO_ADDON,)
         assert len(mail.find_sent_of_same_type_and_user()) == 0
         mail.send_mail()
         assert len(mail.find_sent_of_same_type_and_user()) == 1
 
     @mock.patch('osf.models.queued_mail.send_mail')
     def test_user_is_active(self, mock_mail, user):
-        mail = self.queue_mail(
-            user=user,
-            mail=NO_ADDON,
-        )
+        mail = self.queue_mail(user=user, mail=NO_ADDON,)
         assert bool(mail.send_mail()) is True
 
     @mock.patch('osf.models.queued_mail.send_mail')
@@ -113,47 +105,32 @@ class TestQueuedMail:
         user = UserFactory.build()
         user.set_unusable_password()
         user.save()
-        mail = self.queue_mail(
-            user=user,
-            mail=NO_ADDON,
-        )
+        mail = self.queue_mail(user=user, mail=NO_ADDON,)
         assert mail.send_mail() is False
 
     @mock.patch('osf.models.queued_mail.send_mail')
     def test_user_is_not_active_not_registered(self, mock_mail):
         user = UserFactory(is_registered=False)
-        mail = self.queue_mail(
-            user=user,
-            mail=NO_ADDON,
-        )
+        mail = self.queue_mail(user=user, mail=NO_ADDON,)
         assert mail.send_mail() is False
 
     @mock.patch('osf.models.queued_mail.send_mail')
     def test_user_is_not_active_is_merged(self, mock_mail):
         other_user = UserFactory()
         user = UserFactory(merged_by=other_user)
-        mail = self.queue_mail(
-            user=user,
-            mail=NO_ADDON,
-        )
+        mail = self.queue_mail(user=user, mail=NO_ADDON,)
         assert mail.send_mail() is False
 
     @mock.patch('osf.models.queued_mail.send_mail')
     def test_user_is_not_active_is_disabled(self, mock_mail):
         user = UserFactory(date_disabled=timezone.now())
-        mail = self.queue_mail(
-            user=user,
-            mail=NO_ADDON,
-        )
+        mail = self.queue_mail(user=user, mail=NO_ADDON,)
         assert mail.send_mail() is False
 
     @mock.patch('osf.models.queued_mail.send_mail')
     def test_user_is_not_active_is_not_confirmed(self, mock_mail):
         user = UserFactory(date_confirmed=None)
-        mail = self.queue_mail(
-            user=user,
-            mail=NO_ADDON,
-        )
+        mail = self.queue_mail(user=user, mail=NO_ADDON,)
         assert mail.send_mail() is False
 
     def test_disabled_queued_emails_not_sent_if_switch_active(self, user):

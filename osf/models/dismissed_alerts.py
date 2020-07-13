@@ -7,6 +7,7 @@ from .base import BaseModel
 class DismissedAlert(BaseModel):
     """User dismissed alerts
     """
+
     primary_identifier_name = '_id'
 
     _id = models.CharField(max_length=255, db_index=True)

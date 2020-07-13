@@ -56,10 +56,7 @@ class CitationsOauthProvider(ExternalProvider):
         # TODO: Verify OAuth access to each folder
         all_documents = self.serializer.serialized_root_folder
 
-        serialized_folders = [
-            extract_folder(each)
-            for each in folders
-        ]
+        serialized_folders = [extract_folder(each) for each in folders]
         return [all_documents] + serialized_folders
 
     def get_list(self, list_id=None):
@@ -71,6 +68,7 @@ class CitationsOauthProvider(ExternalProvider):
             return self._citations_for_user()
 
         return self._citations_for_folder(list_id)
+
 
 class CitationsProvider(object):
 
@@ -116,7 +114,7 @@ class CitationsProvider(object):
         node_addon.user_settings.grant_oauth_access(
             node=node_addon.owner,
             external_account=node_addon.external_account,
-            metadata={'folder': external_list_id}
+            metadata={'folder': external_list_id},
         )
         node_addon.user_settings.save()
 
@@ -149,8 +147,7 @@ class CitationsProvider(object):
             raise HTTPError(http_status.HTTP_403_FORBIDDEN)
 
         result = self.serializer(
-            node_settings=node_addon,
-            user_settings=user.get_addon(self.provider_name),
+            node_settings=node_addon, user_settings=user.get_addon(self.provider_name),
         ).serialized_node_settings
         result['validCredentials'] = self.check_credentials(node_addon)
         return {'result': result}
@@ -160,8 +157,7 @@ class CitationsProvider(object):
         node_addon.deauthorize(auth=Auth(user))
         node_addon.reload()
         result = self.serializer(
-            node_settings=node_addon,
-            user_settings=user.get_addon(self.provider_name),
+            node_settings=node_addon, user_settings=user.get_addon(self.provider_name),
         ).serialized_node_settings
 
         return {'result': result}
@@ -169,10 +165,9 @@ class CitationsProvider(object):
     def widget(self, node_addon):
         """Serializes settting needed to build the widget"""
         ret = node_addon.config.to_json()
-        ret.update({
-            'complete': node_addon.complete,
-            'list_id': node_addon.list_id,
-        })
+        ret.update(
+            {'complete': node_addon.complete, 'list_id': node_addon.list_id,}
+        )
         return ret
 
     def _extract_folder(self, folder):
@@ -182,7 +177,7 @@ class CitationsProvider(object):
             'name': folder['name'],
             'provider_list_id': folder['list_id'],
             'id': folder['id'],
-            'parent_list_id': folder.get('parent_id', None)
+            'parent_list_id': folder.get('parent_id', None),
         }
 
     @abc.abstractmethod
@@ -210,10 +205,11 @@ class CitationsProvider(object):
             user_is_owner = False
 
         # verify this list is the attached list or its descendant
-        if not user_is_owner and (list_id != attached_list_id and attached_list_id is not None):
+        if not user_is_owner and (
+            list_id != attached_list_id and attached_list_id is not None
+        ):
             folders = {
-                (each['provider_list_id'] or 'ROOT'): each
-                for each in account_folders
+                (each['provider_list_id'] or 'ROOT'): each for each in account_folders
             }
             if list_id is None:
                 ancestor_id = 'ROOT'
@@ -233,8 +229,7 @@ class CitationsProvider(object):
             if show in ('all', 'folders'):
                 contents += [
                     self.serializer(
-                        node_settings=node_addon,
-                        user_settings=user_settings,
+                        node_settings=node_addon, user_settings=user_settings,
                     ).serialize_folder(each)
                     for each in account_folders
                     if each.get('parent_list_id') == list_id
@@ -243,12 +238,9 @@ class CitationsProvider(object):
             if show in ('all', 'citations'):
                 contents += [
                     self.serializer(
-                        node_settings=node_addon,
-                        user_settings=user_settings,
+                        node_settings=node_addon, user_settings=user_settings,
                     ).serialize_citation(each)
                     for each in node_addon.api.get_list(list_id)
                 ]
 
-        return {
-            'contents': contents
-        }
+        return {'contents': contents}

@@ -2,6 +2,7 @@ import pytest
 
 from osf.models import ArchiveTarget
 
+
 @pytest.mark.django_db
 def test_querying_on_id():
     # Test that queries on _id on models that inherit from ObjectIDMixin are

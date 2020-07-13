@@ -11,13 +11,16 @@ from osf_tests.factories import (
     PreprintFactory,
 )
 
+
 @pytest.fixture()
 def user():
     return AuthUserFactory()
 
+
 @pytest.fixture()
 def preprint(user):
     return PreprintFactory(creator=user)
+
 
 @pytest.fixture()
 def preprint_record(user, preprint):
@@ -27,11 +30,12 @@ def preprint_record(user, preprint):
 
 @pytest.mark.django_db
 class TestFileMetadataRecordDetail:
-
     @pytest.fixture()
     def private_record(self, user):
         private_node = ProjectFactory(creator=user)
-        private_file = utils.create_test_file(private_node, user, filename='private_file')
+        private_file = utils.create_test_file(
+            private_node, user, filename='private_file'
+        )
         return private_file.records.get(schema___id='datacite')
 
     @pytest.fixture()
@@ -42,11 +46,15 @@ class TestFileMetadataRecordDetail:
 
     @pytest.fixture()
     def unpublished_preprint_record(self, user):
-        unpublished_preprint = PreprintFactory(is_published=False, creator=user, is_public=False)
+        unpublished_preprint = PreprintFactory(
+            is_published=False, creator=user, is_public=False
+        )
         return unpublished_preprint.primary_file.records.get(schema___id='datacite')
 
     def get_url(self, record):
-        return '/{}files/{}/metadata_records/{}/'.format(API_BASE, record.file._id, record._id)
+        return '/{}files/{}/metadata_records/{}/'.format(
+            API_BASE, record.file._id, record._id
+        )
 
     def test_metadata_record_detail(self, app, user, public_record, private_record):
 
@@ -71,14 +79,20 @@ class TestFileMetadataRecordDetail:
 
         # test_unauthorized_cannot_view_private_file_metadata_record
         unauth = AuthUserFactory()
-        res = app.get(self.get_url(private_record), auth=unauth.auth, expect_errors=True)
+        res = app.get(
+            self.get_url(private_record), auth=unauth.auth, expect_errors=True
+        )
         assert res.status_code == 403
 
         # test_cannot_delete_metadata_records
-        res = app.delete_json_api(self.get_url(public_record), auth=user.auth, expect_errors=True)
+        res = app.delete_json_api(
+            self.get_url(public_record), auth=user.auth, expect_errors=True
+        )
         assert res.status_code == 405
 
-    def test_preprint_file_metadata_record(self, app, user, preprint_record, unpublished_preprint_record):
+    def test_preprint_file_metadata_record(
+        self, app, user, preprint_record, unpublished_preprint_record
+    ):
 
         # unauthenticated view public preprint file metadata record
         res = app.get(self.get_url(preprint_record))
@@ -99,9 +113,9 @@ class TestFileMetadataRecordDetail:
         assert res.status_code == 200
         assert res.json['data']['id'] == unpublished_preprint_record._id
 
+
 @pytest.mark.django_db
 class TestFileMetadataRecordUpdate:
-
     @pytest.fixture()
     def user_write(self):
         return AuthUserFactory()
@@ -113,7 +127,9 @@ class TestFileMetadataRecordUpdate:
     @pytest.fixture()
     def registration_record(self, user):
         registration = RegistrationFactory(project=ProjectFactory(creator=user))
-        registration_file = utils.create_test_file(registration, user, filename='registration_file')
+        registration_file = utils.create_test_file(
+            registration, user, filename='registration_file'
+        )
         return registration_file.records.get(schema___id='datacite')
 
     @pytest.fixture()
@@ -128,7 +144,9 @@ class TestFileMetadataRecordUpdate:
         return public_file.records.get(schema___id='datacite')
 
     def get_url(self, record):
-        return '/{}files/{}/metadata_records/{}/'.format(API_BASE, record.file._id, record._id)
+        return '/{}files/{}/metadata_records/{}/'.format(
+            API_BASE, record.file._id, record._id
+        )
 
     @pytest.fixture()
     def metadata_record_json(self):
@@ -138,7 +156,7 @@ class TestFileMetadataRecordUpdate:
             'funders': [
                 {'funding_agency': 'LJAF'},
                 {'funding_agency': 'Templeton', 'grant_number': '12345'},
-            ]
+            ],
         }
 
     @pytest.fixture()
@@ -150,60 +168,99 @@ class TestFileMetadataRecordUpdate:
                     'type': 'metadata_records',
                     'attributes': {
                         'metadata': metadata_record_json if not metadata else metadata
-                    }
+                    },
                 }
             }
             if relationships:
                 payload_data['data']['relationships'] = relationships
 
             return payload_data
+
         return payload
 
-    def test_admin_can_update(self, app, user, node, public_record, make_payload, metadata_record_json):
-        res = app.patch_json_api(self.get_url(public_record), make_payload(public_record), auth=user.auth)
+    def test_admin_can_update(
+        self, app, user, node, public_record, make_payload, metadata_record_json
+    ):
+        res = app.patch_json_api(
+            self.get_url(public_record), make_payload(public_record), auth=user.auth
+        )
         public_record.reload()
         assert res.status_code == 200
         assert res.json['data']['attributes']['metadata'] == metadata_record_json
         assert public_record.metadata == metadata_record_json
         assert node.logs.first().action == NodeLog.FILE_METADATA_UPDATED
 
-    def test_write_can_update(self, app, user_write, public_record, make_payload, metadata_record_json):
-        res = app.patch_json_api(self.get_url(public_record), make_payload(public_record), auth=user_write.auth)
+    def test_write_can_update(
+        self, app, user_write, public_record, make_payload, metadata_record_json
+    ):
+        res = app.patch_json_api(
+            self.get_url(public_record),
+            make_payload(public_record),
+            auth=user_write.auth,
+        )
         public_record.reload()
         assert res.status_code == 200
         assert res.json['data']['attributes']['metadata'] == metadata_record_json
         assert public_record.metadata == metadata_record_json
 
     def test_read_cannot_update(self, app, user_read, public_record, make_payload):
-        res = app.patch_json_api(self.get_url(public_record), make_payload(public_record), auth=user_read.auth, expect_errors=True)
+        res = app.patch_json_api(
+            self.get_url(public_record),
+            make_payload(public_record),
+            auth=user_read.auth,
+            expect_errors=True,
+        )
         assert res.status_code == 403
 
     def test_update_fails_with_extra_key(self, app, user, public_record, make_payload):
         payload = make_payload(public_record)
         payload['data']['attributes']['metadata']['cat'] = 'sterling'
-        res = app.patch_json_api(self.get_url(public_record), payload, auth=user.auth, expect_errors=True)
+        res = app.patch_json_api(
+            self.get_url(public_record), payload, auth=user.auth, expect_errors=True
+        )
         public_record.reload()
         assert res.status_code == 400
-        assert 'Additional properties are not allowed' in res.json['errors'][0]['detail']
+        assert (
+            'Additional properties are not allowed' in res.json['errors'][0]['detail']
+        )
         assert res.json['errors'][0]['meta'].get('metadata_schema', None)
         assert public_record.metadata == {}
 
-    def test_update_fails_with_invalid_json(self, app, user, public_record, make_payload):
+    def test_update_fails_with_invalid_json(
+        self, app, user, public_record, make_payload
+    ):
         payload = make_payload(public_record)
-        payload['data']['attributes']['metadata']['related_publication_doi'] = 'dinosaur'
-        res = app.patch_json_api(self.get_url(public_record), payload, auth=user.auth, expect_errors=True)
+        payload['data']['attributes']['metadata'][
+            'related_publication_doi'
+        ] = 'dinosaur'
+        res = app.patch_json_api(
+            self.get_url(public_record), payload, auth=user.auth, expect_errors=True
+        )
         public_record.reload()
         assert res.status_code == 400
-        assert res.json['errors'][0]['detail'] == 'Your response of dinosaur for the field related_publication_doi was invalid.'
+        assert (
+            res.json['errors'][0]['detail']
+            == 'Your response of dinosaur for the field related_publication_doi was invalid.'
+        )
         assert public_record.metadata == {}
 
-    def test_cannot_update_registration_metadata_record(self, app, user, registration_record, make_payload):
-        url = '/{}files/{}/metadata_records/{}/'.format(API_BASE, registration_record.file._id, registration_record._id)
-        res = app.patch_json_api(url, make_payload(registration_record), auth=user.auth, expect_errors=True)
+    def test_cannot_update_registration_metadata_record(
+        self, app, user, registration_record, make_payload
+    ):
+        url = '/{}files/{}/metadata_records/{}/'.format(
+            API_BASE, registration_record.file._id, registration_record._id
+        )
+        res = app.patch_json_api(
+            url, make_payload(registration_record), auth=user.auth, expect_errors=True
+        )
         assert res.status_code == 403
 
-    def test_update_file_metadata_for_preprint_file(self, app, user, metadata_record_json, make_payload, preprint_record, preprint):
-        res = app.patch_json_api(self.get_url(preprint_record), make_payload(preprint_record), auth=user.auth)
+    def test_update_file_metadata_for_preprint_file(
+        self, app, user, metadata_record_json, make_payload, preprint_record, preprint
+    ):
+        res = app.patch_json_api(
+            self.get_url(preprint_record), make_payload(preprint_record), auth=user.auth
+        )
         preprint_record.reload()
         assert res.status_code == 200
         assert res.json['data']['attributes']['metadata'] == metadata_record_json

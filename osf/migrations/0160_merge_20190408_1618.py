@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0156_abstractnode_article_doi'),
     ]
 
-    operations = [
-    ]
+    operations = []

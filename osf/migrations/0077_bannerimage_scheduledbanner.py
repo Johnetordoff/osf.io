@@ -17,7 +17,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='BannerImage',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
                 ('filename', models.CharField(max_length=256, unique=True)),
                 ('image', models.BinaryField()),
             ],
@@ -25,19 +33,39 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ScheduledBanner',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
                 ('name', models.CharField(unique=True, max_length=256)),
                 ('start_date', osf.utils.fields.NonNaiveDateTimeField()),
                 ('end_date', osf.utils.fields.NonNaiveDateTimeField()),
                 ('color', models.CharField(max_length=7)),
                 ('license', models.CharField(blank=True, max_length=256, null=True)),
-                ('default_photo', models.FileField(storage=osf.utils.storage.BannerImageStorage(), upload_to='')),
+                (
+                    'default_photo',
+                    models.FileField(
+                        storage=osf.utils.storage.BannerImageStorage(), upload_to=''
+                    ),
+                ),
                 ('default_alt_text', models.TextField()),
-                ('mobile_photo', models.FileField(storage=osf.utils.storage.BannerImageStorage(), upload_to='')),
+                (
+                    'mobile_photo',
+                    models.FileField(
+                        storage=osf.utils.storage.BannerImageStorage(), upload_to=''
+                    ),
+                ),
                 ('mobile_alt_text', models.TextField(blank=True, null=True)),
             ],
             options={
-                'permissions': (('view_scheduledbanner', 'Can view scheduled banner details'),),
+                'permissions': (
+                    ('view_scheduledbanner', 'Can view scheduled banner details'),
+                ),
             },
         ),
     ]

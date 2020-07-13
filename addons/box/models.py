@@ -3,8 +3,11 @@ import logging
 import os
 
 import requests
-from addons.base.models import (BaseOAuthNodeSettings, BaseOAuthUserSettings,
-                                BaseStorageAddon)
+from addons.base.models import (
+    BaseOAuthNodeSettings,
+    BaseOAuthUserSettings,
+    BaseStorageAddon,
+)
 from boxsdk import Client, OAuth2
 from boxsdk.exception import BoxAPIException
 from django.db import models
@@ -59,19 +62,21 @@ class Provider(ExternalProvider):
         record to the user and saves the user's access token and account info.
         """
 
-        client = Client(OAuth2(
-            access_token=response['access_token'],
-            refresh_token=response['refresh_token'],
-            client_id=settings.BOX_KEY,
-            client_secret=settings.BOX_SECRET,
-        ))
+        client = Client(
+            OAuth2(
+                access_token=response['access_token'],
+                refresh_token=response['refresh_token'],
+                client_id=settings.BOX_KEY,
+                client_secret=settings.BOX_SECRET,
+            )
+        )
 
         about = client.user().get()
 
         return {
             'provider_id': about['id'],
             'display_name': about['name'],
-            'profile_url': 'https://app.box.com/profile/{0}'.format(about['id'])
+            'profile_url': 'https://app.box.com/profile/{0}'.format(about['id']),
         }
 
 
@@ -92,7 +97,7 @@ class UserSettings(BaseOAuthUserSettings):
                     'client_id': settings.BOX_KEY,
                     'client_secret': settings.BOX_SECRET,
                     'token': external_account.oauth_key,
-                }
+                },
             )
         except requests.HTTPError:
             pass
@@ -105,7 +110,9 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
     folder_id = models.TextField(null=True, blank=True)
     folder_name = models.TextField(null=True, blank=True)
     folder_path = models.TextField(null=True, blank=True)
-    user_settings = models.ForeignKey(UserSettings, null=True, blank=True, on_delete=models.CASCADE)
+    user_settings = models.ForeignKey(
+        UserSettings, null=True, blank=True, on_delete=models.CASCADE
+    )
 
     _api = None
 
@@ -126,23 +133,30 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
     def get_folders(self, **kwargs):
         folder_id = kwargs.get('folder_id')
         if folder_id is None:
-            return [{
-                'id': '0',
-                'path': '/',
-                'addon': 'box',
-                'kind': 'folder',
-                'name': '/ (Full Box)',
-                'urls': {
-                    # 'folders': node.api_url_for('box_folder_list', folderId=0),
-                    'folders': api_v2_url('nodes/{}/addons/box/folders/'.format(self.owner._id),
-                        params={'id': '0'}
-                    )
+            return [
+                {
+                    'id': '0',
+                    'path': '/',
+                    'addon': 'box',
+                    'kind': 'folder',
+                    'name': '/ (Full Box)',
+                    'urls': {
+                        # 'folders': node.api_url_for('box_folder_list', folderId=0),
+                        'folders': api_v2_url(
+                            'nodes/{}/addons/box/folders/'.format(self.owner._id),
+                            params={'id': '0'},
+                        )
+                    },
                 }
-            }]
+            ]
 
         try:
             Provider(self.external_account).refresh_oauth_key()
-            oauth = OAuth2(client_id=settings.BOX_KEY, client_secret=settings.BOX_SECRET, access_token=ensure_str(self.external_account.oauth_key))
+            oauth = OAuth2(
+                client_id=settings.BOX_KEY,
+                client_secret=settings.BOX_SECRET,
+                access_token=ensure_str(self.external_account.oauth_key),
+            )
             client = Client(oauth)
         except BoxAPIException:
             raise HTTPError(http_status.HTTP_403_FORBIDDEN)
@@ -155,10 +169,8 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
             raise HTTPError(http_status.HTTP_400_BAD_REQUEST)
 
         folder_path = '/'.join(
-            [
-                x['name']
-                for x in metadata['path_collection']['entries']
-            ] + [metadata['name']]
+            [x['name'] for x in metadata['path_collection']['entries']]
+            + [metadata['name']]
         )
 
         return [
@@ -167,12 +179,15 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
                 'kind': 'folder',
                 'id': item['id'],
                 'name': item['name'],
-                'path': os.path.join(folder_path, item['name']).replace('All Files', ''),
+                'path': os.path.join(folder_path, item['name']).replace(
+                    'All Files', ''
+                ),
                 'urls': {
-                    'folders': api_v2_url('nodes/{}/addons/box/folders/'.format(self.owner._id),
-                        params={'id': item['id']}
+                    'folders': api_v2_url(
+                        'nodes/{}/addons/box/folders/'.format(self.owner._id),
+                        params={'id': item['id']},
                     )
-                }
+                },
             }
             for item in metadata['item_collection']['entries']
             if item['type'] == 'folder'
@@ -191,17 +206,28 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
         except InvalidGrantError:
             raise exceptions.InvalidAuthError()
         try:
-            oauth = OAuth2(client_id=settings.BOX_KEY, client_secret=settings.BOX_SECRET, access_token=ensure_str(self.external_account.oauth_key))
+            oauth = OAuth2(
+                client_id=settings.BOX_KEY,
+                client_secret=settings.BOX_SECRET,
+                access_token=ensure_str(self.external_account.oauth_key),
+            )
             client = Client(oauth)
             folder_data = client.folder(self.folder_id).get()
         except BoxAPIException:
             raise exceptions.InvalidFolderError()
 
         folder_name = folder_data['name'].replace('All Files', '') or '/ (Full Box)'
-        folder_path = '/'.join(
-            [x['name'] for x in folder_data['path_collection']['entries'] if x['name']] +
-            [folder_data['name']]
-        ).replace('All Files', '') or '/'
+        folder_path = (
+            '/'.join(
+                [
+                    x['name']
+                    for x in folder_data['path_collection']['entries']
+                    if x['name']
+                ]
+                + [folder_data['name']]
+            ).replace('All Files', '')
+            or '/'
+        )
 
         return folder_name, folder_path
 
@@ -245,15 +271,17 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
                 'node': self.owner._id,
                 'folder': self.folder_id,
                 'urls': {
-                    'view': self.owner.web_url_for('addon_view_or_download_file',
+                    'view': self.owner.web_url_for(
+                        'addon_view_or_download_file',
                         provider='box',
                         action='view',
-                        path=metadata['path']
+                        path=metadata['path'],
                     ),
-                    'download': self.owner.web_url_for('addon_view_or_download_file',
+                    'download': self.owner.web_url_for(
+                        'addon_view_or_download_file',
                         provider='box',
                         action='download',
-                        path=metadata['path']
+                        path=metadata['path'],
                     ),
                 },
             },

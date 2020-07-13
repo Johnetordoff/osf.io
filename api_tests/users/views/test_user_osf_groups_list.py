@@ -13,19 +13,23 @@ from osf.features import OSF_GROUPS
 def user():
     return AuthUserFactory()
 
+
 @pytest.fixture()
 def manager():
     return AuthUserFactory()
 
+
 @pytest.fixture()
 def member():
     return AuthUserFactory()
+
 
 @pytest.fixture()
 def osf_group(manager, member):
     group = OSFGroupFactory(name='Platform Team', creator=manager)
     group.make_member(member)
     return group
+
 
 @pytest.fixture()
 def second_osf_group(manager, member):
@@ -35,7 +39,6 @@ def second_osf_group(manager, member):
 
 @pytest.mark.django_db
 class TestUserGroupList:
-
     @pytest.fixture()
     def manager_url(self, manager):
         return '/{}users/{}/groups/'.format(API_BASE, manager._id)
@@ -44,7 +47,9 @@ class TestUserGroupList:
     def member_url(self, member):
         return '/{}users/{}/groups/'.format(API_BASE, member._id)
 
-    def test_return_manager_groups(self, app, member, manager, user, osf_group, second_osf_group, manager_url):
+    def test_return_manager_groups(
+        self, app, member, manager, user, osf_group, second_osf_group, manager_url
+    ):
         with override_flag(OSF_GROUPS, active=True):
             # test nonauthenticated
             res = app.get(manager_url)
@@ -72,7 +77,9 @@ class TestUserGroupList:
             assert osf_group._id in ids
             assert second_osf_group._id in ids
 
-    def test_groups_filter(self, app, member, manager, user, osf_group, second_osf_group, manager_url):
+    def test_groups_filter(
+        self, app, member, manager, user, osf_group, second_osf_group, manager_url
+    ):
         with override_flag(OSF_GROUPS, active=True):
             res = app.get(manager_url + '?filter[name]=Platform', auth=manager.auth)
             assert res.status_code == 200
@@ -85,10 +92,16 @@ class TestUserGroupList:
             data = res.json['data']
             assert len(data) == 0
 
-            res = app.get(manager_url + '?filter[bad_field]=Apple', auth=manager.auth, expect_errors=True)
+            res = app.get(
+                manager_url + '?filter[bad_field]=Apple',
+                auth=manager.auth,
+                expect_errors=True,
+            )
             assert res.status_code == 400
 
-    def test_return_member_groups(self, app, member, manager, user, osf_group, second_osf_group, member_url):
+    def test_return_member_groups(
+        self, app, member, manager, user, osf_group, second_osf_group, member_url
+    ):
         with override_flag(OSF_GROUPS, active=True):
             # test nonauthenticated
             res = app.get(member_url)

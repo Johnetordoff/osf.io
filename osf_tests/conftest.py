@@ -30,18 +30,23 @@ def app_init():
 
 @pytest.yield_fixture()
 def request_context(app):
-    context = app.test_request_context(headers={
-        'Remote-Addr': '146.9.219.56',
-        'User-Agent': 'Mozilla/5.0 (X11; U; SunOS sun4u; en-US; rv:0.9.4.1) Gecko/20020518 Netscape6/6.2.3'
-    })
+    context = app.test_request_context(
+        headers={
+            'Remote-Addr': '146.9.219.56',
+            'User-Agent': 'Mozilla/5.0 (X11; U; SunOS sun4u; en-US; rv:0.9.4.1) Gecko/20020518 Netscape6/6.2.3',
+        }
+    )
     context.push()
     yield context
     context.pop()
+
 
 DISCONNECTED_SIGNALS = {
     # disconnect notify_add_contributor so that add_contributor does not send "fake" emails in tests
     contributor_added: [notify_added_contributor]
 }
+
+
 @pytest.fixture(autouse=True)
 def disconnected_signals():
     for signal in DISCONNECTED_SIGNALS:

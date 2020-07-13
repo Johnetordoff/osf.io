@@ -16,18 +16,32 @@ from website import settings
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
+
 def add_subjects_to_paleorxiv():
     paleoarix = PreprintProvider.objects.get(_id='paleorxiv')
 
     bepress_subject = Subject.objects.get(text='Paleontology', provider___id='osf')
-    life_sciences = Subject.objects.get(text='Earth and Life Sciences', provider=paleoarix)
-    ichnology = Subject(text='Ichnology', provider=paleoarix, parent=life_sciences, bepress_subject=bepress_subject)
+    life_sciences = Subject.objects.get(
+        text='Earth and Life Sciences', provider=paleoarix
+    )
+    ichnology = Subject(
+        text='Ichnology',
+        provider=paleoarix,
+        parent=life_sciences,
+        bepress_subject=bepress_subject,
+    )
     ichnology.save()
 
-    taphonomy = Subject(text='Taphonomy', provider=paleoarix, parent=life_sciences, bepress_subject=bepress_subject)
+    taphonomy = Subject(
+        text='Taphonomy',
+        provider=paleoarix,
+        parent=life_sciences,
+        bepress_subject=bepress_subject,
+    )
     taphonomy.save()
 
     paleoarix.save()
+
 
 def main():
     init_app(set_backends=True, routes=False)
@@ -38,6 +52,7 @@ def main():
         add_subjects_to_paleorxiv()
         if dry_run:
             raise RuntimeError('Dry run, transaction rolled back')
+
 
 if __name__ == '__main__':
     main()

@@ -17,5 +17,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(update_metaschema_active, ),
+        migrations.RunPython(update_metaschema_active,),
     ]

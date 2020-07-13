@@ -10,9 +10,9 @@ from osf_tests.factories import ProjectFactory, UserFactory
 
 pytestmark = pytest.mark.django_db
 
+
 @pytest.mark.enable_implicit_clean
 class TestTag:
-
     def test_has_an_integer_pk(self):
         tag = Tag(name='FooBar')
         tag.save()
@@ -42,7 +42,6 @@ class TestTag:
 
 # copied from tests/test_models.py
 class TestTags:
-
     @pytest.fixture()
     def project(self):
         return ProjectFactory()

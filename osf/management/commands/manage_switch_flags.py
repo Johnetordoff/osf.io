@@ -8,6 +8,7 @@ from waffle.models import Flag, Switch
 
 logger = logging.getLogger(__name__)
 
+
 def manage_waffle(delete_waffle=False):
     file_switches = list(switches.values())
     current_switches = Switch.objects.values_list('name', flat=True)
@@ -34,6 +35,7 @@ def manage_waffle(delete_waffle=False):
         Flag.objects.filter(name__in=delete_flags).delete()
         logger.info('Deleting flags: {}'.format(delete_flags))
 
+
 class Command(BaseCommand):
     """Ensure all features and switches are updated with the switch and flag files
     """
@@ -43,7 +45,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '-delete',
             action='store_true',
-            help='Use this flag to remove flags, otherwise the script will just add flags'
+            help='Use this flag to remove flags, otherwise the script will just add flags',
         )
 
     def handle(self, *args, **options):

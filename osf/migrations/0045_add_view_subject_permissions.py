@@ -14,6 +14,9 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelOptions(
             name='subject',
-            options={'base_manager_name': 'objects', 'permissions': (('view_subject', 'Can view subject details'),)},
+            options={
+                'base_manager_name': 'objects',
+                'permissions': (('view_subject', 'Can view subject details'),),
+            },
         ),
     ]

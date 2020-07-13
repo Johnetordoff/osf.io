@@ -27,10 +27,7 @@ from framework.auth.core import Auth
 
 class WikiSerializer(JSONAPISerializer):
 
-    filterable_fields = frozenset([
-        'name',
-        'date_modified',
-    ])
+    filterable_fields = frozenset(['name', 'date_modified',])
 
     id = IDField(source='_id', read_only=True)
     type = TypeField()
@@ -42,19 +39,22 @@ class WikiSerializer(JSONAPISerializer):
     materialized_path = ser.SerializerMethodField(method_name='get_path')
     date_modified = VersionedDateTimeField(source='modified', read_only=True)
     content_type = ser.SerializerMethodField()
-    current_user_can_comment = ser.SerializerMethodField(help_text='Whether the current user is allowed to post comments')
+    current_user_can_comment = ser.SerializerMethodField(
+        help_text='Whether the current user is allowed to post comments',
+    )
     extra = ser.SerializerMethodField(help_text='Additional metadata about this wiki')
 
     user = RelationshipField(
-        related_view='users:user-detail',
-        related_view_kwargs={'user_id': '<user._id>'},
+        related_view='users:user-detail', related_view_kwargs={'user_id': '<user._id>'},
     )
 
     # LinksField.to_representation adds link to "self"
-    links = LinksField({
-        'info': Link('wikis:wiki-detail', kwargs={'wiki_id': '<_id>'}),
-        'download': 'get_wiki_content',
-    })
+    links = LinksField(
+        {
+            'info': Link('wikis:wiki-detail', kwargs={'wiki_id': '<_id>'}),
+            'download': 'get_wiki_content',
+        },
+    )
 
     class Meta:
         type_ = 'wikis'
@@ -86,7 +86,8 @@ class WikiSerializer(JSONAPISerializer):
 
     def get_wiki_content(self, obj):
         return absolute_reverse(
-            'wikis:wiki-content', kwargs={
+            'wikis:wiki-content',
+            kwargs={
                 'wiki_id': obj._id,
                 'version': self.context['request'].parser_context['kwargs']['version'],
             },
@@ -95,8 +96,7 @@ class WikiSerializer(JSONAPISerializer):
 
 class NodeWikiSerializer(WikiSerializer):
     node = RelationshipField(
-        related_view='nodes:node-detail',
-        related_view_kwargs={'node_id': '<node._id>'},
+        related_view='nodes:node-detail', related_view_kwargs={'node_id': '<node._id>'},
     )
 
     comments = RelationshipField(
@@ -107,8 +107,7 @@ class NodeWikiSerializer(WikiSerializer):
     )
 
     versions = RelationshipField(
-        related_view='wikis:wiki-versions',
-        related_view_kwargs={'wiki_id': '<_id>'},
+        related_view='wikis:wiki-versions', related_view_kwargs={'wiki_id': '<_id>'},
     )
 
     def update(self, instance, validated_data):
@@ -136,13 +135,13 @@ class NodeWikiSerializer(WikiSerializer):
             raise NotFound(detail='The wiki for this node has been disabled.')
 
         if WikiPage.objects.get_for_node(node, name):
-            raise Conflict("A wiki page with the name '{}' already exists.".format(name))
+            raise Conflict(
+                "A wiki page with the name '{}' already exists.".format(name),
+            )
 
         try:
             wiki_page = WikiPage.objects.create_for_node(node, name, content, auth)
-        except (
-            NameInvalidError, NameMaximumLengthError,
-        ) as err:
+        except (NameInvalidError, NameMaximumLengthError,) as err:
             raise ValidationError(err.args[0])
 
         return wiki_page
@@ -170,6 +169,7 @@ class NodeWikiDetailSerializer(NodeWikiSerializer):
     """
     Overrides NodeWikiSerializer to make id required.
     """
+
     id = IDField(source='_id', required=True)
 
 
@@ -177,6 +177,7 @@ class RegistrationWikiDetailSerializer(RegistrationWikiSerializer):
     """
     Overrides NodeWikiSerializer to make id required.
     """
+
     id = IDField(source='_id', required=True)
 
 
@@ -185,7 +186,11 @@ class WikiVersionSerializer(JSONAPISerializer):
     type = TypeField()
     size = ser.SerializerMethodField()
     content_type = ser.SerializerMethodField()
-    date_created = VersionedDateTimeField(source='created', read_only=True, help_text='The date that this version was created')
+    date_created = VersionedDateTimeField(
+        source='created',
+        read_only=True,
+        help_text='The date that this version was created',
+    )
 
     wiki_page = RelationshipField(
         related_view='wikis:wiki-detail',
@@ -193,18 +198,15 @@ class WikiVersionSerializer(JSONAPISerializer):
     )
 
     user = RelationshipField(
-        related_view='users:user-detail',
-        related_view_kwargs={'user_id': '<user._id>'},
+        related_view='users:user-detail', related_view_kwargs={'user_id': '<user._id>'},
     )
 
-    links = LinksField({
-        'self': 'self_url',
-        'download': 'get_wiki_content',
-    })
+    links = LinksField({'self': 'self_url', 'download': 'get_wiki_content',})
 
     def self_url(self, obj):
         return absolute_reverse(
-            'wikis:wiki-version-detail', kwargs={
+            'wikis:wiki-version-detail',
+            kwargs={
                 'version_id': obj.identifier,
                 'wiki_id': obj.wiki_page._id,
                 'version': self.context['request'].parser_context['kwargs']['version'],
@@ -220,7 +222,8 @@ class WikiVersionSerializer(JSONAPISerializer):
 
     def get_wiki_content(self, obj):
         return absolute_reverse(
-            'wikis:wiki-version-content', kwargs={
+            'wikis:wiki-version-content',
+            kwargs={
                 'version_id': obj.identifier,
                 'wiki_id': obj.wiki_page._id,
                 'version': self.context['request'].parser_context['kwargs']['version'],

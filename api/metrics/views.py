@@ -48,8 +48,8 @@ class PreprintMetricMixin(JSONAPIBaseView):
         preprint_guid_string = query_params.get('guids')
         if not preprint_guid_string:
             raise ValidationError(
-                'To gather metrics for preprints, you must provide one or more preprint ' +
-                'guids in the `guids` query parameter.',
+                'To gather metrics for preprints, you must provide one or more preprint '
+                + 'guids in the `guids` query parameter.',
             )
         preprint_guids = preprint_guid_string.split(',')
 
@@ -61,7 +61,9 @@ class PreprintMetricMixin(JSONAPIBaseView):
             for result in response.aggregations.dates.buckets:
                 guid_results = {}
                 for preprint_result in result.preprints.buckets:
-                    guid_results[preprint_result['key']] = preprint_result['total']['value']
+                    guid_results[preprint_result['key']] = preprint_result['total'][
+                        'value'
+                    ]
                     # return 0 for the guids with no results for consistent payloads
                 guids = query_params['guids'].split(',')
                 if guid_results.keys() != guids:
@@ -83,11 +85,7 @@ class PreprintMetricMixin(JSONAPIBaseView):
             if query:
                 es = get_connection(search._using)
                 response = search._response_class(
-                    search,
-                    es.search(
-                        index=search._index,
-                        body=query,
-                    ),
+                    search, es.search(index=search._index, body=query,),
                 )
             else:
                 response = search.execute()
@@ -106,10 +104,14 @@ class PreprintMetricMixin(JSONAPIBaseView):
         start_datetime, end_datetime = parse_datetimes(query_params)
 
         search = self.metric.search(after=start_datetime)
-        search = search.filter('range', timestamp={'gte': start_datetime, 'lt': end_datetime})
-        search.aggs.bucket('dates', 'date_histogram', field='timestamp', interval=interval) \
-            .bucket('preprints', 'terms', field='preprint_id') \
-            .metric('total', 'sum', field='count')
+        search = search.filter(
+            'range', timestamp={'gte': start_datetime, 'lt': end_datetime},
+        )
+        search.aggs.bucket(
+            'dates', 'date_histogram', field='timestamp', interval=interval,
+        ).bucket('preprints', 'terms', field='preprint_id').metric(
+            'total', 'sum', field='count',
+        )
         search = self.add_search(search, query_params, **kwargs)
         response = self.execute_search(search)
         resp_dict = self.format_response(response, query_params)
@@ -161,6 +163,7 @@ class PreprintDownloadMetrics(PreprintMetricMixin):
     def metric(self):
         return PreprintDownload
 
+
 class RawMetricsView(GenericAPIView):
 
     permission_classes = (
@@ -192,11 +195,15 @@ class RawMetricsView(GenericAPIView):
         connection = get_connection()
         url_path = kwargs['url_path']
         body = json.loads(request.body)
-        return JsonResponse(connection.transport.perform_request('POST', f'/{url_path}', body=body))
+        return JsonResponse(
+            connection.transport.perform_request('POST', f'/{url_path}', body=body),
+        )
 
     @require_switch(ENABLE_RAW_METRICS)
     def put(self, request, *args, **kwargs):
         connection = get_connection()
         url_path = kwargs['url_path']
         body = json.loads(request.body)
-        return JsonResponse(connection.transport.perform_request('PUT', f'/{url_path}', body=body))
+        return JsonResponse(
+            connection.transport.perform_request('PUT', f'/{url_path}', body=body),
+        )

@@ -2,6 +2,7 @@
 from website.citations.providers import CitationsProvider
 from addons.mendeley.serializer import MendeleySerializer
 
+
 class MendeleyCitationsProvider(CitationsProvider):
     serializer = MendeleySerializer
     provider_name = 'mendeley'

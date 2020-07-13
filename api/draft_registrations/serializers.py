@@ -3,7 +3,13 @@ from rest_framework import exceptions
 
 from framework.exceptions import PermissionsError
 from api.base.exceptions import InvalidModelValueError
-from api.base.serializers import ValuesListField, RelationshipField, LinksField, HideIfDraftRegistration, IDField
+from api.base.serializers import (
+    ValuesListField,
+    RelationshipField,
+    LinksField,
+    HideIfDraftRegistration,
+    IDField,
+)
 from api.base.utils import absolute_reverse, get_user_auth
 from api.nodes.serializers import (
     DraftRegistrationLegacySerializer,
@@ -22,32 +28,38 @@ from website import settings
 
 
 class NodeRelationshipField(RelationshipField):
-
     def to_internal_value(self, node_id):
         node = self.context['view'].get_node(node_id=node_id) if node_id else None
         return {'branched_from': node}
 
 
-class DraftRegistrationSerializer(DraftRegistrationLegacySerializer, TaxonomizableSerializerMixin):
+class DraftRegistrationSerializer(
+    DraftRegistrationLegacySerializer, TaxonomizableSerializerMixin,
+):
     """
     New DraftRegistrationSerializer - instead of the node_id being provided in the URL, an optional
     node is passed in under `branched_from`.
 
     DraftRegistrations have several fields that can be edited that are persisted to the final registration.
     """
+
     category_choices = list(settings.NODE_CATEGORY_MAP.items())
-    category_choices_string = ', '.join(["'{}'".format(choice[0]) for choice in category_choices])
+    category_choices_string = ', '.join(
+        ["'{}'".format(choice[0]) for choice in category_choices],
+    )
 
     title = ser.CharField(required=False, allow_blank=True)
     description = ser.CharField(required=False, allow_blank=True, allow_null=True)
 
-    category = ser.ChoiceField(required=False, choices=category_choices, help_text='Choices: ' + category_choices_string)
+    category = ser.ChoiceField(
+        required=False,
+        choices=category_choices,
+        help_text='Choices: ' + category_choices_string,
+    )
     tags = ValuesListField(attr_name='name', child=ser.CharField(), required=False)
     node_license = NodeLicenseSerializer(required=False, source='license')
 
-    links = LinksField({
-        'self': 'get_absolute_url',
-    })
+    links = LinksField({'self': 'get_absolute_url',})
 
     affiliated_institutions = RelationshipField(
         related_view='draft_registrations:draft-registration-institutions',
@@ -60,7 +72,9 @@ class DraftRegistrationSerializer(DraftRegistrationLegacySerializer, Taxonomizab
     )
 
     branched_from = NodeRelationshipField(
-        related_view=lambda n: 'draft_nodes:draft-node-detail' if getattr(n, 'type', False) == 'osf.draftnode' else 'nodes:node-detail',
+        related_view=lambda n: 'draft_nodes:draft-node-detail'
+        if getattr(n, 'type', False) == 'osf.draftnode'
+        else 'nodes:node-detail',
         related_view_kwargs={'node_id': '<branched_from._id>'},
         read_only=False,
         required=False,
@@ -99,6 +113,7 @@ class DraftRegistrationSerializer(DraftRegistrationLegacySerializer, Taxonomizab
                 'version': self.context['request'].parser_context['kwargs']['version'],
             },
         )
+
     def get_absolute_url(self, obj):
         return obj.get_absolute_url()
 
@@ -118,27 +133,31 @@ class DraftRegistrationSerializer(DraftRegistrationLegacySerializer, Taxonomizab
         return True
 
 
-class DraftRegistrationDetailSerializer(DraftRegistrationSerializer, DraftRegistrationDetailLegacySerializer):
+class DraftRegistrationDetailSerializer(
+    DraftRegistrationSerializer, DraftRegistrationDetailLegacySerializer,
+):
     """
     Overrides DraftRegistrationLegacySerializer to make id required.
     registration_supplement, node, cannot be changed after draft has been created.
     """
 
-    links = LinksField({
-        'self': 'get_self_url',
-    })
+    links = LinksField({'self': 'get_self_url',})
 
     def get_self_url(self, obj):
         return absolute_reverse(
             'draft_registrations:draft-registration-detail',
             kwargs={
                 'version': self.context['request'].parser_context['kwargs']['version'],
-                'draft_id': self.context['request'].parser_context['kwargs']['draft_id'],
+                'draft_id': self.context['request'].parser_context['kwargs'][
+                    'draft_id'
+                ],
             },
         )
 
     def update(self, draft, validated_data):
-        draft = super(DraftRegistrationDetailSerializer, self).update(draft, validated_data)
+        draft = super(DraftRegistrationDetailSerializer, self).update(
+            draft, validated_data,
+        )
         user = self.context['request'].user
         auth = get_user_auth(self.context['request'])
 
@@ -150,7 +169,9 @@ class DraftRegistrationDetailSerializer(DraftRegistrationSerializer, DraftRegist
             validated_data['node_license'] = license_details
         if 'affiliated_institutions' in validated_data:
             institutions_list = validated_data.pop('affiliated_institutions')
-            new_institutions = [{'_id': institution} for institution in institutions_list]
+            new_institutions = [
+                {'_id': institution} for institution in institutions_list
+            ]
             update_institutions(draft, new_institutions, user)
         if 'subjects' in validated_data:
             subjects = validated_data.pop('subjects', None)
@@ -172,46 +193,54 @@ class DraftRegistrationContributorsSerializer(NodeContributorsSerializer):
         related_view_kwargs={'draft_id': '<draft_registration._id>'},
     )
 
-    node = HideIfDraftRegistration(RelationshipField(
-        related_view='nodes:node-detail',
-        related_view_kwargs={'node_id': '<node._id>'},
-    ))
+    node = HideIfDraftRegistration(
+        RelationshipField(
+            related_view='nodes:node-detail',
+            related_view_kwargs={'node_id': '<node._id>'},
+        ),
+    )
 
     class Meta:
         type_ = 'contributors'
 
-    links = LinksField({
-        'self': 'get_absolute_url',
-    })
+    links = LinksField({'self': 'get_absolute_url',})
 
     def get_absolute_url(self, obj):
         return absolute_reverse(
             'draft_registrations:draft-registration-contributor-detail',
             kwargs={
                 'user_id': obj.user._id,
-                'draft_id': self.context['request'].parser_context['kwargs']['draft_id'],
+                'draft_id': self.context['request'].parser_context['kwargs'][
+                    'draft_id'
+                ],
                 'version': self.context['request'].parser_context['kwargs']['version'],
             },
         )
 
 
-class DraftRegistrationContributorsCreateSerializer(NodeContributorsCreateSerializer, DraftRegistrationContributorsSerializer):
+class DraftRegistrationContributorsCreateSerializer(
+    NodeContributorsCreateSerializer, DraftRegistrationContributorsSerializer,
+):
     """
     Overrides DraftRegistrationContributorsSerializer to add email, full_name, send_email, and non-required index and users field.
 
     id and index redefined because of the two serializers we've inherited
     """
+
     id = IDField(source='_id', required=False, allow_null=True)
     index = ser.IntegerField(required=False, source='_order')
 
     email_preferences = ['draft_registration', 'false']
 
 
-class DraftRegistrationContributorDetailSerializer(NodeContributorDetailSerializer, DraftRegistrationContributorsSerializer):
+class DraftRegistrationContributorDetailSerializer(
+    NodeContributorDetailSerializer, DraftRegistrationContributorsSerializer,
+):
     """
     Overrides NodeContributorDetailSerializer to set the draft registration instead of the node
 
     id and index redefined because of the two serializers we've inherited
     """
+
     id = IDField(required=True, source='_id')
     index = ser.IntegerField(required=False, read_only=False, source='_order')

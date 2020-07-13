@@ -1,4 +1,4 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import re
 import datetime
 import functools
@@ -16,13 +16,11 @@ from nose.tools import *  # noqa: F403
 from framework.auth import Auth
 from framework.celery_tasks import handlers
 
-from website.archiver import (
-    ARCHIVER_INITIATED,
-)
+from website.archiver import ARCHIVER_INITIATED
 from website.archiver import utils as archiver_utils
 from website.app import *  # noqa: F403
 from website.archiver import listeners
-from website.archiver.tasks import *   # noqa: F403
+from website.archiver.tasks import *  # noqa: F403
 from osf.models.archive import ArchiveTarget, ArchiveJob
 from website.archiver.decorators import fail_archive_on_error
 
@@ -51,6 +49,7 @@ for each in SILENT_LOGGERS:
 sha256_factory = _unique(fake.sha256)
 name_factory = _unique(fake.ean13)
 
+
 @contextmanager
 def nested(*contexts):
     """
@@ -61,6 +60,7 @@ def nested(*contexts):
             stack.enter_context(ctx)
         yield contexts
 
+
 def file_factory(name=None, sha256=None):
     fname = name or name_factory()
     return {
@@ -68,37 +68,32 @@ def file_factory(name=None, sha256=None):
         'name': fname,
         'kind': 'file',
         'size': random.randint(4, 4000),
-        'extra': {
-            'hashes': {
-                'sha256': sha256 or sha256_factory()
-            }
-        }
+        'extra': {'hashes': {'sha256': sha256 or sha256_factory()}},
     }
+
 
 def folder_factory(depth, num_files, num_folders, path_above):
     new_path = os.path.join(path_above.rstrip('/'), fake.word())
     return {
         'path': new_path,
         'kind': 'folder',
-        'children': [
-            file_factory()
-            for i in range(num_files)
-        ] + [
-            folder_factory(depth - 1, num_files, num_folders, new_path)
-        ] if depth > 0 else []
+        'children': [file_factory() for i in range(num_files)]
+        + [folder_factory(depth - 1, num_files, num_folders, new_path)]
+        if depth > 0
+        else [],
     }
+
 
 def file_tree_factory(depth, num_files, num_folders):
     return {
         'path': '/',
         'kind': 'folder',
-        'children': [
-            file_factory()
-            for i in range(num_files)
-        ] + [
-            folder_factory(depth - 1, num_files, num_folders, '/')
-        ] if depth > 0 else []
+        'children': [file_factory() for i in range(num_files)]
+        + [folder_factory(depth - 1, num_files, num_folders, '/')]
+        if depth > 0
+        else [],
     }
+
 
 def select_files_from_tree(file_tree):
     """
@@ -120,18 +115,14 @@ def select_files_from_tree(file_tree):
             stack.append(target_folders[0])
     return selected
 
+
 FILE_TREE = {
     'path': '/',
     'name': '',
     'kind': 'folder',
     'size': '100',
     'children': [
-        {
-            'path': '/1234567',
-            'name': 'Afile.file',
-            'kind': 'file',
-            'size': '128',
-        },
+        {'path': '/1234567', 'name': 'Afile.file', 'kind': 'file', 'size': '128',},
         {
             'path': '/qwerty',
             'name': 'A Folder',
@@ -144,7 +135,7 @@ FILE_TREE = {
                     'size': '256',
                 }
             ],
-        }
+        },
     ],
 }
 
@@ -179,7 +170,7 @@ WB_FILE_TREE = {
                         }
                     ],
                 }
-            }
+            },
         ],
     }
 }
@@ -206,12 +197,14 @@ class MockAddon(object):
     def archive_errors(self):
         return False
 
+
 mock_osfstorage = MockAddon()
 mock_osfstorage.config.short_name = 'osfstorage'
 mock_dropbox = MockAddon()
 mock_dropbox.config.short_name = 'dropbox'
 
 active_addons = {'osfstorage', 'dropbox'}
+
 
 def _mock_get_addon(name, *args, **kwargs):
     if name not in active_addons:
@@ -221,46 +214,58 @@ def _mock_get_addon(name, *args, **kwargs):
     if name == 'osfstorage':
         return mock_osfstorage
 
+
 def _mock_delete_addon(name, *args, **kwargs):
     try:
         active_addons.remove(name)
     except ValueError:
         pass
 
+
 def _mock_get_or_add(name, *args, **kwargs):
     active_addons.add(name)
     return _mock_get_addon(name)
+
 
 def use_fake_addons(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         with nested(
-            mock.patch('osf.models.mixins.AddonModelMixin.add_addon', mock.Mock(side_effect=_mock_get_or_add)),
-            mock.patch('osf.models.mixins.AddonModelMixin.get_addon', mock.Mock(side_effect=_mock_get_addon)),
-            mock.patch('osf.models.mixins.AddonModelMixin.delete_addon', mock.Mock(side_effect=_mock_delete_addon)),
-            mock.patch('osf.models.mixins.AddonModelMixin.get_or_add_addon', mock.Mock(side_effect=_mock_get_or_add))
+            mock.patch(
+                'osf.models.mixins.AddonModelMixin.add_addon',
+                mock.Mock(side_effect=_mock_get_or_add),
+            ),
+            mock.patch(
+                'osf.models.mixins.AddonModelMixin.get_addon',
+                mock.Mock(side_effect=_mock_get_addon),
+            ),
+            mock.patch(
+                'osf.models.mixins.AddonModelMixin.delete_addon',
+                mock.Mock(side_effect=_mock_delete_addon),
+            ),
+            mock.patch(
+                'osf.models.mixins.AddonModelMixin.get_or_add_addon',
+                mock.Mock(side_effect=_mock_get_or_add),
+            ),
         ):
             ret = func(*args, **kwargs)
             return ret
+
     return wrapper
 
+
 def generate_file_tree(nodes):
-    file_trees = {
-        n._id: file_tree_factory(3, 3, 3)
-        for n in nodes
-    }
+    file_trees = {n._id: file_tree_factory(3, 3, 3) for n in nodes}
 
     selected_files = {}
     selected_file_node_index = {}
     for n in nodes:
         file_tree = file_trees[n._id]
         selected = select_files_from_tree(file_tree)
-        selected_file_node_index.update({
-            sha256: n._id
-            for sha256 in selected.keys()
-        })
+        selected_file_node_index.update({sha256: n._id for sha256 in selected.keys()})
         selected_files.update(selected)  # select files from each Node
     return file_trees, selected_files, selected_file_node_index
+
 
 def generate_schema_from_data(data):
     def from_property(id, prop):
@@ -269,22 +274,15 @@ def generate_schema_from_data(data):
                 'id': id,
                 'type': 'object',
                 'properties': [
-                    from_property(pid, sp)
-                    for pid, sp in list(prop['value'].items())
-                ]
+                    from_property(pid, sp) for pid, sp in list(prop['value'].items())
+                ],
             }
         else:
-            return {
-                'id': id,
-                'type': 'osf-upload' if prop.get('extra') else 'string'
-            }
+            return {'id': id, 'type': 'osf-upload' if prop.get('extra') else 'string'}
 
     def from_question(qid, question):
         if question.get('extra'):
-            return {
-                'qid': qid,
-                'type': 'osf-upload'
-            }
+            return {'qid': qid, 'type': 'osf-upload'}
         elif isinstance(question.get('value'), dict):
             return {
                 'qid': qid,
@@ -292,31 +290,24 @@ def generate_schema_from_data(data):
                 'properties': [
                     from_property(id, value)
                     for id, value in list(question.get('value').items())
-                ]
+                ],
             }
         else:
-            return {
-                'qid': qid,
-                'type': 'string'
-            }
+            return {'qid': qid, 'type': 'string'}
+
     _schema = {
         'name': 'Test',
         'version': 2,
-        'config': {
-            'hasFiles': True
-        },
-        'pages': [{
-            'id': 'page1',
-            'questions': [
-                from_question(qid, q)
-                for qid, q in data.items()
-            ]
-        }]
+        'config': {'hasFiles': True},
+        'pages': [
+            {
+                'id': 'page1',
+                'questions': [from_question(qid, q) for qid, q in data.items()],
+            }
+        ],
     }
     schema = RegistrationSchema(
-        name=_schema['name'],
-        schema_version=_schema['version'],
-        schema=_schema
+        name=_schema['name'], schema_version=_schema['version'], schema=_schema
     )
     try:
         schema.save()
@@ -326,26 +317,30 @@ def generate_schema_from_data(data):
         # reason. Update the doc currently in the db rather than saving a new
         # one.
 
-        schema = RegistrationSchema.objects.get(name=_schema['name'], schema_version=_schema['version'])
+        schema = RegistrationSchema.objects.get(
+            name=_schema['name'], schema_version=_schema['version']
+        )
         schema.schema = _schema
         schema.save()
 
     return schema
+
 
 def generate_metadata(file_trees, selected_files, node_index):
     data = {}
     uploader_types = {
         ('q_' + selected_file['name']): {
             'value': fake.word(),
-            'extra': [{
-                'sha256': sha256,
-                'viewUrl': '/project/{0}/files/osfstorage{1}'.format(
-                    node_index[sha256],
-                    selected_file['path']
-                ),
-                'selectedFileName': selected_file['name'],
-                'nodeId': node_index[sha256]
-            }]
+            'extra': [
+                {
+                    'sha256': sha256,
+                    'viewUrl': '/project/{0}/files/osfstorage{1}'.format(
+                        node_index[sha256], selected_file['path']
+                    ),
+                    'selectedFileName': selected_file['name'],
+                    'nodeId': node_index[sha256],
+                }
+            ],
         }
         for sha256, selected_file in selected_files.items()
     }
@@ -355,35 +350,29 @@ def generate_metadata(file_trees, selected_files, node_index):
             'value': {
                 name_factory(): {
                     'value': fake.word(),
-                    'extra': [{
-                        'sha256': sha256,
-                        'viewUrl': '/project/{0}/files/osfstorage{1}'.format(
-                            node_index[sha256],
-                            selected_file['path']
-                        ),
-                        'selectedFileName': selected_file['name'],
-                        'nodeId': node_index[sha256]
-                    }]
+                    'extra': [
+                        {
+                            'sha256': sha256,
+                            'viewUrl': '/project/{0}/files/osfstorage{1}'.format(
+                                node_index[sha256], selected_file['path']
+                            ),
+                            'selectedFileName': selected_file['name'],
+                            'nodeId': node_index[sha256],
+                        }
+                    ],
                 },
-                name_factory(): {
-                    'value': fake.word()
-                }
+                name_factory(): {'value': fake.word()},
             }
         }
         for sha256, selected_file in selected_files.items()
     }
     data.update(object_types)
-    other_questions = {
-        'q{}'.format(i): {
-            'value': fake.word()
-        }
-        for i in range(5)
-    }
+    other_questions = {'q{}'.format(i): {'value': fake.word()} for i in range(5)}
     data.update(other_questions)
     return data
 
-class ArchiverTestCase(OsfTestCase):
 
+class ArchiverTestCase(OsfTestCase):
     def setUp(self):
         super(ArchiverTestCase, self).setUp()
 
@@ -391,9 +380,12 @@ class ArchiverTestCase(OsfTestCase):
         self.user = factories.UserFactory()
         self.auth = Auth(user=self.user)
         self.src = factories.NodeFactory(creator=self.user)
-        self.dst = factories.RegistrationFactory(user=self.user, project=self.src, send_signals=False, archive=True)
+        self.dst = factories.RegistrationFactory(
+            user=self.user, project=self.src, send_signals=False, archive=True
+        )
         archiver_utils.before_archive(self.dst, self.user)
         self.archive_job = self.dst.archive_job
+
 
 class TestStorageAddonBase(ArchiverTestCase):
     tree_root = WB_FILE_TREE['attributes']['children']
@@ -423,14 +415,14 @@ class TestStorageAddonBase(ArchiverTestCase):
                 user=self.user,
                 view_only=True,
                 _internal=True,
-                base_url=self.src.osfstorage_region.waterbutler_url
+                base_url=self.src.osfstorage_region.waterbutler_url,
             )
             responses.add(
                 responses.Response(
                     responses.GET,
                     url,
                     json=self.get_resp(url),
-                    content_type='applcation/json'
+                    content_type='applcation/json',
                 )
             )
         addon = self.src.get_or_add_addon(addon_short_name, auth=self.auth)
@@ -457,17 +449,23 @@ class TestStorageAddonBase(ArchiverTestCase):
     # @pytest.mark.skip('Unskip when figshare addon is implemented')
     def test_addons(self):
         #  Test that each addon in settings.ADDONS_ARCHIVABLE other than wiki/forward implements the StorageAddonBase interface
-        for addon in [a for a in settings.ADDONS_ARCHIVABLE if a not in ['wiki', 'forward']]:
+        for addon in [
+            a for a in settings.ADDONS_ARCHIVABLE if a not in ['wiki', 'forward']
+        ]:
             self._test_addon(addon)
 
-class TestArchiverTasks(ArchiverTestCase):
 
+class TestArchiverTasks(ArchiverTestCase):
     @mock.patch('framework.celery_tasks.handlers.enqueue_task')
     @mock.patch('celery.chain')
     def test_archive(self, mock_chain, mock_enqueue):
         archive(job_pk=self.archive_job._id)
         targets = [self.src.get_addon(name) for name in settings.ADDONS_ARCHIVABLE]
-        target_addons = [addon for addon in targets if (addon and addon.complete and isinstance(addon, BaseStorageAddon))]
+        target_addons = [
+            addon
+            for addon in targets
+            if (addon and addon.complete and isinstance(addon, BaseStorageAddon))
+        ]
         assert_true(self.dst.archiving)
         mock_chain.assert_called_with(
             [
@@ -475,9 +473,10 @@ class TestArchiverTasks(ArchiverTestCase):
                     stat_addon.si(
                         addon_short_name=addon.config.short_name,
                         job_pk=self.archive_job._id,
-                    ) for addon in target_addons
+                    )
+                    for addon in target_addons
                 ),
-                archive_node.s(job_pk=self.archive_job._id)
+                archive_node.s(job_pk=self.archive_job._id),
             ]
         )
 
@@ -493,38 +492,46 @@ class TestArchiverTasks(ArchiverTestCase):
         settings.MAX_ARCHIVE_SIZE = 1024 ** 3
         with mock.patch.object(BaseStorageAddon, '_get_file_tree') as mock_file_tree:
             mock_file_tree.return_value = FILE_TREE
-            results = [stat_addon(addon, self.archive_job._id) for addon in ['osfstorage']]
+            results = [
+                stat_addon(addon, self.archive_job._id) for addon in ['osfstorage']
+            ]
         with mock.patch.object(celery, 'group') as mock_group:
             archive_node(results, self.archive_job._id)
         archive_osfstorage_signature = archive_addon.si(
-            'osfstorage',
-            self.archive_job._id
+            'osfstorage', self.archive_job._id
         )
-        assert(mock_group.called_with(archive_osfstorage_signature))
+        assert mock_group.called_with(archive_osfstorage_signature)
 
     @use_fake_addons
     def test_archive_node_fail(self):
         settings.MAX_ARCHIVE_SIZE = 100
-        results = [stat_addon(addon, self.archive_job._id) for addon in ['osfstorage', 'dropbox']]
-        with pytest.raises(ArchiverSizeExceeded):  # Note: Requires task_eager_propagates = True in celery
+        results = [
+            stat_addon(addon, self.archive_job._id)
+            for addon in ['osfstorage', 'dropbox']
+        ]
+        with pytest.raises(
+            ArchiverSizeExceeded
+        ):  # Note: Requires task_eager_propagates = True in celery
             archive_node.apply(args=(results, self.archive_job._id))
 
     @mock.patch('website.project.signals.archive_callback.send')
     @mock.patch('website.archiver.tasks.archive_addon.delay')
-    def test_archive_node_does_not_archive_empty_addons(self, mock_archive_addon, mock_send):
-        with mock.patch('osf.models.mixins.AddonModelMixin.get_addon') as mock_get_addon:
+    def test_archive_node_does_not_archive_empty_addons(
+        self, mock_archive_addon, mock_send
+    ):
+        with mock.patch(
+            'osf.models.mixins.AddonModelMixin.get_addon'
+        ) as mock_get_addon:
             mock_addon = MockAddon()
 
             def empty_file_tree(user, version):
-                return {
-                    'path': '/',
-                    'kind': 'folder',
-                    'name': 'Fake',
-                    'children': []
-                }
+                return {'path': '/', 'kind': 'folder', 'name': 'Fake', 'children': []}
+
             setattr(mock_addon, '_get_file_tree', empty_file_tree)
             mock_get_addon.return_value = mock_addon
-            results = [stat_addon(addon, self.archive_job._id) for addon in ['osfstorage']]
+            results = [
+                stat_addon(addon, self.archive_job._id) for addon in ['osfstorage']
+            ]
             archive_node(results, job_pk=self.archive_job._id)
         assert_false(mock_archive_addon.called)
         assert_true(mock_send.called)
@@ -537,29 +544,28 @@ class TestArchiverTasks(ArchiverTestCase):
         self.archive_job.initiator.save()
         with mock.patch.object(BaseStorageAddon, '_get_file_tree') as mock_file_tree:
             mock_file_tree.return_value = FILE_TREE
-            results = [stat_addon(addon, self.archive_job._id) for addon in ['osfstorage', 'dropbox']]
+            results = [
+                stat_addon(addon, self.archive_job._id)
+                for addon in ['osfstorage', 'dropbox']
+            ]
         with mock.patch.object(celery, 'group') as mock_group:
             archive_node(results, self.archive_job._id)
-        archive_dropbox_signature = archive_addon.si(
-            'dropbox',
-            self.archive_job._id
-        )
-        assert(mock_group.called_with(archive_dropbox_signature))
+        archive_dropbox_signature = archive_addon.si('dropbox', self.archive_job._id)
+        assert mock_group.called_with(archive_dropbox_signature)
 
     @mock.patch('website.archiver.tasks.make_copy_request.delay')
     def test_archive_addon(self, mock_make_copy_request):
         archive_addon('osfstorage', self.archive_job._id)
-        assert_equal(self.archive_job.get_target('osfstorage').status, ARCHIVER_INITIATED)
+        assert_equal(
+            self.archive_job.get_target('osfstorage').status, ARCHIVER_INITIATED
+        )
         cookie = self.user.get_or_create_cookie()
-        assert(mock_make_copy_request.called_with(
+        assert mock_make_copy_request.called_with(
             self.archive_job._id,
             settings.WATERBUTLER_URL + '/ops/copy',
             data=dict(
                 source=dict(
-                    cookie=cookie,
-                    nid=self.src._id,
-                    provider='osfstorage',
-                    path='/',
+                    cookie=cookie, nid=self.src._id, provider='osfstorage', path='/',
                 ),
                 destination=dict(
                     cookie=cookie,
@@ -568,29 +574,41 @@ class TestArchiverTasks(ArchiverTestCase):
                     path='/',
                 ),
                 rename='Archive of OSF Storage',
-            )
-        ))
+            ),
+        )
 
     def test_archive_success(self):
         node = factories.NodeFactory(creator=self.user)
         file_trees, selected_files, node_index = generate_file_tree([node])
-        data = generate_metadata(
-            file_trees,
-            selected_files,
-            node_index
-        )
+        data = generate_metadata(file_trees, selected_files, node_index)
         schema = generate_schema_from_data(data)
-        draft_registration = factories.DraftRegistrationFactory(branched_from=node, registration_schema=schema, registration_metadata=data)
+        draft_registration = factories.DraftRegistrationFactory(
+            branched_from=node, registration_schema=schema, registration_metadata=data
+        )
 
-        with test_utils.mock_archive(node, schema=schema, draft_registration=draft_registration, autocomplete=True, autoapprove=True) as registration:
-            with mock.patch.object(BaseStorageAddon, '_get_file_tree', mock.Mock(return_value=file_trees[node._id])):
+        with test_utils.mock_archive(
+            node,
+            schema=schema,
+            draft_registration=draft_registration,
+            autocomplete=True,
+            autoapprove=True,
+        ) as registration:
+            with mock.patch.object(
+                BaseStorageAddon,
+                '_get_file_tree',
+                mock.Mock(return_value=file_trees[node._id]),
+            ):
                 job = factories.ArchiveJobFactory(initiator=registration.creator)
                 archive_success(registration._id, job._id)
                 registration.reload()
                 for key, question in registration.registered_meta[schema._id].items():
                     target = None
                     if isinstance(question.get('value'), dict):
-                        target = [v for v in question['value'].values() if 'extra' in v and 'sha256' in v['extra'][0]][0]
+                        target = [
+                            v
+                            for v in question['value'].values()
+                            if 'extra' in v and 'sha256' in v['extra'][0]
+                        ][0]
                     elif 'extra' in question and 'hashes' in question['extra'][0]:
                         target = question
                     if target:
@@ -612,26 +630,39 @@ class TestArchiverTasks(ArchiverTestCase):
         data = {
             ('q_' + fake_file_name): {
                 'value': fake.word(),
-                'extra': [{
-                    'sha256': fake_file['extra']['hashes']['sha256'],
-                    'viewUrl': '/project/{0}/files/osfstorage{1}'.format(
-                        node._id,
-                        fake_file['path']
-                    ),
-                    'selectedFileName': fake_file_name,
-                    'nodeId': node._id
-                }]
+                'extra': [
+                    {
+                        'sha256': fake_file['extra']['hashes']['sha256'],
+                        'viewUrl': '/project/{0}/files/osfstorage{1}'.format(
+                            node._id, fake_file['path']
+                        ),
+                        'selectedFileName': fake_file_name,
+                        'nodeId': node._id,
+                    }
+                ],
             }
         }
         schema = generate_schema_from_data(data)
-        draft = factories.DraftRegistrationFactory(branched_from=node, registration_schema=schema, registered_metadata=data)
-        with test_utils.mock_archive(node, schema=schema, draft_registration=draft, autocomplete=True, autoapprove=True) as registration:
-            with mock.patch.object(BaseStorageAddon, '_get_file_tree', mock.Mock(return_value=file_tree)):
+        draft = factories.DraftRegistrationFactory(
+            branched_from=node, registration_schema=schema, registered_metadata=data
+        )
+        with test_utils.mock_archive(
+            node,
+            schema=schema,
+            draft_registration=draft,
+            autocomplete=True,
+            autoapprove=True,
+        ) as registration:
+            with mock.patch.object(
+                BaseStorageAddon, '_get_file_tree', mock.Mock(return_value=file_tree)
+            ):
                 job = factories.ArchiveJobFactory(initiator=registration.creator)
                 archive_success(registration._id, job._id)
                 registration.reload()
                 for key, question in registration.registered_meta[schema._id].items():
-                    assert_equal(question['extra'][0]['selectedFileName'], fake_file_name)
+                    assert_equal(
+                        question['extra'][0]['selectedFileName'], fake_file_name
+                    )
 
     def test_archive_success_with_deeply_nested_schema(self):
         node = factories.NodeFactory(creator=self.user)
@@ -639,26 +670,46 @@ class TestArchiverTasks(ArchiverTestCase):
         data = {
             ('q_' + selected_file['name']): {
                 'value': fake.word(),
-                'extra': [{
-                    'selectedFileName': selected_file['name'],
-                    'nodeId': node._id,
-                    'sha256': sha256,
-                    'viewUrl': '/project/{0}/files/osfstorage{1}'.format(node._id, selected_file['path'])
-                }]
+                'extra': [
+                    {
+                        'selectedFileName': selected_file['name'],
+                        'nodeId': node._id,
+                        'sha256': sha256,
+                        'viewUrl': '/project/{0}/files/osfstorage{1}'.format(
+                            node._id, selected_file['path']
+                        ),
+                    }
+                ],
             }
             for sha256, selected_file in selected_files.items()
         }
         schema = generate_schema_from_data(data)
-        draft_registration = factories.DraftRegistrationFactory(registration_schema=schema, branched_from=node, registration_metadata=data)
-        with test_utils.mock_archive(node, schema=schema, draft_registration=draft_registration, autocomplete=True, autoapprove=True) as registration:
-            with mock.patch.object(BaseStorageAddon, '_get_file_tree', mock.Mock(return_value=file_trees[node._id])):
+        draft_registration = factories.DraftRegistrationFactory(
+            registration_schema=schema, branched_from=node, registration_metadata=data
+        )
+        with test_utils.mock_archive(
+            node,
+            schema=schema,
+            draft_registration=draft_registration,
+            autocomplete=True,
+            autoapprove=True,
+        ) as registration:
+            with mock.patch.object(
+                BaseStorageAddon,
+                '_get_file_tree',
+                mock.Mock(return_value=file_trees[node._id]),
+            ):
                 job = factories.ArchiveJobFactory(initiator=registration.creator)
                 archive_success(registration._id, job._id)
                 registration.reload()
                 for key, question in registration.registered_meta[schema._id].items():
                     target = None
                     if isinstance(question['value'], dict):
-                        target = [v for v in question['value'].values() if 'extra' in v and 'sha256' in v['extra'][0]][0]
+                        target = [
+                            v
+                            for v in question['value'].values()
+                            if 'extra' in v and 'sha256' in v['extra'][0]
+                        ][0]
                     elif 'extra' in question and 'sha256' in question['extra'][0]:
                         target = question
                     if target:
@@ -677,17 +728,25 @@ class TestArchiverTasks(ArchiverTestCase):
         factories.NodeFactory(parent=node, creator=self.user)
         nodes = [n for n in node.node_and_primary_descendants()]
         file_trees, selected_files, node_index = generate_file_tree(nodes)
-        data = generate_metadata(
-            file_trees,
-            selected_files,
-            node_index
-        )
+        data = generate_metadata(file_trees, selected_files, node_index)
         schema = generate_schema_from_data(data)
-        draft_registration = factories.DraftRegistrationFactory(registration_schema=schema, branched_from=node, registration_metadata=data)
-        with test_utils.mock_archive(node, schema=schema, draft_registration=draft_registration, autocomplete=True, autoapprove=True) as registration:
+        draft_registration = factories.DraftRegistrationFactory(
+            registration_schema=schema, branched_from=node, registration_metadata=data
+        )
+        with test_utils.mock_archive(
+            node,
+            schema=schema,
+            draft_registration=draft_registration,
+            autocomplete=True,
+            autoapprove=True,
+        ) as registration:
+
             def mock_get_file_tree(self, *args, **kwargs):
                 return file_trees[self.owner.registered_from._id]
-            with mock.patch.object(BaseStorageAddon, '_get_file_tree', mock_get_file_tree):
+
+            with mock.patch.object(
+                BaseStorageAddon, '_get_file_tree', mock_get_file_tree
+            ):
                 job = factories.ArchiveJobFactory(initiator=registration.creator)
                 archive_success(registration._id, job._id)
 
@@ -696,18 +755,22 @@ class TestArchiverTasks(ArchiverTestCase):
             for key, question in registration.registered_meta[schema._id].items():
                 target = None
                 if isinstance(question['value'], dict):
-                    target = [v for v in question['value'].values() if 'extra' in v and 'sha256' in v['extra'][0]]
+                    target = [
+                        v
+                        for v in question['value'].values()
+                        if 'extra' in v and 'sha256' in v['extra'][0]
+                    ]
                 elif 'extra' in question and 'sha256' in question['extra']:
                     target = question
 
                 if target:
                     node_id = re.search(
                         r'^/project/(?P<node_id>\w{5}).+$',
-                        target[0]['extra'][0]['viewUrl']
+                        target[0]['extra'][0]['viewUrl'],
                     ).groupdict()['node_id']
                     assert_in(
                         node_id,
-                        [r._id for r in registration.node_and_primary_descendants()]
+                        [r._id for r in registration.node_and_primary_descendants()],
                     )
                     if target[0]['extra'][0]['sha256'] in selected_files:
                         del selected_files[target[0]['extra'][0]['sha256']]
@@ -727,25 +790,38 @@ class TestArchiverTasks(ArchiverTestCase):
         data = {
             ('q_' + fake_file['name']): {
                 'value': fake.word(),
-                'extra': [{
-                    'sha256': fake_file['extra']['hashes']['sha256'],
-                    'viewUrl': '/project/{0}/files/osfstorage{1}'.format(
-                        node._id,
-                        fake_file['path']
-                    ),
-                    'selectedFileName': fake_file['name'],
-                    'nodeId': node._id
-                }]
+                'extra': [
+                    {
+                        'sha256': fake_file['extra']['hashes']['sha256'],
+                        'viewUrl': '/project/{0}/files/osfstorage{1}'.format(
+                            node._id, fake_file['path']
+                        ),
+                        'selectedFileName': fake_file['name'],
+                        'nodeId': node._id,
+                    }
+                ],
             }
         }
         schema = generate_schema_from_data(data)
-        draft_registration = factories.DraftRegistrationFactory(registration_schema=schema, branched_from=node, registration_metadata=data)
-        with test_utils.mock_archive(node, schema=schema, draft_registration=draft_registration, autocomplete=True, autoapprove=True) as registration:
-            with mock.patch.object(BaseStorageAddon, '_get_file_tree', mock.Mock(return_value=file_tree)):
+        draft_registration = factories.DraftRegistrationFactory(
+            registration_schema=schema, branched_from=node, registration_metadata=data
+        )
+        with test_utils.mock_archive(
+            node,
+            schema=schema,
+            draft_registration=draft_registration,
+            autocomplete=True,
+            autoapprove=True,
+        ) as registration:
+            with mock.patch.object(
+                BaseStorageAddon, '_get_file_tree', mock.Mock(return_value=file_tree)
+            ):
                 job = factories.ArchiveJobFactory(initiator=registration.creator)
                 archive_success(registration._id, job._id)
                 for key, question in registration.registered_meta[schema._id].items():
-                    assert_equal(question['extra'][0]['selectedFileName'], fake_file['name'])
+                    assert_equal(
+                        question['extra'][0]['selectedFileName'], fake_file['name']
+                    )
 
     def test_archive_failure_different_name_same_sha(self):
         file_tree = file_tree_factory(0, 0, 0)
@@ -757,21 +833,32 @@ class TestArchiverTasks(ArchiverTestCase):
         data = {
             ('q_' + fake_file['name']): {
                 'value': fake.word(),
-                'extra': [{
-                    'sha256': fake_file['extra']['hashes']['sha256'],
-                    'viewUrl': '/project/{0}/files/osfstorage{1}'.format(
-                        node._id,
-                        fake_file['path']
-                    ),
-                    'selectedFileName': fake_file['name'],
-                    'nodeId': node._id
-                }]
+                'extra': [
+                    {
+                        'sha256': fake_file['extra']['hashes']['sha256'],
+                        'viewUrl': '/project/{0}/files/osfstorage{1}'.format(
+                            node._id, fake_file['path']
+                        ),
+                        'selectedFileName': fake_file['name'],
+                        'nodeId': node._id,
+                    }
+                ],
             }
         }
         schema = generate_schema_from_data(data)
-        draft = factories.DraftRegistrationFactory(branched_from=node, registration_schema=schema, registration_metadata=data)
-        with test_utils.mock_archive(node, schema=schema, draft_registration=draft, autocomplete=True, autoapprove=True) as registration:
-            with mock.patch.object(BaseStorageAddon, '_get_file_tree', mock.Mock(return_value=file_tree)):
+        draft = factories.DraftRegistrationFactory(
+            branched_from=node, registration_schema=schema, registration_metadata=data
+        )
+        with test_utils.mock_archive(
+            node,
+            schema=schema,
+            draft_registration=draft,
+            autocomplete=True,
+            autoapprove=True,
+        ) as registration:
+            with mock.patch.object(
+                BaseStorageAddon, '_get_file_tree', mock.Mock(return_value=file_tree)
+            ):
                 job = factories.ArchiveJobFactory(initiator=registration.creator)
                 draft.registered_node = registration
                 draft.save()
@@ -791,21 +878,32 @@ class TestArchiverTasks(ArchiverTestCase):
         data = {
             ('q_' + selected['name']): {
                 'value': fake.word(),
-                'extra': [{
-                    'sha256': selected['extra']['hashes']['sha256'],
-                    'viewUrl': '/project/{0}/files/osfstorage{1}'.format(
-                        child._id,
-                        selected['path']
-                    ),
-                    'selectedFileName': selected['name'],
-                    'nodeId': child._id
-                }]
+                'extra': [
+                    {
+                        'sha256': selected['extra']['hashes']['sha256'],
+                        'viewUrl': '/project/{0}/files/osfstorage{1}'.format(
+                            child._id, selected['path']
+                        ),
+                        'selectedFileName': selected['name'],
+                        'nodeId': child._id,
+                    }
+                ],
             }
         }
         schema = generate_schema_from_data(data)
-        draft_registration = factories.DraftRegistrationFactory(registration_schema=schema, branched_from=node, registration_metadata=data)
-        with test_utils.mock_archive(node, schema=schema, draft_registration=draft_registration, autocomplete=True, autoapprove=True) as registration:
-            with mock.patch.object(BaseStorageAddon, '_get_file_tree', mock.Mock(return_value=file_tree)):
+        draft_registration = factories.DraftRegistrationFactory(
+            registration_schema=schema, branched_from=node, registration_metadata=data
+        )
+        with test_utils.mock_archive(
+            node,
+            schema=schema,
+            draft_registration=draft_registration,
+            autocomplete=True,
+            autoapprove=True,
+        ) as registration:
+            with mock.patch.object(
+                BaseStorageAddon, '_get_file_tree', mock.Mock(return_value=file_tree)
+            ):
                 job = factories.ArchiveJobFactory(initiator=registration.creator)
                 archive_success(registration._id, job._id)
                 registration.reload()
@@ -815,15 +913,10 @@ class TestArchiverTasks(ArchiverTestCase):
 
 
 class TestArchiverUtils(ArchiverTestCase):
-
     @mock.patch('website.mails.send_mail')
     def test_handle_archive_fail(self, mock_send_mail):
         archiver_utils.handle_archive_fail(
-            ARCHIVER_NETWORK_ERROR,
-            self.src,
-            self.dst,
-            self.user,
-            {}
+            ARCHIVER_NETWORK_ERROR, self.src, self.dst, self.user, {}
         )
         assert_equal(mock_send_mail.call_count, 2)
         assert_true(self.dst.is_deleted)
@@ -832,11 +925,7 @@ class TestArchiverUtils(ArchiverTestCase):
     def test_handle_archive_fail_copy(self, mock_send_mail):
         url = settings.INTERNAL_DOMAIN + self.src._id
         archiver_utils.handle_archive_fail(
-            ARCHIVER_NETWORK_ERROR,
-            self.src,
-            self.dst,
-            self.user,
-            {}
+            ARCHIVER_NETWORK_ERROR, self.src, self.dst, self.user, {}
         )
         args_user = dict(
             to_addr=self.user.username,
@@ -856,20 +945,15 @@ class TestArchiverUtils(ArchiverTestCase):
             can_change_preferences=False,
             url=url,
         )
-        mock_send_mail.assert_has_calls([
-            call(**args_user),
-            call(**args_desk),
-        ], any_order=True)
+        mock_send_mail.assert_has_calls(
+            [call(**args_user), call(**args_desk),], any_order=True
+        )
 
     @mock.patch('website.mails.send_mail')
     def test_handle_archive_fail_size(self, mock_send_mail):
         url = settings.INTERNAL_DOMAIN + self.src._id
         archiver_utils.handle_archive_fail(
-            ARCHIVER_SIZE_EXCEEDED,
-            self.src,
-            self.dst,
-            self.user,
-            {}
+            ARCHIVER_SIZE_EXCEEDED, self.src, self.dst, self.user, {}
         )
         args_user = dict(
             to_addr=self.user.username,
@@ -888,13 +972,14 @@ class TestArchiverUtils(ArchiverTestCase):
             can_change_preferences=False,
             url=url,
         )
-        mock_send_mail.assert_has_calls([
-            call(**args_user),
-            call(**args_desk),
-        ], any_order=True)
+        mock_send_mail.assert_has_calls(
+            [call(**args_user), call(**args_desk),], any_order=True
+        )
 
     def test_aggregate_file_tree_metadata(self):
-        a_stat_result = archiver_utils.aggregate_file_tree_metadata('dropbox', FILE_TREE, self.user)
+        a_stat_result = archiver_utils.aggregate_file_tree_metadata(
+            'dropbox', FILE_TREE, self.user
+        )
         assert_equal(a_stat_result.disk_usage, 128 + 256)
         assert_equal(a_stat_result.num_files, 2)
         assert_equal(len(a_stat_result.targets), 2)
@@ -902,7 +987,9 @@ class TestArchiverUtils(ArchiverTestCase):
     @use_fake_addons
     def test_archive_provider_for(self):
         provider = self.src.get_addon(settings.ARCHIVE_PROVIDER)
-        assert_equal(archiver_utils.archive_provider_for(self.src, self.user)._id, provider._id)
+        assert_equal(
+            archiver_utils.archive_provider_for(self.src, self.user)._id, provider._id
+        )
 
     @use_fake_addons
     def test_has_archive_provider(self):
@@ -921,13 +1008,12 @@ class TestArchiverUtils(ArchiverTestCase):
     def test_get_file_map(self):
         node = factories.NodeFactory(creator=self.user)
         file_tree = file_tree_factory(3, 3, 3)
-        with mock.patch.object(BaseStorageAddon, '_get_file_tree', mock.Mock(return_value=file_tree)):
+        with mock.patch.object(
+            BaseStorageAddon, '_get_file_tree', mock.Mock(return_value=file_tree)
+        ):
             file_map = archiver_utils.get_file_map(node)
         stack = [file_tree]
-        file_map = {
-            sha256: value
-            for sha256, value, _ in file_map
-        }
+        file_map = {sha256: value for sha256, value, _ in file_map}
         while len(stack):
             item = stack.pop(0)
             if item['kind'] == 'file':
@@ -945,13 +1031,12 @@ class TestArchiverUtils(ArchiverTestCase):
         factories.NodeFactory(parent=node)
 
         file_tree = file_tree_factory(3, 3, 3)
-        with mock.patch.object(BaseStorageAddon, '_get_file_tree', mock.Mock(return_value=file_tree)):
+        with mock.patch.object(
+            BaseStorageAddon, '_get_file_tree', mock.Mock(return_value=file_tree)
+        ):
             file_map = archiver_utils.get_file_map(node)
             stack = [file_tree]
-            file_map = {
-                sha256: value
-                for sha256, value, _ in file_map
-            }
+            file_map = {sha256: value for sha256, value, _ in file_map}
             while len(stack):
                 item = stack.pop(0)
                 if item['kind'] == 'file':
@@ -968,7 +1053,9 @@ class TestArchiverUtils(ArchiverTestCase):
         factories.NodeFactory(parent=comp1)
         factories.NodeFactory(parent=node)
 
-        with mock.patch.object(BaseStorageAddon, '_get_file_tree') as mock_get_file_tree:
+        with mock.patch.object(
+            BaseStorageAddon, '_get_file_tree'
+        ) as mock_get_file_tree:
             mock_get_file_tree.return_value = file_tree_factory(3, 3, 3)
 
             # first call
@@ -980,7 +1067,6 @@ class TestArchiverUtils(ArchiverTestCase):
 
 
 class TestArchiverListeners(ArchiverTestCase):
-
     @mock.patch('website.archiver.tasks.archive')
     @mock.patch('website.archiver.utils.before_archive')
     def test_after_register(self, mock_before_archive, mock_archive):
@@ -1022,14 +1108,8 @@ class TestArchiverListeners(ArchiverTestCase):
 
     @mock.patch('website.archiver.tasks.archive_success.delay')
     def test_archive_callback_pending(self, mock_delay):
-        self.archive_job.update_target(
-            'osfstorage',
-            ARCHIVER_INITIATED
-        )
-        self.dst.archive_job.update_target(
-            'osfstorage',
-            ARCHIVER_SUCCESS
-        )
+        self.archive_job.update_target('osfstorage', ARCHIVER_INITIATED)
+        self.dst.archive_job.update_target('osfstorage', ARCHIVER_SUCCESS)
         self.dst.archive_job.save()
         with mock.patch('website.mails.send_mail') as mock_send:
             with mock.patch('website.archiver.utils.handle_archive_fail') as mock_fail:
@@ -1051,10 +1131,7 @@ class TestArchiverListeners(ArchiverTestCase):
     def test_archive_callback_done_embargoed(self, mock_send, mock_archive_success):
         end_date = timezone.now() + datetime.timedelta(days=30)
         self.dst.archive_job.meta = {
-            'embargo_urls': {
-                contrib._id: None
-                for contrib in self.dst.contributors
-            }
+            'embargo_urls': {contrib._id: None for contrib in self.dst.contributors}
         }
         self.dst.embargo_registration(self.user, end_date)
         self.dst.archive_job.update_target('osfstorage', ARCHIVER_SUCCESS)
@@ -1139,7 +1216,9 @@ class TestArchiverListeners(ArchiverTestCase):
 
     @mock.patch('website.mails.send_mail')
     @mock.patch('website.archiver.tasks.archive_success.delay')
-    def test_archive_callback_on_tree_sends_only_one_email(self, mock_send_success, mock_arhive_success):
+    def test_archive_callback_on_tree_sends_only_one_email(
+        self, mock_send_success, mock_arhive_success
+    ):
         proj = factories.NodeFactory()
         child = factories.NodeFactory(parent=proj)
         factories.NodeFactory(parent=child)
@@ -1164,8 +1243,8 @@ class TestArchiverListeners(ArchiverTestCase):
         assert_equal(mock_send_success.call_count, 1)
         assert_true(mock_send_success.called)
 
-class TestArchiverScripts(ArchiverTestCase):
 
+class TestArchiverScripts(ArchiverTestCase):
     def test_find_failed_registrations(self):
         failures = []
         legacy = []
@@ -1211,7 +1290,6 @@ class TestArchiverScripts(ArchiverTestCase):
 
 
 class TestArchiverDecorators(ArchiverTestCase):
-
     @mock.patch('website.archiver.signals.archive_fail.send')
     def test_fail_archive_on_error(self, mock_fail):
         e = HTTPError(418)
@@ -1221,15 +1299,14 @@ class TestArchiverDecorators(ArchiverTestCase):
 
         func = fail_archive_on_error(error)
         func(node=self.dst)
-        mock_fail.assert_called_with(
-            self.dst,
-            errors=[str(e)]
-        )
+        mock_fail.assert_called_with(self.dst, errors=[str(e)])
+
 
 class TestArchiverBehavior(OsfTestCase):
-
     @mock.patch('osf.models.AbstractNode.update_search')
-    def test_archiving_registrations_not_added_to_search_before_archival(self, mock_update_search):
+    def test_archiving_registrations_not_added_to_search_before_archival(
+        self, mock_update_search
+    ):
         proj = factories.ProjectFactory()
         reg = factories.RegistrationFactory(project=proj)
         reg.save()
@@ -1238,13 +1315,20 @@ class TestArchiverBehavior(OsfTestCase):
     @mock.patch('osf.models.AbstractNode.update_search')
     @mock.patch('website.mails.send_mail')
     @mock.patch('website.archiver.tasks.archive_success.delay')
-    def test_archiving_nodes_added_to_search_on_archive_success_if_public(self, mock_update_search, mock_send, mock_archive_success):
+    def test_archiving_nodes_added_to_search_on_archive_success_if_public(
+        self, mock_update_search, mock_send, mock_archive_success
+    ):
         proj = factories.ProjectFactory()
         reg = factories.RegistrationFactory(project=proj)
         reg.save()
         with nested(
-            mock.patch('osf.models.ArchiveJob.archive_tree_finished', mock.Mock(return_value=True)),
-            mock.patch('osf.models.ArchiveJob.success', mock.PropertyMock(return_value=True))
+            mock.patch(
+                'osf.models.ArchiveJob.archive_tree_finished',
+                mock.Mock(return_value=True),
+            ),
+            mock.patch(
+                'osf.models.ArchiveJob.success', mock.PropertyMock(return_value=True)
+            ),
         ) as (mock_finished, mock_success):
             listeners.archive_callback(reg)
         assert_equal(mock_update_search.call_count, 1)
@@ -1252,30 +1336,41 @@ class TestArchiverBehavior(OsfTestCase):
     @pytest.mark.enable_search
     @mock.patch('website.search.elastic_search.delete_doc')
     @mock.patch('website.mails.send_mail')
-    def test_archiving_nodes_not_added_to_search_on_archive_failure(self, mock_send, mock_delete_index_node):
+    def test_archiving_nodes_not_added_to_search_on_archive_failure(
+        self, mock_send, mock_delete_index_node
+    ):
         proj = factories.ProjectFactory()
         reg = factories.RegistrationFactory(project=proj, archive=True)
         reg.save()
         with nested(
-                mock.patch('osf.models.archive.ArchiveJob.archive_tree_finished', mock.Mock(return_value=True)),
-                mock.patch('osf.models.archive.ArchiveJob.success', mock.PropertyMock(return_value=False))
+            mock.patch(
+                'osf.models.archive.ArchiveJob.archive_tree_finished',
+                mock.Mock(return_value=True),
+            ),
+            mock.patch(
+                'osf.models.archive.ArchiveJob.success',
+                mock.PropertyMock(return_value=False),
+            ),
         ) as (mock_finished, mock_success):
             listeners.archive_callback(reg)
         assert_true(mock_delete_index_node.called)
 
     @mock.patch('osf.models.AbstractNode.update_search')
     @mock.patch('website.mails.send_mail')
-    def test_archiving_nodes_not_added_to_search_on_archive_incomplete(self, mock_send, mock_update_search):
+    def test_archiving_nodes_not_added_to_search_on_archive_incomplete(
+        self, mock_send, mock_update_search
+    ):
         proj = factories.ProjectFactory()
         reg = factories.RegistrationFactory(project=proj)
         reg.save()
-        with mock.patch('osf.models.ArchiveJob.archive_tree_finished', mock.Mock(return_value=False)):
+        with mock.patch(
+            'osf.models.ArchiveJob.archive_tree_finished', mock.Mock(return_value=False)
+        ):
             listeners.archive_callback(reg)
         assert_false(mock_update_search.called)
 
 
 class TestArchiveTarget(OsfTestCase):
-
     def test_repr(self):
         target = ArchiveTarget()
         result = repr(target)
@@ -1284,7 +1379,6 @@ class TestArchiveTarget(OsfTestCase):
 
 
 class TestArchiveJobModel(OsfTestCase):
-
     def tearDown(self, *args, **kwargs):
         super(TestArchiveJobModel, self).tearDown(*args, **kwargs)
         with open(os.path.join(settings.ROOT, 'addons.json')) as fp:
@@ -1317,7 +1411,9 @@ class TestArchiveJobModel(OsfTestCase):
     def test_get_target(self):
         proj = factories.ProjectFactory()
         reg = factories.RegistrationFactory(project=proj)
-        job = ArchiveJob.objects.create(src_node=proj, dst_node=reg, initiator=proj.creator)
+        job = ArchiveJob.objects.create(
+            src_node=proj, dst_node=reg, initiator=proj.creator
+        )
         job.set_targets()
         osfstorage = job.get_target('osfstorage')
         assert_false(not osfstorage)
@@ -1331,7 +1427,9 @@ class TestArchiveJobModel(OsfTestCase):
         job.save()
         job.set_targets()
 
-        assert_equal(list(job.target_addons.values_list('name', flat=True)), ['osfstorage'])
+        assert_equal(
+            list(job.target_addons.values_list('name', flat=True)), ['osfstorage']
+        )
 
     def test_archive_tree_finished_with_nodes(self):
         proj = factories.NodeFactory()
@@ -1354,6 +1452,7 @@ class TestArchiveJobModel(OsfTestCase):
                 node.archive_job.update_target(target.name, ARCHIVER_SUCCESS)
         for node in reg.node_and_primary_descendants():
             assert_true(node.archive_job.archive_tree_finished())
+
 
 # Regression test for https://openscience.atlassian.net/browse/OSF-9085
 def test_archiver_uncaught_error_mail_renders():

@@ -75,9 +75,12 @@ def sort_dependencies(app_list):
             else:
                 skipped.append((model, deps))
         if not changed:
-            raise Exception("Can't resolve dependencies for %s in serialized app list." %
-                ', '.join('%s.%s' % (model._meta.app_label, model._meta.object_name)
-                for model, deps in sorted(skipped, key=lambda obj: obj[0].__name__))
+            raise Exception(
+                "Can't resolve dependencies for %s in serialized app list."
+                % ', '.join(
+                    '%s.%s' % (model._meta.app_label, model._meta.object_name)
+                    for model, deps in sorted(skipped, key=lambda obj: obj[0].__name__)
+                )
             )
         model_dependencies = skipped
 
@@ -99,6 +102,14 @@ def get_ordered_models():
             model_mapping[app_label].append(model_class)
 
     ordered_list_of_models = sort_dependencies(model_mapping)
-    allowed_models = list(itertools.chain(*[application.get_models(include_auto_created=False) for application in apps.get_app_configs() if 'addons' in application.label or 'osf' in application.label]))
+    allowed_models = list(
+        itertools.chain(
+            *[
+                application.get_models(include_auto_created=False)
+                for application in apps.get_app_configs()
+                if 'addons' in application.label or 'osf' in application.label
+            ]
+        )
+    )
 
     return [model for model in ordered_list_of_models if model in allowed_models]

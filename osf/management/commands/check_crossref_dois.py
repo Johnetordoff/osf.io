@@ -10,6 +10,7 @@ from django.utils import timezone
 from django.core.management.base import BaseCommand
 
 import django
+
 django.setup()
 
 from osf.models import Preprint
@@ -17,7 +18,9 @@ from osf.models import Preprint
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-time_since_published = timedelta(days=settings.DAYS_CROSSREF_DOIS_MUST_BE_STUCK_BEFORE_EMAIL)
+time_since_published = timedelta(
+    days=settings.DAYS_CROSSREF_DOIS_MUST_BE_STUCK_BEFORE_EMAIL
+)
 
 CHECK_DOIS_BATCH_SIZE = 20
 
@@ -39,8 +42,7 @@ def check_crossref_dois(dry_run=True):
     """
 
     preprints_with_pending_dois = Preprint.objects.filter(
-        preprint_doi_created__isnull=True,
-        is_published=True
+        preprint_doi_created__isnull=True, is_published=True
     ).exclude(date_published__gt=timezone.now() - time_since_published)
 
     if not preprints_with_pending_dois.exists():
@@ -54,15 +56,25 @@ def check_crossref_dois(dry_run=True):
         pending_dois = []
         for preprint in preprint_batch:
             prefix = preprint.provider.doi_prefix
-            pending_dois.append('doi:{}'.format(settings.DOI_FORMAT.format(prefix=prefix, guid=preprint._id)))
+            pending_dois.append(
+                'doi:{}'.format(
+                    settings.DOI_FORMAT.format(prefix=prefix, guid=preprint._id)
+                )
+            )
 
-        url = '{}works?filter={}'.format(settings.CROSSREF_JSON_API_URL, ','.join(pending_dois))
+        url = '{}works?filter={}'.format(
+            settings.CROSSREF_JSON_API_URL, ','.join(pending_dois)
+        )
 
         try:
             resp = requests.get(url)
             resp.raise_for_status()
         except requests.exceptions.HTTPError as exc:
-            logger.error('Could not contact crossref to check for DOIs, response returned with exception {}'.format(exc))
+            logger.error(
+                'Could not contact crossref to check for DOIs, response returned with exception {}'.format(
+                    exc
+                )
+            )
             raise exc
 
         preprints_response = resp.json()['message']['items']
@@ -78,12 +90,16 @@ def check_crossref_dois(dry_run=True):
 
 def report_stuck_dois(dry_run=True):
 
-    preprints_with_pending_dois = Preprint.objects.filter(preprint_doi_created__isnull=True,
-                                                          is_published=True,
-                                                          date_published__lt=timezone.now() - time_since_published)
+    preprints_with_pending_dois = Preprint.objects.filter(
+        preprint_doi_created__isnull=True,
+        is_published=True,
+        date_published__lt=timezone.now() - time_since_published,
+    )
 
     if preprints_with_pending_dois:
-        guids = ', '.join(preprints_with_pending_dois.values_list('guids___id', flat=True))
+        guids = ', '.join(
+            preprints_with_pending_dois.values_list('guids___id', flat=True)
+        )
         if not dry_run:
             mails.send_mail(
                 to_addr=settings.OSF_SUPPORT_EMAIL,
@@ -95,7 +111,11 @@ def report_stuck_dois(dry_run=True):
         else:
             logger.info('DRY RUN')
 
-        logger.info('There were {} stuck registrations for CrossRef, email sent to help desk'.format(preprints_with_pending_dois.count()))
+        logger.info(
+            'There were {} stuck registrations for CrossRef, email sent to help desk'.format(
+                preprints_with_pending_dois.count()
+            )
+        )
 
 
 @celery_app.task(name='management.commands.check_crossref_dois')
@@ -105,15 +125,12 @@ def main(dry_run=False):
 
 
 class Command(BaseCommand):
-    help = '''Checks if we've missed any Crossref DOI confirmation emails. '''
+    help = """Checks if we've missed any Crossref DOI confirmation emails. """
 
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
         parser.add_argument(
-            '--dry',
-            action='store_true',
-            dest='dry_run',
-            help='Dry run',
+            '--dry', action='store_true', dest='dry_run', help='Dry run',
         )
 
     # Management command handler

@@ -9,7 +9,11 @@ from framework.celery_tasks import handlers
 from framework.exceptions import PermissionsError
 from framework.sessions import set_session
 from website.project.model import has_anonymous_link
-from website.project.signals import contributor_added, contributor_removed, after_create_registration
+from website.project.signals import (
+    contributor_added,
+    contributor_removed,
+    after_create_registration,
+)
 from osf.exceptions import NodeStateError
 from osf.utils import permissions
 from website.util import api_url_for, web_url_for
@@ -34,7 +38,7 @@ from osf.models import (
     Registration,
     DraftRegistration,
     DraftRegistrationApproval,
-    CollectionSubmission
+    CollectionSubmission,
 )
 
 from addons.wiki.models import WikiPage, WikiVersion
@@ -71,25 +75,31 @@ from osf_tests.utils import capture_signals, assert_datetime_equal, mock_archive
 
 pytestmark = pytest.mark.django_db
 
+
 @pytest.fixture()
 def user():
     return UserFactory()
+
 
 @pytest.fixture()
 def node(user):
     return NodeFactory(creator=user)
 
+
 @pytest.fixture()
 def project(user):
     return ProjectFactory(creator=user)
+
 
 @pytest.fixture()
 def auth(user):
     return Auth(user)
 
+
 @pytest.fixture()
 def subject():
     return SubjectFactory()
+
 
 @pytest.fixture()
 def preprint(user):
@@ -97,7 +107,6 @@ def preprint(user):
 
 
 class TestParentNode:
-
     @pytest.fixture()
     def project(self, user):
         return ProjectFactory(creator=user)
@@ -225,10 +234,14 @@ class TestParentNode:
         assert 20 == Node.objects.get_children(root).count()
         pks = Node.objects.get_children(root).values_list('id', flat=True)
         assert 20 == len(pks)
-        assert set(pks) == set(Node.objects.exclude(id=root.id).values_list('id', flat=True))
+        assert set(pks) == set(
+            Node.objects.exclude(id=root.id).values_list('id', flat=True)
+        )
 
         assert greatgrandchild_1 in Node.objects.get_children(root).all()
-        assert greatgrandchild_1 not in Node.objects.get_children(root, active=True).all()
+        assert (
+            greatgrandchild_1 not in Node.objects.get_children(root, active=True).all()
+        )
 
         assert 21 == Node.objects.get_children(root, include_root=True).count()
         assert root in Node.objects.get_children(root, include_root=True)
@@ -365,7 +378,9 @@ class TestParentNode:
 
         draft_reg = DraftRegistrationFactory(branched_from=project)
         with disconnected_from_listeners(after_create_registration):
-            reg_root = project.register_node(get_default_metaschema(), auth, draft_reg, None)
+            reg_root = project.register_node(
+                get_default_metaschema(), auth, draft_reg, None
+            )
         reg_child = reg_root._nodes.first()
         reg_grandchild = reg_child._nodes.first()
 
@@ -380,7 +395,9 @@ class TestParentNode:
     def test_fork_has_correct_affiliations(self, user, auth, project_with_affiliations):
         fork = project_with_affiliations.fork_node(auth=auth)
         user_affiliations = user.affiliated_institutions.values_list('id', flat=True)
-        project_affiliations = project_with_affiliations.affiliated_institutions.values_list('id', flat=True)
+        project_affiliations = project_with_affiliations.affiliated_institutions.values_list(
+            'id', flat=True
+        )
         fork_affiliations = fork.affiliated_institutions.values_list('id', flat=True)
         assert set(project_affiliations) != set(user_affiliations)
         assert set(fork_affiliations) == set(user_affiliations)
@@ -411,11 +428,17 @@ class TestParentNode:
     def test_template_has_no_parent(self, template):
         assert template.parent_node is None
 
-    def test_template_has_correct_affiliations(self, user, auth, project_with_affiliations):
+    def test_template_has_correct_affiliations(
+        self, user, auth, project_with_affiliations
+    ):
         template = project_with_affiliations.use_as_template(auth=auth)
         user_affiliations = user.affiliated_institutions.values_list('id', flat=True)
-        project_affiliations = project_with_affiliations.affiliated_institutions.values_list('id', flat=True)
-        template_affiliations = template.affiliated_institutions.values_list('id', flat=True)
+        project_affiliations = project_with_affiliations.affiliated_institutions.values_list(
+            'id', flat=True
+        )
+        template_affiliations = template.affiliated_institutions.values_list(
+            'id', flat=True
+        )
         assert set(project_affiliations) != set(user_affiliations)
         assert set(template_affiliations) == set(user_affiliations)
 
@@ -440,7 +463,9 @@ class TestParentNode:
         assert template_child.root == template_root
         assert template_grandchild.root == template_root
 
-    def test_template_project_does_not_copy_deleted_components(self, project, child, deleted_child, template):
+    def test_template_project_does_not_copy_deleted_components(
+        self, project, child, deleted_child, template
+    ):
         """Regression test for https://openscience.atlassian.net/browse/OSF-5942. """
         new_nodes = [node.title for node in template.nodes]
         assert len(template.nodes) == 1
@@ -539,7 +564,9 @@ class TestRoot:
         # Create a rogue node that's not related at all
         NodeFactory()
 
-        family_ids = [project._id] + [r._id for r in project.get_descendants_recursive()]
+        family_ids = [project._id] + [
+            r._id for r in project.get_descendants_recursive()
+        ]
         family_nodes = Node.objects.filter(root=project)
         number_of_nodes = family_nodes.count()
 
@@ -570,7 +597,6 @@ class TestRoot:
 
 @pytest.mark.enable_implicit_clean
 class TestNodeMODMCompat:
-
     def test_basic_querying(self):
         node_1 = ProjectFactory(is_public=False)
         node_2 = ProjectFactory(is_public=True)
@@ -597,17 +623,20 @@ class TestNodeMODMCompat:
         node = NodeFactory.build(title=too_long)
         with pytest.raises(ValidationError) as excinfo:
             node.save()
-        assert excinfo.value.message_dict == {'title': ['Title cannot exceed 512 characters.']}
+        assert excinfo.value.message_dict == {
+            'title': ['Title cannot exceed 512 characters.']
+        }
 
     def test_querying_on_guid_id(self):
         node = NodeFactory()
         assert len(node._id) == 5
-        assert node in Node.objects.filter(guids___id=node._id, guids___id__isnull=False)
+        assert node in Node.objects.filter(
+            guids___id=node._id, guids___id__isnull=False
+        )
 
 
 # copied from tests/test_models.py
 class TestProject:
-
     @pytest.fixture()
     def project(self, user):
         return ProjectFactory(creator=user, description='foobar')
@@ -621,10 +650,7 @@ class TestProject:
         assert project._id in repr(project)
 
     def test_url(self, project):
-        assert (
-            project.url ==
-            '/{0}/'.format(project._primary_key)
-        )
+        assert project.url == '/{0}/'.format(project._primary_key)
 
     def test_api_url(self, project):
         api_url = project.api_url
@@ -632,10 +658,7 @@ class TestProject:
 
     def test_web_url_for(self, node, request_context):
         result = node.web_url_for('view_project')
-        assert result == web_url_for(
-            'view_project',
-            pid=node._id,
-        )
+        assert result == web_url_for('view_project', pid=node._id,)
 
     def test_web_url_for_absolute(self, node, request_context):
         result = node.web_url_for('view_project', _absolute=True)
@@ -643,17 +666,16 @@ class TestProject:
 
     def test_api_url_for(self, node, request_context):
         result = node.api_url_for('view_project')
-        assert result == api_url_for(
-            'view_project',
-            pid=node._id
-        )
+        assert result == api_url_for('view_project', pid=node._id)
 
     def test_api_url_for_absolute(self, node, request_context):
         result = node.api_url_for('view_project', _absolute=True)
         assert settings.DOMAIN in result
 
     def test_get_absolute_url(self, node):
-        assert node.get_absolute_url() == '{}v2/nodes/{}/'.format(settings.API_DOMAIN, node._id)
+        assert node.get_absolute_url() == '{}v2/nodes/{}/'.format(
+            settings.API_DOMAIN, node._id
+        )
 
     def test_parents(self):
         node = ProjectFactory()
@@ -672,19 +694,23 @@ class TestProject:
         assert node.category == 'hypothesis'
         assert bool(node.parents)
         assert node.logs.first().action == 'project_created'
-        assert set(node.get_addon_names()) == set([
-            addon_config.short_name
-            for addon_config in settings.ADDONS_AVAILABLE
-            if 'node' in addon_config.added_default
-        ])
+        assert set(node.get_addon_names()) == set(
+            [
+                addon_config.short_name
+                for addon_config in settings.ADDONS_AVAILABLE
+                if 'node' in addon_config.added_default
+            ]
+        )
         for addon_config in settings.ADDONS_AVAILABLE:
             if 'node' in addon_config.added_default:
                 assert addon_config.short_name in node.get_addon_names()
-                assert len([
-                    addon
-                    for addon in node.addons
-                    if addon.config.short_name == addon_config.short_name
-                ])
+                assert len(
+                    [
+                        addon
+                        for addon in node.addons
+                        if addon.config.short_name == addon_config.short_name
+                    ]
+                )
         mock_now = datetime.datetime(2017, 3, 16, 11, 00, tzinfo=pytz.utc)
         with mock.patch.object(timezone, 'now', return_value=mock_now):
             deleted_node = NodeFactory(is_deleted=True)
@@ -749,8 +775,8 @@ class TestProject:
         assert linked_node in project.nodes_active
         assert deleted_linked_node not in project.nodes_active
 
-class TestLogging:
 
+class TestLogging:
     def test_add_log(self, node, auth):
         node.add_log(NodeLog.PROJECT_CREATED, params={'node': node._id}, auth=auth)
         node.add_log(NodeLog.EMBARGO_INITIATED, params={'node': node._id}, auth=auth)
@@ -766,7 +792,6 @@ class TestLogging:
 
 
 class TestTagging:
-
     @pytest.fixture()
     def node(self):
         return ProjectFactory(is_public=True)
@@ -838,21 +863,18 @@ class TestTagging:
         node.add_system_tag('systag')
         assert 'systag' not in node.tags.values_list('name', flat=True)
 
-class TestSearch:
 
+class TestSearch:
     @mock.patch('website.search.search.update_node')
     def test_update_search(self, mock_update_node, node):
         node.update_search()
         assert mock_update_node.called
 
-class TestNodeCreation:
 
+class TestNodeCreation:
     def test_creator_is_added_as_contributor(self, fake):
         user = UserFactory()
-        node = Node(
-            title=fake.bs(),
-            creator=user
-        )
+        node = Node(title=fake.bs(), creator=user)
         node.save()
         assert node.is_contributor(user) is True
         contributor = Contributor.objects.get(user=user, node=node)
@@ -863,10 +885,7 @@ class TestNodeCreation:
 
     def test_project_created_log_is_added(self, fake):
         user = UserFactory()
-        node = Node(
-            title=fake.bs(),
-            creator=user
-        )
+        node = Node(title=fake.bs(), creator=user)
         node.save()
         assert node.logs.count() == 1
         first_log = node.logs.first()
@@ -874,6 +893,7 @@ class TestNodeCreation:
         params = first_log.params
         assert params['node'] == node._id
         assert_datetime_equal(first_log.date, node.created)
+
 
 # Copied from tests/test_models.py
 class TestContributorMethods:
@@ -912,26 +932,24 @@ class TestContributorMethods:
         node.add_contributors(
             [
                 {'user': user1, 'permissions': ADMIN, 'visible': True},
-                {'user': user2, 'permissions': WRITE, 'visible': False}
+                {'user': user2, 'permissions': WRITE, 'visible': False},
             ],
-            auth=auth
+            auth=auth,
         )
         last_log = node.logs.all().order_by('-date')[0]
-        assert (
-            last_log.params['contributors'] ==
-            [user1._id, user2._id]
-        )
+        assert last_log.params['contributors'] == [user1._id, user2._id]
         assert node.is_contributor(user1)
         assert node.is_contributor(user2)
         assert user1._id in node.visible_contributor_ids
         assert user2._id not in node.visible_contributor_ids
-        assert set(node.get_permissions(user1)) == set([permissions.READ, permissions.WRITE, permissions.ADMIN])
-        assert set(node.get_permissions(user2)) == set([permissions.READ, permissions.WRITE])
-        last_log = node.logs.all().order_by('-date')[0]
-        assert (
-            last_log.params['contributors'] ==
-            [user1._id, user2._id]
+        assert set(node.get_permissions(user1)) == set(
+            [permissions.READ, permissions.WRITE, permissions.ADMIN]
         )
+        assert set(node.get_permissions(user2)) == set(
+            [permissions.READ, permissions.WRITE]
+        )
+        last_log = node.logs.all().order_by('-date')[0]
+        assert last_log.params['contributors'] == [user1._id, user2._id]
 
     def test_add_contributor_unreg_user_without_unclaimed_records(self, user, node):
         unregistered_user = UnregUserFactory()
@@ -941,9 +959,11 @@ class TestContributorMethods:
 
         with pytest.raises(UserStateError) as excinfo:
             node.add_contributor(unregistered_user, auth=Auth(user))
-        assert str(excinfo.value) == 'This contributor cannot be added. ' \
-                                        'If the problem persists please report it to please report it to' \
-                                        ' <a href="mailto:support@osf.io">support@osf.io</a>.'
+        assert (
+            str(excinfo.value) == 'This contributor cannot be added. '
+            'If the problem persists please report it to please report it to'
+            ' <a href="mailto:support@osf.io">support@osf.io</a>.'
+        )
 
     def test_cant_add_creator_as_contributor_twice(self, node, user):
         node.add_contributor(contributor=user)
@@ -959,15 +979,13 @@ class TestContributorMethods:
         assert len(node.contributors) == 2
 
     def test_remove_unregistered_conributor_removes_unclaimed_record(self, node, auth):
-        new_user = node.add_unregistered_contributor(fullname='David Davidson',
-            email='david@davidson.com', auth=auth)
+        new_user = node.add_unregistered_contributor(
+            fullname='David Davidson', email='david@davidson.com', auth=auth
+        )
         node.save()
         assert node.is_contributor(new_user)  # sanity check
         assert node._primary_key in new_user.unclaimed_records
-        node.remove_contributor(
-            auth=auth,
-            contributor=new_user
-        )
+        node.remove_contributor(auth=auth, contributor=new_user)
         node.save()
         new_user.refresh_from_db()
         assert node._primary_key not in new_user.unclaimed_records
@@ -1029,7 +1047,10 @@ class TestContributorMethods:
         Contributor.objects.create(user=contrib, node=node, visible=True)
         node.set_visible(contrib, visible=False, auth=auth)
         node.save()
-        assert Contributor.objects.filter(user=contrib, node=node, visible=False).exists() is True
+        assert (
+            Contributor.objects.filter(user=contrib, node=node, visible=False).exists()
+            is True
+        )
 
         last_log = node.logs.all().order_by('-date')[0]
         assert last_log.user == auth.user
@@ -1040,7 +1061,10 @@ class TestContributorMethods:
         Contributor.objects.create(user=contrib, node=node, visible=False)
         node.set_visible(contrib, visible=True, auth=auth)
         node.save()
-        assert Contributor.objects.filter(user=contrib, node=node, visible=True).exists() is True
+        assert (
+            Contributor.objects.filter(user=contrib, node=node, visible=True).exists()
+            is True
+        )
 
         last_log = node.logs.all().order_by('-date')[0]
         assert last_log.user == auth.user
@@ -1145,9 +1169,9 @@ class TestContributorMethods:
         node.add_contributors(
             [
                 {'user': user1, 'permissions': permissions.WRITE, 'visible': True},
-                {'user': user2, 'permissions': permissions.WRITE, 'visible': True}
+                {'user': user2, 'permissions': permissions.WRITE, 'visible': True},
             ],
-            auth=auth
+            auth=auth,
         )
         assert user1 in node.contributors
         assert user2 in node.contributors
@@ -1180,10 +1204,7 @@ class TestContributorMethods:
         assert node.has_permission(contrib, permissions.WRITE) is False
 
         # test unclaimed_records is removed
-        assert (
-            node._id not in
-            contrib.unclaimed_records.keys()
-        )
+        assert node._id not in contrib.unclaimed_records.keys()
 
     def test_permission_override_on_readded_contributor(self, node, user):
 
@@ -1208,71 +1229,60 @@ class TestContributorMethods:
 
     def test_update_contributor(self, node, auth):
         new_contrib = AuthUserFactory()
-        node.add_contributor(new_contrib, permissions=DEFAULT_CONTRIBUTOR_PERMISSIONS, auth=auth)
+        node.add_contributor(
+            new_contrib, permissions=DEFAULT_CONTRIBUTOR_PERMISSIONS, auth=auth
+        )
 
-        assert set(node.get_permissions(new_contrib)) == set([permissions.READ, permissions.WRITE])
+        assert set(node.get_permissions(new_contrib)) == set(
+            [permissions.READ, permissions.WRITE]
+        )
 
         assert node.get_visible(new_contrib) is True
 
-        node.update_contributor(
-            new_contrib,
-            READ,
-            False,
-            auth=auth
-        )
+        node.update_contributor(new_contrib, READ, False, auth=auth)
         assert set(node.get_permissions(new_contrib)) == set([permissions.READ])
         assert node.get_visible(new_contrib) is False
 
     def test_update_contributor_non_admin_raises_error(self, node, auth):
         non_admin = AuthUserFactory()
         node.add_contributor(
-            non_admin,
-            permissions=DEFAULT_CONTRIBUTOR_PERMISSIONS,
-            auth=auth
+            non_admin, permissions=DEFAULT_CONTRIBUTOR_PERMISSIONS, auth=auth
         )
         with pytest.raises(PermissionsError):
-            node.update_contributor(
-                non_admin,
-                None,
-                False,
-                auth=Auth(non_admin)
-            )
+            node.update_contributor(non_admin, None, False, auth=Auth(non_admin))
 
     def test_update_contributor_only_admin_raises_error(self, node, auth):
         with pytest.raises(NodeStateError):
-            node.update_contributor(
-                auth.user,
-                WRITE,
-                True,
-                auth=auth
-            )
+            node.update_contributor(auth.user, WRITE, True, auth=auth)
 
     def test_update_contributor_non_contrib_raises_error(self, node, auth):
         non_contrib = AuthUserFactory()
         with pytest.raises(ValueError):
-            node.update_contributor(
-                non_contrib,
-                ADMIN,
-                True,
-                auth=auth
-            )
+            node.update_contributor(non_contrib, ADMIN, True, auth=auth)
 
 
 # Copied from tests/test_models.py
 @pytest.mark.enable_implicit_clean
 class TestNodeAddContributorRegisteredOrNot:
-
     def test_add_contributor_user_id(self, user, node):
         registered_user = UserFactory()
-        contributor_obj = node.add_contributor_registered_or_not(auth=Auth(user), user_id=registered_user._id, save=True)
+        contributor_obj = node.add_contributor_registered_or_not(
+            auth=Auth(user), user_id=registered_user._id, save=True
+        )
         contributor = contributor_obj.user
         assert contributor in node.contributors
         assert contributor.is_registered is True
 
-    def test_add_contributor_registered_or_not_unreg_user_without_unclaimed_records(self, user, node):
+    def test_add_contributor_registered_or_not_unreg_user_without_unclaimed_records(
+        self, user, node
+    ):
         unregistered_user = UnregUserFactory()
         unregistered_user.save()
-        contributor_obj = node.add_contributor_registered_or_not(auth=Auth(user), email=unregistered_user.email, full_name=unregistered_user.fullname)
+        contributor_obj = node.add_contributor_registered_or_not(
+            auth=Auth(user),
+            email=unregistered_user.email,
+            full_name=unregistered_user.fullname,
+        )
 
         contributor = contributor_obj.user
         assert contributor in node.contributors
@@ -1281,29 +1291,39 @@ class TestNodeAddContributorRegisteredOrNot:
 
     def test_add_contributor_user_id_already_contributor(self, user, node):
         with pytest.raises(ValidationError) as excinfo:
-            node.add_contributor_registered_or_not(auth=Auth(user), user_id=user._id, save=True)
+            node.add_contributor_registered_or_not(
+                auth=Auth(user), user_id=user._id, save=True
+            )
         assert 'is already a contributor' in str(excinfo.value)
 
     def test_add_contributor_invalid_user_id(self, user, node):
         with pytest.raises(ValueError) as excinfo:
-            node.add_contributor_registered_or_not(auth=Auth(user), user_id='abcde', save=True)
+            node.add_contributor_registered_or_not(
+                auth=Auth(user), user_id='abcde', save=True
+            )
         assert 'was not found' in str(excinfo.value)
 
     def test_add_contributor_fullname_email(self, user, node):
-        contributor_obj = node.add_contributor_registered_or_not(auth=Auth(user), full_name='Jane Doe', email='jane@doe.com')
+        contributor_obj = node.add_contributor_registered_or_not(
+            auth=Auth(user), full_name='Jane Doe', email='jane@doe.com'
+        )
         contributor = contributor_obj.user
         assert contributor in node.contributors
         assert contributor.is_registered is False
 
     def test_add_contributor_fullname(self, user, node):
-        contributor_obj = node.add_contributor_registered_or_not(auth=Auth(user), full_name='Jane Doe')
+        contributor_obj = node.add_contributor_registered_or_not(
+            auth=Auth(user), full_name='Jane Doe'
+        )
         contributor = contributor_obj.user
         assert contributor in node.contributors
         assert contributor.is_registered is False
 
     def test_add_contributor_fullname_email_already_exists(self, user, node):
         registered_user = UserFactory()
-        contributor_obj = node.add_contributor_registered_or_not(auth=Auth(user), full_name='F Mercury', email=registered_user.username)
+        contributor_obj = node.add_contributor_registered_or_not(
+            auth=Auth(user), full_name='F Mercury', email=registered_user.username
+        )
         contributor = contributor_obj.user
         assert contributor in node.contributors
         assert contributor.is_registered is True
@@ -1312,7 +1332,9 @@ class TestNodeAddContributorRegisteredOrNot:
         registered_user = UserFactory()
         secondary_email = 'secondary@test.test'
         Email.objects.create(address=secondary_email, user=registered_user)
-        contributor_obj = node.add_contributor_registered_or_not(auth=Auth(user), full_name='F Mercury', email=secondary_email)
+        contributor_obj = node.add_contributor_registered_or_not(
+            auth=Auth(user), full_name='F Mercury', email=secondary_email
+        )
         contributor = contributor_obj.user
         assert contributor == registered_user
         assert contributor in node.contributors
@@ -1321,7 +1343,11 @@ class TestNodeAddContributorRegisteredOrNot:
     def test_add_contributor_unregistered(self, user, node):
         unregistered_user = UnregUserFactory()
         unregistered_user.save()
-        contributor_obj = node.add_contributor_registered_or_not(auth=Auth(user), full_name=unregistered_user.fullname, email=unregistered_user.email)
+        contributor_obj = node.add_contributor_registered_or_not(
+            auth=Auth(user),
+            full_name=unregistered_user.fullname,
+            email=unregistered_user.email,
+        )
         contributor = contributor_obj.user
         assert contributor == unregistered_user
         assert contributor in node.contributors
@@ -1330,7 +1356,6 @@ class TestNodeAddContributorRegisteredOrNot:
 
 
 class TestContributorProperties:
-
     def test_parent_admin_contributors(self, user):
         project = ProjectFactory(creator=user)
         assert project.parent_admin_contributors.count() == 0
@@ -1353,28 +1378,58 @@ class TestContributorProperties:
         assert project.admin_contributor_or_group_member_ids == {user._id}
         child1 = ProjectFactory(parent=project)
         child2 = ProjectFactory(parent=child1)
-        assert child1.admin_contributor_or_group_member_ids == {project.creator._id, child1.creator._id}
-        assert child2.admin_contributor_or_group_member_ids == {project.creator._id, child1.creator._id, child2.creator._id}
+        assert child1.admin_contributor_or_group_member_ids == {
+            project.creator._id,
+            child1.creator._id,
+        }
+        assert child2.admin_contributor_or_group_member_ids == {
+            project.creator._id,
+            child1.creator._id,
+            child2.creator._id,
+        }
         admin = UserFactory()
         project.add_contributor(admin, auth=Auth(project.creator), permissions=ADMIN)
         project.set_permissions(project.creator, WRITE)
         project.save()
-        assert child1.admin_contributor_or_group_member_ids == {child1.creator._id, admin._id}
-        assert child2.admin_contributor_or_group_member_ids == {child2.creator._id, child1.creator._id, admin._id}
+        assert child1.admin_contributor_or_group_member_ids == {
+            child1.creator._id,
+            admin._id,
+        }
+        assert child2.admin_contributor_or_group_member_ids == {
+            child2.creator._id,
+            child1.creator._id,
+            admin._id,
+        }
 
         # OSFGroup added with write perms
         group_member = UserFactory()
         group = OSFGroupFactory(creator=group_member)
         project.add_osf_group(group, permissions.WRITE)
         project.save()
-        assert child1.admin_contributor_or_group_member_ids == {child1.creator._id, admin._id}
-        assert child2.admin_contributor_or_group_member_ids == {child2.creator._id, child1.creator._id, admin._id}
+        assert child1.admin_contributor_or_group_member_ids == {
+            child1.creator._id,
+            admin._id,
+        }
+        assert child2.admin_contributor_or_group_member_ids == {
+            child2.creator._id,
+            child1.creator._id,
+            admin._id,
+        }
 
         # OSFGroup updated to admin perms
         project.update_osf_group(group, permissions.ADMIN)
         project.save()
-        assert child1.admin_contributor_or_group_member_ids == {child1.creator._id, admin._id, group_member._id}
-        assert child2.admin_contributor_or_group_member_ids == {child2.creator._id, child1.creator._id, admin._id, group_member._id}
+        assert child1.admin_contributor_or_group_member_ids == {
+            child1.creator._id,
+            admin._id,
+            group_member._id,
+        }
+        assert child2.admin_contributor_or_group_member_ids == {
+            child2.creator._id,
+            child1.creator._id,
+            admin._id,
+            group_member._id,
+        }
 
 
 class TestContributorAddedSignal:
@@ -1385,13 +1440,13 @@ class TestContributorAddedSignal:
         return None
 
     @mock.patch('website.project.views.contributor.mails.send_mail')
-    def test_add_contributors_sends_contributor_added_signal(self, mock_send_mail, node, auth):
+    def test_add_contributors_sends_contributor_added_signal(
+        self, mock_send_mail, node, auth
+    ):
         user = UserFactory()
-        contributors = [{
-            'user': user,
-            'visible': True,
-            'permissions': permissions.WRITE
-        }]
+        contributors = [
+            {'user': user, 'visible': True, 'permissions': permissions.WRITE}
+        ]
         with capture_signals() as mock_signals:
             node.add_contributors(contributors=contributors, auth=auth)
             node.save()
@@ -1400,7 +1455,6 @@ class TestContributorAddedSignal:
 
 
 class TestContributorVisibility:
-
     @pytest.fixture()
     def user2(self):
         return UserFactory()
@@ -1409,7 +1463,7 @@ class TestContributorVisibility:
     def project(self, user, user2):
         p = ProjectFactory(creator=user)
         p.add_contributor(user2)
-        #p.save()
+        # p.save()
         return p
 
     def test_get_visible_true(self, project):
@@ -1444,16 +1498,13 @@ class TestContributorVisibility:
 
 @pytest.mark.enable_implicit_clean
 class TestPermissionMethods:
-
     @pytest.fixture()
     def project(self, user):
         return ProjectFactory(creator=user)
 
     def test_has_permission(self, node):
         user = UserFactory()
-        contributor = Contributor.objects.create(
-            node=node, user=user,
-        )
+        contributor = Contributor.objects.create(node=node, user=user,)
         node.add_permission(user, READ)
 
         assert node.has_permission(user, READ) is True
@@ -1473,9 +1524,7 @@ class TestPermissionMethods:
 
         unreg = UnregUserFactory()
         node.add_unregistered_contributor(
-            fullname='David Davidson',
-            email=unreg.username,
-            auth=Auth(node.creator)
+            fullname='David Davidson', email=unreg.username, auth=Auth(node.creator)
         )
         node.save()
         assert node.has_permission(unreg, permissions.WRITE) is True
@@ -1486,14 +1535,14 @@ class TestPermissionMethods:
 
     def test_get_permissions(self, node):
         user = UserFactory()
-        contributor = Contributor.objects.create(
-            node=node, user=user,
-        )
+        contributor = Contributor.objects.create(node=node, user=user,)
         node.add_permission(user, READ)
         assert set(node.get_permissions(user)) == set([permissions.READ])
 
         node.add_permission(user, WRITE)
-        assert set(node.get_permissions(user)) == set([permissions.READ, permissions.WRITE])
+        assert set(node.get_permissions(user)) == set(
+            [permissions.READ, permissions.WRITE]
+        )
         assert contributor.user in node.contributors
 
     def test_add_permission(self, node):
@@ -1542,7 +1591,7 @@ class TestPermissionMethods:
             fullname='David Davidson',
             email=unreg.username,
             permissions=ADMIN,
-            auth=Auth(user)
+            auth=Auth(user),
         )
         node.save()
 
@@ -1559,11 +1608,16 @@ class TestPermissionMethods:
         assert node.has_permission(high, permissions.WRITE) is True
         assert node.has_permission(high, permissions.ADMIN) is True
 
-    def test_set_permissions_raises_error_if_only_admins_permissions_are_reduced(self, node):
+    def test_set_permissions_raises_error_if_only_admins_permissions_are_reduced(
+        self, node
+    ):
         # creator is the only admin
         with pytest.raises(NodeStateError) as excinfo:
             node.set_permissions(node.creator, permissions=WRITE)
-        assert excinfo.value.args[0] == 'Must have at least one registered admin contributor'
+        assert (
+            excinfo.value.args[0]
+            == 'Must have at least one registered admin contributor'
+        )
 
         new_user = AuthUserFactory()
         osf_group = OSFGroupFactory(creator=new_user)
@@ -1598,8 +1652,7 @@ class TestPermissionMethods:
         contributor_auth = Auth(user=contributor)
         other_guy = UserFactory()
         other_guy_auth = Auth(user=other_guy)
-        node.add_contributor(
-            contributor=contributor, auth=auth)
+        node.add_contributor(contributor=contributor, auth=auth)
         node.save()
         assert bool(node.can_edit(contributor_auth)) is True
         assert bool(node.can_edit(other_guy_auth)) is False
@@ -1626,8 +1679,7 @@ class TestPermissionMethods:
         contributor_auth = Auth(user=contributor)
         other_guy = UserFactory()
         other_guy_auth = Auth(user=other_guy)
-        project.add_contributor(
-            contributor=contributor, auth=auth)
+        project.add_contributor(contributor=contributor, auth=auth)
         project.save()
         # Only creator and contributor can view
         assert project.can_view(auth)
@@ -1646,11 +1698,7 @@ class TestPermissionMethods:
 
     def test_is_admin_parent_grandparent_admin(self, project):
         user = UserFactory()
-        parent_node = NodeFactory(
-            parent=project,
-            category='project',
-            creator=user
-        )
+        parent_node = NodeFactory(parent=project, category='project', creator=user)
         child_node = NodeFactory(parent=parent_node, creator=user)
         assert child_node.is_admin_parent(project.creator)
         assert parent_node.is_admin_parent(project.creator)
@@ -1670,15 +1718,8 @@ class TestPermissionMethods:
 
     def test_has_permission_read_grandparent_admin(self, project):
         user = UserFactory()
-        parent_node = NodeFactory(
-            parent=project,
-            category='project',
-            creator=user
-        )
-        child_node = NodeFactory(
-            parent=parent_node,
-            creator=user
-        )
+        parent_node = NodeFactory(parent=project, category='project', creator=user)
+        child_node = NodeFactory(parent=parent_node, creator=user)
         assert child_node.has_permission(project.creator, READ)
         assert child_node.has_permission(project.creator, ADMIN) is False
         assert parent_node.has_permission(project.creator, READ)
@@ -1692,15 +1733,8 @@ class TestPermissionMethods:
 
     def test_can_view_grandparent_admin(self, project):
         user = UserFactory()
-        parent_node = NodeFactory(
-            parent=project,
-            creator=user,
-            category='project'
-        )
-        child_node = NodeFactory(
-            parent=parent_node,
-            creator=user
-        )
+        parent_node = NodeFactory(parent=project, creator=user, category='project')
+        child_node = NodeFactory(parent=parent_node, creator=user)
         assert parent_node.can_view(Auth(user=project.creator))
         assert parent_node.can_edit(Auth(user=project.creator)) is False
         assert child_node.can_view(Auth(user=project.creator)) is True
@@ -1733,8 +1767,7 @@ class TestPermissionMethods:
         contributor_auth = Auth(user=contributor)
         other_guy = UserFactory()
         other_guy_auth = Auth(user=other_guy)
-        project.add_contributor(
-            contributor=contributor, auth=auth)
+        project.add_contributor(contributor=contributor, auth=auth)
         # Change project to public
         project.set_privacy('public')
         project.save()
@@ -1796,29 +1829,31 @@ class TestPermissionMethods:
     def test_is_contributor_unregistered(self, project, auth):
         unreg = UnregUserFactory()
         project.add_unregistered_contributor(
-            fullname='David Davidson',
-            email=unreg.username,
-            auth=auth
+            fullname='David Davidson', email=unreg.username, auth=auth
         )
         project.save()
         assert project.is_contributor(unreg) is True
+
 
 # Copied from tests/test_models
 # Permissions are now on the Contributor model, and are well-defined (i.e. not 'dance')
 # Consider removing this class
 @pytest.mark.skip
 class TestPermissions:
-
     @pytest.fixture()
     def project(self):
         return ProjectFactory()
 
     def test_default_creator_permissions(self, project):
-        assert set(permissions.CREATOR_PERMISSIONS) == set(project.permissions[project.creator._id])
+        assert set(permissions.CREATOR_PERMISSIONS) == set(
+            project.permissions[project.creator._id]
+        )
 
     def test_default_contributor_permissions(self, project):
         user = UserFactory()
-        project.add_contributor(user, permissions=permissions.READ, auth=Auth(user=project.creator))
+        project.add_contributor(
+            user, permissions=permissions.READ, auth=Auth(user=project.creator)
+        )
         project.save()
         assert set([permissions.READ]) == set(self.project.get_permissions(user))
 
@@ -1859,7 +1894,6 @@ class TestPermissions:
 
 
 class TestNodeSubjects:
-
     @pytest.fixture()
     def subject(self):
         return SubjectFactory()
@@ -1867,7 +1901,9 @@ class TestNodeSubjects:
     @pytest.fixture()
     def write_contrib(self, project):
         write_contrib = AuthUserFactory()
-        project.add_contributor(write_contrib, auth=Auth(project.creator), permissions=WRITE)
+        project.add_contributor(
+            write_contrib, auth=Auth(project.creator), permissions=WRITE
+        )
         project.save()
         return write_contrib
 
@@ -1888,11 +1924,12 @@ class TestNodeSubjects:
 
 
 class TestRegisterNode:
-
     def test_register_node_creates_new_registration(self, node, auth):
         with disconnected_from_listeners(after_create_registration):
             draft_reg = DraftRegistrationFactory(branched_from=node)
-            registration = node.register_node(get_default_metaschema(), auth, draft_reg, None)
+            registration = node.register_node(
+                get_default_metaschema(), auth, draft_reg, None
+            )
             assert type(registration) is Registration
             assert node._id != registration._id
 
@@ -1903,7 +1940,7 @@ class TestRegisterNode:
             node.register_node(
                 schema=None,
                 auth=auth,
-                draft_registration=DraftRegistrationFactory(branched_from=node)
+                draft_registration=DraftRegistrationFactory(branched_from=node),
             )
         assert str(err.value) == 'Cannot register deleted node.'
 
@@ -1915,7 +1952,9 @@ class TestRegisterNode:
         node.set_subjects([[subject._id]], auth=Auth(user))
         node.save()
         draft_reg = DraftRegistrationFactory(branched_from=node)
-        registration = node.register_node(get_default_metaschema(), Auth(user), draft_reg, None)
+        registration = node.register_node(
+            get_default_metaschema(), Auth(user), draft_reg, None
+        )
         assert registration.subjects.filter(id=subject.id).exists()
 
     @mock.patch('website.project.signals.after_create_registration')
@@ -1931,7 +1970,9 @@ class TestRegisterNode:
         assert node.has_permission(group_mem, permissions.READ) is True
 
         draft_reg = DraftRegistrationFactory(branched_from=node)
-        registration = node.register_node(get_default_metaschema(), Auth(user), draft_reg, None)
+        registration = node.register_node(
+            get_default_metaschema(), Auth(user), draft_reg, None
+        )
 
         assert registration.has_permission(user, permissions.ADMIN) is True
         assert registration.has_permission(group_mem, permissions.READ) is False
@@ -1943,7 +1984,9 @@ class TestRegisterNode:
         node.is_public = True
         node.save()
         draft_reg = DraftRegistrationFactory(branched_from=node)
-        registration = node.register_node(get_default_metaschema(), Auth(user), draft_reg, None)
+        registration = node.register_node(
+            get_default_metaschema(), Auth(user), draft_reg, None
+        )
         assert registration.is_public is False
 
     @mock.patch('website.project.signals.after_create_registration')
@@ -1959,28 +2002,38 @@ class TestRegisterNode:
         childchild.is_public = True
         childchild.save()
         draft_reg = DraftRegistrationFactory(branched_from=node)
-        registration = node.register_node(get_default_metaschema(), Auth(user), draft_reg, None)
+        registration = node.register_node(
+            get_default_metaschema(), Auth(user), draft_reg, None
+        )
         for node in registration.node_and_primary_descendants():
             assert node.is_public is False
 
     @mock.patch('website.project.signals.after_create_registration')
-    def test_register_node_propagates_schema_and_data_to_children(self, mock_signal, user, auth):
+    def test_register_node_propagates_schema_and_data_to_children(
+        self, mock_signal, user, auth
+    ):
         root = ProjectFactory(creator=user)
         c1 = ProjectFactory(creator=user, parent=root)
         ProjectFactory(creator=user, parent=c1)
 
-        meta_schema = RegistrationSchema.objects.get(name='Open-Ended Registration', schema_version=2)
+        meta_schema = RegistrationSchema.objects.get(
+            name='Open-Ended Registration', schema_version=2
+        )
 
         draft_registration = DraftRegistrationFactory(branched_from=root)
-        data = {'summary': {'extra': [], 'value': 'This is a summary of my registration...', 'comments': []}}
+        data = {
+            'summary': {
+                'extra': [],
+                'value': 'This is a summary of my registration...',
+                'comments': [],
+            }
+        }
         expected_flat_data = {'summary': 'This is a summary of my registration...'}
 
         draft_registration.registration_metadata = data
         draft_registration.registration_responses = expected_flat_data
         reg = root.register_node(
-            schema=meta_schema,
-            auth=auth,
-            draft_registration=draft_registration,
+            schema=meta_schema, auth=auth, draft_registration=draft_registration,
         )
         r1 = reg.nodes[0]
         r1a = r1.nodes[0]
@@ -1989,7 +2042,9 @@ class TestRegisterNode:
             assert r.registration_responses == expected_flat_data
             assert r.registered_schema.first() == meta_schema
 
-    def test_register_root_node_prioritizes_draft_registration_editable_fields(self, node, auth):
+    def test_register_root_node_prioritizes_draft_registration_editable_fields(
+        self, node, auth
+    ):
         node_title = node.title
         node.description = 'parent description'
         node.category = 'project'
@@ -2008,13 +2063,16 @@ class TestRegisterNode:
             draft_reg.category = 'procedure'
             draft_reg.add_tag('draft tag', Auth(draft_reg.creator))
             draft_reg.save()
-            registration = node.register_node(get_default_metaschema(), auth, draft_reg, None)
+            registration = node.register_node(
+                get_default_metaschema(), auth, draft_reg, None
+            )
             # Draft registration information copied to the draft
             assert registration.title == 'The Giraffe'
             assert registration.description == draft_reg.description
             assert registration.category == draft_reg.category
             assert list(registration.tags.values_list('name', flat=True)) == list(
-                draft_reg.tags.values_list('name', flat=True))
+                draft_reg.tags.values_list('name', flat=True)
+            )
             assert registration.title != node_title
             # Component registration editable fields pulled from component
             # not the draft registration
@@ -2023,7 +2081,8 @@ class TestRegisterNode:
             assert reg_child.description == child.description
             assert reg_child.category == child.category
             assert list(reg_child.tags.values_list('name', flat=True)) == list(
-                child.tags.values_list('name', flat=True))
+                child.tags.values_list('name', flat=True)
+            )
 
             # Assert draft fields not copied back to the node
             node.reload()
@@ -2036,7 +2095,9 @@ class TestRegisterNode:
             draft_reg = DraftRegistrationFactory(branched_from=child)
             draft_reg.title = 'The Elephant'
             draft_reg.save()
-            registration = child.register_node(get_default_metaschema(), auth, draft_reg, None)
+            registration = child.register_node(
+                get_default_metaschema(), auth, draft_reg, None
+            )
             # Draft registration title copied to the registration
             assert registration.title == 'The Elephant'
 
@@ -2047,7 +2108,9 @@ class TestRegisterNode:
         root.add_contributor(bib_contrib, auth=Auth(user))
         non_bib_contrib = UserFactory()
         root.add_contributor(non_bib_contrib, visible=False, auth=Auth(user))
-        schema = RegistrationSchema.objects.get(name='Prereg Challenge', schema_version=2)
+        schema = RegistrationSchema.objects.get(
+            name='Prereg Challenge', schema_version=2
+        )
 
         draft_reg = DraftRegistrationFactory(branched_from=root)
 
@@ -2055,17 +2118,13 @@ class TestRegisterNode:
             'q2': {
                 'comments': [],
                 'value': 'Dawn Pattison, James Brown, Carrie Skinner',
-                'extra': []
+                'extra': [],
             },
-            'q3': {
-                'comments': [],
-                'value': 'research questions',
-                'extra': []
-            }
+            'q3': {'comments': [], 'value': 'research questions', 'extra': []},
         }
         flat_data = {
             'q2': 'Dawn Pattison, James Brown, Carrie Skinner',
-            'q3': 'research questions'
+            'q3': 'research questions',
         }
 
         # Contains inaccurate data - this data needs to match the contributors
@@ -2074,50 +2133,54 @@ class TestRegisterNode:
         draft_reg.save()
 
         registration = root.register_node(
-            schema=schema,
-            auth=auth,
-            draft_registration=draft_reg
+            schema=schema, auth=auth, draft_registration=draft_reg
         )
 
         # Author questions are overridden with bibliographic contributors upon registration,
         # so there aren't discrepancies
 
         # assert that other registration_metadata not overridden
-        assert registration.registered_meta[registration.registration_schema._id]['q3']['value'] == 'research questions'
+        assert (
+            registration.registered_meta[registration.registration_schema._id]['q3'][
+                'value'
+            ]
+            == 'research questions'
+        )
         assert registration.registration_responses['q3'] == 'research questions'
 
 
 # Copied from tests/test_models.py
 @pytest.mark.enable_implicit_clean
 class TestAddUnregisteredContributor:
-
     def test_add_unregistered_contributor(self, node, user, auth):
         node.add_unregistered_contributor(
-            email='foo@bar.com',
-            fullname='Weezy F. Baby',
-            auth=auth
+            email='foo@bar.com', fullname='Weezy F. Baby', auth=auth
         )
         node.save()
-        latest_contributor = Contributor.objects.get(node=node, user__username='foo@bar.com').user
+        latest_contributor = Contributor.objects.get(
+            node=node, user__username='foo@bar.com'
+        ).user
         assert latest_contributor.username == 'foo@bar.com'
         assert latest_contributor.fullname == 'Weezy F. Baby'
         assert bool(latest_contributor.is_registered) is False
 
         # A log event was added
         assert node.logs.first().action == 'contributor_added'
-        assert node._id in latest_contributor.unclaimed_records, 'unclaimed record was added'
+        assert (
+            node._id in latest_contributor.unclaimed_records
+        ), 'unclaimed record was added'
         unclaimed_data = latest_contributor.get_unclaimed_record(node._primary_key)
         assert unclaimed_data['referrer_id'] == user._primary_key
         assert bool(node.is_contributor(latest_contributor)) is True
         assert unclaimed_data['email'] == 'foo@bar.com'
 
-    def test_add_unregistered_adds_new_unclaimed_record_if_user_already_in_db(self, fake, node, auth):
+    def test_add_unregistered_adds_new_unclaimed_record_if_user_already_in_db(
+        self, fake, node, auth
+    ):
         user = UnregUserFactory()
         given_name = fake.name()
         new_user = node.add_unregistered_contributor(
-            email=user.username,
-            fullname=given_name,
-            auth=auth
+            email=user.username, fullname=given_name, auth=auth
         )
         node.save()
         # new unclaimed record was added
@@ -2129,29 +2192,28 @@ class TestAddUnregisteredContributor:
         user = UserFactory(is_registered=True)  # A registered user
         with pytest.raises(ValidationError):
             node.add_unregistered_contributor(
-                email=user.username,
-                fullname=user.fullname,
-                auth=auth
+                email=user.username, fullname=user.fullname, auth=auth
             )
 
     def test_add_unregistered_contributor_already_group_member(self, node, user, auth):
         given_name = 'Grapes McGee'
         username = 'fake@cos.io'
         group = OSFGroupFactory(creator=user)
-        unreg_user = group.add_unregistered_member(given_name, username, auth=Auth(user))
+        unreg_user = group.add_unregistered_member(
+            given_name, username, auth=Auth(user)
+        )
         assert unreg_user.get_unclaimed_record(group._id)['email'] == username
 
         node.add_osf_group(group, permissions.ADMIN)
 
         node.add_unregistered_contributor(
-            email=username,
-            fullname=given_name,
-            auth=auth
+            email=username, fullname=given_name, auth=auth
         )
         node.save
         unreg_user.reload()
         unclaimed_data = unreg_user.get_unclaimed_record(node._primary_key)
         assert unclaimed_data['email'] == username
+
 
 def test_find_by_institutions():
     inst1, inst2 = InstitutionFactory(), InstitutionFactory()
@@ -2189,6 +2251,7 @@ def test_can_comment():
     private_node.add_osf_group(group, permissions.READ)
     assert private_node.can_comment(Auth(group_mem)) is True
 
+
 def test_parent_kwarg():
     parent = NodeFactory()
     child = NodeFactory(parent=parent)
@@ -2197,7 +2260,6 @@ def test_parent_kwarg():
 
 
 class TestSetPrivacy:
-
     def test_set_privacy_checks_admin_permissions(self, user):
         non_contrib = UserFactory()
         project = ProjectFactory(creator=user, is_public=False)
@@ -2258,11 +2320,12 @@ class TestSetPrivacy:
         node.set_privacy('public', auth=auth, meeting_creation=True)
         assert bool(mock_queue.called) is False
 
-    def test_set_privacy_can_not_cancel_pending_embargo_for_registration(self, node, user, auth):
+    def test_set_privacy_can_not_cancel_pending_embargo_for_registration(
+        self, node, user, auth
+    ):
         registration = RegistrationFactory(project=node)
         registration.embargo_registration(
-            user,
-            timezone.now() + datetime.timedelta(days=10)
+            user, timezone.now() + datetime.timedelta(days=10)
         )
         assert bool(registration.is_pending_embargo) is True
 
@@ -2270,26 +2333,39 @@ class TestSetPrivacy:
             registration.set_privacy('public', auth=auth)
         assert bool(registration.is_public) is False
 
-    def test_set_privacy_requests_embargo_termination_on_embargoed_registration(self, node, user, auth):
+    def test_set_privacy_requests_embargo_termination_on_embargoed_registration(
+        self, node, user, auth
+    ):
         for i in range(3):
             c = UserFactory()
             node.add_contributor(c, ADMIN)
         registration = RegistrationFactory(project=node)
         registration.embargo_registration(
-            user,
-            timezone.now() + datetime.timedelta(days=10)
+            user, timezone.now() + datetime.timedelta(days=10)
         )
-        assert len([a for a in registration.get_admin_contributors_recursive(unique_users=True)]) == 4
+        assert (
+            len(
+                [
+                    a
+                    for a in registration.get_admin_contributors_recursive(
+                        unique_users=True
+                    )
+                ]
+            )
+            == 4
+        )
         embargo = registration.embargo
         embargo.state = Sanction.APPROVED
         embargo.save()
-        with mock.patch('osf.models.Registration.request_embargo_termination') as mock_request_embargo_termination:
+        with mock.patch(
+            'osf.models.Registration.request_embargo_termination'
+        ) as mock_request_embargo_termination:
             registration.set_privacy('public', auth=auth)
             assert mock_request_embargo_termination.call_count == 1
 
+
 # copied from tests/test_models.py
 class TestNodeSpam:
-
     @pytest.fixture()
     def project(self):
         return ProjectFactory(is_public=True)
@@ -2304,23 +2380,41 @@ class TestNodeSpam:
 
     def test_check_spam_disabled_by_default(self, project, user):
         # SPAM_CHECK_ENABLED is False by default
-        with mock.patch('osf.models.node.Node._get_spam_content', mock.Mock(return_value='some content!')):
-            with mock.patch('osf.models.node.Node.do_check_spam', mock.Mock(side_effect=Exception('should not get here'))):
+        with mock.patch(
+            'osf.models.node.Node._get_spam_content',
+            mock.Mock(return_value='some content!'),
+        ):
+            with mock.patch(
+                'osf.models.node.Node.do_check_spam',
+                mock.Mock(side_effect=Exception('should not get here')),
+            ):
                 project.set_privacy('public')
                 assert project.check_spam(user, None, None) is False
 
     @mock.patch.object(settings, 'SPAM_CHECK_ENABLED', True)
     def test_check_spam_only_public_node_by_default(self, project, user):
         # SPAM_CHECK_PUBLIC_ONLY is True by default
-        with mock.patch('osf.models.node.Node._get_spam_content', mock.Mock(return_value='some content!')):
-            with mock.patch('osf.models.node.Node.do_check_spam', mock.Mock(side_effect=Exception('should not get here'))):
+        with mock.patch(
+            'osf.models.node.Node._get_spam_content',
+            mock.Mock(return_value='some content!'),
+        ):
+            with mock.patch(
+                'osf.models.node.Node.do_check_spam',
+                mock.Mock(side_effect=Exception('should not get here')),
+            ):
                 project.set_privacy('private')
                 assert project.check_spam(user, None, None) is False
 
     @mock.patch.object(settings, 'SPAM_CHECK_ENABLED', True)
     def test_check_spam_skips_ham_user(self, project, user):
-        with mock.patch('osf.models.AbstractNode._get_spam_content', mock.Mock(return_value='some content!')):
-            with mock.patch('osf.models.AbstractNode.do_check_spam', mock.Mock(side_effect=Exception('should not get here'))):
+        with mock.patch(
+            'osf.models.AbstractNode._get_spam_content',
+            mock.Mock(return_value='some content!'),
+        ):
+            with mock.patch(
+                'osf.models.AbstractNode.do_check_spam',
+                mock.Mock(side_effect=Exception('should not get here')),
+            ):
                 user.confirm_ham()
                 project.set_privacy('public')
                 assert project.check_spam(user, None, None) is False
@@ -2330,27 +2424,43 @@ class TestNodeSpam:
     def test_check_spam_on_private_node(self, project, user):
         project.is_public = False
         project.save()
-        with mock.patch('osf.models.node.Node._get_spam_content', mock.Mock(return_value='some content!')):
-            with mock.patch('osf.models.node.Node.do_check_spam', mock.Mock(return_value=True)):
+        with mock.patch(
+            'osf.models.node.Node._get_spam_content',
+            mock.Mock(return_value='some content!'),
+        ):
+            with mock.patch(
+                'osf.models.node.Node.do_check_spam', mock.Mock(return_value=True)
+            ):
                 project.set_privacy('private')
                 assert project.check_spam(user, None, None) is True
 
     @mock.patch('website.mails.send_mail')
     @mock.patch.object(settings, 'SPAM_CHECK_ENABLED', True)
     @mock.patch.object(settings, 'SPAM_ACCOUNT_SUSPENSION_ENABLED', True)
-    def test_check_spam_on_private_node_bans_new_spam_user(self, mock_send_mail, project, user):
+    def test_check_spam_on_private_node_bans_new_spam_user(
+        self, mock_send_mail, project, user
+    ):
         project.is_public = False
         project.save()
-        with mock.patch('osf.models.AbstractNode._get_spam_content', mock.Mock(return_value='some content!')):
-            with mock.patch('osf.models.AbstractNode.do_check_spam', mock.Mock(return_value=True)):
+        with mock.patch(
+            'osf.models.AbstractNode._get_spam_content',
+            mock.Mock(return_value='some content!'),
+        ):
+            with mock.patch(
+                'osf.models.AbstractNode.do_check_spam', mock.Mock(return_value=True)
+            ):
                 user.date_confirmed = timezone.now()
                 project.set_privacy('public')
                 user2 = UserFactory()
                 # project w/ one contributor
-                project2 = ProjectFactory(creator=user, description='foobar2', is_public=True)
+                project2 = ProjectFactory(
+                    creator=user, description='foobar2', is_public=True
+                )
                 project2.save()
                 # project with more than one contributor
-                project3 = ProjectFactory(creator=user, description='foobar3', is_public=True)
+                project3 = ProjectFactory(
+                    creator=user, description='foobar3', is_public=True
+                )
                 project3.add_contributor(user2)
                 project3.save()
 
@@ -2366,12 +2476,21 @@ class TestNodeSpam:
     @mock.patch('website.mails.send_mail')
     @mock.patch.object(settings, 'SPAM_CHECK_ENABLED', True)
     @mock.patch.object(settings, 'SPAM_ACCOUNT_SUSPENSION_ENABLED', True)
-    def test_check_spam_on_private_node_does_not_ban_existing_user(self, mock_send_mail, project, user):
+    def test_check_spam_on_private_node_does_not_ban_existing_user(
+        self, mock_send_mail, project, user
+    ):
         project.is_public = False
         project.save()
-        with mock.patch('osf.models.AbstractNode._get_spam_content', mock.Mock(return_value='some content!')):
-            with mock.patch('osf.models.AbstractNode.do_check_spam', mock.Mock(return_value=True)):
-                project.creator.date_confirmed = timezone.now() - datetime.timedelta(days=9001)
+        with mock.patch(
+            'osf.models.AbstractNode._get_spam_content',
+            mock.Mock(return_value='some content!'),
+        ):
+            with mock.patch(
+                'osf.models.AbstractNode.do_check_spam', mock.Mock(return_value=True)
+            ):
+                project.creator.date_confirmed = timezone.now() - datetime.timedelta(
+                    days=9001
+                )
                 project.set_privacy('public')
                 assert project.check_spam(user, None, None) is True
                 assert project.is_public is True
@@ -2471,10 +2590,7 @@ class TestPrivateLinks:
         schema = RegistrationSchema.objects.first()
         data = {'some': 'data'}
         draft = DraftRegistration.create_from_node(
-            node=proj,
-            user=user,
-            schema=schema,
-            data=data,
+            node=proj, user=user, schema=schema, data=data,
         )
         assert user == draft.initiator
         assert schema == draft.registration_schema
@@ -2484,21 +2600,24 @@ class TestPrivateLinks:
 
 # copied from tests/test_models.py
 class TestManageContributors:
-
     def test_contributor_manage_visibility(self, node, user, auth):
         reg_user1 = UserFactory()
-        #This makes sure manage_contributors uses set_visible so visibility for contributors is added before visibility
-        #for other contributors is removed ensuring there is always at least one visible contributor
+        # This makes sure manage_contributors uses set_visible so visibility for contributors is added before visibility
+        # for other contributors is removed ensuring there is always at least one visible contributor
         node.add_contributor(contributor=user, permissions=ADMIN, auth=auth)
         node.add_contributor(contributor=reg_user1, permissions=ADMIN, auth=auth)
 
         node.manage_contributors(
             user_dicts=[
                 {'id': user._id, 'permission': permissions.ADMIN, 'visible': True},
-                {'id': reg_user1._id, 'permission': permissions.ADMIN, 'visible': False},
+                {
+                    'id': reg_user1._id,
+                    'permission': permissions.ADMIN,
+                    'visible': False,
+                },
             ],
             auth=auth,
-            save=True
+            save=True,
         )
         node.manage_contributors(
             user_dicts=[
@@ -2506,7 +2625,7 @@ class TestManageContributors:
                 {'id': reg_user1._id, 'permission': permissions.ADMIN, 'visible': True},
             ],
             auth=auth,
-            save=True
+            save=True,
         )
 
         assert len(node.visible_contributor_ids) == 1
@@ -2531,13 +2650,14 @@ class TestManageContributors:
         node.save()
         with pytest.raises(NodeStateError) as excinfo:
             node.manage_contributors(
-                user_dicts=[{'id': user2._id,
-                             'permission': WRITE,
-                             'visible': True}],
+                user_dicts=[{'id': user2._id, 'permission': WRITE, 'visible': True}],
                 auth=auth,
-                save=True
+                save=True,
             )
-        assert excinfo.value.args[0] == 'Must have at least one registered admin contributor'
+        assert (
+            excinfo.value.args[0]
+            == 'Must have at least one registered admin contributor'
+        )
 
     def test_manage_contributors_reordering(self, node, user, auth):
         user2, user3 = UserFactory(), UserFactory()
@@ -2547,24 +2667,12 @@ class TestManageContributors:
         assert list(node.contributors.all()) == [user, user2, user3]
         node.manage_contributors(
             user_dicts=[
-                {
-                    'id': user2._id,
-                    'permission': WRITE,
-                    'visible': True,
-                },
-                {
-                    'id': user3._id,
-                    'permission': WRITE,
-                    'visible': True,
-                },
-                {
-                    'id': user._id,
-                    'permission': ADMIN,
-                    'visible': True,
-                },
+                {'id': user2._id, 'permission': WRITE, 'visible': True,},
+                {'id': user3._id, 'permission': WRITE, 'visible': True,},
+                {'id': user._id, 'permission': ADMIN, 'visible': True,},
             ],
             auth=auth,
-            save=True
+            save=True,
         )
         assert list(node.contributors.all()) == [user2, user3, user]
 
@@ -2574,19 +2682,11 @@ class TestManageContributors:
         node.save()
         node.manage_contributors(
             user_dicts=[
-                {
-                    'id': user2._id,
-                    'permission': WRITE,
-                    'visible': True,
-                },
-                {
-                    'id': user._id,
-                    'permission': ADMIN,
-                    'visible': True,
-                },
+                {'id': user2._id, 'permission': WRITE, 'visible': True,},
+                {'id': user._id, 'permission': ADMIN, 'visible': True,},
             ],
             auth=auth,
-            save=True
+            save=True,
         )
         latest_log = node.logs.latest()
         assert latest_log.action == NodeLog.CONTRIB_REORDERED
@@ -2600,19 +2700,11 @@ class TestManageContributors:
         node.save()
         node.manage_contributors(
             user_dicts=[
-                {
-                    'id': user._id,
-                    'permission': ADMIN,
-                    'visible': True,
-                },
-                {
-                    'id': user2._id,
-                    'permission': READ,
-                    'visible': True,
-                },
+                {'id': user._id, 'permission': ADMIN, 'visible': True,},
+                {'id': user2._id, 'permission': READ, 'visible': True,},
             ],
             auth=auth,
-            save=True
+            save=True,
         )
         latest_log = node.logs.latest()
         assert latest_log.action == NodeLog.PERMISSIONS_UPDATED
@@ -2624,13 +2716,17 @@ class TestManageContributors:
         user = UserFactory()
         users = [
             {'id': user._id, 'permission': READ, 'visible': True},
-            {'id': node.creator._id, 'permission': [READ, WRITE, ADMIN], 'visible': True},
+            {
+                'id': node.creator._id,
+                'permission': [READ, WRITE, ADMIN],
+                'visible': True,
+            },
         ]
         with pytest.raises(ValueError) as excinfo:
-            node.manage_contributors(
-                users, auth=auth, save=True
-            )
-        assert excinfo.value.args[0] == 'User {0} not in contributors'.format(user.fullname)
+            node.manage_contributors(users, auth=auth, save=True)
+        assert excinfo.value.args[0] == 'User {0} not in contributors'.format(
+            user.fullname
+        )
 
     def test_manage_contributors_no_contributors(self, node, auth):
         with pytest.raises(NodeStateError):
@@ -2640,11 +2736,7 @@ class TestManageContributors:
 
     def test_manage_contributors_no_admins(self, node, auth):
         user = UserFactory()
-        node.add_contributor(
-            user,
-            permissions=ADMIN,
-            save=True
-        )
+        node.add_contributor(user, permissions=ADMIN, save=True)
         users = [
             {'id': node.creator._id, 'permission': permissions.READ, 'visible': True},
             {'id': user._id, 'permission': permissions.READ, 'visible': True},
@@ -2661,7 +2753,7 @@ class TestManageContributors:
             unregistered.email,
             auth=Auth(node.creator),
             permissions=ADMIN,
-            existing_user=unregistered
+            existing_user=unregistered,
         )
         users = [
             {'id': node.creator._id, 'permission': READ, 'visible': True},
@@ -2692,9 +2784,11 @@ class TestManageContributors:
         nonactive_admin.is_disabled = True
         nonactive_admin.save()
 
-        result = list(project.get_admin_contributors([
-            read, write, admin, noncontrib, nonactive_admin, group_member
-        ]))
+        result = list(
+            project.get_admin_contributors(
+                [read, write, admin, noncontrib, nonactive_admin, group_member]
+            )
+        )
 
         assert admin in result
         assert read not in result
@@ -2703,9 +2797,9 @@ class TestManageContributors:
         assert nonactive_admin not in result
         assert group_member not in result
 
+
 # copied from tests/test_models.py
 class TestNodeTraversals:
-
     @pytest.fixture()
     def viewer(self):
         return UserFactory()
@@ -2726,8 +2820,7 @@ class TestNodeTraversals:
         ProjectFactory(creator=user, parent=comp2)
 
         descendants = root.next_descendants(
-            Auth(viewer),
-            condition=lambda auth, node: node.is_contributor(auth.user)
+            Auth(viewer), condition=lambda auth, node: node.is_contributor(auth.user)
         )
         assert len(descendants) == 2  # two immediate children
         assert len(descendants[0][1]) == 1  # only one visible child of comp1
@@ -2743,10 +2836,14 @@ class TestNodeTraversals:
         reg_ids = [reg._id] + [r._id for r in reg.get_descendants_recursive()]
         orig_call_count = mock_update_search.call_count
         reg.delete_registration_tree(save=True)
-        assert Node.objects.filter(guids___id__in=reg_ids, is_deleted=False).count() == 0
+        assert (
+            Node.objects.filter(guids___id__in=reg_ids, is_deleted=False).count() == 0
+        )
         assert mock_update_search.call_count == orig_call_count + len(reg_ids)
 
-    def test_delete_registration_tree_sets_draft_registration_approvals_to_none(self, user):
+    def test_delete_registration_tree_sets_draft_registration_approvals_to_none(
+        self, user
+    ):
         reg = RegistrationFactory()
 
         dr = DraftRegistrationFactory(initiator=user)
@@ -2771,14 +2868,14 @@ class TestNodeTraversals:
         reg.delete_registration_tree(save=True)
         assert bool(proj.registrations_all) is False
 
-    def test_get_active_contributors_recursive_with_duplicate_users(self, user, viewer, auth):
+    def test_get_active_contributors_recursive_with_duplicate_users(
+        self, user, viewer, auth
+    ):
         parent = ProjectFactory(creator=user)
 
         child = ProjectFactory(creator=viewer, parent=parent)
         child_non_admin = UserFactory()
-        child.add_contributor(child_non_admin,
-                              auth=auth,
-                              permissions=WRITE)
+        child.add_contributor(child_non_admin, auth=auth, permissions=WRITE)
         grandchild = ProjectFactory(creator=user, parent=child)
 
         contributors = list(parent.get_active_contributors_recursive())
@@ -2793,14 +2890,14 @@ class TestNodeTraversals:
         assert parent._id in node_ids
         assert grandchild._id in node_ids
 
-    def test_get_active_contributors_recursive_with_no_duplicate_users(self, user, viewer, auth):
+    def test_get_active_contributors_recursive_with_no_duplicate_users(
+        self, user, viewer, auth
+    ):
         parent = ProjectFactory(creator=user)
 
         child = ProjectFactory(creator=viewer, parent=parent)
         child_non_admin = UserFactory()
-        child.add_contributor(child_non_admin,
-                              auth=auth,
-                              permissions=WRITE)
+        child.add_contributor(child_non_admin, auth=auth, permissions=WRITE)
         grandchild = ProjectFactory(creator=user, parent=child)  # noqa
 
         contributors = list(parent.get_active_contributors_recursive(unique_users=True))
@@ -2814,14 +2911,14 @@ class TestNodeTraversals:
         node_ids = [node._id for u, node in contributors]
         assert parent._id in node_ids
 
-    def test_get_admin_contributors_recursive_with_duplicate_users(self, viewer, user, auth):
+    def test_get_admin_contributors_recursive_with_duplicate_users(
+        self, viewer, user, auth
+    ):
         parent = ProjectFactory(creator=user)
 
         child = ProjectFactory(creator=viewer, parent=parent)
         child_non_admin = UserFactory()
-        child.add_contributor(child_non_admin,
-                              auth=auth,
-                              permissions=WRITE)
+        child.add_contributor(child_non_admin, auth=auth, permissions=WRITE)
         child.save()
 
         grandchild = ProjectFactory(creator=user, parent=child)  # noqa
@@ -2840,9 +2937,7 @@ class TestNodeTraversals:
 
         child = ProjectFactory(creator=viewer, parent=parent)
         child_non_admin = UserFactory()
-        child.add_contributor(child_non_admin,
-                              auth=auth,
-                              permissions=WRITE)
+        child.add_contributor(child_non_admin, auth=auth, permissions=WRITE)
         child.save()
 
         grandchild = ProjectFactory(creator=user, parent=child)  # noqa
@@ -2866,7 +2961,14 @@ class TestNodeTraversals:
 
         descendants = root.get_descendants_recursive()
         ids = {d._id for d in descendants}
-        assert bool({node._id for node in [comp1, comp1a, comp1b, comp2, comp2a, comp2b]}.difference(ids)) is False
+        assert (
+            bool(
+                {
+                    node._id for node in [comp1, comp1a, comp1b, comp2, comp2a, comp2b]
+                }.difference(ids)
+            )
+            is False
+        )
 
     def test_get_descendants_recursive_cyclic(self, user, root, auth):
         point1 = ProjectFactory(creator=user, parent=root)
@@ -2890,26 +2992,21 @@ class TestNodeTraversals:
 
 # Copied from tests/test_models.py
 class TestPointerMethods:
-
     def test_add_pointer(self, node, user, auth):
         node2 = NodeFactory(creator=user)
         node.add_pointer(node2, auth=auth)
         assert node2 in node.linked_nodes.all()
-        assert (
-            node.logs.latest().action == NodeLog.POINTER_CREATED
-        )
-        assert (
-            node.logs.latest().params == {
-                'parent_node': node.parent_id,
-                'node': node._primary_key,
-                'pointer': {
-                    'id': node2._id,
-                    'url': node2.url,
-                    'title': node2.title,
-                    'category': node2.category,
-                },
-            }
-        )
+        assert node.logs.latest().action == NodeLog.POINTER_CREATED
+        assert node.logs.latest().params == {
+            'parent_node': node.parent_id,
+            'node': node._primary_key,
+            'pointer': {
+                'id': node2._id,
+                'url': node2.url,
+                'title': node2.title,
+                'category': node2.category,
+            },
+        }
 
     def test_add_linked_nodes_property(self, node, auth):
         child = NodeFactory(parent=node)
@@ -2960,21 +3057,17 @@ class TestPointerMethods:
         # assert Pointer.load(pointer._id) is None
         # assert len(node.nodes) == 0
         assert NodeRelation.objects.filter(child=node2, is_node_link=True).count() == 0
-        assert (
-            node.logs.latest().action == NodeLog.POINTER_REMOVED
-        )
-        assert(
-            node.logs.latest().params == {
-                'parent_node': node.parent_id,
-                'node': node._primary_key,
-                'pointer': {
-                    'id': node2._id,
-                    'url': node2.url,
-                    'title': node2.title,
-                    'category': node2.category,
-                },
-            }
-        )
+        assert node.logs.latest().action == NodeLog.POINTER_REMOVED
+        assert node.logs.latest().params == {
+            'parent_node': node.parent_id,
+            'node': node._primary_key,
+            'pointer': {
+                'id': node2._id,
+                'url': node2.url,
+                'title': node2.title,
+                'category': node2.category,
+            },
+        }
 
     def test_rm_pointer_not_present(self, user, node, auth):
         node_relation = NodeRelationFactory()
@@ -3004,21 +3097,17 @@ class TestPointerMethods:
         assert forked.is_fork is True
         assert forked.forked_from == content
         assert forked.primary is True
-        assert(
-            node.logs.latest().action == NodeLog.POINTER_FORKED
-        )
-        assert(
-            node.logs.latest().params == {
-                'parent_node': node.parent_id,
-                'node': node._primary_key,
-                'pointer': {
-                    'id': content._id,
-                    'url': content.url,
-                    'title': content.title,
-                    'category': content.category,
-                },
-            }
-        )
+        assert node.logs.latest().action == NodeLog.POINTER_FORKED
+        assert node.logs.latest().params == {
+            'parent_node': node.parent_id,
+            'node': node._primary_key,
+            'pointer': {
+                'id': content._id,
+                'url': content.url,
+                'title': content.title,
+                'category': content.category,
+            },
+        }
 
     def test_fork_pointer_project(self, node, user, auth):
         project = ProjectFactory(creator=user)
@@ -3031,9 +3120,9 @@ class TestPointerMethods:
 
 # copied from tests/test_models.py
 class TestForkNode:
-
-    def _cmp_fork_original(self, fork_user, fork_date, fork, original,
-                           title_prepend='Fork of '):
+    def _cmp_fork_original(
+        self, fork_user, fork_date, fork, original, title_prepend='Fork of '
+    ):
         """Compare forked node with original node. Verify copied fields,
         modified fields, and files; recursively compare child nodes.
 
@@ -3051,7 +3140,9 @@ class TestForkNode:
         assert fork.logs.count() == original.logs.count() + 1
         assert original.logs.latest().action != NodeLog.NODE_FORKED
         assert fork.logs.latest().action == NodeLog.NODE_FORKED
-        assert list(original.tags.values_list('name', flat=True)) == list(fork.tags.values_list('name', flat=True))
+        assert list(original.tags.values_list('name', flat=True)) == list(
+            fork.tags.values_list('name', flat=True)
+        )
         assert (original.parent_node is None) == (fork.parent_node is None)
 
         # Test modified fields
@@ -3065,34 +3156,29 @@ class TestForkNode:
         assert fork.forked_date != original.created
 
         # Test that pointers were copied correctly
-        assert(
-            list(original.nodes_pointer.all()) == list(fork.nodes_pointer.all())
-        )
+        assert list(original.nodes_pointer.all()) == list(fork.nodes_pointer.all())
 
         # Test that subjects were copied correctly
-        assert(
-            list(original.subjects.all()) == list(fork.subjects.all())
-        )
+        assert list(original.subjects.all()) == list(fork.subjects.all())
 
         # Test that add-ons were copied correctly
-        assert(
-            original.get_addon_names() ==
-            fork.get_addon_names()
-        )
-        assert(
-            [addon.config.short_name for addon in original.get_addons()] ==
-            [addon.config.short_name for addon in fork.get_addons()]
-        )
+        assert original.get_addon_names() == fork.get_addon_names()
+        assert [addon.config.short_name for addon in original.get_addons()] == [
+            addon.config.short_name for addon in fork.get_addons()
+        ]
 
         fork_user_auth = Auth(user=fork_user)
         # Recursively compare children
         for idx, child in enumerate(original.get_nodes()):
             if child.can_view(fork_user_auth):
-                self._cmp_fork_original(fork_user, fork_date, fork.get_nodes()[idx],
-                                        child, title_prepend='')
+                self._cmp_fork_original(
+                    fork_user, fork_date, fork.get_nodes()[idx], child, title_prepend=''
+                )
 
     @mock.patch('framework.status.push_status_message')
-    def test_fork_recursion(self, mock_push_status_message, project, user, subject, auth, request_context):
+    def test_fork_recursion(
+        self, mock_push_status_message, project, user, subject, auth, request_context
+    ):
         """Omnibus test for forking.
         """
         # Make some children
@@ -3132,41 +3218,27 @@ class TestForkNode:
         # Make some children
         # public component
         NodeFactory(
-            creator=user,
-            parent=node,
-            title='Forked',
-            is_public=True,
+            creator=user, parent=node, title='Forked', is_public=True,
         )
         # public subproject
         ProjectFactory(
-            creator=user,
-            parent=node,
-            title='Forked',
-            is_public=True,
+            creator=user, parent=node, title='Forked', is_public=True,
         )
         # private component
         NodeFactory(
-            creator=user,
-            parent=node,
-            title='Not Forked',
+            creator=user, parent=node, title='Not Forked',
         )
         # private subproject
         private_subproject = ProjectFactory(
-            creator=user,
-            parent=node,
-            title='Not Forked',
+            creator=user, parent=node, title='Not Forked',
         )
         # private subproject public component
         NodeFactory(
-            creator=user,
-            parent=private_subproject,
-            title='Not Forked',
+            creator=user, parent=private_subproject, title='Not Forked',
         )
         # public subproject public component
         NodeFactory(
-            creator=user,
-            parent=private_subproject,
-            title='Forked',
+            creator=user, parent=private_subproject, title='Forked',
         )
         user2 = UserFactory()
         user2_auth = Auth(user=user2)
@@ -3220,7 +3292,9 @@ class TestForkNode:
         assert bool(fork) is True
         # Forker has admin permissions
         assert fork.contributors.count() == 1
-        assert set(fork.get_permissions(user2)) == set([permissions.READ, permissions.WRITE, permissions.ADMIN])
+        assert set(fork.get_permissions(user2)) == set(
+            [permissions.READ, permissions.WRITE, permissions.ADMIN]
+        )
 
     def test_fork_preserves_license(self, node, auth):
         license = NodeLicenseRecordFactory()
@@ -3238,10 +3312,7 @@ class TestForkNode:
 
         # Compare fork to original
         self._cmp_fork_original(
-            user,
-            timezone.now(),
-            fork,
-            registration,
+            user, timezone.now(), fork, registration,
         )
 
     def test_fork_project_with_no_wiki_pages(self, user, auth):
@@ -3255,35 +3326,38 @@ class TestForkNode:
         project = ProjectFactory(creator=user, is_public=True)
         # TODO: Unmock when StoredFileNode is implemented
         with mock.patch('osf.models.AbstractNode.update_search'):
-            wiki_page = WikiFactory(
-                user=user,
-                node=project,
-            )
-            wiki = WikiVersionFactory(
-                wiki_page=wiki_page,
-            )
+            wiki_page = WikiFactory(user=user, node=project,)
+            wiki = WikiVersionFactory(wiki_page=wiki_page,)
             current_wiki = WikiVersionFactory(wiki_page=wiki_page, identifier=2)
         fork = project.fork_node(auth)
         assert fork.wiki_private_uuids == {}
 
-        fork_wiki_current = WikiVersion.objects.get_for_node(fork, current_wiki.wiki_page.page_name)
+        fork_wiki_current = WikiVersion.objects.get_for_node(
+            fork, current_wiki.wiki_page.page_name
+        )
         assert fork_wiki_current.wiki_page.node == fork
         assert fork_wiki_current._id != current_wiki._id
         assert fork_wiki_current.identifier == 2
 
-        fork_wiki_version = WikiVersion.objects.get_for_node(fork, wiki.wiki_page.page_name, version=1)
+        fork_wiki_version = WikiVersion.objects.get_for_node(
+            fork, wiki.wiki_page.page_name, version=1
+        )
         assert fork_wiki_version.wiki_page.node == fork
         assert fork_wiki_version._id != wiki._id
         assert fork_wiki_version.identifier == 1
 
-class TestContributorOrdering:
 
+class TestContributorOrdering:
     def test_can_get_contributor_order(self, node):
         user1, user2 = UserFactory(), UserFactory()
         contrib1 = Contributor.objects.create(user=user1, node=node)
         contrib2 = Contributor.objects.create(user=user2, node=node)
         creator_contrib = Contributor.objects.get(user=node.creator, node=node)
-        assert list(node.get_contributor_order()) == [creator_contrib.id, contrib1.id, contrib2.id]
+        assert list(node.get_contributor_order()) == [
+            creator_contrib.id,
+            contrib1.id,
+            contrib2.id,
+        ]
         assert list(node.contributors.all()) == [node.creator, user1, user2]
 
     def test_can_set_contributor_order(self, node):
@@ -3292,7 +3366,11 @@ class TestContributorOrdering:
         contrib2 = Contributor.objects.create(user=user2, node=node)
         creator_contrib = Contributor.objects.get(user=node.creator, node=node)
         node.set_contributor_order([contrib1.id, contrib2.id, creator_contrib.id])
-        assert list(node.get_contributor_order()) == [contrib1.id, contrib2.id, creator_contrib.id]
+        assert list(node.get_contributor_order()) == [
+            contrib1.id,
+            contrib2.id,
+            creator_contrib.id,
+        ]
         assert list(node.contributors.all()) == [user1, user2, node.creator]
 
     def test_move_contributor(self, user, node, auth):
@@ -3301,9 +3379,9 @@ class TestContributorOrdering:
         node.add_contributors(
             [
                 {'user': user1, 'permissions': WRITE, 'visible': True},
-                {'user': user2, 'permissions': WRITE, 'visible': True}
+                {'user': user2, 'permissions': WRITE, 'visible': True},
             ],
-            auth=auth
+            auth=auth,
         )
 
         user_contrib_id = node.contributor_set.get(user=user).id
@@ -3320,7 +3398,6 @@ class TestContributorOrdering:
 
 
 class TestNodeOrdering:
-
     @pytest.fixture()
     def project(self, user):
         return ProjectFactory(creator=user)
@@ -3339,7 +3416,9 @@ class TestNodeOrdering:
         return [child1, child2, child3]
 
     def test_can_get_node_relation_order(self, project, children):
-        assert list(project.get_noderelation_order()) == [e.pk for e in project.node_relations.all()]
+        assert list(project.get_noderelation_order()) == [
+            e.pk for e in project.node_relations.all()
+        ]
 
     def test_nodes_property_returns_ordered_nodes(self, project, children):
         nodes = list(project.nodes)
@@ -3373,6 +3452,7 @@ class TestNodeOrdering:
         assert len(parent.get_nodes()) == 1  # child
         assert len(linker.get_nodes()) == 2  # child and unrelated
 
+
 def test_node_ids(node):
     child1, child2 = NodeFactory(parent=node), NodeFactory(parent=node)
 
@@ -3381,7 +3461,10 @@ def test_node_ids(node):
 
 
 def test_templated_list(node):
-    templated1, templated2 = ProjectFactory(template_node=node), NodeFactory(template_node=node)
+    templated1, templated2 = (
+        ProjectFactory(template_node=node),
+        NodeFactory(template_node=node),
+    )
     deleted = ProjectFactory(template_node=node, is_deleted=True)
 
     assert node.templated_list.count() == 2
@@ -3404,7 +3487,6 @@ def test_querying_on_contributors(node, user, auth):
 
 
 class TestLogMethods:
-
     @pytest.fixture()
     def parent(self, user):
         return ProjectFactory(creator=user)
@@ -3415,9 +3497,15 @@ class TestLogMethods:
 
     def test_get_logs_queryset_does_not_recurse(self, parent, node, auth):
         grandchild = NodeFactory(parent=node)
-        parent_log = parent.add_log(NodeLog.FILE_ADDED, auth=auth, params={'node': parent._id}, save=True)
-        child_log = node.add_log(NodeLog.FILE_ADDED, auth=auth, params={'node': node._id}, save=True)
-        grandchild_log = grandchild.add_log(NodeLog.FILE_ADDED, auth=auth, params={'node': grandchild._id}, save=True)
+        parent_log = parent.add_log(
+            NodeLog.FILE_ADDED, auth=auth, params={'node': parent._id}, save=True
+        )
+        child_log = node.add_log(
+            NodeLog.FILE_ADDED, auth=auth, params={'node': node._id}, save=True
+        )
+        grandchild_log = grandchild.add_log(
+            NodeLog.FILE_ADDED, auth=auth, params={'node': grandchild._id}, save=True
+        )
         logs = parent.get_logs_queryset(auth)
         assert parent_log in list(logs)
         assert child_log not in list(logs)
@@ -3443,9 +3531,9 @@ class TestLogMethods:
         # one more log for adding the node link
         assert n_logs_after == n_logs_before + 1
 
+
 # copied from tests/test_notifications.py
 class TestHasPermissionOnChildren:
-
     def test_has_permission_on_children(self):
         non_admin_user = UserFactory()
         parent = ProjectFactory()
@@ -3458,7 +3546,7 @@ class TestHasPermissionOnChildren:
         sub_component.save()
         NodeFactory(parent=node)  # another subcomponent
 
-        assert(
+        assert (
             node.has_permission_on_children(non_admin_user, permissions.READ)
         ) is True
 
@@ -3475,7 +3563,7 @@ class TestHasPermissionOnChildren:
         sub_component.save()
         NodeFactory(parent=node)
 
-        assert(
+        assert (
             node.has_permission_on_children(non_admin_user, permissions.READ)
         ) is False
 
@@ -3498,7 +3586,7 @@ class TestHasPermissionOnChildren:
         parent.save()
         node = NodeFactory(parent=parent, category='project')
 
-        assert(
+        assert (
             node.has_permission_on_children(non_admin_user, permissions.READ)
         ) is False
 
@@ -3518,31 +3606,24 @@ class TestHasPermissionOnChildren:
         parent.add_pointer(pointed, Auth(parent.creator))
         parent.save()
 
-        assert (
-            parent.has_permission_on_children(user, permissions.READ)
-        ) is False
+        assert (parent.has_permission_on_children(user, permissions.READ)) is False
 
 
 # copied from test/test_citations.py#CitationsNodeTestCase
 class TestCitationsProperties:
-
     def test_csl_single_author(self, node):
         # Nodes with one contributor generate valid CSL-data
-        assert (
-            node.csl ==
-            {
-                'publisher': 'OSF',
-                'author': [{
-                    'given': node.creator.given_name,
-                    'family': node.creator.family_name,
-                }],
-                'URL': node.display_absolute_url,
-                'issued': datetime_to_csl(node.logs.latest().date),
-                'title': node.title,
-                'type': 'webpage',
-                'id': node._id,
-            }
-        )
+        assert node.csl == {
+            'publisher': 'OSF',
+            'author': [
+                {'given': node.creator.given_name, 'family': node.creator.family_name,}
+            ],
+            'URL': node.display_absolute_url,
+            'issued': datetime_to_csl(node.logs.latest().date),
+            'title': node.title,
+            'type': 'webpage',
+            'id': node._id,
+        }
 
     def test_csl_multiple_authors(self, node):
         # Nodes with multiple contributors generate valid CSL-data
@@ -3550,27 +3631,18 @@ class TestCitationsProperties:
         node.add_contributor(user)
         node.save()
 
-        assert (
-            node.csl ==
-            {
-                'publisher': 'OSF',
-                'author': [
-                    {
-                        'given': node.creator.given_name,
-                        'family': node.creator.family_name,
-                    },
-                    {
-                        'given': user.given_name,
-                        'family': user.family_name,
-                    }
-                ],
-                'URL': node.display_absolute_url,
-                'issued': datetime_to_csl(node.logs.latest().date),
-                'title': node.title,
-                'type': 'webpage',
-                'id': node._id,
-            }
-        )
+        assert node.csl == {
+            'publisher': 'OSF',
+            'author': [
+                {'given': node.creator.given_name, 'family': node.creator.family_name,},
+                {'given': user.given_name, 'family': user.family_name,},
+            ],
+            'URL': node.display_absolute_url,
+            'issued': datetime_to_csl(node.logs.latest().date),
+            'title': node.title,
+            'type': 'webpage',
+            'id': node._id,
+        }
 
     def test_non_visible_contributors_arent_included_in_csl(self):
         node = ProjectFactory()
@@ -3621,8 +3693,7 @@ class TestNodeEditableFieldsMixin:
 
     def test_set_description(self, resource, auth):
         old_desc = resource.description
-        resource.set_description(
-            'new description', auth=auth)
+        resource.set_description('new description', auth=auth)
         resource.save()
         assert resource.description, 'new description'
         latest_log = resource.logs.latest()
@@ -3644,7 +3715,6 @@ class TestNodeEditableFieldsMixin:
 # copied from tests/test_models.py
 @pytest.mark.enable_implicit_clean
 class TestNodeUpdate:
-
     def test_update_description(self, fake, node, auth):
         new_title = fake.bs()
 
@@ -3668,7 +3738,9 @@ class TestNodeUpdate:
 
         new_category = 'data'
 
-        node.update({'title': new_title, 'category': new_category}, auth=auth, save=True)
+        node.update(
+            {'title': new_title, 'category': new_category}, auth=auth, save=True
+        )
         assert node.title == new_title
         assert node.category == 'data'
 
@@ -3743,7 +3815,9 @@ class TestNodeUpdate:
         assert node.logs.count() == original_n_logs + 1
 
     # Regression test for https://openscience.atlassian.net/browse/OSF-4664
-    def test_updating_category_twice_with_same_content_generates_one_log(self, node, auth):
+    def test_updating_category_twice_with_same_content_generates_one_log(
+        self, node, auth
+    ):
         node.category = 'project'
         node.save()
         original_n_logs = node.logs.count()
@@ -3765,7 +3839,6 @@ class TestNodeUpdate:
 
 @pytest.mark.enable_enqueue_task
 class TestOnNodeUpdate:
-
     @pytest.fixture(autouse=True)
     def session(self, user, request_context):
         s = SessionFactory(user=user)
@@ -3781,9 +3854,7 @@ class TestOnNodeUpdate:
     def node_in_collection(self, collection):
         node = ProjectFactory(is_public=True)
         CollectionSubmission(
-            guid=node.guids.first(),
-            collection=collection,
-            creator=node.creator,
+            guid=node.guids.first(), collection=collection, creator=node.creator,
         ).save()
         return node
 
@@ -3798,9 +3869,7 @@ class TestOnNodeUpdate:
     @pytest.fixture()
     def component_registration(self, node):
         NodeFactory(
-            creator=node.creator,
-            parent=node,
-            title='Title1',
+            creator=node.creator, parent=node, title='Title1',
         )
         registration = RegistrationFactory(project=node)
         registration.refresh_from_db()
@@ -3813,7 +3882,10 @@ class TestOnNodeUpdate:
         node.title = 'A new title'
         node.save()
 
-        task = handlers.get_task_from_queue('website.project.tasks.on_node_updated', predicate=lambda task: task.kwargs['node_id'] == node._id)
+        task = handlers.get_task_from_queue(
+            'website.project.tasks.on_node_updated',
+            predicate=lambda task: task.kwargs['node_id'] == node._id,
+        )
 
         assert task.task == 'website.project.tasks.on_node_updated'
         assert task.kwargs['node_id'] == node._id
@@ -3822,12 +3894,20 @@ class TestOnNodeUpdate:
         assert 'title' in task.kwargs['saved_fields']
 
     def test_queueing_on_node_updated(self, node, user):
-        node.set_identifier_value(category='doi', value=settings.DOI_FORMAT.format(prefix=settings.DATACITE_PREFIX, guid=node._id))
+        node.set_identifier_value(
+            category='doi',
+            value=settings.DOI_FORMAT.format(
+                prefix=settings.DATACITE_PREFIX, guid=node._id
+            ),
+        )
         node.title = 'Something New'
         node.save()
 
         # make sure on_node_updated is in the queue
-        assert handlers.get_task_from_queue('website.project.tasks.on_node_updated', predicate=lambda task: task.kwargs['node_id'] == node._id)
+        assert handlers.get_task_from_queue(
+            'website.project.tasks.on_node_updated',
+            predicate=lambda task: task.kwargs['node_id'] == node._id,
+        )
 
         # adding a contributor to the node will also trigger on_node_updated
         new_person = UserFactory()
@@ -3839,21 +3919,23 @@ class TestOnNodeUpdate:
             {
                 'id': new_license.license_id,
                 'year': '2018',
-                'copyrightHolders': ['LeBron', 'Ladron']
+                'copyrightHolders': ['LeBron', 'Ladron'],
             },
             Auth(node.creator),
         )
         node.save()
 
         # Make sure there's just one on_node_updated task, and that is has contributors and node_license in the kwargs
-        task = handlers.get_task_from_queue('website.project.tasks.on_node_updated', predicate=lambda task: task.kwargs['node_id'] == node._id)
+        task = handlers.get_task_from_queue(
+            'website.project.tasks.on_node_updated',
+            predicate=lambda task: task.kwargs['node_id'] == node._id,
+        )
         assert 'contributors' in task.kwargs['saved_fields']
         assert 'node_license' in task.kwargs['saved_fields']
 
 
 # copied from tests/test_models.py
 class TestRemoveNode:
-
     @pytest.fixture()
     def parent_project(self, user):
         return ProjectFactory(creator=user)
@@ -3867,10 +3949,7 @@ class TestRemoveNode:
         project.reload()
         assert project.is_deleted
         # parent node should have a log of the event
-        assert (
-            parent_project.get_logs_queryset(auth)[0].action ==
-            'node_removed'
-        )
+        assert parent_project.get_logs_queryset(auth)[0].action == 'node_removed'
 
     def test_delete_project_log_present(self, project, parent_project, auth):
         project.remove_node(auth=auth)
@@ -3881,7 +3960,9 @@ class TestRemoveNode:
         assert parent_project.logs.latest().action == 'project_deleted'
         assert parent_project.deleted == parent_project.logs.latest().date
 
-    def test_remove_project_with_project_child_deletes_all_in_hierarchy(self, parent_project, project, auth):
+    def test_remove_project_with_project_child_deletes_all_in_hierarchy(
+        self, parent_project, project, auth
+    ):
         parent_project.remove_node(auth=auth)
         parent_project.reload()
         project.reload()
@@ -3889,7 +3970,9 @@ class TestRemoveNode:
         assert parent_project.is_deleted
         assert project.is_deleted
 
-    def test_remove_project_with_component_child_deletes_all_in_hierarchy(self, user, project, parent_project, auth):
+    def test_remove_project_with_component_child_deletes_all_in_hierarchy(
+        self, user, project, parent_project, auth
+    ):
         component = NodeFactory(creator=user, parent=project)
 
         parent_project.remove_node(auth)
@@ -3901,7 +3984,9 @@ class TestRemoveNode:
         assert project.is_deleted
         assert component.is_deleted
 
-    def test_remove_project_with_pointer_child(self, auth, user, project, parent_project):
+    def test_remove_project_with_pointer_child(
+        self, auth, user, project, parent_project
+    ):
         target = ProjectFactory(creator=user)
         project.add_pointer(node=target, auth=auth)
 
@@ -3909,7 +3994,7 @@ class TestRemoveNode:
 
         project.remove_node(auth=auth)
         project.reload()
-        assert (project.is_deleted)
+        assert project.is_deleted
         # parent node should have a log of the event
         assert parent_project.logs.latest().action == 'node_removed'
 
@@ -3917,7 +4002,9 @@ class TestRemoveNode:
         target.reload()
         assert target.is_deleted is False
 
-    def test_remove_project_missing_perms_in_hierarchy(self, user, project, parent_project, auth):
+    def test_remove_project_missing_perms_in_hierarchy(
+        self, user, project, parent_project, auth
+    ):
         user_two = AuthUserFactory()
         component = NodeFactory(creator=user_two, parent=project)
 
@@ -3932,7 +4019,9 @@ class TestRemoveNode:
         assert not parent_project.is_deleted
         assert not component.is_deleted
 
-    def test_remove_supplemental_project_for_preprints(self, auth, user, project, preprint):
+    def test_remove_supplemental_project_for_preprints(
+        self, auth, user, project, preprint
+    ):
         preprint.node = project
         preprint.save()
 
@@ -3945,7 +4034,6 @@ class TestRemoveNode:
 
 
 class TestTemplateNode:
-
     @pytest.fixture()
     def project(self, user):
         return ProjectFactory(creator=user)
@@ -3961,9 +4049,7 @@ class TestTemplateNode:
     def test_simple_template(self, project, auth):
         """Create a templated node, with no changes"""
         # created templated node
-        new = project.use_as_template(
-            auth=auth
-        )
+        new = project.use_as_template(auth=auth)
 
         assert new.title == self._default_title(project)
         assert new.created != project.created
@@ -3975,12 +4061,7 @@ class TestTemplateNode:
 
         # create templated node
         new = project.use_as_template(
-            auth=auth,
-            changes={
-                project._primary_key: {
-                    'title': changed_title,
-                }
-            }
+            auth=auth, changes={project._primary_key: {'title': changed_title,}}
         )
 
         assert new.title == changed_title
@@ -3988,9 +4069,7 @@ class TestTemplateNode:
         self._verify_log(new)
 
     def test_use_as_template_adds_default_addons(self, project, auth):
-        new = project.use_as_template(
-            auth=auth
-        )
+        new = project.use_as_template(auth=auth)
 
         assert new.has_addon('wiki')
         assert new.has_addon('osfstorage')
@@ -3999,9 +4078,7 @@ class TestTemplateNode:
         license = NodeLicenseRecordFactory()
         project.node_license = license
         project.save()
-        new = project.use_as_template(
-            auth=auth
-        )
+        new = project.use_as_template(auth=auth)
 
         assert new.license.node_license._id == license.node_license._id
         self._verify_log(new)
@@ -4048,16 +4125,17 @@ class TestTemplateNode:
         assert new.title == self._default_title(project1)
         assert len(list(new.nodes)) == len(list(project1.nodes))
         # check that all children were copied
-        assert (
-            [x.title for x in new.nodes] ==
-            [x.title for x in project1.nodes if x not in project1.linked_nodes]
-        )
+        assert [x.title for x in new.nodes] == [
+            x.title for x in project1.nodes if x not in project1.linked_nodes
+        ]
         # ensure all child nodes were actually copied, instead of moved
         assert {x._primary_key for x in new.nodes}.isdisjoint(
             {x._primary_key for x in project1.nodes}
         )
 
-    def test_complex_template_with_pointee(self, auth, project, pointee, component, subproject):
+    def test_complex_template_with_pointee(
+        self, auth, project, pointee, component, subproject
+    ):
         """Create a templated node from a node with children"""
 
         # create templated node
@@ -4066,49 +4144,40 @@ class TestTemplateNode:
         assert new.title == self._default_title(project)
         assert len(list(new.nodes)) == len(list(project.nodes)) - 1
         # check that all children were copied
-        assert (
-            [x.title for x in new.nodes] ==
-            [x.title for x in project.nodes if x not in project.linked_nodes]
-        )
+        assert [x.title for x in new.nodes] == [
+            x.title for x in project.nodes if x not in project.linked_nodes
+        ]
         # ensure all child nodes were actually copied, instead of moved
         assert {x._primary_key for x in new.nodes}.isdisjoint(
             {x._primary_key for x in project.nodes}
         )
 
-    def test_complex_template_titles_changed(self, auth, project, pointee, component, subproject):
+    def test_complex_template_titles_changed(
+        self, auth, project, pointee, component, subproject
+    ):
 
         # build changes dict to change each node's title
         changes = {
-            x._primary_key: {
-                'title': 'New Title ' + str(idx)
-            } for idx, x in enumerate(project.nodes)
+            x._primary_key: {'title': 'New Title ' + str(idx)}
+            for idx, x in enumerate(project.nodes)
         }
 
         # create templated node
-        new = project.use_as_template(
-            auth=auth,
-            changes=changes
-        )
+        new = project.use_as_template(auth=auth, changes=changes)
         old_nodes = [x for x in project.nodes if x not in project.linked_nodes]
 
         for old_node, new_node in zip(old_nodes, new.nodes):
             if isinstance(old_node, Node):
-                assert (
-                    changes[old_node._primary_key]['title'] ==
-                    new_node.title
-                )
+                assert changes[old_node._primary_key]['title'] == new_node.title
             else:
-                assert (
-                    old_node.title ==
-                    new_node.title
-                )
+                assert old_node.title == new_node.title
 
     def test_template_wiki_pages_not_copied(self, project, auth):
         WikiPage.objects.create_for_node(project, 'template', 'lol', auth)
-        new = project.use_as_template(
-            auth=auth
+        new = project.use_as_template(auth=auth)
+        assert (
+            WikiPage.objects.get_for_node(project, 'template').page_name == 'template'
         )
-        assert WikiPage.objects.get_for_node(project, 'template').page_name == 'template'
         latest_version = WikiVersion.objects.get_for_node(project, 'template')
         assert latest_version.identifier == 1
         assert latest_version.is_current is True
@@ -4123,9 +4192,13 @@ class TestTemplateNode:
 
         templated = project.use_as_template(auth)
 
-        assert set(templated.get_permissions(user)) == set([permissions.READ, permissions.WRITE, permissions.ADMIN])
+        assert set(templated.get_permissions(user)) == set(
+            [permissions.READ, permissions.WRITE, permissions.ADMIN]
+        )
 
-    def test_template_security(self, user, auth, project, pointee, component, subproject):
+    def test_template_security(
+        self, user, auth, project, pointee, component, subproject
+    ):
         """Create a templated node from a node with public and private children
 
         Children for which the user has no access should not be copied
@@ -4161,25 +4234,28 @@ class TestTemplateNode:
         assert new.title == self._default_title(project)
 
         # check that all children were copied
-        assert (
-            set(x.template_node._id for x in new.nodes) ==
-            set(x._id for x in visible_nodes if x not in project.linked_nodes)
+        assert set(x.template_node._id for x in new.nodes) == set(
+            x._id for x in visible_nodes if x not in project.linked_nodes
         )
         # ensure all child nodes were actually copied, instead of moved
-        assert bool({x._primary_key for x in new.nodes}.isdisjoint(
-            {x._primary_key for x in project.nodes}
-        )) is True
+        assert (
+            bool(
+                {x._primary_key for x in new.nodes}.isdisjoint(
+                    {x._primary_key for x in project.nodes}
+                )
+            )
+            is True
+        )
 
         # ensure that the creator is admin for each node copied
         for node in new.nodes:
-            assert (
-                set(node.get_permissions(other_user)) ==
-                set([permissions.READ, permissions.WRITE, permissions.ADMIN])
+            assert set(node.get_permissions(other_user)) == set(
+                [permissions.READ, permissions.WRITE, permissions.ADMIN]
             )
+
 
 # copied from tests/test_models.py
 class TestNodeLog:
-
     @pytest.fixture()
     def log(self, node):
         return NodeLogFactory(node=node)
@@ -4230,7 +4306,6 @@ class TestNodeLog:
 
 
 class TestProjectWithAddons:
-
     def test_factory(self):
         p = ProjectWithAddonFactory(addon='s3')
         assert bool(p.get_addon('s3')) is True
@@ -4239,52 +4314,30 @@ class TestProjectWithAddons:
 
 # copied from tests/test_models.py
 class TestAddonMethods:
-
     def test_add_addon(self, node, auth):
         addon_count = len(node.get_addon_names())
         addon_record_count = len(node.addons)
         added = node.add_addon('dropbox', auth)
         assert bool(added) is True
         node.reload()
-        assert (
-            len(node.get_addon_names()) ==
-            addon_count + 1
-        )
-        assert (
-            len(node.addons) ==
-            addon_record_count + 1
-        )
-        assert (
-            node.logs.latest().action ==
-            NodeLog.ADDON_ADDED
-        )
+        assert len(node.get_addon_names()) == addon_count + 1
+        assert len(node.addons) == addon_record_count + 1
+        assert node.logs.latest().action == NodeLog.ADDON_ADDED
 
     def test_add_existing_addon(self, node, auth):
         addon_count = len(node.get_addon_names())
         addon_record_count = len(node.addons)
         added = node.add_addon('wiki', auth)
         assert bool(added) is False
-        assert (
-            len(node.get_addon_names()) ==
-            addon_count
-        )
-        assert (
-            len(node.addons) ==
-            addon_record_count
-        )
+        assert len(node.get_addon_names()) == addon_count
+        assert len(node.addons) == addon_record_count
 
     def test_delete_addon(self, node, auth):
         addon_count = len(node.get_addon_names())
         deleted = node.delete_addon('wiki', auth)
         assert deleted is True
-        assert (
-            len(node.get_addon_names()) ==
-            addon_count - 1
-        )
-        assert (
-            node.logs.latest().action ==
-            NodeLog.ADDON_REMOVED
-        )
+        assert len(node.get_addon_names()) == addon_count - 1
+        assert node.logs.latest().action == NodeLog.ADDON_REMOVED
 
     @mock.patch('addons.dropbox.models.NodeSettings.config')
     def test_delete_mandatory_addon(self, mock_config, node, auth):
@@ -4297,10 +4350,8 @@ class TestAddonMethods:
         addon_count = len(node.get_addon_names())
         deleted = node.delete_addon('dropbox', auth)
         assert bool(deleted) is False
-        assert (
-            len(node.get_addon_names()) ==
-            addon_count
-        )
+        assert len(node.get_addon_names()) == addon_count
+
 
 # copied from tests/test_models.py
 class TestAddonCallbacks:
@@ -4341,18 +4392,12 @@ class TestAddonCallbacks:
                 mock_callback = getattr(mock_settings, callback)
                 mock_callback.return_value = return_value
                 patch = mock.patch.object(
-                    addon,
-                    callback,
-                    getattr(mock_settings, callback)
+                    addon, callback, getattr(mock_settings, callback)
                 )
                 patch.start()
                 self.patches.append(patch)
             self.patched_addons[addon.config.short_name] = addon
-        n_patch = mock.patch.object(
-            node,
-            'get_addon',
-            mock_get_addon
-        )
+        n_patch = mock.patch.object(node, 'get_addon', mock_get_addon)
         n_patch.start()
         self.patches.append(n_patch)
 
@@ -4366,9 +4411,7 @@ class TestAddonCallbacks:
         node.remove_contributor(contributor=user2, auth=auth)
         for addon in node.addons:
             callback = addon.after_remove_contributor
-            callback.assert_called_once_with(
-                node, user2, auth
-            )
+            callback.assert_called_once_with(node, user2, auth)
 
     def test_set_privacy_callback(self, node, auth):
         node.set_privacy('public', auth)
@@ -4381,29 +4424,22 @@ class TestAddonCallbacks:
         node.set_privacy('private', auth)
         for addon in node.addons:
             callback = addon.after_set_privacy
-            callback.assert_called_with(
-                node, 'private'
-            )
+            callback.assert_called_with(node, 'private')
 
     def test_fork_callback(self, node, auth):
         fork = node.fork_node(auth=auth)
         for addon in node.addons:
             callback = addon.after_fork
-            callback.assert_called_once_with(
-                node, fork, auth.user
-            )
+            callback.assert_called_once_with(node, fork, auth.user)
 
     def test_register_callback(self, node, auth):
         with mock_archive(node) as registration:
             for addon in node.addons:
                 callback = addon.after_register
-                callback.assert_called_once_with(
-                    node, registration, auth.user
-                )
+                callback.assert_called_once_with(node, registration, auth.user)
 
 
 class TestAdminImplicitRead(object):
-
     @pytest.fixture()
     def jane_doe(self):
         return UserFactory()
@@ -4443,16 +4479,24 @@ class TestAdminImplicitRead(object):
         return ProjectFactory(is_public=False, parent=lvl2component)
 
     def test_direct_child(self, admin_user, lvl1component):
-        assert Node.objects.filter(id=lvl1component.pk).can_view(admin_user).count() == 1
-        assert Node.objects.filter(id=lvl1component.pk).can_view(admin_user)[0] == lvl1component
+        assert (
+            Node.objects.filter(id=lvl1component.pk).can_view(admin_user).count() == 1
+        )
+        assert (
+            Node.objects.filter(id=lvl1component.pk).can_view(admin_user)[0]
+            == lvl1component
+        )
 
     def test_rando(self, lvl1component, jane_doe):
         assert Node.objects.filter(id=lvl1component.pk).can_view(jane_doe).count() == 0
 
     def test_includes_parent(self, project, admin_user, lvl1component):
-        assert Node.objects.filter(
-            id__in=[lvl1component.pk, project.pk]
-        ).can_view(admin_user).count() == 2
+        assert (
+            Node.objects.filter(id__in=[lvl1component.pk, project.pk])
+            .can_view(admin_user)
+            .count()
+            == 2
+        )
 
     def test_includes_public(self, admin_user, project, lvl1component):
         proj = ProjectFactory(is_public=True)
@@ -4471,7 +4515,9 @@ class TestAdminImplicitRead(object):
         assert proj in qs
         assert qs.count() == 1
 
-    def test_generations(self, admin_user, project, lvl1component, lvl2component, lvl3component):
+    def test_generations(
+        self, admin_user, project, lvl1component, lvl2component, lvl3component
+    ):
         qs = Node.objects.can_view(admin_user)
 
         assert project in qs
@@ -4488,8 +4534,9 @@ class TestAdminImplicitRead(object):
         assert lvl1component in qs
         assert project not in qs
 
-    def test_private_link_public(self, project, lvl1component,
-            lvl1component_two, project_public):
+    def test_private_link_public(
+        self, project, lvl1component, lvl1component_two, project_public
+    ):
         pl = PrivateLinkFactory()
 
         lvl1component.private_links.add(pl)
@@ -4528,7 +4575,6 @@ class TestNodeProperties:
 
 @pytest.mark.enable_bookmark_creation
 class TestCollectionProperties:
-
     @pytest.fixture()
     def user(self):
         return AuthUserFactory()
@@ -4555,8 +4601,13 @@ class TestCollectionProperties:
 
     @pytest.fixture()
     def collection_public(self, provider, collector):
-        return CollectionFactory(creator=collector, provider=provider, is_public=True,
-                                 status_choices=['', 'Complete'], collected_type_choices=['', 'Dataset'])
+        return CollectionFactory(
+            creator=collector,
+            provider=provider,
+            is_public=True,
+            status_choices=['', 'Complete'],
+            collected_type_choices=['', 'Dataset'],
+        )
 
     @pytest.fixture()
     def public_non_provided_collection(self, collector):
@@ -4582,8 +4633,17 @@ class TestCollectionProperties:
             pass
 
     def test_collection_project_views(
-            self, user, node, collection_one, collection_two, collection_public,
-            public_non_provided_collection, private_non_provided_collection, bookmark_collection, collector):
+        self,
+        user,
+        node,
+        collection_one,
+        collection_two,
+        collection_public,
+        public_non_provided_collection,
+        private_non_provided_collection,
+        bookmark_collection,
+        collector,
+    ):
 
         # test_collection_properties
         assert not node.is_collected
@@ -4600,26 +4660,44 @@ class TestCollectionProperties:
 
         ids_actual = {cgm.collection._id for cgm in node.collecting_metadata_list}
         ids_expected = {collection_one._id, collection_two._id, collection_public._id}
-        ids_not_expected = {bookmark_collection._id, public_non_provided_collection._id, private_non_provided_collection._id}
+        ids_not_expected = {
+            bookmark_collection._id,
+            public_non_provided_collection._id,
+            private_non_provided_collection._id,
+        }
 
         assert ids_not_expected.isdisjoint(ids_actual)
         assert ids_actual == ids_expected
 
     def test_permissions_collection_project_views(
-            self, user, node, contrib, subjects, collection_one, collection_two,
-            collection_public, public_non_provided_collection, private_non_provided_collection,
-            bookmark_collection, collector):
+        self,
+        user,
+        node,
+        contrib,
+        subjects,
+        collection_one,
+        collection_two,
+        collection_public,
+        public_non_provided_collection,
+        private_non_provided_collection,
+        bookmark_collection,
+        collector,
+    ):
 
         collection_one.collect_object(node, collector)
         collection_two.collect_object(node, collector)
         public_non_provided_collection.collect_object(node, collector)
         private_non_provided_collection.collect_object(node, collector)
         bookmark_collection.collect_object(node, collector)
-        cgm = collection_public.collect_object(node, collector, status='Complete', collected_type='Dataset')
+        cgm = collection_public.collect_object(
+            node, collector, status='Complete', collected_type='Dataset'
+        )
         cgm.set_subjects(subjects, Auth(collector))
 
         ## test_not_logged_in_user_only_sees_public_collection_info
-        collection_summary = serialize_collections(node.collecting_metadata_list, Auth())
+        collection_summary = serialize_collections(
+            node.collecting_metadata_list, Auth()
+        )
 
         # test_subjects_are_serialized
         assert len(collection_summary[0]['subjects'])
@@ -4632,11 +4710,15 @@ class TestCollectionProperties:
         node.add_contributor(contributor=contrib, auth=Auth(user))
         node.save()
 
-        collection_summary = serialize_collections(node.collecting_metadata_list, Auth(contrib))
+        collection_summary = serialize_collections(
+            node.collecting_metadata_list, Auth(contrib)
+        )
         assert len(collection_summary) == 1
         assert self._collection_url(collection_public) == collection_summary[0]['url']
 
-        collection_summary = serialize_collections(node.collecting_metadata_list, Auth(user))
+        collection_summary = serialize_collections(
+            node.collecting_metadata_list, Auth(user)
+        )
         assert len(collection_summary) == 1
         assert self._collection_url(collection_public) == collection_summary[0]['url']
 
@@ -4644,7 +4726,9 @@ class TestCollectionProperties:
         node.add_contributor(contributor=collector, auth=Auth(user))
         node.save()
 
-        collection_summary = serialize_collections(node.collecting_metadata_list, Auth(collector))
+        collection_summary = serialize_collections(
+            node.collecting_metadata_list, Auth(collector)
+        )
         assert len(collection_summary) == 3
         urls_actual = {summary['url'] for summary in collection_summary}
         urls_expected = {
@@ -4659,7 +4743,9 @@ class TestCollectionProperties:
         bookmark_collection_public.is_public = True
         bookmark_collection_public.save()
 
-        collection_summary = serialize_collections(node.collecting_metadata_list, Auth(collector))
+        collection_summary = serialize_collections(
+            node.collecting_metadata_list, Auth(collector)
+        )
         assert len(collection_summary) == 3
         urls_actual = {summary['url'] for summary in collection_summary}
         assert self._collection_url(bookmark_collection_public) not in urls_actual

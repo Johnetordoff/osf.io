@@ -16,6 +16,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='osfuser',
             name='date_last_login',
-            field=osf.utils.fields.NonNaiveDateTimeField(blank=True, db_index=True, null=True),
+            field=osf.utils.fields.NonNaiveDateTimeField(
+                blank=True, db_index=True, null=True
+            ),
         ),
     ]

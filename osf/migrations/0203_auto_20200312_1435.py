@@ -15,11 +15,27 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='preprint',
             name='has_data_links',
-            field=models.TextField(blank=True, choices=[('available', 'Available'), ('no', 'No'), ('not_applicable', 'Not applicable')], null=True),
+            field=models.TextField(
+                blank=True,
+                choices=[
+                    ('available', 'Available'),
+                    ('no', 'No'),
+                    ('not_applicable', 'Not applicable'),
+                ],
+                null=True,
+            ),
         ),
         migrations.AlterField(
             model_name='preprint',
             name='has_prereg_links',
-            field=models.TextField(blank=True, choices=[('available', 'Available'), ('no', 'No'), ('not_applicable', 'Not applicable')], null=True),
+            field=models.TextField(
+                blank=True,
+                choices=[
+                    ('available', 'Available'),
+                    ('no', 'No'),
+                    ('not_applicable', 'Not applicable'),
+                ],
+                null=True,
+            ),
         ),
     ]

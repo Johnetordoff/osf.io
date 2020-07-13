@@ -5,6 +5,7 @@ import logging
 import django
 from django.db import transaction
 from django.utils import timezone
+
 django.setup()
 
 from framework.auth import Auth
@@ -30,13 +31,18 @@ def main(dry_run=True):
             try:
                 parent_registration = retraction.registrations.get()
             except Exception as err:
-                logger.exception('Could not find registration associated with retraction {}'.format(retraction))
+                logger.exception(
+                    'Could not find registration associated with retraction {}'.format(
+                        retraction
+                    )
+                )
                 logger.error('Skipping...'.format(retraction))
                 continue
 
             logger.warn(
-                'Retraction {0} approved. Retracting registration {1}'
-                .format(retraction._id, parent_registration._id)
+                'Retraction {0} approved. Retracting registration {1}'.format(
+                    retraction._id, parent_registration._id
+                )
             )
             if not dry_run:
                 with transaction.atomic():
@@ -58,13 +64,16 @@ def main(dry_run=True):
                     except Exception as err:
                         logger.error(
                             'Unexpected error raised when retracting '
-                            'registration {}. Continuing...'.format(parent_registration))
+                            'registration {}. Continuing...'.format(parent_registration)
+                        )
                         logger.exception(err)
 
 
 def should_be_retracted(retraction):
     """Returns true if retraction was initiated more than 48 hours prior"""
-    return (timezone.now() - retraction.initiation_date) >= settings.RETRACTION_PENDING_TIME
+    return (
+        timezone.now() - retraction.initiation_date
+    ) >= settings.RETRACTION_PENDING_TIME
 
 
 @celery_app.task(name='scripts.retract_registrations')

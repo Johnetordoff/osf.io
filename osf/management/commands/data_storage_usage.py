@@ -41,7 +41,7 @@ VALUES = [
     'target_root',
     'target_is_deleted',
     'target_spam_status',
-    'target_is_supplementary_node'
+    'target_is_supplementary_node',
 ]
 
 # Grab the id of end of the basefilenode_version table for query limiting
@@ -260,24 +260,19 @@ def combine_summary_data(*args):
         logger.debug(summary_data_item)
         if isinstance(summary_data_item, dict):
             for key in summary_data_item.keys():
-                combined_summary_data[key] = combined_summary_data.get(key, 0) + convert_value(
-                    summary_data_item.get(key, 0)
-                )
+                combined_summary_data[key] = combined_summary_data.get(
+                    key, 0
+                ) + convert_value(summary_data_item.get(key, 0))
         elif isinstance(summary_data_item, list):
             for key, value in summary_data_item:
-                combined_summary_data[key] = combined_summary_data.get(key, 0) + convert_value(value)
+                combined_summary_data[key] = combined_summary_data.get(
+                    key, 0
+                ) + convert_value(value)
     return combined_summary_data
 
 
 def summarize(sql, content_type, start, end, cursor):
-    cursor.execute(
-        sql,
-        [
-            content_type,
-            start,
-            end,
-        ]
-    )
+    cursor.execute(sql, [content_type, start, end,])
     return cursor.fetchall()
 
 
@@ -298,64 +293,75 @@ def gather_usage_data(start, end, dry_run, zip_file):
                 abstractnode_content_type,
                 start,
                 end,
-            ]
+            ],
         )
         if not dry_run:
             logger.debug('Writing {} to zip'.format(filename))
             write_raw_data(cursor=cursor, zip_file=zip_file, filename=filename)
 
-        logger.debug('Gathering abstractnode summary at {}'.format(datetime.datetime.now()))
-        summary_data = combine_summary_data(summarize(
-            sql=ABSTRACT_NODE_SIZE_SUM_SQL,
-            content_type=abstractnode_content_type,
-            start=start,
-            end=end,
-            cursor=cursor,
-        ))
-        logger.debug('Gathering regional node summary at {}'.format(datetime.datetime.now()))
-        summary_data = combine_summary_data(summary_data, summarize(
-            sql=REGIONAL_NODE_SIZE_SUM_SQL,
-            content_type=abstractnode_content_type,
-            start=start,
-            end=end,
-            cursor=cursor,
-        ))
+        logger.debug(
+            'Gathering abstractnode summary at {}'.format(datetime.datetime.now())
+        )
+        summary_data = combine_summary_data(
+            summarize(
+                sql=ABSTRACT_NODE_SIZE_SUM_SQL,
+                content_type=abstractnode_content_type,
+                start=start,
+                end=end,
+                cursor=cursor,
+            )
+        )
+        logger.debug(
+            'Gathering regional node summary at {}'.format(datetime.datetime.now())
+        )
+        summary_data = combine_summary_data(
+            summary_data,
+            summarize(
+                sql=REGIONAL_NODE_SIZE_SUM_SQL,
+                content_type=abstractnode_content_type,
+                start=start,
+                end=end,
+                cursor=cursor,
+            ),
+        )
 
         # TODO: Move the next when Quick Folders is done
-        logger.debug('Gathering quickfile summary at {}'.format(datetime.datetime.now()))
-        summary_data = combine_summary_data(summary_data, summarize(
-            sql=ND_QUICK_FILE_SIZE_SUM_SQL,
-            content_type=abstractnode_content_type,
-            start=start,
-            end=end,
-            cursor=cursor,
-        ))
+        logger.debug(
+            'Gathering quickfile summary at {}'.format(datetime.datetime.now())
+        )
+        summary_data = combine_summary_data(
+            summary_data,
+            summarize(
+                sql=ND_QUICK_FILE_SIZE_SUM_SQL,
+                content_type=abstractnode_content_type,
+                start=start,
+                end=end,
+                cursor=cursor,
+            ),
+        )
 
-        logger.debug('Gathering supplement summary at {}'.format(datetime.datetime.now()))
-        summary_data = combine_summary_data(summary_data, summarize(
-            sql=ND_PREPRINT_SUPPLEMENT_SIZE_SUM_SQL,
-            content_type=abstractnode_content_type,
-            start=start,
-            end=end,
-            cursor=cursor,
-        ))
-        logger.debug('Gathering deleted file summary at {}'.format(datetime.datetime.now()))
-        cursor.execute(
-            DELETED_FILE_SIZE_SUM_SQL,
-            [
-                start,
-                end,
-            ]
+        logger.debug(
+            'Gathering supplement summary at {}'.format(datetime.datetime.now())
         )
+        summary_data = combine_summary_data(
+            summary_data,
+            summarize(
+                sql=ND_PREPRINT_SUPPLEMENT_SIZE_SUM_SQL,
+                content_type=abstractnode_content_type,
+                start=start,
+                end=end,
+                cursor=cursor,
+            ),
+        )
+        logger.debug(
+            'Gathering deleted file summary at {}'.format(datetime.datetime.now())
+        )
+        cursor.execute(DELETED_FILE_SIZE_SUM_SQL, [start, end,])
         summary_data = combine_summary_data(summary_data, cursor.fetchall())
-        logger.debug('Gathering total file summary at {}'.format(datetime.datetime.now()))
-        cursor.execute(
-            TOTAL_FILE_SIZE_SUM_SQL,
-            [
-                start,
-                end,
-            ]
+        logger.debug(
+            'Gathering total file summary at {}'.format(datetime.datetime.now())
         )
+        cursor.execute(TOTAL_FILE_SIZE_SUM_SQL, [start, end,])
         summary_data = combine_summary_data(summary_data, cursor.fetchall())
 
         logger.debug('Gathering preprint usage at {}'.format(datetime.datetime.now()))
@@ -363,33 +369,36 @@ def gather_usage_data(start, end, dry_run, zip_file):
 
         cursor.execute(
             PREPRINT_LIST_SQL,
-            [
-                preprint_content_type,
-                preprint_content_type,
-                start,
-                end,
-            ]
+            [preprint_content_type, preprint_content_type, start, end,],
         )
         if not dry_run:
             logger.debug('Writing {} to zip.'.format(filename))
             write_raw_data(cursor=cursor, zip_file=zip_file, filename=filename)
 
         logger.debug('Gathering preprint summary at {}'.format(datetime.datetime.now()))
-        summary_data = combine_summary_data(summary_data, summarize(
-            sql=ND_PREPRINT_SIZE_SUM_SQL,
-            content_type=preprint_content_type,
-            start=start,
-            end=end,
-            cursor=cursor,
-        ))
-        logger.debug('Gathering regional preprint summary at {}'.format(datetime.datetime.now()))
-        summary_data = combine_summary_data(summary_data, summarize(
-            sql=REGIONAL_PREPRINT_SIZE_SUM_SQL,
-            content_type=preprint_content_type,
-            start=start,
-            end=end,
-            cursor=cursor,
-        ))
+        summary_data = combine_summary_data(
+            summary_data,
+            summarize(
+                sql=ND_PREPRINT_SIZE_SUM_SQL,
+                content_type=preprint_content_type,
+                start=start,
+                end=end,
+                cursor=cursor,
+            ),
+        )
+        logger.debug(
+            'Gathering regional preprint summary at {}'.format(datetime.datetime.now())
+        )
+        summary_data = combine_summary_data(
+            summary_data,
+            summarize(
+                sql=REGIONAL_PREPRINT_SIZE_SUM_SQL,
+                content_type=preprint_content_type,
+                start=start,
+                end=end,
+                cursor=cursor,
+            ),
+        )
 
     return summary_data
 
@@ -400,7 +409,9 @@ def write_summary_data(filename, summary_data, remote_base_folder):
     file_path = '{}{}'.format(TEMP_FOLDER, filename)
     old_remote = requests.get(
         url=remote_base_folder['files'],
-        headers={'Accept': 'application/vnd.api+json;version={}'.format(DEFAULT_API_VERSION)},
+        headers={
+            'Accept': 'application/vnd.api+json;version={}'.format(DEFAULT_API_VERSION)
+        },
         auth=bearer_token_auth(DS_METRICS_OSF_TOKEN),
         params={'filter[name]': filename},
     ).json()
@@ -418,13 +429,19 @@ def write_summary_data(filename, summary_data, remote_base_folder):
 
         header_skipped = False
         with open(file_path, 'w') as new_file:
-            writer = csv.writer(new_file, delimiter=',', lineterminator='\n', quoting=csv.QUOTE_ALL)
+            writer = csv.writer(
+                new_file, delimiter=',', lineterminator='\n', quoting=csv.QUOTE_ALL
+            )
             writer.writerow(header_row)
             with requests.get(
-                    url=upload,  # Yes, upload is correct here.
-                    headers={'Accept': 'application/vnd.api+json;version={}'.format(DEFAULT_API_VERSION)},
-                    auth=bearer_token_auth(DS_METRICS_OSF_TOKEN),
-                    stream=True,
+                url=upload,  # Yes, upload is correct here.
+                headers={
+                    'Accept': 'application/vnd.api+json;version={}'.format(
+                        DEFAULT_API_VERSION
+                    )
+                },
+                auth=bearer_token_auth(DS_METRICS_OSF_TOKEN),
+                stream=True,
             ) as old_file:
                 lines = []
                 for line in old_file.iter_lines():
@@ -446,7 +463,9 @@ def write_summary_data(filename, summary_data, remote_base_folder):
             'name': filename,
         }
         with open(file_path, 'w') as new_file:
-            writer = csv.writer(new_file, delimiter=',', lineterminator='\n', quoting=csv.QUOTE_ALL)
+            writer = csv.writer(
+                new_file, delimiter=',', lineterminator='\n', quoting=csv.QUOTE_ALL
+            )
             writer.writerow(header_row)
             writer.writerow(summary_row)
 
@@ -455,7 +474,9 @@ def write_summary_data(filename, summary_data, remote_base_folder):
 
 def write_raw_data(cursor, zip_file, filename):
     data_buffer = StringIO()
-    writer = csv.writer(data_buffer, delimiter=',', lineterminator='\n', quoting=csv.QUOTE_ALL)
+    writer = csv.writer(
+        data_buffer, delimiter=',', lineterminator='\n', quoting=csv.QUOTE_ALL
+    )
     writer.writerow(VALUES)
     for row in cursor.fetchall():
         row_to_write = []
@@ -471,7 +492,11 @@ def upload_to_storage(file_path, upload_url, params):
     with open(file_path, 'rb') as summary_file:
         requests.put(
             url=upload_url,
-            headers={'Accept': 'application/vnd.api+json;version={}'.format(DEFAULT_API_VERSION)},
+            headers={
+                'Accept': 'application/vnd.api+json;version={}'.format(
+                    DEFAULT_API_VERSION
+                )
+            },
             params=params,
             data=summary_file,
             auth=bearer_token_auth(DS_METRICS_OSF_TOKEN),
@@ -480,15 +505,17 @@ def upload_to_storage(file_path, upload_url, params):
 
 @celery_app.task(name='management.commands.data_storage_usage')
 def process_usages(
-        dry_run=False,
-        page_size=10000,
-        sample_only=False,
+    dry_run=False, page_size=10000, sample_only=False,
 ):
     if not dry_run:
         json = requests.get(
             url=DS_METRICS_BASE_FOLDER,
-            headers={'Accept': 'application/vnd.api+json;version={}'.format(DEFAULT_API_VERSION)},
-            auth=bearer_token_auth(DS_METRICS_OSF_TOKEN)
+            headers={
+                'Accept': 'application/vnd.api+json;version={}'.format(
+                    DEFAULT_API_VERSION
+                )
+            },
+            auth=bearer_token_auth(DS_METRICS_OSF_TOKEN),
         ).json()['data']
 
         remote_base_folder = {
@@ -506,21 +533,23 @@ def process_usages(
         cursor.execute(LAST_ROW_SQL)
         last_item = cursor.fetchone()[0]
     logger.debug('Last item: {}'.format(last_item))
-    summary_data = OrderedDict([
-        ('date', date.today().isoformat()),
-        ('total', 0),
-        ('deleted', 0),
-        ('registrations', 0),
-        ('nd_quick_files', 0),
-        ('nd_public_nodes', 0),
-        ('nd_private_nodes', 0),
-        ('nd_preprints', 0),
-        ('nd_supp_nodes', 0),
-        ('canada_montreal', 0),
-        ('australia_sydney', 0),
-        ('germany_frankfurt', 0),
-        ('united_states', 0),
-    ])
+    summary_data = OrderedDict(
+        [
+            ('date', date.today().isoformat()),
+            ('total', 0),
+            ('deleted', 0),
+            ('registrations', 0),
+            ('nd_quick_files', 0),
+            ('nd_public_nodes', 0),
+            ('nd_private_nodes', 0),
+            ('nd_preprints', 0),
+            ('nd_supp_nodes', 0),
+            ('canada_montreal', 0),
+            ('australia_sydney', 0),
+            ('germany_frankfurt', 0),
+            ('united_states', 0),
+        ]
+    )
     logger.debug('Collecting usage details - {}'.format(datetime.datetime.now()))
     summary_totals = {}
     start = 0
@@ -530,17 +559,14 @@ def process_usages(
     zip_file_name = 'data_storage_raw_{}.zip'.format(now)
     zip_file_path = '{}{}'.format(TEMP_FOLDER, zip_file_name)
     with zipfile.ZipFile(
-            zip_file_path, mode='w', compression=zipfile.ZIP_DEFLATED
+        zip_file_path, mode='w', compression=zipfile.ZIP_DEFLATED
     ) as zip_file:
         while keep_going:
             summary_totals = combine_summary_data(
                 summary_totals,
                 gather_usage_data(
-                    start=start,
-                    end=end,
-                    dry_run=dry_run,
-                    zip_file=zip_file,
-                )
+                    start=start, end=end, dry_run=dry_run, zip_file=zip_file,
+                ),
             )
             start = end + 1
             end = min(end + page_size, last_item)
@@ -551,10 +577,7 @@ def process_usages(
         upload_to_storage(
             file_path=zip_file_path,
             upload_url=remote_base_folder['upload'],
-            params={
-                'kind': 'file',
-                'name': zip_file_name,
-            }
+            params={'kind': 'file', 'name': zip_file_name,},
         )
 
     summary_data['total'] = summary_totals.get('total', 0)
@@ -573,26 +596,23 @@ def process_usages(
         write_summary_data(
             filename='osf_storage_metrics.csv',
             summary_data=summary_data,
-            remote_base_folder=remote_base_folder
+            remote_base_folder=remote_base_folder,
         )
 
     return summary_data
 
 
 def bearer_token_auth(token):
-    token_dict = {
-        'token_type': 'Bearer',
-        'access_token': token
-    }
+    token_dict = {'token_type': 'Bearer', 'access_token': token}
     return OAuth2(token=token_dict)
 
 
 class Command(BaseCommand):
-    help = '''Get raw and summary data of storage usage for Product and Metascience.
+    help = """Get raw and summary data of storage usage for Product and Metascience.
     For remote upload, add a setting for DS_METRICS_API_TOKEN that has write access to a waterbutler info URL
     for a folder on an OSF project stored in the DS_METRICS_BASE_FOLDER setting. WARNING: If you are making
     changes to this and are using Production data, do not put the data that this script outputs anywhere that
-    you wouldn't put production data.'''
+    you wouldn't put production data."""
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -632,16 +652,13 @@ class Command(BaseCommand):
                     'DS_METRICS_BASE_FOLDER and DS_METRICS_OSF_TOKEN settings are required if dry_run==False.'
                 )
 
-        logger.debug('Dry run: {}, page size: {}, sample only: {}, temp folder: {}'.format(
-            dry_run,
-            page_size,
-            sample_only,
-            TEMP_FOLDER
-        ))
+        logger.debug(
+            'Dry run: {}, page size: {}, sample only: {}, temp folder: {}'.format(
+                dry_run, page_size, sample_only, TEMP_FOLDER
+            )
+        )
         process_usages(
-            dry_run=dry_run,
-            page_size=page_size,
-            sample_only=sample_only,
+            dry_run=dry_run, page_size=page_size, sample_only=sample_only,
         )
         script_finish_time = datetime.datetime.now()
         logger.info('Script finished time: {}'.format(script_finish_time))

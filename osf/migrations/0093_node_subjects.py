@@ -15,11 +15,15 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='abstractnode',
             name='subjects',
-            field=models.ManyToManyField(blank=True, related_name='abstractnodes', to='osf.Subject'),
+            field=models.ManyToManyField(
+                blank=True, related_name='abstractnodes', to='osf.Subject'
+            ),
         ),
         migrations.AlterField(
             model_name='preprintservice',
             name='subjects',
-            field=models.ManyToManyField(blank=True, related_name='preprintservices', to='osf.Subject'),
+            field=models.ManyToManyField(
+                blank=True, related_name='preprintservices', to='osf.Subject'
+            ),
         ),
     ]

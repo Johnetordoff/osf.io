@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0004_abstractnode_comment_level'),
     ]
 
-    operations = [
-    ]
+    operations = []

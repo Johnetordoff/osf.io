@@ -7,10 +7,12 @@ from website.preprints.tasks import update_preprint_share
 
 logger = logging.getLogger(__name__)
 
+
 def reindex_provider(provider):
     logger.info('Sending {} preprints to SHARE...'.format(provider.preprints.count()))
     for preprint in provider.preprints.all():
         update_preprint_share(preprint, old_subjects=None, share_type=None)
+
 
 class Command(BaseCommand):
     def add_arguments(self, parser):

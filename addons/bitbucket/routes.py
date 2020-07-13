@@ -6,26 +6,21 @@ from addons.bitbucket import views
 
 api_routes = {
     'rules': [
-
         Rule(
-            [
-                '/settings/bitbucket/accounts/',
-            ],
+            ['/settings/bitbucket/accounts/',],
             'get',
             views.bitbucket_account_list,
             json_renderer,
         ),
-
         Rule(
             [
                 '/project/<pid>/bitbucket/settings/',
-                '/project/<pid>/node/<nid>/bitbucket/settings/'
+                '/project/<pid>/node/<nid>/bitbucket/settings/',
             ],
             'get',
             views.bitbucket_get_config,
             json_renderer,
         ),
-
         Rule(
             [
                 '/project/<pid>/bitbucket/settings/',
@@ -35,27 +30,24 @@ api_routes = {
             views.bitbucket_set_config,
             json_renderer,
         ),
-
         Rule(
             [
                 '/project/<pid>/bitbucket/user_auth/',
-                '/project/<pid>/node/<nid>/bitbucket/user_auth/'
+                '/project/<pid>/node/<nid>/bitbucket/user_auth/',
             ],
             'put',
             views.bitbucket_import_auth,
             json_renderer,
         ),
-
         Rule(
             [
                 '/project/<pid>/bitbucket/user_auth/',
-                '/project/<pid>/node/<nid>/bitbucket/user_auth/'
+                '/project/<pid>/node/<nid>/bitbucket/user_auth/',
             ],
             'delete',
             views.bitbucket_deauthorize_node,
             json_renderer,
         ),
-
         Rule(
             [
                 '/project/<pid>/bitbucket/tarball/',
@@ -78,7 +70,6 @@ api_routes = {
             {'archive': 'zip'},
             endpoint_suffix='__zip',
         ),
-
         Rule(
             [
                 '/project/<pid>/bitbucket/hgrid/root/',
@@ -88,7 +79,6 @@ api_routes = {
             views.bitbucket_root_folder,
             json_renderer,
         ),
-
     ],
-    'prefix': '/api/v1'
+    'prefix': '/api/v1',
 }

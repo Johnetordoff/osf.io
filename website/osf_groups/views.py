@@ -13,11 +13,21 @@ from website.osf_groups.signals import (
     member_added,
     group_added_to_node,
 )
+
 logger = logging.getLogger(__name__)
 
 
 @member_added.connect
-def notify_added_group_member(group, user, permission, auth=None, throttle=None, email_template='default', *args, **kwargs):
+def notify_added_group_member(
+    group,
+    user,
+    permission,
+    auth=None,
+    throttle=None,
+    email_template='default',
+    *args,
+    **kwargs
+):
     if email_template == 'false':
         return
 
@@ -48,10 +58,19 @@ def notify_added_group_member(group, user, permission, auth=None, throttle=None,
         user.save()
 
     else:
-        unreg_member_added.send(group, user=user, permission=permission, auth=auth, throttle=throttle, email_template=email_template)
+        unreg_member_added.send(
+            group,
+            user=user,
+            permission=permission,
+            auth=auth,
+            throttle=throttle,
+            email_template=email_template,
+        )
 
 
-def send_claim_member_email(email, user, group, permission, auth=None, throttle=None, email_template='default'):
+def send_claim_member_email(
+    email, user, group, permission, auth=None, throttle=None, email_template='default'
+):
     """
     Unregistered user claiming a user account as a group member of an OSFGroup. Send an email for claiming the account.
     Sends to the given email
@@ -86,7 +105,9 @@ def send_claim_member_email(email, user, group, permission, auth=None, throttle=
 
 
 @unreg_member_added.connect
-def finalize_invitation(group, user, permission, auth, throttle, email_template='default'):
+def finalize_invitation(
+    group, user, permission, auth, throttle, email_template='default'
+):
     email_template = mails.GROUP_MEMBER_UNREGISTERED_ADDED
 
     try:
@@ -95,7 +116,15 @@ def finalize_invitation(group, user, permission, auth, throttle, email_template=
         pass
     else:
         if record['email']:
-            send_claim_member_email(record['email'], user, group, permission, auth=auth, throttle=throttle, email_template=email_template)
+            send_claim_member_email(
+                record['email'],
+                user,
+                group,
+                permission,
+                auth=auth,
+                throttle=throttle,
+                email_template=email_template,
+            )
 
 
 @group_added_to_node.connect
@@ -119,7 +148,9 @@ def notify_added_node_group_member(group, node, user, permission, auth, throttle
             mimetype='html',
             user=user,
             node=node,
-            all_global_subscriptions_none=check_if_all_global_subscriptions_are_none(user),
+            all_global_subscriptions_none=check_if_all_global_subscriptions_are_none(
+                user
+            ),
             group_name=group.name,
             permission=permission,
             referrer_name=auth.user.fullname if auth else '',
@@ -129,10 +160,13 @@ def notify_added_node_group_member(group, node, user, permission, auth, throttle
         user.group_connected_email_records[group._id]['last_sent'] = get_timestamp()
         user.save()
 
+
 @group_added_to_node.connect
 def subscribe_group_member(group, node, user, permission, auth, throttle=None):
     try:
         subscribe_user_to_notifications(node, user)
     except InvalidSubscriptionError as err:
-        logger.warn('Skipping subscription of user {} to node {}'.format(user, node._id))
+        logger.warn(
+            'Skipping subscription of user {} to node {}'.format(user, node._id)
+        )
         logger.warn('Reason: {}'.format(str(err)))

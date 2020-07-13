@@ -20,7 +20,9 @@ def add_preprint_type_to_collections(state, schema):
     through_objects = []
     collections = Collection.objects.exclude(collected_types__in=[preprint_ct_id])
     for collection in collections:
-        through_objects.append(ThroughModel(collection_id=collection.id, contenttype_id=preprint_ct_id))
+        through_objects.append(
+            ThroughModel(collection_id=collection.id, contenttype_id=preprint_ct_id)
+        )
 
     ThroughModel.objects.bulk_create(through_objects)
 
@@ -31,6 +33,4 @@ class Migration(migrations.Migration):
         ('osf', '0144_merge_20181113_1420'),
     ]
 
-    operations = [
-        migrations.RunPython(add_preprint_type_to_collections, reverse_func)
-    ]
+    operations = [migrations.RunPython(add_preprint_type_to_collections, reverse_func)]

@@ -6,16 +6,18 @@ from website.settings import DOMAIN
 
 serializer_registry = {}
 
+
 def register(schema_id):
     """Register classes into serializer_registry"""
+
     def decorator(cls):
         serializer_registry[schema_id] = cls
         return cls
+
     return decorator
 
 
 class MetadataRecordSerializer(object):
-
     def serialize_json(self, metadata_record):
         raise NotImplementedError
 
@@ -43,34 +45,20 @@ class DataciteMetadataRecordSerializer(MetadataRecordSerializer):
         doc = {
             'creators': utils.datacite_format_contributors(target.visible_contributors),
             'titles': [
-                {
-                    'title': osfstorage_file.name
-                },
-                {
-                    'title': target.title,
-                    'titleType': 'AlternativeTitle'
-                }
+                {'title': osfstorage_file.name},
+                {'title': target.title, 'titleType': 'AlternativeTitle'},
             ],
             'publisher': 'Open Science Framework',
             'dates': [
-                {
-                    'date': str(osfstorage_file.created),
-                    'dateType': 'Created'
-                },
-                {
-                    'date': str(osfstorage_file.modified),
-                    'dateType': 'Updated'
-                }
+                {'date': str(osfstorage_file.created), 'dateType': 'Created'},
+                {'date': str(osfstorage_file.modified), 'dateType': 'Updated'},
             ],
         }
 
         file_description = record.metadata.get('file_description')
         if file_description:
             doc['descriptions'] = [
-                {
-                    'description': file_description,
-                    'descriptionType': 'Abstract'
-                }
+                {'description': file_description, 'descriptionType': 'Abstract'}
             ]
 
         subject_list = []
@@ -86,7 +74,7 @@ class DataciteMetadataRecordSerializer(MetadataRecordSerializer):
         resource_type = record.metadata.get('resource_type', '(:unas)')
         doc['resourceType'] = {
             'resourceType': resource_type,
-            'resourceTypeGeneral': utils.DATACITE_RESOURCE_TYPE_MAP.get(resource_type)
+            'resourceTypeGeneral': utils.DATACITE_RESOURCE_TYPE_MAP.get(resource_type),
         }
 
         doc['publicationYear'] = str(osfstorage_file.created.year)
@@ -97,7 +85,7 @@ class DataciteMetadataRecordSerializer(MetadataRecordSerializer):
                 {
                     'relatedIdentifier': related_publication_doi,
                     'relatedIdentifierType': 'DOI',
-                    'relationType': 'IsSupplementTo'
+                    'relationType': 'IsSupplementTo',
                 }
             ]
 
@@ -105,7 +93,7 @@ class DataciteMetadataRecordSerializer(MetadataRecordSerializer):
             doc['alternateIdentifiers'] = [
                 {
                     'alternateIdentifier': DOMAIN + osfstorage_file.guids.first()._id,
-                    'alternateIdentifierType': 'URL'
+                    'alternateIdentifierType': 'URL',
                 }
             ]
 
@@ -124,7 +112,11 @@ class DataciteMetadataRecordSerializer(MetadataRecordSerializer):
         if getattr(target, 'node_license', None):
             doc['rightsList'] = [utils.datacite_format_rights(target.node_license)]
 
-        latest_version_identifier = osfstorage_file.versions.all().order_by('-created').values_list('identifier', flat=True)
+        latest_version_identifier = (
+            osfstorage_file.versions.all()
+            .order_by('-created')
+            .values_list('identifier', flat=True)
+        )
         if latest_version_identifier:
             doc['version'] = latest_version_identifier[0]
 

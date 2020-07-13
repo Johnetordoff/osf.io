@@ -5,7 +5,15 @@ from django.core import serializers
 from django.core.exceptions import ValidationError
 from django.urls import reverse_lazy
 from django.shortcuts import redirect
-from django.views.generic import View, CreateView, ListView, DetailView, UpdateView, DeleteView, TemplateView
+from django.views.generic import (
+    View,
+    CreateView,
+    ListView,
+    DetailView,
+    UpdateView,
+    DeleteView,
+    TemplateView,
+)
 from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.forms.models import model_to_dict
@@ -62,7 +70,8 @@ class CollectionProviderList(PermissionRequiredMixin, ListView):
         query_set = kwargs.pop('object_list', self.object_list)
         page_size = self.get_paginate_by(query_set)
         paginator, page, query_set, is_paginated = self.paginate_queryset(
-            query_set, page_size)
+            query_set, page_size
+        )
         return {
             'collection_providers': query_set,
             'page': page,
@@ -89,17 +98,25 @@ class CollectionProviderDisplay(PermissionRequiredMixin, DetailView):
     raise_exception = True
 
     def get_object(self, queryset=None):
-        return CollectionProvider.objects.get(id=self.kwargs.get('collection_provider_id'))
+        return CollectionProvider.objects.get(
+            id=self.kwargs.get('collection_provider_id')
+        )
 
     def get_context_data(self, *args, **kwargs):
         collection_provider = self.get_object()
         collection_provider_attributes = model_to_dict(collection_provider)
-        collection_provider_attributes['default_license'] = collection_provider.default_license.name if collection_provider.default_license else None
+        collection_provider_attributes['default_license'] = (
+            collection_provider.default_license.name
+            if collection_provider.default_license
+            else None
+        )
         kwargs['collection_provider'] = collection_provider_attributes
         kwargs['import_form'] = ImportFileForm()
 
         # compile html list of licenses_acceptable so we can render them as a list
-        licenses_acceptable = list(collection_provider.licenses_acceptable.values_list('name', flat=True))
+        licenses_acceptable = list(
+            collection_provider.licenses_acceptable.values_list('name', flat=True)
+        )
         licenses_html = '<ul>'
         for license in licenses_acceptable:
             licenses_html += '<li>{}</li>'.format(license)
@@ -143,11 +160,21 @@ class CollectionProviderDisplay(PermissionRequiredMixin, DetailView):
 
         # get a dict of model fields so that we can set the initial value for the update form
         fields = model_to_dict(collection_provider)
-        fields['collected_type_choices'] = json.dumps(collection_provider.primary_collection.collected_type_choices)
-        fields['status_choices'] = json.dumps(collection_provider.primary_collection.status_choices)
-        fields['volume_choices'] = json.dumps(collection_provider.primary_collection.volume_choices)
-        fields['issue_choices'] = json.dumps(collection_provider.primary_collection.issue_choices)
-        fields['program_area_choices'] = json.dumps(collection_provider.primary_collection.program_area_choices)
+        fields['collected_type_choices'] = json.dumps(
+            collection_provider.primary_collection.collected_type_choices
+        )
+        fields['status_choices'] = json.dumps(
+            collection_provider.primary_collection.status_choices
+        )
+        fields['volume_choices'] = json.dumps(
+            collection_provider.primary_collection.volume_choices
+        )
+        fields['issue_choices'] = json.dumps(
+            collection_provider.primary_collection.issue_choices
+        )
+        fields['program_area_choices'] = json.dumps(
+            collection_provider.primary_collection.program_area_choices
+        )
         kwargs['form'] = CollectionProviderForm(initial=fields)
 
         # set api key for tinymce
@@ -163,23 +190,33 @@ class CollectionProviderChangeForm(PermissionRequiredMixin, UpdateView):
     form_class = CollectionProviderForm
 
     def form_valid(self, form):
-        self.object.primary_collection.collected_type_choices.extend(form.cleaned_data['collected_type_choices']['added'])
+        self.object.primary_collection.collected_type_choices.extend(
+            form.cleaned_data['collected_type_choices']['added']
+        )
         for item in form.cleaned_data['collected_type_choices']['removed']:
             self.object.primary_collection.collected_type_choices.remove(item)
 
-        self.object.primary_collection.status_choices.extend(form.cleaned_data['status_choices']['added'])
+        self.object.primary_collection.status_choices.extend(
+            form.cleaned_data['status_choices']['added']
+        )
         for item in form.cleaned_data['status_choices']['removed']:
             self.object.primary_collection.status_choices.remove(item)
 
-        self.object.primary_collection.issue_choices.extend(form.cleaned_data['issue_choices']['added'])
+        self.object.primary_collection.issue_choices.extend(
+            form.cleaned_data['issue_choices']['added']
+        )
         for item in form.cleaned_data['issue_choices']['removed']:
             self.object.primary_collection.issue_choices.remove(item)
 
-        self.object.primary_collection.volume_choices.extend(form.cleaned_data['volume_choices']['added'])
+        self.object.primary_collection.volume_choices.extend(
+            form.cleaned_data['volume_choices']['added']
+        )
         for item in form.cleaned_data['volume_choices']['removed']:
             self.object.primary_collection.volume_choices.remove(item)
 
-        self.object.primary_collection.program_area_choices.extend(form.cleaned_data['program_area_choices']['added'])
+        self.object.primary_collection.program_area_choices.extend(
+            form.cleaned_data['program_area_choices']['added']
+        )
         for item in form.cleaned_data['program_area_choices']['removed']:
             self.object.primary_collection.program_area_choices.remove(item)
 
@@ -195,15 +232,21 @@ class CollectionProviderChangeForm(PermissionRequiredMixin, UpdateView):
 
     def get_context_data(self, *args, **kwargs):
         kwargs['import_form'] = ImportFileForm()
-        return super(CollectionProviderChangeForm, self).get_context_data(*args, **kwargs)
+        return super(CollectionProviderChangeForm, self).get_context_data(
+            *args, **kwargs
+        )
 
     def get_object(self, queryset=None):
         provider_id = self.kwargs.get('collection_provider_id')
         return CollectionProvider.objects.get(id=provider_id)
 
     def get_success_url(self, *args, **kwargs):
-        return reverse_lazy('collection_providers:detail',
-                            kwargs={'collection_provider_id': self.kwargs.get('collection_provider_id')})
+        return reverse_lazy(
+            'collection_providers:detail',
+            kwargs={
+                'collection_provider_id': self.kwargs.get('collection_provider_id')
+            },
+        )
 
 
 class DeleteCollectionProvider(PermissionRequiredMixin, DeleteView):
@@ -213,15 +256,23 @@ class DeleteCollectionProvider(PermissionRequiredMixin, DeleteView):
     success_url = reverse_lazy('collection_providers:list')
 
     def delete(self, request, *args, **kwargs):
-        provider = CollectionProvider.objects.get(id=self.kwargs['collection_provider_id'])
+        provider = CollectionProvider.objects.get(
+            id=self.kwargs['collection_provider_id']
+        )
         if provider.primary_collection.collectionsubmission_set.count() > 0:
-            return redirect('collection_providers:cannot_delete', collection_provider_id=provider.pk)
+            return redirect(
+                'collection_providers:cannot_delete', collection_provider_id=provider.pk
+            )
         return super(DeleteCollectionProvider, self).delete(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        provider = CollectionProvider.objects.get(id=self.kwargs['collection_provider_id'])
+        provider = CollectionProvider.objects.get(
+            id=self.kwargs['collection_provider_id']
+        )
         if provider.primary_collection.collectionsubmission_set.count() > 0:
-            return redirect('collection_providers:cannot_delete', collection_provider_id=provider.pk)
+            return redirect(
+                'collection_providers:cannot_delete', collection_provider_id=provider.pk
+            )
         return super(DeleteCollectionProvider, self).get(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
@@ -233,7 +284,9 @@ class CannotDeleteProvider(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(CannotDeleteProvider, self).get_context_data(**kwargs)
-        context['provider'] = CollectionProvider.objects.get(id=self.kwargs['collection_provider_id'])
+        context['provider'] = CollectionProvider.objects.get(
+            id=self.kwargs['collection_provider_id']
+        )
         return context
 
 
@@ -242,13 +295,24 @@ class ExportColectionProvider(PermissionRequiredMixin, View):
     raise_exception = True
 
     def get(self, request, *args, **kwargs):
-        collection_provider = CollectionProvider.objects.get(id=self.kwargs['collection_provider_id'])
+        collection_provider = CollectionProvider.objects.get(
+            id=self.kwargs['collection_provider_id']
+        )
         data = serializers.serialize('json', [collection_provider])
         cleaned_data = json.loads(data)[0]
         cleaned_fields = cleaned_data['fields']
-        cleaned_fields['licenses_acceptable'] = [node_license.license_id for node_license in collection_provider.licenses_acceptable.all()]
-        cleaned_fields['default_license'] = collection_provider.default_license.license_id if collection_provider.default_license else ''
-        cleaned_fields['primary_collection'] = self.serialize_primary_collection(cleaned_fields['primary_collection'])
+        cleaned_fields['licenses_acceptable'] = [
+            node_license.license_id
+            for node_license in collection_provider.licenses_acceptable.all()
+        ]
+        cleaned_fields['default_license'] = (
+            collection_provider.default_license.license_id
+            if collection_provider.default_license
+            else ''
+        )
+        cleaned_fields['primary_collection'] = self.serialize_primary_collection(
+            cleaned_fields['primary_collection']
+        )
         cleaned_data['fields'] = cleaned_fields
         filename = '{}_export.json'.format(collection_provider.name)
         response = HttpResponse(json.dumps(cleaned_data), content_type='text/json')
@@ -275,10 +339,16 @@ class ImportCollectionProvider(PermissionRequiredMixin, View):
             try:
                 collection_provider = self.create_or_update_provider(cleaned_result)
             except ValidationError:
-                messages.error(request, 'A Validation Error occured, this JSON is invalid or shares an id with an already existing provider.')
+                messages.error(
+                    request,
+                    'A Validation Error occured, this JSON is invalid or shares an id with an already existing provider.',
+                )
                 return redirect('collection_providers:create')
 
-            return redirect('collection_providers:detail', collection_provider_id=collection_provider.id)
+            return redirect(
+                'collection_providers:detail',
+                collection_provider_id=collection_provider.id,
+            )
 
     def parse_file(self, f):
         parsed_file = ''
@@ -295,7 +365,10 @@ class ImportCollectionProvider(PermissionRequiredMixin, View):
 
     def create_or_update_provider(self, provider_data):
         provider = self.get_page_provider()
-        licenses = [NodeLicense.objects.get(license_id=license_id) for license_id in provider_data.pop('licenses_acceptable', [])]
+        licenses = [
+            NodeLicense.objects.get(license_id=license_id)
+            for license_id in provider_data.pop('licenses_acceptable', [])
+        ]
         default_license = provider_data.pop('default_license', False)
         primary_collection = provider_data.pop('primary_collection', None)
         provider_data.pop('additional_providers')
@@ -310,14 +383,26 @@ class ImportCollectionProvider(PermissionRequiredMixin, View):
             provider.save()
 
         if primary_collection:
-            provider.primary_collection.collected_type_choices = primary_collection['fields']['collected_type_choices']
-            provider.primary_collection.status_choices = primary_collection['fields']['status_choices']
-            provider.primary_collection.issue_choices = primary_collection['fields']['issue_choices']
-            provider.primary_collection.volume_choices = primary_collection['fields']['volume_choices']
-            provider.primary_collection.program_area_choices = primary_collection['fields']['program_area_choices']
+            provider.primary_collection.collected_type_choices = primary_collection[
+                'fields'
+            ]['collected_type_choices']
+            provider.primary_collection.status_choices = primary_collection['fields'][
+                'status_choices'
+            ]
+            provider.primary_collection.issue_choices = primary_collection['fields'][
+                'issue_choices'
+            ]
+            provider.primary_collection.volume_choices = primary_collection['fields'][
+                'volume_choices'
+            ]
+            provider.primary_collection.program_area_choices = primary_collection[
+                'fields'
+            ]['program_area_choices']
             provider.primary_collection.save()
         if licenses:
             provider.licenses_acceptable.set(licenses)
         if default_license:
-            provider.default_license = NodeLicense.objects.get(license_id=default_license)
+            provider.default_license = NodeLicense.objects.get(
+                license_id=default_license
+            )
         return provider

@@ -17,6 +17,7 @@ class OneDriveAccountFactory(ExternalAccountFactory):
     oauth_secret = Sequence(lambda n: 'secret-{0}'.format(n))
     expires_at = timezone.now() + relativedelta(days=1)
 
+
 class OneDriveUserSettingsFactory(DjangoModelFactory):
     class Meta:
         model = UserSettings

@@ -3,6 +3,7 @@ import sys
 
 WHEELHOUSE_PATH = os.environ.get('WHEELHOUSE')
 
+
 def get_bin_path():
     """Get parent path of current python binary.
     """

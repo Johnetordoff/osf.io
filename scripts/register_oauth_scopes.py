@@ -32,7 +32,9 @@ def get_or_create(name, description, save=True):
     """
 
     if name != name.lower():
-        raise ValueError('Scope names are case-sensitive, and should always be lower-case.')
+        raise ValueError(
+            'Scope names are case-sensitive, and should always be lower-case.'
+        )
 
     try:
         scope_obj = ApiOAuth2Scope.objects.get(name=name)
@@ -64,7 +66,11 @@ def do_populate(clear=False):
         if scope.is_public is True:
             get_or_create(name, scope.description, save=True)
         else:
-            logger.info('{} is not a publicly advertised scope; did not load into database'.format(name))
+            logger.info(
+                '{} is not a publicly advertised scope; did not load into database'.format(
+                    name
+                )
+            )
 
 
 def main(dry=True):

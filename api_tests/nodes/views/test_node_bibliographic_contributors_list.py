@@ -28,10 +28,10 @@ class TestNodeBibliographicContributors:
         return AuthUserFactory()
 
     @pytest.fixture()
-    def project(self, admin_contributor_bib, write_contributor_non_bib, read_contributor_bib):
-        project = ProjectFactory(
-            creator=admin_contributor_bib
-        )
+    def project(
+        self, admin_contributor_bib, write_contributor_non_bib, read_contributor_bib
+    ):
+        project = ProjectFactory(creator=admin_contributor_bib)
         project.add_contributor(write_contributor_non_bib, WRITE, visible=False)
         project.add_contributor(read_contributor_bib, READ)
         project.save()
@@ -41,8 +41,16 @@ class TestNodeBibliographicContributors:
     def url(self, project):
         return '/{}nodes/{}/bibliographic_contributors/'.format(API_BASE, project._id)
 
-    def test_list_and_filter_bibliographic_contributors(self, app, url, project, admin_contributor_bib,
-            write_contributor_non_bib, read_contributor_bib, non_contributor):
+    def test_list_and_filter_bibliographic_contributors(
+        self,
+        app,
+        url,
+        project,
+        admin_contributor_bib,
+        write_contributor_non_bib,
+        read_contributor_bib,
+        non_contributor,
+    ):
 
         # Test GET unauthenticated
         res = app.get(url, expect_errors=True)
@@ -61,7 +69,9 @@ class TestNodeBibliographicContributors:
         assert res.status_code == 200
 
         # Test POST not allowed
-        res = app.post_json_api(url, auth=write_contributor_non_bib.auth, expect_errors=True)
+        res = app.post_json_api(
+            url, auth=write_contributor_non_bib.auth, expect_errors=True
+        )
         assert res.status_code == 405
 
         # Test GET contributor, only bibliographic contribs included
@@ -85,4 +95,6 @@ class TestNodeBibliographicContributors:
         assert res.status_code == 200
         assert res.content_type == 'application/vnd.api+json'
         assert len(res.json['data']) == 1
-        assert res.json['data'][0]['id'] == '{}-{}'.format(project._id, admin_contributor_bib._id)
+        assert res.json['data'][0]['id'] == '{}-{}'.format(
+            project._id, admin_contributor_bib._id
+        )

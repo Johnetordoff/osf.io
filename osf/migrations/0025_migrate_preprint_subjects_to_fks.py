@@ -18,17 +18,17 @@ def migrate_data(state, schema):
         pp.save()
     field.auto_now = True
 
+
 def unmigrate_data(state, scheme):
     Preprint = state.get_model('osf', 'preprintservice')
     # Avoid updating date_modified for migration
     field = Preprint._meta.get_field('date_modified')
     field.auto_now = False
     for pp in Preprint.objects.all():
-        pp.subjects = [
-            [s._id for s in hier] for hier in pp.subject_hierarchy
-        ]
+        pp.subjects = [[s._id for s in hier] for hier in pp.subject_hierarchy]
         pp.save()
     field.auto_now = True
+
 
 class Migration(migrations.Migration):
 
@@ -40,9 +40,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='preprintservice',
             name='_subjects',
-            field=models.ManyToManyField(blank=True, related_name='preprint_services', to='osf.Subject'),
+            field=models.ManyToManyField(
+                blank=True, related_name='preprint_services', to='osf.Subject'
+            ),
         ),
-        migrations.RunPython(
-            migrate_data, unmigrate_data
-        ),
+        migrations.RunPython(migrate_data, unmigrate_data),
     ]

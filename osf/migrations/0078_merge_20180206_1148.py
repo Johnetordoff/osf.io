@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0077_add_maintenance_permissions'),
     ]
 
-    operations = [
-    ]
+    operations = []

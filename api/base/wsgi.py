@@ -11,12 +11,14 @@ from api.base import settings as api_settings
 
 if not settings.DEBUG_MODE:
     from gevent import monkey
+
     monkey.patch_all()
     # PATCH: avoid deadlock on getaddrinfo, this patch is necessary while waiting for
     # the final gevent 1.1 release (https://github.com/gevent/gevent/issues/349)
     #  'foo'.encode('idna')  # noqa
 
     from psycogreen.gevent import patch_psycopg  # noqa
+
     patch_psycopg()
 
 
@@ -26,8 +28,16 @@ from website.app import init_app  # noqa
 
 if os.environ.get('API_REMOTE_DEBUG', None):
     import pydevd
+
     remote_parts = os.environ.get('API_REMOTE_DEBUG').split(':')
-    pydevd.settrace(remote_parts[0], port=int(remote_parts[1]), suspend=False, stdoutToServer=True, stderrToServer=True, trace_only_current_thread=False)
+    pydevd.settrace(
+        remote_parts[0],
+        port=int(remote_parts[1]),
+        suspend=False,
+        stdoutToServer=True,
+        stderrToServer=True,
+        trace_only_current_thread=False,
+    )
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'api.base.settings')
 
@@ -51,6 +61,7 @@ def __getattr__(self, attr):
     except AttributeError:
         info = sys.exc_info()
         six.reraise(info[0], info[1], info[2].tb_next)
+
 
 Field.context = context
 Request.__getattr__ = __getattr__

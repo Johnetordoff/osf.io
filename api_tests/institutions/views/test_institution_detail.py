@@ -4,6 +4,7 @@ from osf_tests.factories import InstitutionFactory
 from api.base.settings.defaults import API_BASE
 from django.core.validators import URLValidator
 
+
 @pytest.mark.django_db
 class TestInstitutionDetail:
 
@@ -13,7 +14,7 @@ class TestInstitutionDetail:
         'users',
         'department_metrics',
         'user_metrics',
-        'summary_metrics'
+        'summary_metrics',
     }
 
     is_valid_url = URLValidator()

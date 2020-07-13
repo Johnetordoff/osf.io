@@ -2,9 +2,7 @@
 import mock
 import pytest
 from api.base.settings.defaults import API_BASE
-from osf_tests.factories import (
-    AuthUserFactory,
-)
+from osf_tests.factories import AuthUserFactory
 from website.settings import MAILCHIMP_GENERAL_LIST, OSF_HELP_LIST
 
 
@@ -12,9 +10,11 @@ from website.settings import MAILCHIMP_GENERAL_LIST, OSF_HELP_LIST
 def user_one():
     return AuthUserFactory()
 
+
 @pytest.fixture()
 def user_two():
     return AuthUserFactory()
+
 
 @pytest.fixture()
 def url(user_one):
@@ -23,7 +23,6 @@ def url(user_one):
 
 @pytest.mark.django_db
 class TestUserSettingsGet:
-
     def test_get(self, app, user_one, user_two, url):
         # User unauthenticated
         res = app.get(url, expect_errors=True)
@@ -56,18 +55,12 @@ class TestUserSettingsGet:
         assert res.json['data']['attributes']['two_factor_confirmed'] is False
         assert res.json['data']['attributes']['secret'] == addon.totp_secret_b32
 
+
 @pytest.mark.django_db
 class TestUserSettingsUpdateTwoFactor:
-
     @pytest.fixture()
     def payload(self, user_one):
-        return {
-            'data': {
-                'type': 'user_settings',
-                'id': user_one._id,
-                'attributes': {}
-            }
-        }
+        return {'data': {'type': 'user_settings', 'id': user_one._id, 'attributes': {}}}
 
     def test_user_settings_type(self, app, user_one, url, payload):
         payload['data']['type'] = 'Invalid type'
@@ -128,13 +121,18 @@ class TestUserSettingsUpdateTwoFactor:
         assert addon is None
 
     @mock.patch('addons.twofactor.models.UserSettings.verify_code')
-    def test_update_two_factor_verification(self, mock_verify_code, app, user_one, url, payload):
+    def test_update_two_factor_verification(
+        self, mock_verify_code, app, user_one, url, payload
+    ):
         # Two factor not enabled
         mock_verify_code.return_value = True
         payload['data']['attributes']['two_factor_verification'] = 123456
         res = app.patch_json_api(url, payload, auth=user_one.auth, expect_errors=True)
         assert res.status_code == 400
-        assert res.json['errors'][0]['detail'] == 'Two-factor authentication is not enabled.'
+        assert (
+            res.json['errors'][0]['detail']
+            == 'Two-factor authentication is not enabled.'
+        )
 
         # Two factor invalid code
         mock_verify_code.return_value = False
@@ -142,7 +140,10 @@ class TestUserSettingsUpdateTwoFactor:
         payload['data']['attributes']['two_factor_verification'] = 123456
         res = app.patch_json_api(url, payload, auth=user_one.auth, expect_errors=True)
         assert res.status_code == 403
-        assert res.json['errors'][0]['detail'] == 'The two-factor verification code you provided is invalid.'
+        assert (
+            res.json['errors'][0]['detail']
+            == 'The two-factor verification code you provided is invalid.'
+        )
 
         # Test invalid data type
         mock_verify_code.return_value = False
@@ -170,7 +171,6 @@ class TestUserSettingsUpdateTwoFactor:
 
 @pytest.mark.django_db
 class TestUserSettingsUpdateMailingList:
-
     @pytest.fixture()
     def payload(self, user_one):
         return {
@@ -179,8 +179,8 @@ class TestUserSettingsUpdateMailingList:
                 'type': 'user_settings',
                 'attributes': {
                     'subscribe_osf_help_email': False,
-                    'subscribe_osf_general_email': True
-                }
+                    'subscribe_osf_general_email': True,
+                },
             }
         }
 
@@ -193,8 +193,7 @@ class TestUserSettingsUpdateMailingList:
                 'attributes': {
                     'subscribe_osf_help_email': False,
                     'subscribe_osf_general_email': '22',
-                }
-
+                },
             }
         }
 
@@ -208,7 +207,9 @@ class TestUserSettingsUpdateMailingList:
         mailchimp_mock.assert_called_with(user_one, MAILCHIMP_GENERAL_LIST, True)
 
     def test_bad_payload_patch_400(self, app, user_one, bad_payload, url):
-        res = app.patch_json_api(url, bad_payload, auth=user_one.auth, expect_errors=True)
+        res = app.patch_json_api(
+            url, bad_payload, auth=user_one.auth, expect_errors=True
+        )
 
         assert res.status_code == 400
         assert res.json['errors'][0]['detail'] == u'"22" is not a valid boolean.'
@@ -226,21 +227,20 @@ class TestUserSettingsUpdateMailingList:
 
 @pytest.mark.django_db
 class TestUpdateRequestedDeactivation:
-
     @pytest.fixture()
     def payload(self, user_one):
         return {
             'data': {
                 'id': user_one._id,
                 'type': 'user_settings',
-                'attributes': {
-                    'deactivation_requested': True
-                }
+                'attributes': {'deactivation_requested': True},
             }
         }
 
     @mock.patch('framework.auth.views.mails.send_mail')
-    def test_patch_requested_deactivation(self, mock_mail, app, user_one, user_two, url, payload):
+    def test_patch_requested_deactivation(
+        self, mock_mail, app, user_one, user_two, url, payload
+    ):
         # Logged out
         res = app.patch_json_api(url, payload, expect_errors=True)
         assert res.status_code == 401

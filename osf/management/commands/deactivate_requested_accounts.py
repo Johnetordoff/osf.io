@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from framework.celery_tasks import app as celery_app
 from website.app import setup_django
+
 setup_django()
 from osf.models import OSFUser
 from website.settings import OSF_SUPPORT_EMAIL, OSF_CONTACT_EMAIL
@@ -15,11 +16,19 @@ logging.basicConfig(level=logging.INFO)
 
 
 def deactivate_requested_accounts(dry_run=True):
-    users = OSFUser.objects.filter(requested_deactivation=True, contacted_deactivation=False, date_disabled__isnull=True)
+    users = OSFUser.objects.filter(
+        requested_deactivation=True,
+        contacted_deactivation=False,
+        date_disabled__isnull=True,
+    )
 
     for user in users:
         if user.has_resources:
-            logger.info('OSF support is being emailed about deactivating the account of user {}.'.format(user._id))
+            logger.info(
+                'OSF support is being emailed about deactivating the account of user {}.'.format(
+                    user._id
+                )
+            )
             if not dry_run:
                 mails.send_mail(
                     to_addr=OSF_SUPPORT_EMAIL,
@@ -56,23 +65,22 @@ def main(dry_run=False):
     have any content can be automatically deleted.
     """
     if dry_run:
-        logger.info('This is a dry run; no changes will be saved, and no emails will be sent.')
+        logger.info(
+            'This is a dry run; no changes will be saved, and no emails will be sent.'
+        )
     deactivate_requested_accounts(dry_run=dry_run)
 
 
 class Command(BaseCommand):
-    help = '''
+    help = """
     If there are any users who want to be deactivated we will either: immediately deactivate, or if they have active
     resources (undeleted nodes, preprints etc) we contact admin to guide the user through the deactivation process.
-    '''
+    """
 
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
         parser.add_argument(
-            '--dry',
-            action='store_true',
-            dest='dry_run',
-            help='Dry run',
+            '--dry', action='store_true', dest='dry_run', help='Dry run',
         )
 
     # Management command handler

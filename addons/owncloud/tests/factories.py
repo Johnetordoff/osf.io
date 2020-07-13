@@ -10,7 +10,9 @@ class OwnCloudAccountFactory(ExternalAccountFactory):
     provider = 'owncloud'
     provider_id = factory.Sequence(lambda n: 'id-{0}'.format(n))
     profile_url = factory.Sequence(lambda n: 'https://localhost/{0}/owncloud'.format(n))
-    oauth_secret = factory.Sequence(lambda n: 'https://localhost/{0}/owncloud'.format(n))
+    oauth_secret = factory.Sequence(
+        lambda n: 'https://localhost/{0}/owncloud'.format(n)
+    )
     display_name = 'catname'
     oauth_key = 'meoword'
 

@@ -12,6 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0141_merge_20181023_1526'),
     ]
 
-    operations = [
-        DeleteWaffleFlags([EMBER_PROJECT_FORKS])
-    ]
+    operations = [DeleteWaffleFlags([EMBER_PROJECT_FORKS])]

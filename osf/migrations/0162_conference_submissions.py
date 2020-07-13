@@ -15,10 +15,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='conference',
             name='submissions',
-            field=models.ManyToManyField(related_name='conferences', to='osf.AbstractNode'),
+            field=models.ManyToManyField(
+                related_name='conferences', to='osf.AbstractNode'
+            ),
         ),
-        migrations.RemoveField(
-            model_name='conference',
-            name='num_submissions',
-        ),
+        migrations.RemoveField(model_name='conference', name='num_submissions',),
     ]

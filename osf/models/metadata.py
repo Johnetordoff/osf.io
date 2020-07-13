@@ -18,14 +18,20 @@ class FileMetadataRecord(ObjectIDMixin, BaseModel):
 
     metadata = DateTimeAwareJSONField(default=dict, blank=True)
 
-    file = models.ForeignKey(OsfStorageFile, related_name='records', on_delete=models.SET_NULL, null=True)
-    schema = models.ForeignKey(FileMetadataSchema, related_name='records', on_delete=models.SET_NULL, null=True)
+    file = models.ForeignKey(
+        OsfStorageFile, related_name='records', on_delete=models.SET_NULL, null=True
+    )
+    schema = models.ForeignKey(
+        FileMetadataSchema, related_name='records', on_delete=models.SET_NULL, null=True
+    )
 
     class Meta:
         unique_together = ('file', 'schema')
 
     def __unicode__(self):
-        return '(file={}, schema={}, _id={})'.format(self.file.name, self.schema, self._id)
+        return '(file={}, schema={}, _id={})'.format(
+            self.file.name, self.schema, self._id
+        )
 
     @property
     def absolute_api_v2_url(self):
@@ -40,7 +46,9 @@ class FileMetadataRecord(ObjectIDMixin, BaseModel):
         return self.serializer.serialize(self, format)
 
     def validate_metadata(self, proposed_metadata):
-        return jsonschema.validate(proposed_metadata, from_json(self.serializer.osf_schema))
+        return jsonschema.validate(
+            proposed_metadata, from_json(self.serializer.osf_schema)
+        )
 
     def update(self, proposed_metadata, user=None):
         auth = Auth(user) if user else None
@@ -52,10 +60,10 @@ class FileMetadataRecord(ObjectIDMixin, BaseModel):
             target = self.file.target
             target.add_log(
                 action=target.log_class.FILE_METADATA_UPDATED,
-                params={
-                    'path': self.file.materialized_path,
-                },
+                params={'path': self.file.materialized_path,},
                 auth=auth,
             )
         else:
-            raise PermissionsError('You must have write access for this file to update its metadata.')
+            raise PermissionsError(
+                'You must have write access for this file to update its metadata.'
+            )

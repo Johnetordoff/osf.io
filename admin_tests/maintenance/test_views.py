@@ -20,14 +20,17 @@ pytestmark = pytest.mark.django_db
 def date():
     return timezone.now()
 
+
 @pytest.fixture()
 def maintenance_alert():
     maintenance.set_maintenance('')
     return maintenance.get_maintenance()
 
+
 @pytest.fixture()
 def user():
     return AuthUserFactory()
+
 
 @pytest.fixture()
 def req(user):
@@ -35,9 +38,9 @@ def req(user):
     req.user = user
     return req
 
+
 @pytest.mark.urls('admin.base.urls')
 class TestMaintenanceDisplay:
-
     @pytest.fixture()
     def plain_view(self):
         return views.MaintenanceDisplay
@@ -77,7 +80,6 @@ class TestMaintenanceDisplay:
 
 @pytest.mark.urls('admin.base.urls')
 class TestDeleteMaintenance:
-
     @pytest.fixture()
     def plain_view(self):
         return views.DeleteMaintenance

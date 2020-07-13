@@ -1,7 +1,6 @@
 # from nose.tools import *  # noqa
 import mock
-from nose.tools import (assert_false, assert_true,
-    assert_equal, assert_is_none)
+from nose.tools import assert_false, assert_true, assert_equal, assert_is_none
 import pytest
 import unittest
 
@@ -12,22 +11,24 @@ from tests.base import get_default_metaschema
 
 from addons.base.tests.models import (
     OAuthAddonNodeSettingsTestSuiteMixin,
-    OAuthAddonUserSettingTestSuiteMixin
+    OAuthAddonUserSettingTestSuiteMixin,
 )
 from addons.s3.models import NodeSettings
 from addons.s3.tests.factories import (
     S3UserSettingsFactory,
     S3NodeSettingsFactory,
-    S3AccountFactory
+    S3AccountFactory,
 )
 
 pytestmark = pytest.mark.django_db
+
 
 class TestUserSettings(OAuthAddonUserSettingTestSuiteMixin, unittest.TestCase):
 
     short_name = 's3'
     full_name = 'Amazon S3'
     ExternalAccountFactory = S3AccountFactory
+
 
 class TestNodeSettings(OAuthAddonNodeSettingsTestSuiteMixin, unittest.TestCase):
 
@@ -76,8 +77,10 @@ class TestNodeSettings(OAuthAddonNodeSettingsTestSuiteMixin, unittest.TestCase):
         self.user_settings.save()
         credentials = self.node_settings.serialize_waterbutler_credentials()
 
-        expected = {'access_key': self.node_settings.external_account.oauth_key,
-                    'secret_key': self.node_settings.external_account.oauth_secret}
+        expected = {
+            'access_key': self.node_settings.external_account.oauth_key,
+            'secret_key': self.node_settings.external_account.oauth_secret,
+        }
         assert_equal(credentials, expected)
 
     @mock.patch('addons.s3.models.bucket_exists')
@@ -96,6 +99,8 @@ class TestNodeSettings(OAuthAddonNodeSettingsTestSuiteMixin, unittest.TestCase):
 
     def test_serialize_settings(self):
         settings = self.node_settings.serialize_waterbutler_settings()
-        expected = {'bucket': self.node_settings.folder_id,
-                    'encrypt_uploads': self.node_settings.encrypt_uploads}
+        expected = {
+            'bucket': self.node_settings.folder_id,
+            'encrypt_uploads': self.node_settings.encrypt_uploads,
+        }
         assert_equal(settings, expected)

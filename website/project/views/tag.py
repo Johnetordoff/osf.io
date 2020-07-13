@@ -8,7 +8,9 @@ from osf.models import AbstractNode
 from osf.utils.permissions import WRITE
 from osf.exceptions import InvalidTagError, NodeStateError, TagNotFoundError
 from website.project.decorators import (
-    must_be_valid_project, must_have_permission, must_not_be_registration
+    must_be_valid_project,
+    must_have_permission,
+    must_not_be_registration,
 )
 
 
@@ -16,15 +18,13 @@ from website.project.decorators import (
 # nodes serialized, before re-enabling.
 @collect_auth
 def project_tag(tag, auth, **kwargs):
-    nodes = AbstractNode.objects.filter(tags___id=tag).can_view(auth.user).values('title', 'url')
+    nodes = (
+        AbstractNode.objects.filter(tags___id=tag)
+        .can_view(auth.user)
+        .values('title', 'url')
+    )
     return {
-        'nodes': [
-            {
-                'title': node['title'],
-                'url': node['url'],
-            }
-            for node in nodes
-        ],
+        'nodes': [{'title': node['title'], 'url': node['url'],} for node in nodes],
         'tag': tag,
     }
 

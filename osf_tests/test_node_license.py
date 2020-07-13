@@ -4,40 +4,44 @@ import pytest
 import builtins
 
 from django.db.utils import IntegrityError
-from nose.tools import assert_equal, assert_is_not_none, assert_not_equal, assert_false, assert_raises
+from nose.tools import (
+    assert_equal,
+    assert_is_not_none,
+    assert_not_equal,
+    assert_false,
+    assert_raises,
+)
 from osf.models.licenses import serialize_node_license_record, serialize_node_license
 from osf.utils.migrations import ensure_licenses
 from osf.exceptions import NodeStateError
 from framework.auth.core import Auth
 
 
-from osf.models import (
-    NodeLicense,
-    NodeLog
-)
+from osf.models import NodeLicense, NodeLog
 
 from osf_tests.factories import (
     AuthUserFactory,
     ProjectFactory,
-    NodeLicenseRecordFactory
+    NodeLicenseRecordFactory,
 )
 
 CHANGED_NAME = 'FOO BAR'
 CHANGED_TEXT = 'Some good new text'
 
 CHANGED_PROPERTIES = ['foo', 'bar']
-LICENSE_TEXT = json.dumps({
-    'MIT': {
-        'name': CHANGED_NAME,
-        'text': CHANGED_TEXT,
-        'properties': CHANGED_PROPERTIES
+LICENSE_TEXT = json.dumps(
+    {
+        'MIT': {
+            'name': CHANGED_NAME,
+            'text': CHANGED_TEXT,
+            'properties': CHANGED_PROPERTIES,
+        }
     }
-})
+)
 
 
 @pytest.mark.django_db
 class TestNodeLicenses:
-
     @pytest.fixture()
     def user(self):
         return AuthUserFactory()
@@ -48,7 +52,7 @@ class TestNodeLicenses:
         node.node_license = NodeLicenseRecordFactory(
             node_license=node_license,
             year=self.YEAR,
-            copyright_holders=self.COPYRIGHT_HOLDERS
+            copyright_holders=self.COPYRIGHT_HOLDERS,
         )
         node.save()
         return node
@@ -113,7 +117,9 @@ class TestNodeLicenses:
         assert_is_not_none(found)
 
     def test_ensure_licenses_updates_existing(self):
-        with mock.patch.object(builtins, 'open', mock.mock_open(read_data=LICENSE_TEXT)):
+        with mock.patch.object(
+            builtins, 'open', mock.mock_open(read_data=LICENSE_TEXT)
+        ):
             ensure_licenses()
         MIT = NodeLicense.objects.get(license_id='MIT')
         assert_equal(MIT.name, CHANGED_NAME)
@@ -128,10 +134,10 @@ class TestNodeLicenses:
             {
                 'id': GPL3.license_id,
                 'year': NEW_YEAR,
-                'copyrightHolders': COPYLEFT_HOLDERS
+                'copyrightHolders': COPYLEFT_HOLDERS,
             },
             auth=Auth(user),
-            save=True
+            save=True,
         )
 
         assert_equal(node.node_license.license_id, GPL3.license_id)
@@ -142,17 +148,17 @@ class TestNodeLicenses:
     def test_node_set_node_license_invalid(self, node, user):
         with assert_raises(NodeStateError):
             node.set_node_license(
-                {
-                    'id': 'SOME ID',
-                    'year': 'foo',
-                    'copyrightHolders': []
-                },
-                auth=Auth(user)
+                {'id': 'SOME ID', 'year': 'foo', 'copyrightHolders': []},
+                auth=Auth(user),
             )
         action = node.logs.latest().action if node.logs.count() else None
         assert action != NodeLog.CHANGED_LICENSE
 
     def test_manager_methods(self):
         # Projects can't have CCBYNCND but preprints can
-        assert 'CCBYNCND' not in list(NodeLicense.objects.project_licenses().values_list('license_id', flat=True))
-        assert 'CCBYNCND' in list(NodeLicense.objects.preprint_licenses().values_list('license_id', flat=True))
+        assert 'CCBYNCND' not in list(
+            NodeLicense.objects.project_licenses().values_list('license_id', flat=True)
+        )
+        assert 'CCBYNCND' in list(
+            NodeLicense.objects.preprint_licenses().values_list('license_id', flat=True)
+        )

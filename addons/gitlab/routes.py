@@ -6,13 +6,7 @@ from addons.gitlab import views
 
 api_routes = {
     'rules': [
-
-        Rule(
-            '/settings/gitlab/',
-            'get',
-            views.gitlab_user_config_get,
-            json_renderer,
-        ),
+        Rule('/settings/gitlab/', 'get', views.gitlab_user_config_get, json_renderer,),
         Rule(
             '/settings/gitlab/accounts/',
             'post',
@@ -20,24 +14,20 @@ api_routes = {
             json_renderer,
         ),
         Rule(
-            [
-                '/settings/gitlab/accounts/',
-            ],
+            ['/settings/gitlab/accounts/',],
             'get',
             views.gitlab_account_list,
             json_renderer,
         ),
-
         Rule(
             [
                 '/project/<pid>/gitlab/settings/',
-                '/project/<pid>/node/<nid>/gitlab/settings/'
+                '/project/<pid>/node/<nid>/gitlab/settings/',
             ],
             'get',
             views.gitlab_get_config,
             json_renderer,
         ),
-
         Rule(
             [
                 '/project/<pid>/gitlab/settings/',
@@ -47,27 +37,24 @@ api_routes = {
             views.gitlab_set_config,
             json_renderer,
         ),
-
         Rule(
             [
                 '/project/<pid>/gitlab/user_auth/',
-                '/project/<pid>/node/<nid>/gitlab/user_auth/'
+                '/project/<pid>/node/<nid>/gitlab/user_auth/',
             ],
             'put',
             views.gitlab_import_auth,
             json_renderer,
         ),
-
         Rule(
             [
                 '/project/<pid>/gitlab/user_auth/',
-                '/project/<pid>/node/<nid>/gitlab/user_auth/'
+                '/project/<pid>/node/<nid>/gitlab/user_auth/',
             ],
             'delete',
             views.gitlab_deauthorize_node,
             json_renderer,
         ),
-
         Rule(
             [
                 '/project/<pid>/gitlab/tarball/',
@@ -90,17 +77,12 @@ api_routes = {
             {'archive': 'zip'},
             endpoint_suffix='__zip',
         ),
-
         Rule(
-            [
-                '/project/<pid>/gitlab/hook/',
-                '/project/<pid>/node/<nid>/gitlab/hook/',
-            ],
+            ['/project/<pid>/gitlab/hook/', '/project/<pid>/node/<nid>/gitlab/hook/',],
             'post',
             views.gitlab_hook_callback,
             json_renderer,
         ),
-
         Rule(
             [
                 '/project/<pid>/gitlab/hgrid/root/',
@@ -110,7 +92,6 @@ api_routes = {
             views.gitlab_root_folder,
             json_renderer,
         ),
-
     ],
-    'prefix': '/api/v1'
+    'prefix': '/api/v1',
 }

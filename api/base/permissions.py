@@ -21,6 +21,7 @@ class TokenHasScope(permissions.BasePermission):
     Requires the user to define `read_scopes` and `write_scopes` attributes based on names of publicly defined composed
         scopes
     """
+
     message = 'The user has not authorized access to this view.'
 
     def has_object_permission(self, request, view, obj):
@@ -48,8 +49,10 @@ class TokenHasScope(permissions.BasePermission):
             normalized_scopes = oauth_scopes.normalize_scopes(allowed_scopes)
         except KeyError:
             # This should never fire: it implies that CAS issued a scope name not in the master list of scopes
-            raise exceptions.APIException('OAuth2 token specifies unrecognized scope. User token specifies '
-                                          'the following scopes: {}'.format(', '.join(allowed_scopes)))
+            raise exceptions.APIException(
+                'OAuth2 token specifies unrecognized scope. User token specifies '
+                'the following scopes: {}'.format(', '.join(allowed_scopes)),
+            )
 
         return required_scopes.issubset(normalized_scopes)
 
@@ -63,9 +66,12 @@ class TokenHasScope(permissions.BasePermission):
                     'TokenHasScope requires the view to define the '
                     'required_read_scopes attribute',
                 )
-            assert is_iterable_but_not_string(view.required_read_scopes), \
-                'The required_read_scopes must be an iterable of CoreScopes'
-            if view.required_read_scopes and isinstance(view.required_read_scopes[0], tuple):
+            assert is_iterable_but_not_string(
+                view.required_read_scopes,
+            ), 'The required_read_scopes must be an iterable of CoreScopes'
+            if view.required_read_scopes and isinstance(
+                view.required_read_scopes[0], tuple,
+            ):
                 raise ImproperlyConfigured(
                     'TokenHasScope requires the view to define the '
                     'required_read_scopes attribute using CoreScopes rather than ComposedScopes',
@@ -81,9 +87,12 @@ class TokenHasScope(permissions.BasePermission):
                     'TokenHasScope requires the view to define the '
                     'required_write_scopes attribute',
                 )
-            assert is_iterable_but_not_string(view.required_read_scopes), \
-                'The required_write_scopes must be an iterable of CoreScopes'
-            if view.required_write_scopes and isinstance(view.required_write_scopes[0], tuple):
+            assert is_iterable_but_not_string(
+                view.required_read_scopes,
+            ), 'The required_write_scopes must be an iterable of CoreScopes'
+            if view.required_write_scopes and isinstance(
+                view.required_write_scopes[0], tuple,
+            ):
                 raise ImproperlyConfigured(
                     'TokenHasScope requires the view to define the '
                     'required_write_scopes attribute using CoreScopes rather than ComposedScopes',
@@ -129,14 +138,19 @@ class OwnerOnly(permissions.BasePermission):
     # TODO: Write tests for basic, session, and oauth-based authentication
     def has_object_permission(self, request, view, obj):
         """Not applied to all members of a queryset"""
-        assert isinstance(obj, (ApiOAuth2Application, ApiOAuth2PersonalToken)), 'obj must be an ApiOAuth2Application or ApiOAuth2PersonalToken, got {}'.format(obj)
-        return (obj.owner.id == request.user.id)
+        assert isinstance(
+            obj, (ApiOAuth2Application, ApiOAuth2PersonalToken),
+        ), 'obj must be an ApiOAuth2Application or ApiOAuth2PersonalToken, got {}'.format(
+            obj,
+        )
+        return obj.owner.id == request.user.id
 
 
 def PermissionWithGetter(Base, getter):
     """A psuedo class for checking permissions
     of subresources without having to redefine permission classes
     """
+
     class Perm(Base):
         def get_object(self, request, view, obj):
             if callable(getter):
@@ -146,4 +160,5 @@ def PermissionWithGetter(Base, getter):
         def has_object_permission(self, request, view, obj):
             obj = self.get_object(request, view, obj)
             return super(Perm, self).has_object_permission(request, view, obj)
+
     return Perm

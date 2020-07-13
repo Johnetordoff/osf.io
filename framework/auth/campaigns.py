@@ -6,7 +6,13 @@ from django.utils import timezone
 from website import mails, settings
 from osf.models import PreprintProvider
 from website.settings import DOMAIN, CAMPAIGN_REFRESH_THRESHOLD
-from website.util.metrics import OsfSourceTags, OsfClaimedTags, CampaignSourceTags, CampaignClaimedTags, provider_source_tag
+from website.util.metrics import (
+    OsfSourceTags,
+    OsfClaimedTags,
+    CampaignSourceTags,
+    CampaignClaimedTags,
+    provider_source_tag,
+)
 from framework.utils import throttle_period_expired
 
 
@@ -20,7 +26,12 @@ def get_campaigns():
     global CAMPAIGNS
     global CAMPAIGNS_LAST_REFRESHED
 
-    if not CAMPAIGNS or (not mutex.locked() and throttle_period_expired(CAMPAIGNS_LAST_REFRESHED, CAMPAIGN_REFRESH_THRESHOLD)):
+    if not CAMPAIGNS or (
+        not mutex.locked()
+        and throttle_period_expired(
+            CAMPAIGNS_LAST_REFRESHED, CAMPAIGN_REFRESH_THRESHOLD
+        )
+    ):
         with mutex:
             # Native campaigns: PREREG and ERPC
             newest_campaigns = {
@@ -29,7 +40,7 @@ def get_campaigns():
                     'redirect_url': furl.furl(DOMAIN).add(path='prereg/').url,
                     'confirmation_email_template': mails.CONFIRM_EMAIL_PREREG,
                     'login_type': 'native',
-                    'logo': settings.OSF_PREREG_LOGO
+                    'logo': settings.OSF_PREREG_LOGO,
                 },
                 'erpc': {
                     'system_tag': CampaignSourceTags.ErpChallenge.value,
@@ -40,13 +51,15 @@ def get_campaigns():
             }
 
             # Institution Login
-            newest_campaigns.update({
-                'institution': {
-                    'system_tag': 'institution_campaign',
-                    'redirect_url': '',
-                    'login_type': 'institution',
-                },
-            })
+            newest_campaigns.update(
+                {
+                    'institution': {
+                        'system_tag': 'institution_campaign',
+                        'redirect_url': '',
+                        'login_type': 'institution',
+                    },
+                }
+            )
 
             # Proxy campaigns: Preprints, both OSF and branded ones
             preprint_providers = PreprintProvider.objects.all()
@@ -63,41 +76,51 @@ def get_campaigns():
                     external_url = provider.domain
                 campaign = '{}-preprints'.format(provider._id)
                 system_tag = provider_source_tag(provider._id, 'preprint')
-                newest_campaigns.update({
-                    campaign: {
-                        'system_tag': system_tag,
-                        'redirect_url': furl.furl(DOMAIN).add(path=url_path).url,
-                        'external_url': external_url,
-                        'confirmation_email_template': mails.CONFIRM_EMAIL_PREPRINTS(template, name),
-                        'login_type': 'proxy',
-                        'provider': name,
-                        'logo': provider._id if name != 'OSF' else settings.OSF_PREPRINTS_LOGO,
+                newest_campaigns.update(
+                    {
+                        campaign: {
+                            'system_tag': system_tag,
+                            'redirect_url': furl.furl(DOMAIN).add(path=url_path).url,
+                            'external_url': external_url,
+                            'confirmation_email_template': mails.CONFIRM_EMAIL_PREPRINTS(
+                                template, name
+                            ),
+                            'login_type': 'proxy',
+                            'provider': name,
+                            'logo': provider._id
+                            if name != 'OSF'
+                            else settings.OSF_PREPRINTS_LOGO,
+                        }
                     }
-                })
+                )
 
             # Proxy campaigns: Registries, OSF only
             # TODO: refactor for futher branded registries when there is a model for registries providers
-            newest_campaigns.update({
-                'osf-registries': {
-                    'system_tag': provider_source_tag('osf', 'registry'),
-                    'redirect_url': furl.furl(DOMAIN).add(path='registries/').url,
-                    'confirmation_email_template': mails.CONFIRM_EMAIL_REGISTRIES_OSF,
-                    'login_type': 'proxy',
-                    'provider': 'osf',
-                    'logo': settings.OSF_REGISTRIES_LOGO
+            newest_campaigns.update(
+                {
+                    'osf-registries': {
+                        'system_tag': provider_source_tag('osf', 'registry'),
+                        'redirect_url': furl.furl(DOMAIN).add(path='registries/').url,
+                        'confirmation_email_template': mails.CONFIRM_EMAIL_REGISTRIES_OSF,
+                        'login_type': 'proxy',
+                        'provider': 'osf',
+                        'logo': settings.OSF_REGISTRIES_LOGO,
+                    }
                 }
-            })
+            )
 
-            newest_campaigns.update({
-                'osf-registered-reports': {
-                    'system_tag': CampaignSourceTags.OsfRegisteredReports.value,
-                    'redirect_url': furl.furl(DOMAIN).add(path='rr/').url,
-                    'confirmation_email_template': mails.CONFIRM_EMAIL_REGISTRIES_OSF,
-                    'login_type': 'proxy',
-                    'provider': 'osf',
-                    'logo': settings.OSF_REGISTRIES_LOGO
+            newest_campaigns.update(
+                {
+                    'osf-registered-reports': {
+                        'system_tag': CampaignSourceTags.OsfRegisteredReports.value,
+                        'redirect_url': furl.furl(DOMAIN).add(path='rr/').url,
+                        'confirmation_email_template': mails.CONFIRM_EMAIL_REGISTRIES_OSF,
+                        'login_type': 'proxy',
+                        'provider': 'osf',
+                        'logo': settings.OSF_REGISTRIES_LOGO,
+                    }
                 }
-            })
+            )
 
             CAMPAIGNS = newest_campaigns
             CAMPAIGNS_LAST_REFRESHED = timezone.now()

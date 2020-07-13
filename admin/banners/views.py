@@ -6,7 +6,14 @@ from datetime import timedelta
 from django.shortcuts import redirect
 from django.forms.models import model_to_dict
 from django.urls import reverse_lazy
-from django.views.generic import ListView, DetailView, View, CreateView, UpdateView, DeleteView
+from django.views.generic import (
+    ListView,
+    DetailView,
+    View,
+    CreateView,
+    UpdateView,
+    DeleteView,
+)
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib import messages
 
@@ -26,6 +33,7 @@ def get_blackout_dates(current_banner_id=None):
             blackout_dates.append(dt.strftime('%Y-%m-%d'))
     return blackout_dates
 
+
 class BannerList(PermissionRequiredMixin, ListView):
     paginate_by = 25
     template_name = 'banners/list.html'
@@ -40,7 +48,9 @@ class BannerList(PermissionRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         query_set = kwargs.pop('object_list', self.object_list)
         page_size = self.get_paginate_by(query_set)
-        paginator, page, query_set, is_paginated = self.paginate_queryset(query_set, page_size)
+        paginator, page, query_set, is_paginated = self.paginate_queryset(
+            query_set, page_size
+        )
         kwargs.setdefault('banners', query_set)
         kwargs.setdefault('page', page)
         return super(BannerList, self).get_context_data(**kwargs)
@@ -80,7 +90,9 @@ class BannerChangeForm(PermissionRequiredMixin, UpdateView):
         return ScheduledBanner.objects.get(id=banner_id)
 
     def get_success_url(self, *args, **kwargs):
-        return reverse_lazy('banners:detail', kwargs={'banner_id': self.kwargs.get('banner_id')})
+        return reverse_lazy(
+            'banners:detail', kwargs={'banner_id': self.kwargs.get('banner_id')}
+        )
 
     def post(self, request, *args, **kwargs):
         bid = kwargs['banner_id']
@@ -105,6 +117,7 @@ class BannerDetail(PermissionRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         view = BannerChangeForm.as_view()
         return view(request, *args, **kwargs)
+
 
 class CreateBanner(PermissionRequiredMixin, CreateView):
     permission_required = 'osf.change_scheduledbanner'

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''Base TestCase class for OSF unittests. Uses a temporary MongoDB database.'''
+"""Base TestCase class for OSF unittests. Uses a temporary MongoDB database."""
 import abc
 import datetime as dt
 import functools
@@ -24,8 +24,7 @@ from framework.flask import rm_handlers
 from osf.models import RegistrationSchema
 from website import settings
 from website.app import init_app
-from website.notifications.listeners import (subscribe_contributor,
-                                             subscribe_creator)
+from website.notifications.listeners import subscribe_contributor, subscribe_creator
 from website.project.signals import contributor_added, project_created
 from website.project.views.contributor import notify_added_contributor
 from website.signals import ALL_SIGNALS
@@ -41,6 +40,7 @@ logger = logging.getLogger(__name__)
 def get_default_metaschema():
     """This needs to be a method so it gets called after the test database is set up"""
     return RegistrationSchema.objects.first()
+
 
 try:
     test_app = init_app(routes=True, set_backends=False)
@@ -84,6 +84,7 @@ fake = Factory.create()
 class DbTestCase(unittest.TestCase):
     """Base `TestCase` for tests that require a scratch database.
     """
+
     @classmethod
     def setUpClass(cls):
         super(DbTestCase, cls).setUpClass()
@@ -117,10 +118,12 @@ class AppTestCase(unittest.TestCase):
         self.app.lint = False  # This breaks things in Py3
         if not self.PUSH_CONTEXT:
             return
-        self.context = test_app.test_request_context(headers={
-            'Remote-Addr': '146.9.219.56',
-            'User-Agent': 'Mozilla/5.0 (X11; U; SunOS sun4u; en-US; rv:0.9.4.1) Gecko/20020518 Netscape6/6.2.3'
-        })
+        self.context = test_app.test_request_context(
+            headers={
+                'Remote-Addr': '146.9.219.56',
+                'User-Agent': 'Mozilla/5.0 (X11; U; SunOS sun4u; en-US; rv:0.9.4.1) Gecko/20020518 Netscape6/6.2.3',
+            }
+        )
         self.context.push()
         with self.context:
             celery_before_request()
@@ -142,6 +145,7 @@ class AppTestCase(unittest.TestCase):
 class ApiAppTestCase(unittest.TestCase):
     """Base `TestCase` for OSF API v2 tests that require the WSGI app (but no database).
     """
+
     allow_database_queries = True
 
     def setUp(self):
@@ -150,12 +154,12 @@ class ApiAppTestCase(unittest.TestCase):
 
 
 class SearchTestCase(unittest.TestCase):
-
     def setUp(self):
         settings.ELASTIC_INDEX = uuid.uuid1().hex
         settings.ELASTIC_TIMEOUT = 60
 
         from website.search import elastic_search
+
         elastic_search.INDEX = settings.ELASTIC_INDEX
         elastic_search.create_index(settings.ELASTIC_INDEX)
 
@@ -167,8 +171,8 @@ class SearchTestCase(unittest.TestCase):
         super(SearchTestCase, self).tearDown()
 
         from website.search import elastic_search
-        elastic_search.delete_index(settings.ELASTIC_INDEX)
 
+        elastic_search.delete_index(settings.ELASTIC_INDEX)
 
 
 class OsfTestCase(DbTestCase, AppTestCase, SearchTestCase):
@@ -176,6 +180,7 @@ class OsfTestCase(DbTestCase, AppTestCase, SearchTestCase):
     application. Note: superclasses must call `super` in order for all setup and
     teardown methods to be called correctly.
     """
+
     pass
 
 
@@ -184,14 +189,17 @@ class ApiTestCase(DbTestCase, ApiAppTestCase, SearchTestCase):
     API application. Note: superclasses must call `super` in order for all setup and
     teardown methods to be called correctly.
     """
+
     def setUp(self):
         super(ApiTestCase, self).setUp()
         settings.USE_EMAIL = False
+
 
 class ApiAddonTestCase(ApiTestCase):
     """Base `TestCase` for tests that require interaction with addons.
 
     """
+
     DISABLE_OUTGOING_CONNECTIONS = True
 
     @abc.abstractproperty
@@ -214,7 +222,7 @@ class ApiAddonTestCase(ApiTestCase):
         return {
             'user_settings': self.user_settings,
             'folder_id': '1234567890',
-            'owner': self.node
+            'owner': self.node,
         }
 
     def setUp(self):
@@ -223,10 +231,8 @@ class ApiAddonTestCase(ApiTestCase):
             ProjectFactory,
             AuthUserFactory,
         )
-        from addons.base.models import (
-            BaseOAuthNodeSettings,
-            BaseOAuthUserSettings
-        )
+        from addons.base.models import BaseOAuthNodeSettings, BaseOAuthUserSettings
+
         assert self.addon_type in ('CONFIGURABLE', 'OAUTH', 'UNMANAGEABLE', 'INVALID')
         self.account = None
         self.node_settings = None
@@ -242,7 +248,9 @@ class ApiAddonTestCase(ApiTestCase):
                 self.user.save()
 
             self.user_settings = self.user.get_or_add_addon(self.short_name)
-            self.node_settings = self.node.get_or_add_addon(self.short_name, auth=self.auth)
+            self.node_settings = self.node.get_or_add_addon(
+                self.short_name, auth=self.auth
+            )
 
             if self.addon_type in ('OAUTH', 'CONFIGURABLE'):
                 self.node_settings.set_auth(self.account, self.user)
@@ -269,15 +277,17 @@ class ApiAddonTestCase(ApiTestCase):
 class AdminTestCase(DbTestCase, DjangoTestCase, SearchTestCase):
     pass
 
+
 class NotificationTestCase(OsfTestCase):
     """An `OsfTestCase` to use when testing specific subscription behavior.
     Use when you'd like to manually create all Node subscriptions and subscriptions
     for added contributors yourself, and not rely on automatically added ones.
     """
+
     DISCONNECTED_SIGNALS = {
         # disconnect signals so that add_contributor does not send "fake" emails in tests
         contributor_added: [notify_added_contributor, subscribe_contributor],
-        project_created: [subscribe_creator]
+        project_created: [subscribe_creator],
     }
 
     def setUp(self):
@@ -288,15 +298,16 @@ class NotificationTestCase(OsfTestCase):
 
 
 class ApiWikiTestCase(ApiTestCase):
-
     def setUp(self):
         from osf_tests.factories import AuthUserFactory
+
         super(ApiWikiTestCase, self).setUp()
         self.user = AuthUserFactory()
         self.non_contributor = AuthUserFactory()
 
     def _add_project_wiki_page(self, node, user):
         from addons.wiki.tests.factories import WikiFactory, WikiVersionFactory
+
         # Mock out update_search. TODO: Remove when StoredFileNode is implemented
         with mock.patch('osf.models.AbstractNode.update_search'):
             wiki_page = WikiFactory(node=node, user=user)
@@ -305,11 +316,13 @@ class ApiWikiTestCase(ApiTestCase):
 
     def _add_project_wiki_version(self, node, user):
         from addons.wiki.tests.factories import WikiFactory, WikiVersionFactory
+
         # Mock out update_search. TODO: Remove when StoredFileNode is implemented
         with mock.patch('osf.models.AbstractNode.update_search'):
             wiki_page = WikiFactory(node=node, user=user)
             wiki_version = WikiVersionFactory(wiki_page=wiki_page, user=user)
             return wiki_version
+
 
 # From Flask-Security: https://github.com/mattupstate/flask-security/blob/develop/flask_security/utils.py
 class CaptureSignals(object):
@@ -320,6 +333,7 @@ class CaptureSignals(object):
     blinker `NamedSignals` to patch. Each signal has its `send` mocked out.
 
     """
+
     def __init__(self, signals):
         """Patch all given signals and make them available as attributes.
 
@@ -357,15 +371,19 @@ class CaptureSignals(object):
         :rtype: list of blinker `NamedSignals`.
 
         """
-        return set([signal for signal, _ in self._records.items() if self._records[signal]])
+        return set(
+            [signal for signal, _ in self._records.items() if self._records[signal]]
+        )
 
 
 def capture_signals():
     """Factory method that creates a ``CaptureSignals`` with all OSF signals."""
     return CaptureSignals(ALL_SIGNALS)
 
+
 def assert_dict_contains_subset(a, b):
     assert set(a.items()).issubset(set(b.items()))
+
 
 def assert_is_redirect(response, msg='Response is a redirect.'):
     assert 300 <= response.status_code < 400, msg
@@ -373,8 +391,12 @@ def assert_is_redirect(response, msg='Response is a redirect.'):
 
 def assert_before(lst, item1, item2):
     """Assert that item1 appears before item2 in lst."""
-    assert_less(lst.index(item1), lst.index(item2),
-        '{0!r} appears before {1!r}'.format(item1, item2))
+    assert_less(
+        lst.index(item1),
+        lst.index(item2),
+        '{0!r} appears before {1!r}'.format(item1, item2),
+    )
+
 
 def assert_datetime_equal(dt1, dt2, allowance=500):
     """Assert that two datetimes are about equal."""

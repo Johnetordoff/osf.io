@@ -13,7 +13,9 @@ from api.base.serializers import (
     JSONAPISerializer,
     TargetField,
     RelationshipField,
-    IDField, TypeField, LinksField,
+    IDField,
+    TypeField,
+    LinksField,
     AnonymizedRegexField,
     VersionedDateTimeField,
 )
@@ -29,32 +31,46 @@ class CommentReport(object):
 
 class CommentSerializer(JSONAPISerializer):
 
-    filterable_fields = frozenset([
-        'deleted',
-        'date_created',
-        'date_modified',
-        'page',
-        'target',
-    ])
+    filterable_fields = frozenset(
+        ['deleted', 'date_created', 'date_modified', 'page', 'target',],
+    )
 
     id = IDField(source='_id', read_only=True)
     type = TypeField()
-    content = AnonymizedRegexField(source='get_content', regex=r'\[@[^\]]*\]\([^\) ]*\)', replace='@A User', required=True)
+    content = AnonymizedRegexField(
+        source='get_content',
+        regex=r'\[@[^\]]*\]\([^\) ]*\)',
+        replace='@A User',
+        required=True,
+    )
     page = ser.CharField(read_only=True)
 
     target = TargetField(link_type='related', meta={'type': 'get_target_type'})
-    user = RelationshipField(related_view='users:user-detail', related_view_kwargs={'user_id': '<user._id>'})
-    reports = RelationshipField(related_view='comments:comment-reports', related_view_kwargs={'comment_id': '<_id>'})
+    user = RelationshipField(
+        related_view='users:user-detail', related_view_kwargs={'user_id': '<user._id>'},
+    )
+    reports = RelationshipField(
+        related_view='comments:comment-reports',
+        related_view_kwargs={'comment_id': '<_id>'},
+    )
 
     date_created = VersionedDateTimeField(source='created', read_only=True)
     date_modified = VersionedDateTimeField(source='modified', read_only=True)
     modified = ser.BooleanField(source='edited', read_only=True, default=False)
     deleted = ser.BooleanField(read_only=True, source='is_deleted', default=False)
-    is_abuse = ser.SerializerMethodField(help_text='If the comment has been reported or confirmed.')
+    is_abuse = ser.SerializerMethodField(
+        help_text='If the comment has been reported or confirmed.',
+    )
     is_ham = ser.SerializerMethodField(help_text='Comment has been confirmed as ham.')
-    has_report = ser.SerializerMethodField(help_text='If the user reported this comment.')
-    has_children = ser.SerializerMethodField(help_text='Whether this comment has any replies.')
-    can_edit = ser.SerializerMethodField(help_text='Whether the current user can edit this comment.')
+    has_report = ser.SerializerMethodField(
+        help_text='If the user reported this comment.',
+    )
+    has_children = ser.SerializerMethodField(
+        help_text='Whether this comment has any replies.',
+    )
+    can_edit = ser.SerializerMethodField(
+        help_text='Whether the current user can edit this comment.',
+    )
 
     # LinksField.to_representation adds link to "self"
     links = LinksField({})
@@ -71,7 +87,9 @@ class CommentSerializer(JSONAPISerializer):
         user = self.context['request'].user
         if user.is_anonymous:
             return False
-        return user._id in obj.reports and not obj.reports[user._id].get('retracted', True)
+        return user._id in obj.reports and not obj.reports[user._id].get(
+            'retracted', True,
+        )
 
     def get_is_abuse(self, obj):
         if obj.spam_status == SpamStatus.FLAGGED or obj.spam_status == SpamStatus.SPAM:
@@ -89,7 +107,8 @@ class CommentSerializer(JSONAPISerializer):
 
     def get_absolute_url(self, obj):
         return absolute_reverse(
-            'comments:comment-detail', kwargs={
+            'comments:comment-detail',
+            kwargs={
                 'comment_id': obj._id,
                 'version': self.context['request'].parser_context['kwargs']['version'],
             },
@@ -105,7 +124,10 @@ class CommentSerializer(JSONAPISerializer):
                     comment.undelete(auth, save=True)
                 except PermissionsError:
                     raise PermissionDenied('Not authorized to undelete this comment.')
-            elif validated_data.get('is_deleted', None) is True and not comment.is_deleted:
+            elif (
+                validated_data.get('is_deleted', None) is True
+                and not comment.is_deleted
+            ):
                 try:
                     comment.delete(auth, save=True)
                 except PermissionsError:
@@ -123,7 +145,9 @@ class CommentSerializer(JSONAPISerializer):
     def get_target_type(self, obj):
         if not getattr(obj.referent, 'target_type', None):
             raise InvalidModelValueError(
-                source={'pointer': '/data/relationships/target/links/related/meta/type'},
+                source={
+                    'pointer': '/data/relationships/target/links/related/meta/type',
+                },
                 detail='Invalid comment target type.',
             )
         return obj.referent.target_type
@@ -137,13 +161,26 @@ class CommentSerializer(JSONAPISerializer):
 
 
 class RegistrationCommentSerializer(CommentSerializer):
-    replies = RelationshipField(related_view='registrations:registration-comments', related_view_kwargs={'node_id': '<node._id>'}, filter={'target': '<_id>'})
-    node = RelationshipField(related_view='registrations:registration-detail', related_view_kwargs={'node_id': '<node._id>'})
+    replies = RelationshipField(
+        related_view='registrations:registration-comments',
+        related_view_kwargs={'node_id': '<node._id>'},
+        filter={'target': '<_id>'},
+    )
+    node = RelationshipField(
+        related_view='registrations:registration-detail',
+        related_view_kwargs={'node_id': '<node._id>'},
+    )
 
 
 class NodeCommentSerializer(CommentSerializer):
-    replies = RelationshipField(related_view='nodes:node-comments', related_view_kwargs={'node_id': '<node._id>'}, filter={'target': '<_id>'})
-    node = RelationshipField(related_view='nodes:node-detail', related_view_kwargs={'node_id': '<node._id>'})
+    replies = RelationshipField(
+        related_view='nodes:node-comments',
+        related_view_kwargs={'node_id': '<node._id>'},
+        filter={'target': '<_id>'},
+    )
+    node = RelationshipField(
+        related_view='nodes:node-detail', related_view_kwargs={'node_id': '<node._id>'},
+    )
 
 
 class CommentCreateSerializer(CommentSerializer):
@@ -155,7 +192,13 @@ class CommentCreateSerializer(CommentSerializer):
         target_type = self.context['request'].data.get('target_type')
         expected_target_type = self.get_target_type(target)
         if target_type != expected_target_type:
-            raise Conflict(detail=('The target resource has a type of "{}", but you set the json body\'s type field to "{}".  You probably need to change the type field to match the target resource\'s type.'.format(expected_target_type, target_type)))
+            raise Conflict(
+                detail=(
+                    'The target resource has a type of "{}", but you set the json body\'s type field to "{}".  You probably need to change the type field to match the target resource\'s type.'.format(
+                        expected_target_type, target_type,
+                    )
+                ),
+            )
         return target_type
 
     def get_target(self, node_id, target_id):
@@ -164,8 +207,11 @@ class CommentCreateSerializer(CommentSerializer):
             raise ValueError('Invalid comment target.')
         elif not target.referent.belongs_to_node(node_id):
             raise ValueError('Cannot post to comment target on another node.')
-        elif isinstance(target.referent, BaseFileNode) and target.referent.provider not in osf_settings.ADDONS_COMMENTABLE:
-                raise ValueError('Comments are not supported for this file provider.')
+        elif (
+            isinstance(target.referent, BaseFileNode)
+            and target.referent.provider not in osf_settings.ADDONS_COMMENTABLE
+        ):
+            raise ValueError('Comments are not supported for this file provider.')
         return target
 
     def create(self, validated_data):
@@ -179,7 +225,7 @@ class CommentCreateSerializer(CommentSerializer):
         except ValueError:
             raise InvalidModelValueError(
                 source={'pointer': '/data/relationships/target/data/id'},
-                detail='Invalid comment target \'{}\'.'.format(target_id),
+                detail="Invalid comment target '{}'.".format(target_id),
             )
         validated_data['target'] = target
         validated_data['content'] = validated_data.pop('get_content')
@@ -196,6 +242,7 @@ class CommentDetailSerializer(CommentSerializer):
     """
     Overrides CommentSerializer to make id required.
     """
+
     id = IDField(source='_id', required=True)
     deleted = ser.BooleanField(source='is_deleted', required=True)
 
@@ -218,7 +265,8 @@ class CommentReportSerializer(JSONAPISerializer):
             ('spam', 'Spam or advertising'),
             ('hate', 'Hate speech'),
             ('violence', 'Violence or harmful behavior'),
-        ], required=True,
+        ],
+        required=True,
     )
     message = ser.CharField(source='text', required=False, allow_blank=True)
     links = LinksField({'self': 'get_absolute_url'})
@@ -233,7 +281,9 @@ class CommentReportSerializer(JSONAPISerializer):
             'comments:report-detail',
             kwargs={
                 'user_id': obj._id,
-                'comment_id': self.context['request'].parser_context['kwargs']['comment_id'],
+                'comment_id': self.context['request'].parser_context['kwargs'][
+                    'comment_id'
+                ],
                 'version': self.context['request'].parser_context['kwargs']['version'],
             },
         )
@@ -241,7 +291,9 @@ class CommentReportSerializer(JSONAPISerializer):
     def create(self, validated_data):
         user = self.context['request'].user
         comment = self.context['view'].get_comment()
-        if user._id in comment.reports and not comment.reports[user._id].get('retracted', True):
+        if user._id in comment.reports and not comment.reports[user._id].get(
+            'retracted', True,
+        ):
             raise ValidationError('Comment already reported.')
         try:
             comment.report_abuse(user, save=True, **validated_data)
@@ -253,7 +305,9 @@ class CommentReportSerializer(JSONAPISerializer):
         user = self.context['request'].user
         comment = self.context['view'].get_comment()
         if user._id != comment_report._id:
-            raise ValidationError('You cannot report a comment on behalf of another user.')
+            raise ValidationError(
+                'You cannot report a comment on behalf of another user.',
+            )
         try:
             comment.report_abuse(user, save=True, **validated_data)
         except ValueError:
@@ -265,4 +319,5 @@ class CommentReportDetailSerializer(CommentReportSerializer):
     """
     Overrides CommentReportSerializer to make id required.
     """
+
     id = IDField(source='_id', required=True)

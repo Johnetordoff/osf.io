@@ -43,7 +43,6 @@ def get_actual(app, url, user=None, sort=None, expect_errors=False, **filters):
 
 @pytest.mark.django_db
 class ReviewActionFilterMixin(object):
-
     @pytest.fixture()
     def url(self):
         raise NotImplementedError
@@ -51,17 +50,15 @@ class ReviewActionFilterMixin(object):
     @pytest.fixture()
     def providers(self):
         return [
-            PreprintProviderFactory(
-                reviews_workflow='pre-moderation'
-            ) for _ in range(5)]
+            PreprintProviderFactory(reviews_workflow='pre-moderation') for _ in range(5)
+        ]
 
     @pytest.fixture()
     def all_actions(self, providers):
         actions = []
         for provider in providers:
             preprint = PreprintFactory(
-                provider=provider,
-                project=ProjectFactory(is_public=True)
+                provider=provider, project=ProjectFactory(is_public=True)
             )
             for _ in range(5):
                 actions.append(ReviewActionFactory(target=preprint))
@@ -100,20 +97,21 @@ class ReviewActionFilterMixin(object):
         assert expected == actual
 
         # filter by trigger
-        expected = set(
-            [l._id for l in expected_actions if l.trigger == action.trigger])
+        expected = set([l._id for l in expected_actions if l.trigger == action.trigger])
         actual = get_actual(app, url, user, trigger=action.trigger)
         assert expected == actual
 
         # filter by from_state
         expected = set(
-            [l._id for l in expected_actions if l.from_state == action.from_state])
+            [l._id for l in expected_actions if l.from_state == action.from_state]
+        )
         actual = get_actual(app, url, user, from_state=action.from_state)
         assert expected == actual
 
         # filter by to_state
         expected = set(
-            [l._id for l in expected_actions if l.to_state == action.to_state])
+            [l._id for l in expected_actions if l.to_state == action.to_state]
+        )
         actual = get_actual(app, url, user, to_state=action.to_state)
         assert expected == actual
 
@@ -124,8 +122,8 @@ class ReviewActionFilterMixin(object):
 
         expected = set()
         actual = get_actual(
-            app, url, user,
-            date_created=action.created - timedelta(days=1))
+            app, url, user, date_created=action.created - timedelta(days=1)
+        )
         assert expected == actual
 
         # filter by date_modified
@@ -135,27 +133,31 @@ class ReviewActionFilterMixin(object):
 
         expected = set()
         actual = get_actual(
-            app, url, user,
-            date_modified=action.modified - timedelta(days=1))
+            app, url, user, date_modified=action.modified - timedelta(days=1)
+        )
         assert expected == actual
 
         # filter by target
         expected = set(
-            [l._id for l in expected_actions if l.target_id == action.target_id])
+            [l._id for l in expected_actions if l.target_id == action.target_id]
+        )
         actual = get_actual(app, url, user, target=action.target._id)
         assert expected == actual
 
         # filter by provider
         expected = set(
-            [l._id for l in expected_actions if l.target.provider_id == action.target.provider_id])
-        actual = get_actual(
-            app, url, user, provider=action.target.provider._id)
+            [
+                l._id
+                for l in expected_actions
+                if l.target.provider_id == action.target.provider_id
+            ]
+        )
+        actual = get_actual(app, url, user, provider=action.target.provider._id)
         assert expected == actual
 
 
 @pytest.mark.django_db
 class ReviewableFilterMixin(object):
-
     @pytest.fixture()
     def url(self):
         raise NotImplementedError
@@ -181,16 +183,22 @@ class ReviewableFilterMixin(object):
 
         # filter by reviews_state
         expected = set(
-            [r._id for r in expected_reviewables if r.machine_state == reviewable.machine_state])
-        actual = get_actual(
-            app, url, user, reviews_state=reviewable.machine_state)
+            [
+                r._id
+                for r in expected_reviewables
+                if r.machine_state == reviewable.machine_state
+            ]
+        )
+        actual = get_actual(app, url, user, reviews_state=reviewable.machine_state)
         assert expected == actual
 
         # order by date_last_transitioned
         expected = [
-            r._id for r in sorted(
-                expected_reviewables,
-                key=lambda r: r.date_last_transitioned)]
+            r._id
+            for r in sorted(
+                expected_reviewables, key=lambda r: r.date_last_transitioned
+            )
+        ]
         actual = get_actual(app, url, user, sort='date_last_transitioned')
         assert expected == actual
 
@@ -201,7 +209,6 @@ class ReviewableFilterMixin(object):
 
 @pytest.mark.django_db
 class ReviewProviderFilterMixin(object):
-
     @pytest.fixture()
     def url(self):
         raise NotImplementedError
@@ -230,7 +237,8 @@ class ReviewProviderFilterMixin(object):
         return (user, provider)
 
     def test_review_provider_filters(
-            self, app, url, moderator_pair, admin_pair, expected_providers):
+        self, app, url, moderator_pair, admin_pair, expected_providers
+    ):
         # unfiltered
         expected = set([p._id for p in expected_providers])
         actual = get_actual(app, url)
@@ -240,9 +248,13 @@ class ReviewProviderFilterMixin(object):
 
         # filter by reviews_workflow
         expected = set(
-            [p._id for p in expected_providers if p.reviews_workflow == provider.reviews_workflow])
-        actual = get_actual(
-            app, url, reviews_workflow=provider.reviews_workflow)
+            [
+                p._id
+                for p in expected_providers
+                if p.reviews_workflow == provider.reviews_workflow
+            ]
+        )
+        actual = get_actual(app, url, reviews_workflow=provider.reviews_workflow)
         assert expected == actual
 
         # filter by permissions (admin)
@@ -255,7 +267,8 @@ class ReviewProviderFilterMixin(object):
         assert expected == actual
 
         actual = get_actual(
-            app, url, user, permissions='set_up_moderation,view_actions')
+            app, url, user, permissions='set_up_moderation,view_actions'
+        )
         assert expected == actual
 
         # filter by permissions (moderator)
@@ -265,7 +278,8 @@ class ReviewProviderFilterMixin(object):
         assert expected == actual
 
         actual = get_actual(
-            app, url, user, permissions='set_up_moderation,view_actions')
+            app, url, user, permissions='set_up_moderation,view_actions'
+        )
         assert expected == actual
 
         expected = set()
@@ -282,11 +296,10 @@ class ReviewProviderFilterMixin(object):
         assert expected == actual
 
         actual = get_actual(
-            app, url, user, permissions='set_up_moderation,view_actions')
+            app, url, user, permissions='set_up_moderation,view_actions'
+        )
         assert expected == actual
 
         # filter by permissions requires auth
-        res = get_actual(
-            app, url, expect_errors=True,
-            permissions='set_up_moderation')
+        res = get_actual(app, url, expect_errors=True, permissions='set_up_moderation')
         assert res.status_code == 401

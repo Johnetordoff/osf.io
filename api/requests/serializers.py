@@ -4,7 +4,12 @@ from rest_framework import serializers as ser
 
 from api.base.exceptions import Conflict
 from api.base.utils import absolute_reverse, get_user_auth
-from api.base.serializers import JSONAPISerializer, LinksField, VersionedDateTimeField, RelationshipField
+from api.base.serializers import (
+    JSONAPISerializer,
+    LinksField,
+    VersionedDateTimeField,
+    RelationshipField,
+)
 from osf.models import NodeRequest, PreprintRequest
 from osf.utils.workflows import DefaultStates, RequestTypes
 from osf.utils import permissions as osf_permissions
@@ -14,17 +19,16 @@ class RequestSerializer(JSONAPISerializer):
     class Meta:
         type_ = 'node-requests'
 
-    filterable_fields = frozenset([
-        'creator',
-        'request_type',
-        'machine_state',
-        'created',
-        'id',
-        'target',
-    ])
+    filterable_fields = frozenset(
+        ['creator', 'request_type', 'machine_state', 'created', 'id', 'target',],
+    )
     id = ser.CharField(source='_id', read_only=True)
-    request_type = ser.ChoiceField(read_only=True, required=False, choices=RequestTypes.choices())
-    machine_state = ser.ChoiceField(read_only=True, required=False, choices=DefaultStates.choices())
+    request_type = ser.ChoiceField(
+        read_only=True, required=False, choices=RequestTypes.choices(),
+    )
+    machine_state = ser.ChoiceField(
+        read_only=True, required=False, choices=DefaultStates.choices(),
+    )
     comment = ser.CharField(required=False, allow_blank=True, max_length=65535)
     created = VersionedDateTimeField(read_only=True)
     modified = VersionedDateTimeField(read_only=True)
@@ -37,23 +41,27 @@ class RequestSerializer(JSONAPISerializer):
         filter_key='creator___id',
     )
 
-    links = LinksField({
-        'self': 'get_absolute_url',
-        'target': 'get_target_url',
-    })
+    links = LinksField({'self': 'get_absolute_url', 'target': 'get_target_url',})
 
     @property
     def target(self):
         raise NotImplementedError()
 
     def get_absolute_url(self, obj):
-        return absolute_reverse('requests:request-detail', kwargs={'request_id': obj._id, 'version': self.context['request'].parser_context['kwargs']['version']})
+        return absolute_reverse(
+            'requests:request-detail',
+            kwargs={
+                'request_id': obj._id,
+                'version': self.context['request'].parser_context['kwargs']['version'],
+            },
+        )
 
     def get_target_url(self, obj):
         raise NotImplementedError()
 
     def create(self, validated_data):
         raise NotImplementedError()
+
 
 class NodeRequestSerializer(RequestSerializer):
     class Meta:
@@ -67,7 +75,14 @@ class NodeRequestSerializer(RequestSerializer):
     )
 
     def get_target_url(self, obj):
-        return absolute_reverse('nodes:node-detail', kwargs={'node_id': obj.target._id, 'version': self.context['request'].parser_context['kwargs']['version']})
+        return absolute_reverse(
+            'nodes:node-detail',
+            kwargs={
+                'node_id': obj.target._id,
+                'version': self.context['request'].parser_context['kwargs']['version'],
+            },
+        )
+
 
 class NodeRequestCreateSerializer(NodeRequestSerializer):
     request_type = ser.ChoiceField(required=True, choices=RequestTypes.choices())
@@ -82,7 +97,9 @@ class NodeRequestCreateSerializer(NodeRequestSerializer):
         except exceptions.PermissionDenied:
             node = self.context['view'].get_target(check_object_permissions=False)
             if auth.user in node.contributors:
-                raise exceptions.PermissionDenied('You cannot request access to a node you contribute to.')
+                raise exceptions.PermissionDenied(
+                    'You cannot request access to a node you contribute to.',
+                )
             raise
 
         comment = validated_data.pop('comment', '')
@@ -101,9 +118,14 @@ class NodeRequestCreateSerializer(NodeRequestSerializer):
             )
             node_request.save()
         except IntegrityError:
-            raise Conflict('Users may not have more than one {} request per node.'.format(request_type))
+            raise Conflict(
+                'Users may not have more than one {} request per node.'.format(
+                    request_type,
+                ),
+            )
         node_request.run_submit(auth.user)
         return node_request
+
 
 class PreprintRequestSerializer(RequestSerializer):
     class Meta:
@@ -123,7 +145,14 @@ class PreprintRequestSerializer(RequestSerializer):
     )
 
     def get_target_url(self, obj):
-        return absolute_reverse('preprints:preprint-detail', kwargs={'preprint_id': obj.target._id, 'version': self.context['request'].parser_context['kwargs']['version']})
+        return absolute_reverse(
+            'preprints:preprint-detail',
+            kwargs={
+                'preprint_id': obj.target._id,
+                'version': self.context['request'].parser_context['kwargs']['version'],
+            },
+        )
+
 
 class PreprintRequestCreateSerializer(PreprintRequestSerializer):
     request_type = ser.ChoiceField(required=True, choices=RequestTypes.choices())
@@ -141,8 +170,14 @@ class PreprintRequestCreateSerializer(PreprintRequestSerializer):
         comment = validated_data.pop('comment', '')
         request_type = validated_data.pop('request_type', None)
 
-        if PreprintRequest.objects.filter(target_id=preprint.id, creator_id=auth.user.id, request_type=request_type).exists():
-            raise Conflict('Users may not have more than one {} request per preprint.'.format(request_type))
+        if PreprintRequest.objects.filter(
+            target_id=preprint.id, creator_id=auth.user.id, request_type=request_type,
+        ).exists():
+            raise Conflict(
+                'Users may not have more than one {} request per preprint.'.format(
+                    request_type,
+                ),
+            )
 
         if request_type != RequestTypes.WITHDRAWAL.value:
             raise exceptions.ValidationError('You must specify a valid request_type.')

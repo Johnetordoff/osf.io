@@ -14,42 +14,45 @@ from osf.models import OSFGroup, Node, OSFUser, OSFGroupLog, NodeLog
 from osf.utils.permissions import MANAGER, MEMBER, MANAGE, READ, WRITE, ADMIN
 from website.notifications.utils import get_all_node_subscriptions
 from website.osf_groups import signals as group_signals
-from .factories import (
-    NodeFactory,
-    ProjectFactory,
-    AuthUserFactory,
-    OSFGroupFactory
-)
+from .factories import NodeFactory, ProjectFactory, AuthUserFactory, OSFGroupFactory
 
 pytestmark = pytest.mark.django_db
+
 
 @pytest.fixture()
 def manager():
     return AuthUserFactory()
 
+
 @pytest.fixture()
 def member():
     return AuthUserFactory()
+
 
 @pytest.fixture()
 def user():
     return AuthUserFactory()
 
+
 @pytest.fixture()
 def user_two():
     return AuthUserFactory()
+
 
 @pytest.fixture()
 def user_three():
     return AuthUserFactory()
 
+
 @pytest.fixture()
 def auth(manager):
     return Auth(manager)
 
+
 @pytest.fixture()
 def project(manager):
     return ProjectFactory(creator=manager)
+
 
 @pytest.fixture()
 def osf_group(manager, member):
@@ -57,8 +60,8 @@ def osf_group(manager, member):
     osf_group.make_member(member)
     return osf_group
 
-class TestOSFGroup:
 
+class TestOSFGroup:
     def test_osf_group_creation(self, manager, member, user_two, fake):
         osf_group = OSFGroup.objects.create(name=fake.bs(), creator=manager)
         # OSFGroup creator given manage permissions
@@ -76,7 +79,9 @@ class TestOSFGroup:
         assert osf_group.has_permission(user_two, MEMBER) is False
 
     @mock.patch('website.osf_groups.views.mails.send_mail')
-    def test_make_manager(self, mock_send_mail, manager, member, user_two, user_three, osf_group):
+    def test_make_manager(
+        self, mock_send_mail, manager, member, user_two, user_three, osf_group
+    ):
         # no permissions
         with pytest.raises(PermissionsError):
             osf_group.make_manager(user_two, Auth(user_three))
@@ -101,7 +106,9 @@ class TestOSFGroup:
         assert mock_send_mail.call_count == 1
 
     @mock.patch('website.osf_groups.views.mails.send_mail')
-    def test_make_member(self, mock_send_mail, manager, member, user_two, user_three, osf_group):
+    def test_make_member(
+        self, mock_send_mail, manager, member, user_two, user_three, osf_group
+    ):
         # no permissions
         with pytest.raises(PermissionsError):
             osf_group.make_member(user_two, Auth(user_three))
@@ -131,18 +138,24 @@ class TestOSFGroup:
         assert mock_send_mail.call_count == 1
 
     @mock.patch('website.osf_groups.views.mails.send_mail')
-    def test_add_unregistered_member(self, mock_send_mail, manager, member, osf_group, user_two):
+    def test_add_unregistered_member(
+        self, mock_send_mail, manager, member, osf_group, user_two
+    ):
         test_fullname = 'Test User'
         test_email = 'test_member@cos.io'
         test_manager_email = 'test_manager@cos.io'
 
         # Email already exists
         with pytest.raises(ValueError):
-            osf_group.add_unregistered_member(test_fullname, user_two.username, auth=Auth(manager))
+            osf_group.add_unregistered_member(
+                test_fullname, user_two.username, auth=Auth(manager)
+            )
 
         # Test need manager perms to add
         with pytest.raises(PermissionsError):
-            osf_group.add_unregistered_member(test_fullname, test_email, auth=Auth(member))
+            osf_group.add_unregistered_member(
+                test_fullname, test_email, auth=Auth(member)
+            )
 
         # Add member
         osf_group.add_unregistered_member(test_fullname, test_email, auth=Auth(manager))
@@ -155,10 +168,14 @@ class TestOSFGroup:
 
         # Attempt to add unreg user as a member
         with pytest.raises(ValueError):
-            osf_group.add_unregistered_member(test_fullname, test_email, auth=Auth(manager))
+            osf_group.add_unregistered_member(
+                test_fullname, test_email, auth=Auth(manager)
+            )
 
         # Add unregistered manager
-        osf_group.add_unregistered_member(test_fullname, test_manager_email, auth=Auth(manager), role=MANAGER)
+        osf_group.add_unregistered_member(
+            test_fullname, test_manager_email, auth=Auth(manager), role=MANAGER
+        )
         assert mock_send_mail.call_count == 2
         unreg_manager = OSFUser.objects.get(username=test_manager_email)
         assert unreg_manager in osf_group.members
@@ -168,7 +185,9 @@ class TestOSFGroup:
 
         # Add unregistered member with blacklisted email
         with pytest.raises(ValidationError):
-            osf_group.add_unregistered_member(test_fullname, 'test@example.com', auth=Auth(manager), role=MANAGER)
+            osf_group.add_unregistered_member(
+                test_fullname, 'test@example.com', auth=Auth(manager), role=MANAGER
+            )
 
     def test_remove_member(self, manager, member, user_three, osf_group):
         new_member = AuthUserFactory()
@@ -217,55 +236,96 @@ class TestOSFGroup:
         assert manager in osf_group.members
 
     @mock.patch('website.osf_groups.views.mails.send_mail')
-    def test_notify_group_member_email_does_not_send_before_throttle_expires(self, mock_send_mail, manager, osf_group):
+    def test_notify_group_member_email_does_not_send_before_throttle_expires(
+        self, mock_send_mail, manager, osf_group
+    ):
         member = AuthUserFactory()
         assert member.member_added_email_records == {}
-        group_signals.member_added.send(osf_group, user=member, permission=WRITE, auth=Auth(manager))
+        group_signals.member_added.send(
+            osf_group, user=member, permission=WRITE, auth=Auth(manager)
+        )
         assert mock_send_mail.call_count == 1
 
         record = member.member_added_email_records[osf_group._id]
         assert record is not None
         # 2nd call does not send email because throttle period has not expired
-        group_signals.member_added.send(osf_group, user=member, permission=WRITE, auth=Auth(manager))
+        group_signals.member_added.send(
+            osf_group, user=member, permission=WRITE, auth=Auth(manager)
+        )
         assert member.member_added_email_records[osf_group._id] == record
         assert mock_send_mail.call_count == 1
 
     @mock.patch('website.osf_groups.views.mails.send_mail')
-    def test_notify_group_member_email_sends_after_throttle_expires(self, mock_send_mail, osf_group, member, manager):
+    def test_notify_group_member_email_sends_after_throttle_expires(
+        self, mock_send_mail, osf_group, member, manager
+    ):
         throttle = 0.5
 
         member = AuthUserFactory()
         assert member.member_added_email_records == {}
-        group_signals.member_added.send(osf_group, user=member, permission=WRITE, auth=Auth(manager), throttle=throttle)
+        group_signals.member_added.send(
+            osf_group,
+            user=member,
+            permission=WRITE,
+            auth=Auth(manager),
+            throttle=throttle,
+        )
         assert mock_send_mail.call_count == 1
 
         time.sleep(1)  # throttle period expires
         # 2nd call does not send email because throttle period has not expired
         assert member.member_added_email_records[osf_group._id] is not None
-        group_signals.member_added.send(osf_group, user=member, permission=WRITE, auth=Auth(manager), throttle=throttle)
+        group_signals.member_added.send(
+            osf_group,
+            user=member,
+            permission=WRITE,
+            auth=Auth(manager),
+            throttle=throttle,
+        )
         assert mock_send_mail.call_count == 2
 
     @mock.patch('website.osf_groups.views.mails.send_mail')
-    def test_notify_group_unregistered_member_throttle(self, mock_send_mail, osf_group, member, manager):
+    def test_notify_group_unregistered_member_throttle(
+        self, mock_send_mail, osf_group, member, manager
+    ):
         throttle = 0.5
 
         member = AuthUserFactory()
         member.is_registered = False
-        member.add_unclaimed_record(osf_group, referrer=manager, given_name='grapes mcgee', email='grapes@cos.io')
+        member.add_unclaimed_record(
+            osf_group,
+            referrer=manager,
+            given_name='grapes mcgee',
+            email='grapes@cos.io',
+        )
         member.save()
         assert member.member_added_email_records == {}
-        group_signals.member_added.send(osf_group, user=member, permission=WRITE, auth=Auth(manager), throttle=throttle)
+        group_signals.member_added.send(
+            osf_group,
+            user=member,
+            permission=WRITE,
+            auth=Auth(manager),
+            throttle=throttle,
+        )
         assert mock_send_mail.call_count == 1
 
         assert member.member_added_email_records[osf_group._id] is not None
         # 2nd call does not send email because throttle period has not expired
-        group_signals.member_added.send(osf_group, user=member, permission=WRITE, auth=Auth(manager))
+        group_signals.member_added.send(
+            osf_group, user=member, permission=WRITE, auth=Auth(manager)
+        )
         assert mock_send_mail.call_count == 1
 
         time.sleep(1)  # throttle period expires
         # 2nd call does not send email because throttle period has not expired
         assert member.member_added_email_records[osf_group._id] is not None
-        group_signals.member_added.send(osf_group, user=member, permission=WRITE, auth=Auth(manager), throttle=throttle)
+        group_signals.member_added.send(
+            osf_group,
+            user=member,
+            permission=WRITE,
+            auth=Auth(manager),
+            throttle=throttle,
+        )
         assert mock_send_mail.call_count == 2
 
     def test_rename_osf_group(self, manager, member, user_two, osf_group):
@@ -319,13 +379,12 @@ class TestOSFGroup:
         assert user_three.group_role(osf_group) is None
 
     def test_replace_contributor(self, manager, member, osf_group):
-        user = osf_group.add_unregistered_member('test_user', 'test@cos.io', auth=Auth(manager))
+        user = osf_group.add_unregistered_member(
+            'test_user', 'test@cos.io', auth=Auth(manager)
+        )
         assert user in osf_group.members
         assert user not in osf_group.managers
-        assert (
-            osf_group._id in
-            user.unclaimed_records.keys()
-        )
+        assert osf_group._id in user.unclaimed_records.keys()
         osf_group.replace_contributor(user, member)
         assert user not in osf_group.members
         assert user not in osf_group.managers
@@ -333,10 +392,7 @@ class TestOSFGroup:
         assert osf_group.has_permission(user, MEMBER) is False
 
         # test unclaimed_records is removed
-        assert (
-            osf_group._id not in
-            user.unclaimed_records.keys()
-        )
+        assert osf_group._id not in user.unclaimed_records.keys()
 
     def test_get_users_with_perm_osf_groups(self, project, manager, member, osf_group):
         # Explicitly added as a contributor
@@ -385,7 +441,9 @@ class TestOSFGroup:
         assert osf_group.has_permission(manager, MANAGE)
         assert osf_group.is_member(member) is False
 
-    def test_osf_group_is_admin_parent(self, project, manager, member, osf_group, user_two, user_three):
+    def test_osf_group_is_admin_parent(
+        self, project, manager, member, osf_group, user_two, user_three
+    ):
         child = NodeFactory(parent=project, creator=manager)
         assert project.is_admin_parent(manager) is True
         assert project.is_admin_parent(member) is False
@@ -415,7 +473,9 @@ class TestOSFGroup:
 
 
 class TestNodeGroups:
-    def test_node_contributors_and_group_members(self, manager, member, osf_group, project, user, user_two):
+    def test_node_contributors_and_group_members(
+        self, manager, member, osf_group, project, user, user_two
+    ):
         assert project.contributors_and_group_members.count() == 1
         project.add_osf_group(osf_group, ADMIN)
         assert project.contributors_and_group_members.count() == 2
@@ -424,7 +484,9 @@ class TestNodeGroups:
         project.save()
         assert project.contributors_and_group_members.count() == 4
 
-    def test_add_osf_group_to_node_already_connected(self, manager, member, osf_group, project):
+    def test_add_osf_group_to_node_already_connected(
+        self, manager, member, osf_group, project
+    ):
         project.add_osf_group(osf_group, ADMIN)
         assert project.has_permission(member, ADMIN) is True
 
@@ -444,7 +506,9 @@ class TestNodeGroups:
         assert project_two in osf_group.nodes
 
     @mock.patch('website.osf_groups.views.mails.send_mail')
-    def test_add_osf_group_to_node(self, mock_send_mail, manager, member, user_two, osf_group, project):
+    def test_add_osf_group_to_node(
+        self, mock_send_mail, manager, member, user_two, osf_group, project
+    ):
         # noncontributor
         with pytest.raises(PermissionsError):
             project.add_osf_group(osf_group, WRITE, auth=Auth(member))
@@ -482,7 +546,9 @@ class TestNodeGroups:
             project.add_osf_group(other_group, ADMIN, auth=Auth(project.creator))
 
     @mock.patch('website.osf_groups.views.mails.send_mail')
-    def test_add_osf_group_to_node_emails_and_subscriptions(self, mock_send_mail, manager, member, user_two, osf_group, project):
+    def test_add_osf_group_to_node_emails_and_subscriptions(
+        self, mock_send_mail, manager, member, user_two, osf_group, project
+    ):
         osf_group.make_member(user_two)
 
         # Manager is already a node contributor - already has subscriptions
@@ -531,15 +597,31 @@ class TestNodeGroups:
         assert len(get_all_node_subscriptions(user_two, project)) == 2
 
     @mock.patch('website.osf_groups.views.mails.send_mail')
-    def test_add_group_to_node_throttle(self, mock_send_mail, osf_group, manager, member, project):
+    def test_add_group_to_node_throttle(
+        self, mock_send_mail, osf_group, manager, member, project
+    ):
         throttle = 100
         assert manager.group_connected_email_records == {}
-        group_signals.group_added_to_node.send(osf_group, node=project, user=manager, permission=WRITE, auth=Auth(member), throttle=throttle)
+        group_signals.group_added_to_node.send(
+            osf_group,
+            node=project,
+            user=manager,
+            permission=WRITE,
+            auth=Auth(member),
+            throttle=throttle,
+        )
         assert mock_send_mail.call_count == 1
 
         assert manager.group_connected_email_records[osf_group._id] is not None
         # 2nd call does not send email because throttle period has not expired
-        group_signals.group_added_to_node.send(osf_group, node=project, user=manager, permission=WRITE, auth=Auth(member), throttle=throttle)
+        group_signals.group_added_to_node.send(
+            osf_group,
+            node=project,
+            user=manager,
+            permission=WRITE,
+            auth=Auth(member),
+            throttle=throttle,
+        )
         assert mock_send_mail.call_count == 1
 
         throttle = 0.5
@@ -547,10 +629,19 @@ class TestNodeGroups:
         time.sleep(1)  # throttle period expires
         # 2nd call does not send email because throttle period has not expired
         assert manager.group_connected_email_records[osf_group._id] is not None
-        group_signals.group_added_to_node.send(osf_group, node=project, user=manager, permission=WRITE, auth=Auth(member), throttle=throttle)
+        group_signals.group_added_to_node.send(
+            osf_group,
+            node=project,
+            user=manager,
+            permission=WRITE,
+            auth=Auth(member),
+            throttle=throttle,
+        )
         assert mock_send_mail.call_count == 2
 
-    def test_add_osf_group_to_node_default_permission(self, manager, member, osf_group, project):
+    def test_add_osf_group_to_node_default_permission(
+        self, manager, member, osf_group, project
+    ):
         project.add_osf_group(osf_group, auth=Auth(manager))
 
         assert project.has_permission(manager, ADMIN) is True
@@ -562,7 +653,9 @@ class TestNodeGroups:
         assert project.has_permission(member, WRITE) is True
         assert project.has_permission(member, READ) is True
 
-    def test_update_osf_group_node(self, manager, member, user_two, user_three, osf_group, project):
+    def test_update_osf_group_node(
+        self, manager, member, user_two, user_three, osf_group, project
+    ):
         project.add_osf_group(osf_group, ADMIN)
 
         assert project.has_permission(member, ADMIN) is True
@@ -597,7 +690,9 @@ class TestNodeGroups:
             project.update_osf_group(osf_group, ADMIN, auth=Auth(user_three))
         assert project.has_permission(member, ADMIN) is False
 
-    def test_remove_osf_group_from_node(self, manager, member, user_two, osf_group, project):
+    def test_remove_osf_group_from_node(
+        self, manager, member, user_two, osf_group, project
+    ):
         # noncontributor
         with pytest.raises(PermissionsError):
             project.remove_osf_group(osf_group, auth=Auth(member))
@@ -645,7 +740,9 @@ class TestNodeGroups:
         assert group_two in project.osf_groups
         assert len(project.osf_groups) == 2
 
-    def test_get_osf_groups_with_perms_property(self, manager, member, osf_group, project):
+    def test_get_osf_groups_with_perms_property(
+        self, manager, member, osf_group, project
+    ):
         second_group = OSFGroupFactory(creator=manager)
         third_group = OSFGroupFactory(creator=manager)
         fourth_group = OSFGroupFactory(creator=manager)
@@ -767,22 +864,38 @@ class TestNodeGroups:
         assert child.is_contributor_or_group_member(manager) is False
 
     def test_node_object_can_view_osfgroups(self, manager, member, project, osf_group):
-        project.add_contributor(member, ADMIN, save=True)  # Member is explicit admin contributor on project
-        child = NodeFactory(parent=project, creator=manager)  # Member is implicit admin on child
-        grandchild = NodeFactory(parent=child, creator=manager)  # Member is implicit admin on grandchild
+        project.add_contributor(
+            member, ADMIN, save=True
+        )  # Member is explicit admin contributor on project
+        child = NodeFactory(
+            parent=project, creator=manager
+        )  # Member is implicit admin on child
+        grandchild = NodeFactory(
+            parent=child, creator=manager
+        )  # Member is implicit admin on grandchild
 
         project_two = ProjectFactory(creator=manager)
-        project_two.add_osf_group(osf_group, ADMIN)  # Member has admin permissions to project_two through osf_group
-        child_two = NodeFactory(parent=project_two, creator=manager)  # Member has implicit admin on child_two through osf_group
-        grandchild_two = NodeFactory(parent=child_two, creator=manager)  # Member has implicit admin perms on grandchild_two through osf_group
+        project_two.add_osf_group(
+            osf_group, ADMIN
+        )  # Member has admin permissions to project_two through osf_group
+        child_two = NodeFactory(
+            parent=project_two, creator=manager
+        )  # Member has implicit admin on child_two through osf_group
+        grandchild_two = NodeFactory(
+            parent=child_two, creator=manager
+        )  # Member has implicit admin perms on grandchild_two through osf_group
         can_view = Node.objects.can_view(member)
         assert len(can_view) == 6
-        assert set(list(can_view.values_list('id', flat=True))) == set((project.id,
-                                                                        child.id,
-                                                                        grandchild.id,
-                                                                        project_two.id,
-                                                                        child_two.id,
-                                                                        grandchild_two.id))
+        assert set(list(can_view.values_list('id', flat=True))) == set(
+            (
+                project.id,
+                child.id,
+                grandchild.id,
+                project_two.id,
+                child_two.id,
+                grandchild_two.id,
+            )
+        )
 
         grandchild_two.is_deleted = True
         grandchild_two.save()
@@ -790,7 +903,9 @@ class TestNodeGroups:
         assert len(can_view) == 5
         assert grandchild_two not in can_view
 
-    def test_parent_admin_users_osf_groups(self, manager, member, user_two, project, osf_group):
+    def test_parent_admin_users_osf_groups(
+        self, manager, member, user_two, project, osf_group
+    ):
         child = NodeFactory(parent=project, creator=manager)
         project.add_osf_group(osf_group, ADMIN)
         # Manager has explict admin to child, member has implicit admin.
@@ -959,19 +1074,21 @@ class TestRemovingContributorOrGroupMembers:
             target_content_type=ContentType.objects.get_for_model(project),
             path='/{}'.format(filename),
             name=filename,
-            materialized_path='/{}'.format(filename))
+            materialized_path='/{}'.format(filename),
+        )
 
         project_file.save()
         from addons.osfstorage import settings as osfstorage_settings
 
-        project_file.create_version(user_two, {
-            'object': '06d80e',
-            'service': 'cloud',
-            osfstorage_settings.WATERBUTLER_RESOURCE: 'osf',
-        }, {
-            'size': 1337,
-            'contentType': 'img/png'
-        }).save
+        project_file.create_version(
+            user_two,
+            {
+                'object': '06d80e',
+                'service': 'cloud',
+                osfstorage_settings.WATERBUTLER_RESOURCE: 'osf',
+            },
+            {'size': 1337, 'contentType': 'img/png'},
+        ).save
         project_file.checkout = user_two
         project_file.save()
         return project_file
@@ -994,7 +1111,9 @@ class TestRemovingContributorOrGroupMembers:
         node_settings.set_auth
         return node_settings
 
-    def test_remove_contributor_no_member_perms(self, project, node_settings, user_two, user_three, request_context, file):
+    def test_remove_contributor_no_member_perms(
+        self, project, node_settings, user_two, user_three, request_context, file
+    ):
         assert project.get_addon('github').user_settings is not None
         assert file.checkout is not None
         assert len(get_all_node_subscriptions(user_two, project)) == 2
@@ -1006,7 +1125,9 @@ class TestRemovingContributorOrGroupMembers:
         assert file.checkout is None
         assert len(get_all_node_subscriptions(user_two, project)) == 0
 
-    def test_remove_group_from_node_no_contributor_perms(self, project, node_settings, user_two, user_three, request_context, file):
+    def test_remove_group_from_node_no_contributor_perms(
+        self, project, node_settings, user_two, user_three, request_context, file
+    ):
         group = OSFGroupFactory(creator=user_two)
         project.add_osf_group(group, ADMIN)
         # Manually removing contributor
@@ -1025,7 +1146,9 @@ class TestRemovingContributorOrGroupMembers:
         assert file.checkout is None
         assert len(get_all_node_subscriptions(user_two, project)) == 0
 
-    def test_remove_member_no_contributor_perms(self, project, node_settings, user_two, user_three, request_context, file):
+    def test_remove_member_no_contributor_perms(
+        self, project, node_settings, user_two, user_three, request_context, file
+    ):
         group = OSFGroupFactory(creator=user_two)
         project.add_osf_group(group, ADMIN)
         group.make_manager(user_three)
@@ -1045,7 +1168,9 @@ class TestRemovingContributorOrGroupMembers:
         assert file.checkout is None
         assert len(get_all_node_subscriptions(user_two, project)) == 0
 
-    def test_delete_group_no_contributor_perms(self, project, node_settings, user_two, user_three, request_context, file):
+    def test_delete_group_no_contributor_perms(
+        self, project, node_settings, user_two, user_three, request_context, file
+    ):
         group = OSFGroupFactory(creator=user_two)
         project.add_osf_group(group, ADMIN)
         group.make_manager(user_three)
@@ -1065,7 +1190,9 @@ class TestRemovingContributorOrGroupMembers:
         assert file.checkout is None
         assert len(get_all_node_subscriptions(user_two, project)) == 0
 
-    def test_remove_contributor_also_member(self, project, node_settings, user_two, user_three, request_context, file):
+    def test_remove_contributor_also_member(
+        self, project, node_settings, user_two, user_three, request_context, file
+    ):
         group = OSFGroupFactory(creator=user_two)
         project.add_osf_group(group, ADMIN)
 
@@ -1080,7 +1207,9 @@ class TestRemovingContributorOrGroupMembers:
         assert file.checkout is not None
         assert len(get_all_node_subscriptions(user_two, project)) == 2
 
-    def test_remove_osf_group_from_node_also_member(self, project, node_settings, user_two, user_three, request_context, file):
+    def test_remove_osf_group_from_node_also_member(
+        self, project, node_settings, user_two, user_three, request_context, file
+    ):
         group = OSFGroupFactory(creator=user_two)
         project.add_osf_group(group, ADMIN)
 
@@ -1095,7 +1224,9 @@ class TestRemovingContributorOrGroupMembers:
         assert file.checkout is not None
         assert len(get_all_node_subscriptions(user_two, project)) == 2
 
-    def test_remove_member_also_contributor(self, project, node_settings, user_two, user_three, request_context, file):
+    def test_remove_member_also_contributor(
+        self, project, node_settings, user_two, user_three, request_context, file
+    ):
         group = OSFGroupFactory(creator=user_two)
         group.make_manager(user_three)
         project.add_osf_group(group, ADMIN)
@@ -1110,7 +1241,9 @@ class TestRemovingContributorOrGroupMembers:
         assert file.checkout is not None
         assert len(get_all_node_subscriptions(user_two, project)) == 2
 
-    def test_delete_group_also_contributor(self, project, node_settings, user_two, user_three, request_context, file):
+    def test_delete_group_also_contributor(
+        self, project, node_settings, user_two, user_three, request_context, file
+    ):
         group = OSFGroupFactory(creator=user_two)
         project.add_osf_group(group, ADMIN)
         group.make_manager(user_three)

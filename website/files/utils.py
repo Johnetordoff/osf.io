@@ -1,4 +1,3 @@
-
 def copy_files(src, target_node, parent=None, name=None):
     """Copy the files from src to the target node
     :param Folder src: The source to copy children from
@@ -18,7 +17,10 @@ def copy_files(src, target_node, parent=None, name=None):
     if src.is_file and src.versions.exists():
         fileversions = src.versions.select_related('region').order_by('-created')
         most_recent_fileversion = fileversions.first()
-        if most_recent_fileversion.region and most_recent_fileversion.region != target_node.osfstorage_region:
+        if (
+            most_recent_fileversion.region
+            and most_recent_fileversion.region != target_node.osfstorage_region
+        ):
             # add all original version except the most recent
             attach_versions(cloned, fileversions[1:], src)
             # create a new most recent version and update the region before adding
@@ -39,7 +41,9 @@ def copy_files(src, target_node, parent=None, name=None):
         # copy over file metadata records
         if cloned.provider == 'osfstorage':
             for record in cloned.records.all():
-                record.metadata = src.records.get(schema__name=record.schema.name).metadata
+                record.metadata = src.records.get(
+                    schema__name=record.schema.name
+                ).metadata
                 record.save()
 
     if not src.is_file:
@@ -47,6 +51,7 @@ def copy_files(src, target_node, parent=None, name=None):
             copy_files(child, target_node, parent=cloned)
 
     return cloned
+
 
 def attach_versions(file, versions_list, src=None):
     """

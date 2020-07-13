@@ -20,19 +20,30 @@ from osf.utils.migrations import disable_auto_now_fields
 
 logger = logging.getLogger(__name__)
 
+
 def rebrand_provider(src_id, dst_id):
     assert src_id != 'osf', 'Cannot rebrand OSF Preprints'
     src_prov = PreprintProvider.load(src_id)
     dst_prov = PreprintProvider.load(dst_id)
     assert src_prov, 'Unable to find provider {}'.format(src_id)
     assert dst_prov, 'Unable to find provider {}'.format(dst_id)
-    assert set(src_prov.subjects.values_list('text', flat=True)) == set(dst_prov.subjects.values_list('text', flat=True)), 'Provider subjects do not match'
-    assert set(src_prov.licenses_acceptable.values_list('id', flat=True)) == set(dst_prov.licenses_acceptable.values_list('id', flat=True)), 'Provider licenses do not match'
-    assert set(src_prov.notification_subscriptions.values_list('event_name', flat=True)) == set(dst_prov.notification_subscriptions.values_list('event_name', flat=True)), 'Provider subscription events do not match'
-    assert dst_prov.asset_files.filter(name='square_color_no_transparent').exists(), 'Invalid assets on {}'.format(dst_id)
+    assert set(src_prov.subjects.values_list('text', flat=True)) == set(
+        dst_prov.subjects.values_list('text', flat=True)
+    ), 'Provider subjects do not match'
+    assert set(src_prov.licenses_acceptable.values_list('id', flat=True)) == set(
+        dst_prov.licenses_acceptable.values_list('id', flat=True)
+    ), 'Provider licenses do not match'
+    assert set(
+        src_prov.notification_subscriptions.values_list('event_name', flat=True)
+    ) == set(
+        dst_prov.notification_subscriptions.values_list('event_name', flat=True)
+    ), 'Provider subscription events do not match'
+    assert dst_prov.asset_files.filter(
+        name='square_color_no_transparent'
+    ).exists(), 'Invalid assets on {}'.format(dst_id)
     assert dst_prov.access_token, 'Destination Provider must have a SHARE access token'
 
-    logger.info('Updating {}\'s preprints to provider {}'.format(src_id, dst_id))
+    logger.info("Updating {}'s preprints to provider {}".format(src_id, dst_id))
     src_prov.preprints.update(provider_id=dst_prov.id)
 
     logger.info('Updating preprint subjects with {} equivalent subjects'.format(dst_id))
@@ -41,12 +52,18 @@ def rebrand_provider(src_id, dst_id):
     for i, pp in enumerate(target_preprints, 1):
         pbar.update(i)
         # M2M .set does not require .save
-        pp.subjects.set(dst_prov.subjects.filter(text__in=list(pp.subjects.values_list('text', flat=True))))
+        pp.subjects.set(
+            dst_prov.subjects.filter(
+                text__in=list(pp.subjects.values_list('text', flat=True))
+            )
+        )
     pbar.finish()
 
     logger.info('Updating {} moderators'.format(dst_id))
     dst_prov.get_group('admin').user_set.set(src_prov.get_group('admin').user_set.all())
-    dst_prov.get_group('moderator').user_set.set(src_prov.get_group('moderator').user_set.all())
+    dst_prov.get_group('moderator').user_set.set(
+        src_prov.get_group('moderator').user_set.all()
+    )
 
     logger.info('Updating {} notification subscriptions'.format(dst_id))
     for src_sub in src_prov.notification_subscriptions.all():
@@ -58,25 +75,44 @@ def rebrand_provider(src_id, dst_id):
     logger.info('Updating {} notification digests'.format(dst_id))
     src_prov.notificationdigest_set.update(provider_id=dst_prov.id)
 
+
 def delete_old_provider(src_id):
     src_prov = PreprintProvider.load(src_id)
-    assert src_prov.preprints.count() == 0, 'Provider {} still has preprints'.format(src_id)
-    assert src_prov.notificationdigest_set.count() == 0, 'Provider {} still has queued digest emails'
-    assert src_prov.subjects.annotate(pc=Count('preprints')).filter(pc__gt=0).count() == 0, 'Provider {} still has used subjects'.format(src_id)
+    assert src_prov.preprints.count() == 0, 'Provider {} still has preprints'.format(
+        src_id
+    )
+    assert (
+        src_prov.notificationdigest_set.count() == 0
+    ), 'Provider {} still has queued digest emails'
+    assert (
+        src_prov.subjects.annotate(pc=Count('preprints')).filter(pc__gt=0).count() == 0
+    ), 'Provider {} still has used subjects'.format(src_id)
 
     # I don't trust CASCADE deletes to be set up correctly
-    logger.warn('Deleting Assets: {}'.format(src_prov.asset_files.annotate(pc=Count('providers')).filter(pc=1).delete()))
+    logger.warn(
+        'Deleting Assets: {}'.format(
+            src_prov.asset_files.annotate(pc=Count('providers')).filter(pc=1).delete()
+        )
+    )
     logger.warn('Deleting Groups: {}'.format(src_prov.group_objects.delete()))
     logger.warn('Deleting Subjects: {}'.format(src_prov.subjects.all().delete()))
-    logger.warn('Deleting Subscriptions: {}'.format(src_prov.notification_subscriptions.all().delete()))
+    logger.warn(
+        'Deleting Subscriptions: {}'.format(
+            src_prov.notification_subscriptions.all().delete()
+        )
+    )
     logger.warn('Deleting Provider: {}'.format(src_prov.delete()))
+
 
 def reindex_share(dst_id, dry_run):
     dst_prov = PreprintProvider.load(dst_id)
     if dry_run:
-        logger.info('Would send {} preprints to SHARE...'.format(dst_prov.preprints.count()))
+        logger.info(
+            'Would send {} preprints to SHARE...'.format(dst_prov.preprints.count())
+        )
     else:
         reindex_provider(dst_prov)
+
 
 class Command(BaseCommand):
     def add_arguments(self, parser):

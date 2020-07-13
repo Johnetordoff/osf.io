@@ -6,7 +6,6 @@ from osf.models.licenses import NodeLicense
 
 @pytest.mark.django_db
 class TestLicenseDetail:
-
     def test_license_detail(self, app):
         license_node = NodeLicense.objects.first()
         url_license = '/{}licenses/{}/'.format(API_BASE, license_node._id)

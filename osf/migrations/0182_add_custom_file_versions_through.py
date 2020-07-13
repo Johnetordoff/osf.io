@@ -16,10 +16,30 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='BaseFileVersionsThrough',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
                 ('version_name', models.TextField(blank=True)),
-                ('basefilenode', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='osf.BaseFileNode')),
-                ('fileversion', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='osf.FileVersion')),
+                (
+                    'basefilenode',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to='osf.BaseFileNode',
+                    ),
+                ),
+                (
+                    'fileversion',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to='osf.FileVersion',
+                    ),
+                ),
             ],
         ),
         migrations.AlterUniqueTogether(

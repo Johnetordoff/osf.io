@@ -25,18 +25,14 @@ class FrequencyField(ser.Field):
             return {'notification_type': notification_type}
         raise ValidationError('Invalid frequency "{}"'.format(frequency))
 
+
 class SubscriptionSerializer(JSONAPISerializer):
-    filterable_fields = frozenset([
-        'id',
-        'event_name',
-    ])
+    filterable_fields = frozenset(['id', 'event_name',])
 
     id = ser.CharField(source='_id', read_only=True)
     event_name = ser.CharField(read_only=True)
     frequency = FrequencyField(source='*', required=True)
-    links = LinksField({
-        'self': 'get_absolute_url',
-    })
+    links = LinksField({'self': 'get_absolute_url',})
 
     class Meta:
         type_ = 'subscription'

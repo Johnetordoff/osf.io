@@ -9,7 +9,11 @@ from django.utils import timezone
 from framework import forms, status
 from framework.auth import cas
 from framework.auth.core import get_user, generate_verification_key
-from framework.auth.decorators import block_bing_preview, collect_auth, must_be_logged_in
+from framework.auth.decorators import (
+    block_bing_preview,
+    collect_auth,
+    must_be_logged_in,
+)
 from framework.auth.forms import PasswordForm, SetEmailAndPasswordForm
 from framework.auth.signals import user_registered
 from framework.auth.utils import validate_email, validate_recaptcha
@@ -20,14 +24,27 @@ from framework.transactions.handlers import no_auto_transaction
 from framework.utils import get_timestamp, throttle_period_expired
 from osf.models import Tag
 from osf.exceptions import NodeStateError
-from osf.models import AbstractNode, DraftRegistration, OSFGroup, OSFUser, Preprint, PreprintProvider, RecentlyAddedContributor
+from osf.models import (
+    AbstractNode,
+    DraftRegistration,
+    OSFGroup,
+    OSFUser,
+    Preprint,
+    PreprintProvider,
+    RecentlyAddedContributor,
+)
 from osf.utils import sanitize
 from osf.utils.permissions import ADMIN
 from website import mails, language, settings
 from website.notifications.utils import check_if_all_global_subscriptions_are_none
 from website.profile import utils as profile_utils
-from website.project.decorators import (must_have_permission, must_be_valid_project, must_not_be_registration,
-                                        must_be_contributor_or_public, must_be_contributor)
+from website.project.decorators import (
+    must_have_permission,
+    must_be_valid_project,
+    must_not_be_registration,
+    must_be_contributor_or_public,
+    must_be_contributor,
+)
 from website.project.views.node import serialize_preprints
 from website.project.model import has_anonymous_link
 from website.project.signals import unreg_contributor_added, contributor_added
@@ -44,7 +61,8 @@ def get_node_contributors_abbrev(auth, node, **kwargs):
     max_count = kwargs.get('max_count', 3)
     if 'user_ids' in kwargs:
         users = [
-            OSFUser.load(user_id) for user_id in kwargs['user_ids']
+            OSFUser.load(user_id)
+            for user_id in kwargs['user_ids']
             if node.contributor_set.filter(user__guid__guid=user_id).exists()
         ]
     else:
@@ -90,9 +108,14 @@ def get_contributors(auth, node, **kwargs):
         try:
             limit = int(request.args['limit'])
         except ValueError:
-            raise HTTPError(http_status.HTTP_400_BAD_REQUEST, data=dict(
-                message_long='Invalid value for "limit": {}'.format(request.args['limit'])
-            ))
+            raise HTTPError(
+                http_status.HTTP_400_BAD_REQUEST,
+                data=dict(
+                    message_long='Invalid value for "limit": {}'.format(
+                        request.args['limit']
+                    )
+                ),
+            )
     else:
         limit = None
 
@@ -105,15 +128,14 @@ def get_contributors(auth, node, **kwargs):
     # if int, contribs list is sliced to specified length
     # if None, contribs list is not sliced
     contribs = profile_utils.serialize_contributors(
-        node.visible_contributors[0:limit],
-        node=node,
+        node.visible_contributors[0:limit], node=node,
     )
 
     # Will either return just contributor list or contributor list + 'more' element
     if limit:
         return {
             'contributors': contribs,
-            'more': max(0, len(node.visible_contributors) - limit)
+            'more': max(0, len(node.visible_contributors) - limit),
         }
     else:
         return {'contributors': contribs}
@@ -133,7 +155,8 @@ def get_contributors_from_parent(auth, node, **kwargs):
 
     contribs = [
         profile_utils.add_contributor_json(contrib, node=node)
-        for contrib in parent.contributors if contrib not in node.contributors
+        for contrib in parent.contributors
+        if contrib not in node.contributors
     ]
 
     return {'contributors': contribs}
@@ -179,8 +202,8 @@ def deserialize_contributors(node, user_dicts, auth, validate=False):
         else:
             try:
                 contributor = OSFUser.create_unregistered(
-                    fullname=fullname,
-                    email=email)
+                    fullname=fullname, email=email
+                )
                 contributor.save()
             except ValidationError:
                 ## FIXME: This suppresses an exception if ID not found & new validation fails; get_user will return None
@@ -188,16 +211,18 @@ def deserialize_contributors(node, user_dicts, auth, validate=False):
 
         # Add unclaimed record if necessary
         if not contributor.is_registered:
-            contributor.add_unclaimed_record(node, referrer=auth.user,
-                given_name=fullname,
-                email=email)
+            contributor.add_unclaimed_record(
+                node, referrer=auth.user, given_name=fullname, email=email
+            )
             contributor.save()
 
-        contribs.append({
-            'user': contributor,
-            'visible': visible,
-            'permissions': contrib_dict.get('permission')
-        })
+        contribs.append(
+            {
+                'user': contributor,
+                'visible': visible,
+                'permissions': contrib_dict.get('permission'),
+            }
+        )
     return contribs
 
 
@@ -209,7 +234,13 @@ def finalize_invitation(node, contributor, auth, email_template='default'):
         pass
     else:
         if record['email']:
-            send_claim_email(record['email'], contributor, node, notify=True, email_template=email_template)
+            send_claim_email(
+                record['email'],
+                contributor,
+                node,
+                notify=True,
+                email_template=email_template,
+            )
 
 
 @must_be_valid_project
@@ -256,13 +287,15 @@ def project_contributors_post(auth, node, **kwargs):
     # Reconnect listeners
     unreg_contributor_added.connect(finalize_invitation)
 
-    return {
-        'status': 'success',
-        'contributors': profile_utils.serialize_contributors(
-            node.visible_contributors,
-            node=node,
-        )
-    }, 201
+    return (
+        {
+            'status': 'success',
+            'contributors': profile_utils.serialize_contributors(
+                node.visible_contributors, node=node,
+            ),
+        },
+        201,
+    )
 
 
 @no_auto_transaction
@@ -286,7 +319,9 @@ def project_manage_contributors(auth, node, **kwargs):
     try:
         node.manage_contributors(contributors, auth=auth, save=True)
     except (ValueError, NodeStateError) as error:
-        raise HTTPError(http_status.HTTP_400_BAD_REQUEST, data={'message_long': error.args[0]})
+        raise HTTPError(
+            http_status.HTTP_400_BAD_REQUEST, data={'message_long': error.args[0]}
+        )
 
     # If user has removed herself from project, alert; redirect to
     # node summary if node is public, else to user's dashboard page
@@ -294,7 +329,7 @@ def project_manage_contributors(auth, node, **kwargs):
         status.push_status_message(
             'You have removed yourself as a contributor from this project',
             kind='success',
-            trust=False
+            trust=False,
         )
         if node.is_public:
             return {'redirectUrl': node.url}
@@ -305,7 +340,7 @@ def project_manage_contributors(auth, node, **kwargs):
         status.push_status_message(
             'You have removed your administrative privileges for this project',
             kind='success',
-            trust=False
+            trust=False,
         )
     # Else stay on current page
     return {}
@@ -326,7 +361,10 @@ def project_remove_contributor(auth, **kwargs):
     node_ids = request.get_json()['nodeIDs']
     contributor = OSFUser.load(contributor_id)
     if contributor is None:
-        raise HTTPError(http_status.HTTP_400_BAD_REQUEST, data={'message_long': 'Contributor not found.'})
+        raise HTTPError(
+            http_status.HTTP_400_BAD_REQUEST,
+            data={'message_long': 'Contributor not found.'},
+        )
     redirect_url = {}
     parent_id = node_ids[0]
     for node_id in node_ids:
@@ -338,17 +376,24 @@ def project_remove_contributor(auth, **kwargs):
             if auth.user != contributor:
                 raise HTTPError(http_status.HTTP_403_FORBIDDEN)
 
-        if node.visible_contributors.count() == 1 \
-                and node.visible_contributors[0] == contributor:
-            raise HTTPError(http_status.HTTP_403_FORBIDDEN, data={
-                'message_long': 'Must have at least one bibliographic contributor'
-            })
+        if (
+            node.visible_contributors.count() == 1
+            and node.visible_contributors[0] == contributor
+        ):
+            raise HTTPError(
+                http_status.HTTP_403_FORBIDDEN,
+                data={
+                    'message_long': 'Must have at least one bibliographic contributor'
+                },
+            )
 
         nodes_removed = node.remove_contributor(contributor, auth=auth)
         # remove_contributor returns false if there is not one admin or visible contributor left after the move.
         if not nodes_removed:
-            raise HTTPError(http_status.HTTP_400_BAD_REQUEST, data={
-                'message_long': 'Could not remove contributor.'})
+            raise HTTPError(
+                http_status.HTTP_400_BAD_REQUEST,
+                data={'message_long': 'Could not remove contributor.'},
+            )
 
         # On parent node, if user has removed herself from project, alert; redirect to
         # node summary if node is public, else to user's dashboard page
@@ -357,7 +402,7 @@ def project_remove_contributor(auth, **kwargs):
                 'You have removed yourself as a contributor from this project',
                 kind='success',
                 trust=False,
-                id='remove_self_contrib'
+                id='remove_self_contrib',
             )
             if node.is_public:
                 redirect_url = {'redirectUrl': node.url}
@@ -385,9 +430,12 @@ def send_claim_registered_email(claimer, unclaimed_user, node, throttle=24 * 360
     # check throttle
     timestamp = unclaimed_record.get('last_sent')
     if not throttle_period_expired(timestamp, throttle):
-        raise HTTPError(http_status.HTTP_400_BAD_REQUEST, data=dict(
-            message_long='User account can only be claimed with an existing user once every 24 hours'
-        ))
+        raise HTTPError(
+            http_status.HTTP_400_BAD_REQUEST,
+            data=dict(
+                message_long='User account can only be claimed with an existing user once every 24 hours'
+            ),
+        )
 
     # roll the valid token for each email, thus user cannot change email and approve a different email address
     verification_key = generate_verification_key(verification_type='claim')
@@ -433,7 +481,14 @@ def send_claim_registered_email(claimer, unclaimed_user, node, throttle=24 * 360
 
 
 # TODO: consider moving this into utils
-def send_claim_email(email, unclaimed_user, node, notify=True, throttle=24 * 3600, email_template='default'):
+def send_claim_email(
+    email,
+    unclaimed_user,
+    node,
+    notify=True,
+    throttle=24 * 3600,
+    email_template='default',
+):
     """
     Unregistered user claiming a user account as an contributor to a project. Send an email for claiming the account.
     Either sends to the given email or the referrer's email, depending on the email address provided.
@@ -467,7 +522,9 @@ def send_claim_email(email, unclaimed_user, node, notify=True, throttle=24 * 360
             email_template, preprint_provider = find_preprint_provider(node)
             if not email_template or not preprint_provider:
                 return
-            mail_tpl = getattr(mails, 'INVITE_PREPRINT')(email_template, preprint_provider)
+            mail_tpl = getattr(mails, 'INVITE_PREPRINT')(
+                email_template, preprint_provider
+            )
             if preprint_provider._id == 'osf':
                 logo = settings.OSF_PREPRINTS_LOGO
             else:
@@ -487,9 +544,12 @@ def send_claim_email(email, unclaimed_user, node, notify=True, throttle=24 * 360
         # check throttle
         timestamp = unclaimed_record.get('last_sent')
         if not throttle_period_expired(timestamp, throttle):
-            raise HTTPError(http_status.HTTP_400_BAD_REQUEST, data=dict(
-                message_long='User account can only be claimed with an existing user once every 24 hours'
-            ))
+            raise HTTPError(
+                http_status.HTTP_400_BAD_REQUEST,
+                data=dict(
+                    message_long='User account can only be claimed with an existing user once every 24 hours'
+                ),
+            )
         # roll the valid token for each email, thus user cannot change email and approve a different email address
         verification_key = generate_verification_key(verification_type='claim')
         unclaimed_record['last_sent'] = get_timestamp()
@@ -535,7 +595,15 @@ def send_claim_email(email, unclaimed_user, node, notify=True, throttle=24 * 360
 
 
 @contributor_added.connect
-def notify_added_contributor(node, contributor, auth=None, throttle=None, email_template='default', *args, **kwargs):
+def notify_added_contributor(
+    node,
+    contributor,
+    auth=None,
+    throttle=None,
+    email_template='default',
+    *args,
+    **kwargs
+):
     if email_template == 'false':
         return
 
@@ -544,8 +612,13 @@ def notify_added_contributor(node, contributor, auth=None, throttle=None, email_
 
     throttle = throttle or settings.CONTRIBUTOR_ADDED_EMAIL_THROTTLE
     # Email users for projects, or for components where they are not contributors on the parent node.
-    if contributor.is_registered and ((isinstance(node, (Preprint, DraftRegistration))) or
-            (not node.parent_node or (node.parent_node and not node.parent_node.is_contributor(contributor)))):
+    if contributor.is_registered and (
+        (isinstance(node, (Preprint, DraftRegistration)))
+        or (
+            not node.parent_node
+            or (node.parent_node and not node.parent_node.is_contributor(contributor))
+        )
+    ):
         mimetype = 'html'
         preprint_provider = None
         logo = None
@@ -553,24 +626,38 @@ def notify_added_contributor(node, contributor, auth=None, throttle=None, email_
             email_template, preprint_provider = find_preprint_provider(node)
             if not email_template or not preprint_provider:
                 return
-            email_template = getattr(mails, 'CONTRIBUTOR_ADDED_PREPRINT')(email_template, preprint_provider)
+            email_template = getattr(mails, 'CONTRIBUTOR_ADDED_PREPRINT')(
+                email_template, preprint_provider
+            )
             if preprint_provider._id == 'osf':
                 logo = settings.OSF_PREPRINTS_LOGO
             else:
                 logo = preprint_provider._id
         elif email_template == 'draft_registration':
-            email_template = getattr(mails, 'CONTRIBUTOR_ADDED_DRAFT_REGISTRATION'.format(email_template.upper()))
+            email_template = getattr(
+                mails,
+                'CONTRIBUTOR_ADDED_DRAFT_REGISTRATION'.format(email_template.upper()),
+            )
         elif email_template == 'access_request':
             mimetype = 'html'
-            email_template = getattr(mails, 'CONTRIBUTOR_ADDED_ACCESS_REQUEST'.format(email_template.upper()))
+            email_template = getattr(
+                mails, 'CONTRIBUTOR_ADDED_ACCESS_REQUEST'.format(email_template.upper())
+            )
         elif node.has_linked_published_preprints:
             # Project holds supplemental materials for a published preprint
-            email_template = getattr(mails, 'CONTRIBUTOR_ADDED_PREPRINT_NODE_FROM_OSF'.format(email_template.upper()))
+            email_template = getattr(
+                mails,
+                'CONTRIBUTOR_ADDED_PREPRINT_NODE_FROM_OSF'.format(
+                    email_template.upper()
+                ),
+            )
             logo = settings.OSF_PREPRINTS_LOGO
         else:
             email_template = getattr(mails, 'CONTRIBUTOR_ADDED_DEFAULT')
 
-        contributor_record = contributor.contributor_added_email_records.get(node._id, {})
+        contributor_record = contributor.contributor_added_email_records.get(
+            node._id, {}
+        )
         if contributor_record:
             timestamp = contributor_record.get('last_sent', None)
             if timestamp:
@@ -586,19 +673,28 @@ def notify_added_contributor(node, contributor, auth=None, throttle=None, email_
             user=contributor,
             node=node,
             referrer_name=auth.user.fullname if auth else '',
-            all_global_subscriptions_none=check_if_all_global_subscriptions_are_none(contributor),
+            all_global_subscriptions_none=check_if_all_global_subscriptions_are_none(
+                contributor
+            ),
             branded_service=preprint_provider,
             can_change_preferences=False,
             logo=logo if logo else settings.OSF_LOGO,
             osf_contact_email=settings.OSF_CONTACT_EMAIL,
-            published_preprints=[] if isinstance(node, (Preprint, DraftRegistration)) else serialize_preprints(node, user=None)
+            published_preprints=[]
+            if isinstance(node, (Preprint, DraftRegistration))
+            else serialize_preprints(node, user=None),
         )
 
-        contributor.contributor_added_email_records[node._id]['last_sent'] = get_timestamp()
+        contributor.contributor_added_email_records[node._id][
+            'last_sent'
+        ] = get_timestamp()
         contributor.save()
 
     elif not contributor.is_registered:
-        unreg_contributor_added.send(node, contributor=contributor, auth=auth, email_template=email_template)
+        unreg_contributor_added.send(
+            node, contributor=contributor, auth=auth, email_template=email_template
+        )
+
 
 @contributor_added.connect
 def add_recently_added_contributor(node, contributor, auth=None, *args, **kwargs):
@@ -608,25 +704,33 @@ def add_recently_added_contributor(node, contributor, auth=None, *args, **kwargs
     # Add contributor to recently added list for user
     if auth is not None:
         user = auth.user
-        recently_added_contributor_obj, created = RecentlyAddedContributor.objects.get_or_create(
-            user=user,
-            contributor=contributor
+        (
+            recently_added_contributor_obj,
+            created,
+        ) = RecentlyAddedContributor.objects.get_or_create(
+            user=user, contributor=contributor
         )
         recently_added_contributor_obj.date_added = timezone.now()
         recently_added_contributor_obj.save()
         count = user.recently_added.count()
         if count > MAX_RECENT_LENGTH:
             difference = count - MAX_RECENT_LENGTH
-            for each in user.recentlyaddedcontributor_set.order_by('date_added')[:difference]:
+            for each in user.recentlyaddedcontributor_set.order_by('date_added')[
+                :difference
+            ]:
                 each.delete()
 
     if isinstance(node, DraftRegistration):
         return
     # If there are pending access requests for this user, mark them as accepted
-    pending_access_requests_for_user = node.requests.filter(creator=contributor, machine_state='pending')
+    pending_access_requests_for_user = node.requests.filter(
+        creator=contributor, machine_state='pending'
+    )
     if pending_access_requests_for_user.exists():
         permissions = kwargs.get('permissions') or node.DEFAULT_CONTRIBUTOR_PERMISSIONS
-        pending_access_requests_for_user.get().run_accept(contributor, comment='', permissions=permissions)
+        pending_access_requests_for_user.get().run_accept(
+            contributor, comment='', permissions=permissions
+        )
 
 
 def find_preprint_provider(node):
@@ -638,7 +742,9 @@ def find_preprint_provider(node):
     """
 
     try:
-        preprint = node if isinstance(node, Preprint) else Preprint.objects.get(node=node)
+        preprint = (
+            node if isinstance(node, Preprint) else Preprint.objects.get(node=node)
+        )
         provider = preprint.provider
         email_template = 'osf' if provider._id == 'osf' else 'branded'
         return email_template, provider
@@ -655,7 +761,8 @@ def verify_claim_token(user, token, pid):
         if user.is_registered:
             error_data = {
                 'message_short': 'User has already been claimed.',
-                'message_long': 'Please <a href="/login/">log in</a> to continue.'}
+                'message_long': 'Please <a href="/login/">log in</a> to continue.',
+            }
             raise HTTPError(400, data=error_data)
         else:
             return False
@@ -665,7 +772,10 @@ def verify_claim_token(user, token, pid):
 def check_external_auth(user):
     if user:
         return not user.has_usable_password() and (
-            'VERIFIED' in sum([list(each.values()) for each in user.external_identity.values()], [])
+            'VERIFIED'
+            in sum(
+                [list(each.values()) for each in user.external_identity.values()], []
+            )
         )
     return False
 
@@ -681,7 +791,9 @@ def claim_user_registered(auth, node, **kwargs):
 
     current_user = auth.user
 
-    sign_out_url = cas.get_logout_url(service_url=cas.get_login_url(service_url=request.url))
+    sign_out_url = cas.get_logout_url(
+        service_url=cas.get_login_url(service_url=request.url)
+    )
     if not current_user:
         return redirect(sign_out_url)
 
@@ -689,8 +801,10 @@ def claim_user_registered(auth, node, **kwargs):
     if hasattr(node, 'is_contributor') and node.is_contributor(current_user):
         data = {
             'message_short': 'Already a contributor',
-            'message_long': ('The logged-in user is already a contributor to this '
-                'project. Would you like to <a href="{}">log out</a>?').format(sign_out_url)
+            'message_long': (
+                'The logged-in user is already a contributor to this '
+                'project. Would you like to <a href="{}">log out</a>?'
+            ).format(sign_out_url),
         }
         raise HTTPError(http_status.HTTP_400_BAD_REQUEST, data=data)
 
@@ -698,8 +812,10 @@ def claim_user_registered(auth, node, **kwargs):
     if hasattr(node, 'is_member') and node.is_member(current_user):
         data = {
             'message_short': 'Already a member',
-            'message_long': ('The logged-in user is already a member of this OSF Group. '
-                'Would you like to <a href="{}">log out</a>?').format(sign_out_url)
+            'message_long': (
+                'The logged-in user is already a member of this OSF Group. '
+                'Would you like to <a href="{}">log out</a>?'
+            ).format(sign_out_url),
         }
         raise HTTPError(http_status.HTTP_400_BAD_REQUEST, data=data)
 
@@ -708,15 +824,13 @@ def claim_user_registered(auth, node, **kwargs):
     if not verify_claim_token(unreg_user, token, pid=node._primary_key):
         error_data = {
             'message_short': 'Invalid url.',
-            'message_long': 'The token in the URL is invalid or has expired.'
+            'message_long': 'The token in the URL is invalid or has expired.',
         }
         raise HTTPError(http_status.HTTP_400_BAD_REQUEST, data=error_data)
 
     # Store the unreg_user data on the session in case the user registers
     # a new account
-    session.data['unreg_user'] = {
-        'uid': uid, 'pid': pid, 'token': token
-    }
+    session.data['unreg_user'] = {'uid': uid, 'pid': pid, 'token': token}
     session.save()
 
     # If a user is already validated though external auth, it is OK to claim
@@ -727,7 +841,9 @@ def claim_user_registered(auth, node, **kwargs):
             if current_user.check_password(form.password.data):
                 should_claim = True
             else:
-                status.push_status_message(language.LOGIN_FAILED, kind='warning', trust=False)
+                status.push_status_message(
+                    language.LOGIN_FAILED, kind='warning', trust=False
+                )
         else:
             forms.push_errors_to_status(form.errors)
     if should_claim:
@@ -735,15 +851,13 @@ def claim_user_registered(auth, node, **kwargs):
         node.save()
         if isinstance(node, OSFGroup):
             status.push_status_message(
-                'You are now a member of this OSFGroup.',
-                kind='success',
-                trust=False
+                'You are now a member of this OSFGroup.', kind='success', trust=False
             )
         else:
             status.push_status_message(
                 'You are now a contributor to this project.',
                 kind='success',
-                trust=False
+                trust=False,
             )
         return redirect(node.url)
     if is_json_request():
@@ -752,11 +866,7 @@ def claim_user_registered(auth, node, **kwargs):
     else:
         form_ret = form
         user_ret = current_user
-    return {
-        'form': form_ret,
-        'user': user_ret,
-        'signOutUrl': sign_out_url
-    }
+    return {'form': form_ret, 'user': user_ret, 'signOutUrl': sign_out_url}
 
 
 @user_registered.connect
@@ -775,7 +885,8 @@ def replace_unclaimed_user_with_registered(user):
         node.replace_contributor(old=unreg_user, new=user)
         node.save()
         status.push_status_message(
-            'Successfully claimed contributor.', kind='success', trust=False)
+            'Successfully claimed contributor.', kind='success', trust=False
+        )
 
 
 @block_bing_preview
@@ -796,64 +907,88 @@ def claim_user_form(auth, **kwargs):
     if not user or not verify_claim_token(user, token, pid):
         error_data = {
             'message_short': 'Invalid url.',
-            'message_long': 'Claim user does not exists, the token in the URL is invalid or has expired.'
+            'message_long': 'Claim user does not exists, the token in the URL is invalid or has expired.',
         }
         raise HTTPError(http_status.HTTP_400_BAD_REQUEST, data=error_data)
 
     # If user is logged in, redirect to 're-enter password' page
     if auth.logged_in:
-        return redirect(web_url_for('claim_user_registered',
-            uid=uid, pid=pid, token=token))
+        return redirect(
+            web_url_for('claim_user_registered', uid=uid, pid=pid, token=token)
+        )
 
     unclaimed_record = user.unclaimed_records[pid]
     user.fullname = unclaimed_record['name']
     user.update_guessed_names()
     # The email can be the original referrer email if no claimer email has been specified.
-    claimer_email = unclaimed_record.get('claimer_email') or unclaimed_record.get('email')
+    claimer_email = unclaimed_record.get('claimer_email') or unclaimed_record.get(
+        'email'
+    )
     # If there is a registered user with this email, redirect to 're-enter password' page
     try:
-        user_from_email = OSFUser.objects.get(emails__address=claimer_email.lower().strip()) if claimer_email else None
+        user_from_email = (
+            OSFUser.objects.get(emails__address=claimer_email.lower().strip())
+            if claimer_email
+            else None
+        )
     except OSFUser.DoesNotExist:
         user_from_email = None
     if user_from_email and user_from_email.is_registered:
-        return redirect(web_url_for('claim_user_registered', uid=uid, pid=pid, token=token))
+        return redirect(
+            web_url_for('claim_user_registered', uid=uid, pid=pid, token=token)
+        )
 
     form = SetEmailAndPasswordForm(request.form, token=token)
     if request.method == 'POST':
         if not form.validate():
             forms.push_errors_to_status(form.errors)
-        elif settings.RECAPTCHA_SITE_KEY and not validate_recaptcha(request.form.get('g-recaptcha-response'), remote_ip=request.remote_addr):
+        elif settings.RECAPTCHA_SITE_KEY and not validate_recaptcha(
+            request.form.get('g-recaptcha-response'), remote_ip=request.remote_addr
+        ):
             status.push_status_message('Invalid captcha supplied.', kind='error')
         else:
             username, password = claimer_email, form.password.data
             if not username:
-                raise HTTPError(http_status.HTTP_400_BAD_REQUEST, data=dict(
-                    message_long='No email associated with this account. Please claim this '
-                    'account on the project to which you were invited.'
-                ))
+                raise HTTPError(
+                    http_status.HTTP_400_BAD_REQUEST,
+                    data=dict(
+                        message_long='No email associated with this account. Please claim this '
+                        'account on the project to which you were invited.'
+                    ),
+                )
 
-            user.register(username=username, password=password, accepted_terms_of_service=form.accepted_terms_of_service.data)
+            user.register(
+                username=username,
+                password=password,
+                accepted_terms_of_service=form.accepted_terms_of_service.data,
+            )
             # Clear unclaimed records
             user.unclaimed_records = {}
             user.verification_key = generate_verification_key()
             user.save()
             # Authenticate user and redirect to project page
-            status.push_status_message(language.CLAIMED_CONTRIBUTOR, kind='success', trust=True)
+            status.push_status_message(
+                language.CLAIMED_CONTRIBUTOR, kind='success', trust=True
+            )
             # Redirect to CAS and authenticate the user with a verification key.
             provider = PreprintProvider.load(pid)
             redirect_url = None
             if provider:
-                redirect_url = web_url_for('auth_login', next=provider.landing_url, _absolute=True)
+                redirect_url = web_url_for(
+                    'auth_login', next=provider.landing_url, _absolute=True
+                )
             else:
                 # Add related claimed tags to user
                 _add_related_claimed_tag_to_user(pid, user)
                 redirect_url = web_url_for('resolve_guid', guid=pid, _absolute=True)
 
-            return redirect(cas.get_login_url(
-                redirect_url,
-                username=user.username,
-                verification_key=user.verification_key
-            ))
+            return redirect(
+                cas.get_login_url(
+                    redirect_url,
+                    username=user.username,
+                    verification_key=user.verification_key,
+                )
+            )
 
     return {
         'firstname': user.given_name,
@@ -872,20 +1007,24 @@ def _add_related_claimed_tag_to_user(pid, user):
     """
     node = AbstractNode.load(pid)
     preprint = Preprint.load(pid)
-    osf_claimed_tag, created = Tag.all_tags.get_or_create(name=provider_claimed_tag('osf'), system=True)
+    osf_claimed_tag, created = Tag.all_tags.get_or_create(
+        name=provider_claimed_tag('osf'), system=True
+    )
     if node:
         node_source_tags = node.all_tags.filter(name__icontains='source:', system=True)
         if node_source_tags.exists():
             for tag in node_source_tags:
-                claimed_tag, created = Tag.all_tags.get_or_create(name=NODE_SOURCE_TAG_CLAIMED_TAG_RELATION[tag.name],
-                                                                  system=True)
+                claimed_tag, created = Tag.all_tags.get_or_create(
+                    name=NODE_SOURCE_TAG_CLAIMED_TAG_RELATION[tag.name], system=True
+                )
                 user.add_system_tag(claimed_tag)
         else:
             user.add_system_tag(osf_claimed_tag)
     elif preprint:
         provider_id = preprint.provider._id
-        preprint_claimed_tag, created = Tag.all_tags.get_or_create(name=provider_claimed_tag(provider_id, 'preprint'),
-                                                                   system=True)
+        preprint_claimed_tag, created = Tag.all_tags.get_or_create(
+            name=provider_claimed_tag(provider_id, 'preprint'), system=True
+        )
         user.add_system_tag(preprint_claimed_tag)
 
 
@@ -915,7 +1054,9 @@ def invite_contributor_post(node, **kwargs):
     user = get_user(email=email)
     if user:
         if node.is_contributor(user):
-            msg = 'User with this email address is already a contributor to this project.'
+            msg = (
+                'User with this email address is already a contributor to this project.'
+            )
             return {'status': 400, 'message': msg}, 400
         elif not user.is_confirmed:
             serialized = profile_utils.serialize_unregistered(fullname, email)
@@ -964,8 +1105,4 @@ def claim_user_post(node, **kwargs):
     else:
         raise HTTPError(http_status.HTTP_400_BAD_REQUEST)
 
-    return {
-        'status': 'success',
-        'email': email,
-        'fullname': unclaimed_data['name']
-    }
+    return {'status': 'success', 'email': email, 'fullname': unclaimed_data['name']}

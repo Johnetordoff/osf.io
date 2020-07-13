@@ -5,13 +5,12 @@ from api.base.settings.defaults import API_BASE
 from osf_tests.factories import (
     DraftRegistrationFactory,
     AuthUserFactory,
-    ProjectFactory
+    ProjectFactory,
 )
 
 
 @pytest.mark.django_db
 class TestDraftNodeDetail:
-
     @pytest.fixture()
     def user(self):
         return AuthUserFactory()
@@ -45,7 +44,9 @@ class TestDraftNodeDetail:
         assert data['type'] == 'draft-nodes'
         assert data['id'] == draft_node._id
 
-        assert url + 'files/' in data['relationships']['files']['links']['related']['href']
+        assert (
+            url + 'files/' in data['relationships']['files']['links']['related']['href']
+        )
         assert url in data['links']['self']
 
         # assert cannot access node through this endpoint

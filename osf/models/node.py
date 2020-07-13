@@ -36,16 +36,22 @@ from framework.auth import oauth_scopes
 from framework.celery_tasks.handlers import enqueue_task, get_task_from_queue
 from framework.exceptions import PermissionsError, HTTPError
 from framework.sentry import log_exception
-from osf.exceptions import (InvalidTagError, NodeStateError,
-                            TagNotFoundError)
+from osf.exceptions import InvalidTagError, NodeStateError, TagNotFoundError
 from osf.models.contributor import Contributor
 from osf.models.collection import CollectionSubmission
 
 from osf.models.identifiers import Identifier, IdentifierMixin
 from osf.models.licenses import NodeLicenseRecord
-from osf.models.mixins import (AddonModelMixin, CommentableMixin, Loggable, GuardianMixin,
-                               NodeLinkMixin, SpamOverrideMixin, RegistrationResponseMixin,
-                               EditableFieldsMixin)
+from osf.models.mixins import (
+    AddonModelMixin,
+    CommentableMixin,
+    Loggable,
+    GuardianMixin,
+    NodeLinkMixin,
+    SpamOverrideMixin,
+    RegistrationResponseMixin,
+    EditableFieldsMixin,
+)
 from osf.models.node_relation import NodeRelation
 from osf.models.nodelog import NodeLog
 from osf.models.sanctions import RegistrationApproval
@@ -73,7 +79,7 @@ from osf.utils.permissions import (
     READ,
     WRITE_NODE,
     READ_NODE,
-    WRITE
+    WRITE,
 )
 from website.util.metrics import OsfSourceTags, CampaignSourceTags
 from website.util import api_url_for, api_v2_url, web_url_for
@@ -87,15 +93,22 @@ logger = logging.getLogger(__name__)
 
 
 class AbstractNodeQuerySet(GuidMixinQuerySet):
-
     def get_roots(self):
-        return self.filter(id__in=self.exclude(type__in=['osf.collection', 'osf.quickfilesnode', 'osf.draftnode']).values_list('root_id', flat=True))
+        return self.filter(
+            id__in=self.exclude(
+                type__in=['osf.collection', 'osf.quickfilesnode', 'osf.draftnode']
+            ).values_list('root_id', flat=True)
+        )
 
     def get_children(self, root, active=False, include_root=False):
         # If `root` is a root node, we can use the 'descendants' related name
         # rather than doing a recursive query
         if root.id == root.root_id:
-            query = root.descendants.all() if include_root else root.descendants.exclude(id=root.id)
+            query = (
+                root.descendants.all()
+                if include_root
+                else root.descendants.exclude(id=root.id)
+            )
             if active:
                 query = query.filter(is_deleted=False)
             return query
@@ -126,17 +139,33 @@ class AbstractNodeQuerySet(GuidMixinQuerySet):
             """
             with connection.cursor() as cursor:
                 node_relation_table = AsIs(NodeRelation._meta.db_table)
-                cursor.execute(sql, [
-                    node_relation_table,
-                    AsIs('LEFT JOIN osf_abstractnode ON {}.child_id = osf_abstractnode.id'.format(node_relation_table) if active else ''),
-                    root.pk,
-                    AsIs('AND osf_abstractnode.is_deleted IS FALSE' if active else ''),
-                    node_relation_table,
-                    root.pk,
-                    root.pk])
+                cursor.execute(
+                    sql,
+                    [
+                        node_relation_table,
+                        AsIs(
+                            'LEFT JOIN osf_abstractnode ON {}.child_id = osf_abstractnode.id'.format(
+                                node_relation_table
+                            )
+                            if active
+                            else ''
+                        ),
+                        root.pk,
+                        AsIs(
+                            'AND osf_abstractnode.is_deleted IS FALSE' if active else ''
+                        ),
+                        node_relation_table,
+                        root.pk,
+                        root.pk,
+                    ],
+                )
                 row = cursor.fetchone()[0]
                 if not row:
-                    return AbstractNode.objects.filter(id=root.pk) if include_root else AbstractNode.objects.none()
+                    return (
+                        AbstractNode.objects.filter(id=root.pk)
+                        if include_root
+                        else AbstractNode.objects.none()
+                    )
                 if include_root:
                     row.append(root.pk)
                 return AbstractNode.objects.filter(id__in=row)
@@ -148,14 +177,24 @@ class AbstractNodeQuerySet(GuidMixinQuerySet):
             if isinstance(private_link, PrivateLink):
                 private_link = private_link.key
             if not isinstance(private_link, basestring):
-                raise TypeError('"private_link" must be either {} or {}. Got {!r}'.format(str, PrivateLink, private_link))
+                raise TypeError(
+                    '"private_link" must be either {} or {}. Got {!r}'.format(
+                        str, PrivateLink, private_link
+                    )
+                )
 
-            return self.filter(private_links__is_deleted=False, private_links__key=private_link).filter(is_deleted=False)
+            return self.filter(
+                private_links__is_deleted=False, private_links__key=private_link
+            ).filter(is_deleted=False)
 
         if user is not None and not isinstance(user, AnonymousUser):
-            read_user_query = get_objects_for_user(user, READ_NODE, self, with_superuser=False)
+            read_user_query = get_objects_for_user(
+                user, READ_NODE, self, with_superuser=False
+            )
             qs |= read_user_query
-            qs |= self.extra(where=["""
+            qs |= self.extra(
+                where=[
+                    """
                 "osf_abstractnode".id in (
                     WITH RECURSIVE implicit_read AS (
                         SELECT N.id as node_id
@@ -173,12 +212,14 @@ class AbstractNodeQuerySet(GuidMixinQuerySet):
                         WHERE "osf_noderelation"."is_node_link" IS FALSE
                     ) SELECT * FROM implicit_read
                 )
-            """], params=(user.id, ))
+            """
+                ],
+                params=(user.id,),
+            )
         return qs.filter(is_deleted=False)
 
 
 class AbstractNodeManager(TypedModelManager, IncludeManager):
-
     def get_queryset(self):
         qs = AbstractNodeQuerySet(self.model, using=self._db)
         # Filter by typedmodels type
@@ -190,12 +231,16 @@ class AbstractNodeManager(TypedModelManager, IncludeManager):
         return self.get_queryset().get_roots()
 
     def get_children(self, root, active=False, include_root=False):
-        return self.get_queryset().get_children(root, active=active, include_root=include_root)
+        return self.get_queryset().get_children(
+            root, active=active, include_root=include_root
+        )
 
     def can_view(self, user=None, private_link=None):
         return self.get_queryset().can_view(user=user, private_link=private_link)
 
-    def get_nodes_for_user(self, user, permission=READ_NODE, base_queryset=None, include_public=False):
+    def get_nodes_for_user(
+        self, user, permission=READ_NODE, base_queryset=None, include_public=False
+    ):
         """
         Return all AbstractNodes that the user has permissions to - either through contributorship or group membership.
         - similar to guardian.get_objects_for_user(self, READ_NODE, AbstractNode, with_superuser=False).  If include_public is True,
@@ -212,20 +257,41 @@ class AbstractNodeManager(TypedModelManager, IncludeManager):
             base_queryset = self
 
         if permission not in PERMISSIONS:
-            raise ValueError('Permission must be one of {}, {}, or {}.'.format(PERMISSIONS[0], PERMISSIONS[1], PERMISSIONS[2]))
+            raise ValueError(
+                'Permission must be one of {}, {}, or {}.'.format(
+                    PERMISSIONS[0], PERMISSIONS[1], PERMISSIONS[2]
+                )
+            )
 
         nodes = base_queryset.filter(is_deleted=False)
         permission_object_id = Permission.objects.get(codename=permission).id
-        user_groups = OSFUserGroup.objects.filter(osfuser_id=user.id if user else None).values_list('group_id', flat=True)
-        node_groups = NodeGroupObjectPermission.objects.filter(group_id__in=user_groups, permission_id=permission_object_id).values_list('content_object_id', flat=True)
+        user_groups = OSFUserGroup.objects.filter(
+            osfuser_id=user.id if user else None
+        ).values_list('group_id', flat=True)
+        node_groups = NodeGroupObjectPermission.objects.filter(
+            group_id__in=user_groups, permission_id=permission_object_id
+        ).values_list('content_object_id', flat=True)
         query = Q(id__in=node_groups)
         if include_public:
             query |= Q(is_public=True)
         return nodes.filter(query)
 
 
-class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixin, EditableFieldsMixin, GuardianMixin,
-        NodeLinkMixin, CommentableMixin, SpamOverrideMixin, Loggable, GuidMixin, RegistrationResponseMixin, BaseModel):
+class AbstractNode(
+    DirtyFieldsMixin,
+    TypedModel,
+    AddonModelMixin,
+    IdentifierMixin,
+    EditableFieldsMixin,
+    GuardianMixin,
+    NodeLinkMixin,
+    CommentableMixin,
+    SpamOverrideMixin,
+    Loggable,
+    GuidMixin,
+    RegistrationResponseMixin,
+    BaseModel,
+):
     """
     All things that inherit from AbstractNode will appear in
     the same table and will be differentiated by the `type` column.
@@ -262,14 +328,14 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         'is_public',
         'contributors',
         'is_deleted',
-        'node_license'
+        'node_license',
     }
 
     # Node fields that trigger a check to the spam filter on save
     SPAM_CHECK_FIELDS = {
         'title',
         'description',
-        'addons_forward_node_settings__url'  # the often spammed redirect URL
+        'addons_forward_node_settings__url',  # the often spammed redirect URL
     }
 
     # Fields that are writable by Node.update
@@ -285,7 +351,10 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
     PRIVATE = 'private'
     PUBLIC = 'public'
 
-    LICENSE_QUERY = re.sub(r'\s+', ' ', """WITH RECURSIVE ascendants AS (
+    LICENSE_QUERY = re.sub(
+        r'\s+',
+        ' ',
+        """WITH RECURSIVE ascendants AS (
             SELECT
                 N.node_license_id,
                 R.parent_id
@@ -303,29 +372,32 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
             WHERE R.is_node_link IS FALSE
             AND D.node_license_id IS NULL
     ) SELECT {fields} FROM "{nodelicenserecord}"
-    WHERE id = (SELECT node_license_id FROM ascendants WHERE node_license_id IS NOT NULL) LIMIT 1;""")
+    WHERE id = (SELECT node_license_id FROM ascendants WHERE node_license_id IS NOT NULL) LIMIT 1;""",
+    )
 
     # Dictionary field mapping user id to a list of nodes in node.nodes which the user has subscriptions for
     # {<User.id>: [<Node._id>, <Node2._id>, ...] }
     # TODO: Can this be a reference instead of data?
     child_node_subscriptions = DateTimeAwareJSONField(default=dict, blank=True)
-    _contributors = models.ManyToManyField(OSFUser,
-                                           through=Contributor,
-                                           related_name='nodes')
+    _contributors = models.ManyToManyField(
+        OSFUser, through=Contributor, related_name='nodes'
+    )
 
-    creator = models.ForeignKey(OSFUser,
-                                db_index=True,
-                                related_name='nodes_created',
-                                on_delete=models.SET_NULL,
-                                null=True, blank=True)
+    creator = models.ForeignKey(
+        OSFUser,
+        db_index=True,
+        related_name='nodes_created',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
     deleted_date = NonNaiveDateTimeField(null=True, blank=True)
     deleted = NonNaiveDateTimeField(null=True, blank=True)
     file_guid_to_share_uuids = DateTimeAwareJSONField(default=dict, blank=True)
     forked_date = NonNaiveDateTimeField(db_index=True, null=True, blank=True)
-    forked_from = models.ForeignKey('self',
-                                    related_name='forks',
-                                    on_delete=models.SET_NULL,
-                                    null=True, blank=True)
+    forked_from = models.ForeignKey(
+        'self', related_name='forks', on_delete=models.SET_NULL, null=True, blank=True
+    )
     is_fork = models.BooleanField(default=False, db_index=True)
     is_public = models.BooleanField(default=False, db_index=True)
     is_deleted = models.BooleanField(default=False, db_index=True)
@@ -337,17 +409,27 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
     # TODO: Add validator
     comment_level = models.CharField(default='public', max_length=10)
 
-    root = models.ForeignKey('AbstractNode',
-                                default=None,
-                                related_name='descendants',
-                                on_delete=models.SET_NULL, null=True, blank=True)
+    root = models.ForeignKey(
+        'AbstractNode',
+        default=None,
+        related_name='descendants',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
 
-    _nodes = models.ManyToManyField('AbstractNode',
-                                    through=NodeRelation,
-                                    through_fields=('parent', 'child'),
-                                    related_name='parent_nodes')
+    _nodes = models.ManyToManyField(
+        'AbstractNode',
+        through=NodeRelation,
+        through_fields=('parent', 'child'),
+        related_name='parent_nodes',
+    )
 
-    files = GenericRelation('osf.OsfStorageFile', object_id_field='target_object_id', content_type_field='target_content_type')
+    files = GenericRelation(
+        'osf.OsfStorageFile',
+        object_id_field='target_object_id',
+        content_type_field='target_content_type',
+    )
 
     # For ContributorMixin
     guardian_object_type = 'node'
@@ -358,17 +440,17 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
     groups = {
         'read': (READ_NODE,),
         'write': (READ_NODE, WRITE_NODE,),
-        'admin': (READ_NODE, WRITE_NODE, ADMIN_NODE,)
+        'admin': (READ_NODE, WRITE_NODE, ADMIN_NODE,),
     }
     group_format = 'node_{self.id}_{group}'
 
-    article_doi = models.CharField(max_length=128,
-                                        validators=[validate_doi],
-                                        null=True, blank=True)
+    article_doi = models.CharField(
+        max_length=128, validators=[validate_doi], null=True, blank=True
+    )
 
     class Meta:
         base_manager_name = 'objects'
-        index_together = (('is_public', 'is_deleted', 'type'))
+        index_together = ('is_public', 'is_deleted', 'type')
         permissions = (
             ('view_node', 'Can view node details'),
             ('read_node', 'Can read the node'),
@@ -420,17 +502,20 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
             filter_kwargs['is_node_link'] = kwargs.pop('is_node_link')
         for key, val in kwargs.items():
             filter_kwargs['child__{}'.format(key)] = val
-        node_relations = (NodeRelation.objects.filter(parent=self, **filter_kwargs)
-                        .select_related('child')
-                        .order_by('_order'))
+        node_relations = (
+            NodeRelation.objects.filter(parent=self, **filter_kwargs)
+            .select_related('child')
+            .order_by('_order')
+        )
         return [each.child for each in node_relations]
 
     @property
     def linked_nodes(self):
-        child_pks = NodeRelation.objects.filter(
-            parent=self,
-            is_node_link=True
-        ).select_related('child').values_list('child', flat=True)
+        child_pks = (
+            NodeRelation.objects.filter(parent=self, is_node_link=True)
+            .select_related('child')
+            .values_list('child', flat=True)
+        )
         return self._nodes.filter(pk__in=child_pks)
 
     # permissions = Permissions are now on contributors
@@ -438,10 +523,13 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
     suspended = models.BooleanField(default=False, db_index=True)
 
     # The node (if any) used as a template for this node's creation
-    template_node = models.ForeignKey('self',
-                                      related_name='templated_from',
-                                      on_delete=models.SET_NULL,
-                                      null=True, blank=True)
+    template_node = models.ForeignKey(
+        'self',
+        related_name='templated_from',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
     # Dictionary field mapping node wiki page to sharejs private uuid.
     # {<page_name>: <sharejs_id>}
     wiki_private_uuids = DateTimeAwareJSONField(default=dict, blank=True)
@@ -456,8 +544,10 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         super(AbstractNode, self).__init__(*args, **kwargs)
 
     def __repr__(self):
-        return ('(title={self.title!r}, category={self.category!r}) '
-                'with guid {self._id!r}').format(self=self)
+        return (
+            '(title={self.title!r}, category={self.category!r}) '
+            'with guid {self._id!r}'
+        ).format(self=self)
 
     @property
     def is_registration(self):
@@ -483,7 +573,8 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
             guid=self.guids.first(),
             collection__provider__isnull=False,
             collection__deleted__isnull=True,
-            collection__is_bookmark_collection=False)
+            collection__is_bookmark_collection=False,
+        )
 
     @property
     def collecting_metadata_list(self):
@@ -635,11 +726,19 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         return self._nodes.filter(is_deleted=False)
 
     def web_url_for(self, view_name, _absolute=False, _guid=False, *args, **kwargs):
-        return web_url_for(view_name, pid=self._primary_key,
-                           _absolute=_absolute, _guid=_guid, *args, **kwargs)
+        return web_url_for(
+            view_name,
+            pid=self._primary_key,
+            _absolute=_absolute,
+            _guid=_guid,
+            *args,
+            **kwargs
+        )
 
     def api_url_for(self, view_name, _absolute=False, *args, **kwargs):
-        return api_url_for(view_name, pid=self._primary_key, _absolute=_absolute, *args, **kwargs)
+        return api_url_for(
+            view_name, pid=self._primary_key, _absolute=_absolute, *args, **kwargs
+        )
 
     @property
     def project_or_component(self):
@@ -654,9 +753,12 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
     def draft_registrations_active(self):
         DraftRegistration = apps.get_model('osf.DraftRegistration')
         return DraftRegistration.objects.filter(
-            models.Q(branched_from=self) &
-            models.Q(deleted__isnull=True) &
-            (models.Q(registered_node=None) | models.Q(registered_node__is_deleted=True))
+            models.Q(branched_from=self)
+            & models.Q(deleted__isnull=True)
+            & (
+                models.Q(registered_node=None)
+                | models.Q(registered_node__is_deleted=True)
+            )
         )
 
     @property
@@ -674,7 +776,9 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
             'id': self._id,
             'title': sanitize.unescape_entities(self.title),
             'author': [
-                contributor.csl_name(self._id)  # method in auth/model.py which parses the names of authors
+                contributor.csl_name(
+                    self._id
+                )  # method in auth/model.py which parses the names of authors
                 for contributor in self.visible_contributors
             ],
             'publisher': 'OSF',
@@ -698,8 +802,11 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
     @classmethod
     def bulk_update_search(cls, nodes, index=None):
         from website import search
+
         try:
-            serialize = functools.partial(search.search.update_node, index=index, bulk=True, async_update=False)
+            serialize = functools.partial(
+                search.search.update_node, index=index, bulk=True, async_update=False
+            )
             search.search.bulk_update_nodes(serialize, nodes, index=index)
         except search.exceptions.SearchUnavailableError as e:
             logger.exception(e)
@@ -718,6 +825,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
 
     def delete_search_entry(self):
         from website import search
+
         try:
             search.search.delete_node(self)
         except search.exceptions.SearchUnavailableError as e:
@@ -742,10 +850,12 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         if not auth and not self.is_public:
             return False
 
-        return (self.is_public or
-                (auth.user and self.has_permission(auth.user, READ)) or
-                auth.private_key in self.private_link_keys_active or
-                self.is_admin_parent(auth.user))
+        return (
+            self.is_public
+            or (auth.user and self.has_permission(auth.user, READ))
+            or auth.private_key in self.private_link_keys_active
+            or self.is_admin_parent(auth.user)
+        )
 
     def can_edit(self, auth=None, user=None):
         """Return if a user is authorized to edit this node.
@@ -764,9 +874,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
             is_api_node = auth.api_node == self
         else:
             is_api_node = False
-        return (
-            (user and self.has_permission(user, WRITE)) or is_api_node
-        )
+        return (user and self.has_permission(user, WRITE)) or is_api_node
 
     def add_osf_group(self, group, permission=WRITE, auth=None):
         if auth and not self.has_permission(auth.user, ADMIN):
@@ -779,8 +887,13 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         group.update_group_permissions_to_node(self, permission, auth)
 
     def remove_osf_group(self, group, auth=None):
-        if auth and not (self.has_permission(auth.user, ADMIN) or group.has_permission(auth.user, 'manage')):
-            raise PermissionsError('Must be an admin or an OSF Group manager to remove an OSF Group.')
+        if auth and not (
+            self.has_permission(auth.user, ADMIN)
+            or group.has_permission(auth.user, 'manage')
+        ):
+            raise PermissionsError(
+                'Must be an admin or an OSF Group manager to remove an OSF Group.'
+            )
         group.remove_group_from_node(self, auth)
 
     @property
@@ -790,32 +903,40 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         from osf.models.osf_group import OSFGroupGroupObjectPermission, OSFGroup
 
         member_groups = get_groups_with_perms(self).filter(name__icontains='osfgroup')
-        return OSFGroup.objects.filter(id__in=OSFGroupGroupObjectPermission.objects.filter(group_id__in=member_groups).values_list('content_object_id'))
+        return OSFGroup.objects.filter(
+            id__in=OSFGroupGroupObjectPermission.objects.filter(
+                group_id__in=member_groups
+            ).values_list('content_object_id')
+        )
 
     def get_osf_groups_with_perms(self, permission):
         """Returns a queryset of OSF Groups whose members have the specified permission to the node
         """
         from osf.models.osf_group import OSFGroup
         from osf.models.node import NodeGroupObjectPermission
+
         try:
             perm_id = Permission.objects.get(codename=permission + '_node').id
         except Permission.DoesNotExist:
             raise ValueError('Specified permission does not exist.')
-        member_groups = NodeGroupObjectPermission.objects.filter(
-            permission_id=perm_id, content_object_id=self.id
-        ).filter(
-            group__name__icontains='osfgroup'
-        ).values_list(
-            'group_id', flat=True
+        member_groups = (
+            NodeGroupObjectPermission.objects.filter(
+                permission_id=perm_id, content_object_id=self.id
+            )
+            .filter(group__name__icontains='osfgroup')
+            .values_list('group_id', flat=True)
         )
-        return OSFGroup.objects.filter(osfgroupgroupobjectpermission__group_id__in=member_groups)
+        return OSFGroup.objects.filter(
+            osfgroupgroupobjectpermission__group_id__in=member_groups
+        )
 
     def get_logs_queryset(self, auth):
-        return NodeLog.objects.filter(
-            node_id=self.id,
-            should_hide=False
-        ).order_by('-date').include(
-            'node__guids', 'user__guids', 'original_node__guids', limit_includes=10
+        return (
+            NodeLog.objects.filter(node_id=self.id, should_hide=False)
+            .order_by('-date')
+            .include(
+                'node__guids', 'user__guids', 'original_node__guids', limit_includes=10
+            )
         )
 
     def get_absolute_url(self):
@@ -878,9 +999,12 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
             return False
 
         perm = Permission.objects.get(codename='{}_node'.format(permission))
-        node_group_objects = NodeGroupObjectPermission.objects.filter(permission_id=perm.id,
-                                                            content_object_id=self.id).values_list('group_id', flat=True)
-        return OSFUser.objects.filter(groups__id__in=node_group_objects).distinct('id', 'family_name')
+        node_group_objects = NodeGroupObjectPermission.objects.filter(
+            permission_id=perm.id, content_object_id=self.id
+        ).values_list('group_id', flat=True)
+        return OSFUser.objects.filter(groups__id__in=node_group_objects).distinct(
+            'id', 'family_name'
+        )
 
     @property
     def admin_contributor_or_group_member_ids(self):
@@ -900,7 +1024,12 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
 
     def _get_admin_contributor_ids(self, include_self=False):
         def get_admin_contributor_ids(node):
-            return node.get_group(ADMIN).user_set.filter(is_active=True).values_list('guids___id', flat=True)
+            return (
+                node.get_group(ADMIN)
+                .user_set.filter(is_active=True)
+                .values_list('guids___id', flat=True)
+            )
+
         contributor_ids = set(self.contributors.values_list('guids___id', flat=True))
         admin_ids = set(get_admin_contributor_ids(self)) if include_self else set()
         for parent in self.parents:
@@ -926,7 +1055,9 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         def get_admin_user_ids(node):
             return node.get_users_with_perm(ADMIN).values_list('guids___id', flat=True)
 
-        contributor_ids = set(self.get_users_with_perm(READ).values_list('guids___id', flat=True))
+        contributor_ids = set(
+            self.get_users_with_perm(READ).values_list('guids___id', flat=True)
+        )
         admin_ids = set(get_admin_user_ids(self)) if include_self else set()
         for parent in self.parents:
             admins = get_admin_user_ids(parent)
@@ -964,8 +1095,11 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
     @property
     def osfstorage_region(self):
         from addons.osfstorage.models import Region
+
         osfs_settings = self._settings_model('osfstorage')
-        region_subquery = osfs_settings.objects.filter(owner=self.id).values('region_id')
+        region_subquery = osfs_settings.objects.filter(owner=self.id).values(
+            'region_id'
+        )
         return Region.objects.get(id=region_subquery)
 
     @property
@@ -984,12 +1118,18 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         if self.node_license_id:
             return self.node_license
         with connection.cursor() as cursor:
-            cursor.execute(self.LICENSE_QUERY.format(
-                abstractnode=AbstractNode._meta.db_table,
-                noderelation=NodeRelation._meta.db_table,
-                nodelicenserecord=NodeLicenseRecord._meta.db_table,
-                fields=', '.join('"{}"."{}"'.format(NodeLicenseRecord._meta.db_table, f.column) for f in NodeLicenseRecord._meta.concrete_fields)
-            ), [self.id])
+            cursor.execute(
+                self.LICENSE_QUERY.format(
+                    abstractnode=AbstractNode._meta.db_table,
+                    noderelation=NodeRelation._meta.db_table,
+                    nodelicenserecord=NodeLicenseRecord._meta.db_table,
+                    fields=', '.join(
+                        '"{}"."{}"'.format(NodeLicenseRecord._meta.db_table, f.column)
+                        for f in NodeLicenseRecord._meta.concrete_fields
+                    ),
+                ),
+                [self.id],
+            )
             res = cursor.fetchone()
             if res:
                 return NodeLicenseRecord.from_db(self._state.db, None, res)
@@ -1013,13 +1153,9 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
     def add_tag_log(self, tag, auth):
         self.add_log(
             action=NodeLog.TAG_ADDED,
-            params={
-                'parent_node': self.parent_id,
-                'node': self._id,
-                'tag': tag.name
-            },
+            params={'parent_node': self.parent_id, 'node': self._id, 'tag': tag.name},
             auth=auth,
-            save=False
+            save=False,
         )
 
     # Override Taggable
@@ -1037,11 +1173,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
             self.tags.remove(tag_obj)
             self.add_log(
                 action=NodeLog.TAG_REMOVED,
-                params={
-                    'parent_node': self.parent_id,
-                    'node': self._id,
-                    'tag': tag,
-                },
+                params={'parent_node': self.parent_id, 'node': self._id, 'tag': tag,},
                 auth=auth,
                 save=False,
             )
@@ -1066,12 +1198,24 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
     def set_visible(self, user, visible, log=True, auth=None, save=False):
         if not self.is_contributor(user):
             raise ValueError(u'User {0} not in contributors'.format(user))
-        if visible and not Contributor.objects.filter(node=self, user=user, visible=True).exists():
-            Contributor.objects.filter(node=self, user=user, visible=False).update(visible=True)
-        elif not visible and Contributor.objects.filter(node=self, user=user, visible=True).exists():
+        if (
+            visible
+            and not Contributor.objects.filter(
+                node=self, user=user, visible=True
+            ).exists()
+        ):
+            Contributor.objects.filter(node=self, user=user, visible=False).update(
+                visible=True
+            )
+        elif (
+            not visible
+            and Contributor.objects.filter(node=self, user=user, visible=True).exists()
+        ):
             if Contributor.objects.filter(node=self, visible=True).count() == 1:
                 raise ValueError('Must have at least one visible contributor')
-            Contributor.objects.filter(node=self, user=user, visible=True).update(visible=False)
+            Contributor.objects.filter(node=self, user=user, visible=True).update(
+                visible=False
+            )
         else:
             return
         message = (
@@ -1134,8 +1278,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         # Override for ContributorMixin
         OSFUser = apps.get_model('osf.OSFUser')
         return OSFUser.objects.filter(
-            contributor__node=self,
-            contributor__visible=True
+            contributor__node=self, contributor__visible=True
         ).order_by('contributor___order')
 
     def get_spam_fields(self, saved_fields):
@@ -1143,8 +1286,11 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         check_fields = self.SPAM_CHECK_FIELDS.copy()
         if not self.has_addon('forward'):
             check_fields.remove('addons_forward_node_settings__url')
-        return check_fields if self.is_public and 'is_public' in saved_fields else check_fields.intersection(
-            saved_fields)
+        return (
+            check_fields
+            if self.is_public and 'is_public' in saved_fields
+            else check_fields.intersection(saved_fields)
+        )
 
     def callback(self, callback, recursive=False, *args, **kwargs):
         """Invoke callbacks of attached add-ons and collect messages.
@@ -1163,23 +1309,26 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
 
         if recursive:
             for child in self._nodes.filter(is_deleted=False):
-                messages.extend(
-                    child.callback(
-                        callback, recursive, *args, **kwargs
-                    )
-                )
+                messages.extend(child.callback(callback, recursive, *args, **kwargs))
 
         return messages
 
     def can_comment(self, auth):
         if self.comment_level == 'public':
             return auth.logged_in and (
-                self.is_public or
-                (auth.user and self.has_permission(auth.user, READ))
+                self.is_public or (auth.user and self.has_permission(auth.user, READ))
             )
         return self.is_contributor_or_group_member(auth.user)
 
-    def set_privacy(self, permissions, auth=None, log=True, save=True, meeting_creation=False, check_addons=True):
+    def set_privacy(
+        self,
+        permissions,
+        auth=None,
+        log=True,
+        save=True,
+        meeting_creation=False,
+        check_addons=True,
+    ):
         """Set the permissions for this node. Also, based on meeting_creation, queues
         an email to user about abilities of public projects.
 
@@ -1192,16 +1341,26 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         if auth and not self.has_permission(auth.user, ADMIN):
             raise PermissionsError('Must be an admin to change privacy settings.')
         if permissions == 'public' and not self.is_public:
-            if self.is_spam or (settings.SPAM_FLAGGED_MAKE_NODE_PRIVATE and self.is_spammy):
+            if self.is_spam or (
+                settings.SPAM_FLAGGED_MAKE_NODE_PRIVATE and self.is_spammy
+            ):
                 # TODO: Should say will review within a certain agreed upon time period.
-                raise NodeStateError('This project has been marked as spam. Please contact the help desk if you think this is in error.')
+                raise NodeStateError(
+                    'This project has been marked as spam. Please contact the help desk if you think this is in error.'
+                )
             if self.is_registration:
                 if self.is_pending_embargo:
-                    raise NodeStateError('A registration with an unapproved embargo cannot be made public.')
+                    raise NodeStateError(
+                        'A registration with an unapproved embargo cannot be made public.'
+                    )
                 elif self.is_pending_registration:
-                    raise NodeStateError('An unapproved registration cannot be made public.')
+                    raise NodeStateError(
+                        'An unapproved registration cannot be made public.'
+                    )
                 elif self.is_pending_embargo:
-                    raise NodeStateError('An unapproved embargoed registration cannot be made public.')
+                    raise NodeStateError(
+                        'An unapproved embargoed registration cannot be made public.'
+                    )
                 elif self.is_embargoed:
                     # Embargoed registrations can be made public early
                     self.request_embargo_termination(auth=auth)
@@ -1210,7 +1369,9 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
             self.keenio_read_key = self.generate_keenio_read_key()
         elif permissions == 'private' and self.is_public:
             if self.is_registration and not self.is_pending_embargo:
-                raise NodeStateError('Public registrations must be withdrawn, not made private.')
+                raise NodeStateError(
+                    'Public registrations must be withdrawn, not made private.'
+                )
             else:
                 self.is_public = False
                 self.keenio_read_key = ''
@@ -1229,31 +1390,37 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
             enqueue_task(update_doi_metadata_on_change.s(self._id))
 
         if log:
-            action = NodeLog.MADE_PUBLIC if permissions == 'public' else NodeLog.MADE_PRIVATE
+            action = (
+                NodeLog.MADE_PUBLIC if permissions == 'public' else NodeLog.MADE_PRIVATE
+            )
             self.add_log(
                 action=action,
-                params={
-                    'project': self.parent_id,
-                    'node': self._primary_key,
-                },
+                params={'project': self.parent_id, 'node': self._primary_key,},
                 auth=auth,
                 save=False,
             )
         if save:
             self.save()
         if auth and permissions == 'public':
-            project_signals.privacy_set_public.send(auth.user, node=self, meeting_creation=meeting_creation)
+            project_signals.privacy_set_public.send(
+                auth.user, node=self, meeting_creation=meeting_creation
+            )
         return True
 
     def generate_keenio_read_key(self):
-        return scoped_keys.encrypt(settings.KEEN['public']['master_key'], options={
-            'filters': [{
-                'property_name': 'node.id',
-                'operator': 'eq',
-                'property_value': str(self._id)
-            }],
-            'allowed_operations': [READ]
-        })
+        return scoped_keys.encrypt(
+            settings.KEEN['public']['master_key'],
+            options={
+                'filters': [
+                    {
+                        'property_name': 'node.id',
+                        'operator': 'eq',
+                        'property_value': str(self._id),
+                    }
+                ],
+                'allowed_operations': [READ],
+            },
+        )
 
     @property
     def private_links_active(self):
@@ -1296,7 +1463,10 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         """
         with connection.cursor() as cursor:
             node_relation_table = AsIs(NodeRelation._meta.db_table)
-            cursor.execute(sql, [node_relation_table, self.pk, node_relation_table, self.pk, self.pk])
+            cursor.execute(
+                sql,
+                [node_relation_table, self.pk, node_relation_table, self.pk, self.pk],
+            )
             res = cursor.fetchone()
             if res:
                 return AbstractNode.objects.get(pk=res[0])
@@ -1322,7 +1492,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
                     node=self,
                     user=contrib.user,
                     _order=contrib._order,
-                    visible=contrib.visible
+                    visible=contrib.visible,
                 )
                 contribs.append(node_contrib)
                 self.add_permission(contrib.user, permission, save=True)
@@ -1336,11 +1506,23 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         """
         for user in self.contributors.filter(is_registered=True):
             perm = self.contributor_set.get(user=user).permission
-            project_signals.contributor_added.send(self,
+            project_signals.contributor_added.send(
+                self,
                 contributor=user,
-                auth=None, email_template='default', permissions=perm)
+                auth=None,
+                email_template='default',
+                permissions=perm,
+            )
 
-    def register_node(self, schema, auth, draft_registration, parent=None, child_ids=None, provider=None):
+    def register_node(
+        self,
+        schema,
+        auth,
+        draft_registration,
+        parent=None,
+        child_ids=None,
+        provider=None,
+    ):
         """Make a frozen copy of a node.
 
         :param schema: Schema object
@@ -1350,8 +1532,12 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         :param provider RegistrationProvider: provider to submit the registration to
         """
         # NOTE: Admins can register child nodes even if they don't have write access to them, but not if they are group admins
-        not_contributor_or_admin_parent = not self.is_contributor(auth.user) and not self.is_admin_parent(user=auth.user, include_group_admin=False)
-        cannot_edit_or_admin_parent = not self.can_edit(auth=auth) and not self.is_admin_parent(user=auth.user)
+        not_contributor_or_admin_parent = not self.is_contributor(
+            auth.user
+        ) and not self.is_admin_parent(user=auth.user, include_group_admin=False)
+        cannot_edit_or_admin_parent = not self.can_edit(
+            auth=auth
+        ) and not self.is_admin_parent(user=auth.user)
         if cannot_edit_or_admin_parent or not_contributor_or_admin_parent:
             raise PermissionsError(
                 'User {} does not have permission '
@@ -1369,6 +1555,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         if not provider:
             # Avoid circular import
             from osf.models.provider import RegistrationProvider
+
             provider = RegistrationProvider.load('osf')
 
         registered = original.clone()
@@ -1381,7 +1568,9 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         registered.provider = provider
         if not registered.registered_meta:
             registered.registered_meta = {}
-        registered.registered_meta[schema._id] = draft_registration.registration_metadata
+        registered.registered_meta[
+            schema._id
+        ] = draft_registration.registration_metadata
 
         registered.forked_from = self.forked_from
         registered.creator = self.creator
@@ -1394,7 +1583,9 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         registered.registered_schema.add(schema)
 
         # Sets registration_metadata and registration_responses
-        registered.copy_registered_meta_and_registration_responses(draft_registration, save=False)
+        registered.copy_registered_meta_and_registration_responses(
+            draft_registration, save=False
+        )
 
         # Clone each log from the original node for this registration.
         self.clone_logs(registered)
@@ -1403,8 +1594,12 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         registered.access_requests_enabled = False
 
         if parent:
-            node_relation = NodeRelation.objects.get(parent=parent.registered_from, child=original)
-            NodeRelation.objects.get_or_create(_order=node_relation._order, parent=parent, child=registered)
+            node_relation = NodeRelation.objects.get(
+                parent=parent.registered_from, child=original
+            )
+            NodeRelation.objects.get_or_create(
+                _order=node_relation._order, parent=parent, child=registered
+            )
 
         # After register callback
         for addon in original.get_addons():
@@ -1417,16 +1612,20 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
 
             if node_relation.is_node_link:
                 NodeRelation.objects.get_or_create(
-                    is_node_link=True,
-                    parent=registered,
-                    child=node_contained
+                    is_node_link=True, parent=registered, child=node_contained
                 )
                 continue
             else:
                 if child_ids and node_contained._id not in child_ids:
-                    if node_contained.node_relations.filter(child__is_deleted=False, child__guids___id__in=child_ids, is_node_link=False).exists():
+                    if node_contained.node_relations.filter(
+                        child__is_deleted=False,
+                        child__guids___id__in=child_ids,
+                        is_node_link=False,
+                    ).exists():
                         # We can't skip a node with children that we have to register.
-                        raise NodeStateError('The parents of all child nodes being registered must be registered.')
+                        raise NodeStateError(
+                            'The parents of all child nodes being registered must be registered.'
+                        )
                     continue
 
                 # Register child nodes
@@ -1453,19 +1652,31 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
             resource = self
             alternative_resource = None
 
-        registered.copy_editable_fields(resource, auth=auth, alternative_resource=alternative_resource, contributors=False)
+        registered.copy_editable_fields(
+            resource,
+            auth=auth,
+            alternative_resource=alternative_resource,
+            contributors=False,
+        )
         registered.copy_contributors_from(self)
         registered.copy_unclaimed_records(self)
 
         if settings.ENABLE_ARCHIVER:
             registered.refresh_from_db()
-            project_signals.after_create_registration.send(self, dst=registered, user=auth.user)
+            project_signals.after_create_registration.send(
+                self, dst=registered, user=auth.user
+            )
 
         return registered
 
     def path_above(self, auth):
         parents = self.parents
-        return '/' + '/'.join([p.title if p.can_view(auth) else '-- private project --' for p in reversed(parents)])
+        return '/' + '/'.join(
+            [
+                p.title if p.can_view(auth) else '-- private project --'
+                for p in reversed(parents)
+            ]
+        )
 
     # TODO: Deprecate this; it duplicates much of what serialize_project already
     # does
@@ -1495,7 +1706,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         self.registration_approval = RegistrationApproval.objects.create(
             initiated_by=user,
             end_date=end_date,
-            notify_initiator_on_complete=notify_initiator_on_complete
+            notify_initiator_on_complete=notify_initiator_on_complete,
         )
         self.save()  # Set foreign field reference Node.registration_approval
         admins = self.get_admin_contributors_recursive(unique_users=True)
@@ -1524,7 +1735,9 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         )
 
     def get_primary(self, node):
-        return NodeRelation.objects.filter(parent=self, child=node, is_node_link=False).exists()
+        return NodeRelation.objects.filter(
+            parent=self, child=node, is_node_link=False
+        ).exists()
 
     # TODO optimize me
     def get_descendants_recursive(self, primary_only=False):
@@ -1534,18 +1747,21 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
             if not primary_only:
                 primary = self.get_primary(node)
                 if primary:
-                    for descendant in node.get_descendants_recursive(primary_only=primary_only):
+                    for descendant in node.get_descendants_recursive(
+                        primary_only=primary_only
+                    ):
                         yield descendant
             else:
-                for descendant in node.get_descendants_recursive(primary_only=primary_only):
+                for descendant in node.get_descendants_recursive(
+                    primary_only=primary_only
+                ):
                     yield descendant
 
     @property
     def nodes_primary(self):
         """For v1 compat."""
         child_pks = NodeRelation.objects.filter(
-            parent=self,
-            is_node_link=False
+            parent=self, is_node_link=False
         ).values_list('child', flat=True)
         return self._nodes.filter(pk__in=child_pks)
 
@@ -1581,7 +1797,11 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
 
         # Non-contributors can't fork private nodes
         if not (self.is_public or self.has_permission(user, READ)):
-            raise PermissionsError('{0!r} does not have permission to fork node {1!r}'.format(user, self._id))
+            raise PermissionsError(
+                '{0!r} does not have permission to fork node {1!r}'.format(
+                    user, self._id
+                )
+            )
 
         when = timezone.now()
 
@@ -1614,8 +1834,12 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         forked.subjects.add(*self.subjects.values_list('pk', flat=True))
 
         if parent:
-            node_relation = NodeRelation.objects.get(parent=parent.forked_from, child=original)
-            NodeRelation.objects.get_or_create(_order=node_relation._order, parent=parent, child=forked)
+            node_relation = NodeRelation.objects.get(
+                parent=parent.forked_from, child=original
+            )
+            NodeRelation.objects.get_or_create(
+                _order=node_relation._order, parent=parent, child=forked
+            )
 
         for node_relation in original.node_relations.filter(child__is_deleted=False):
             node_contained = node_relation.child
@@ -1623,18 +1847,14 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
             if not node_relation.is_node_link:
                 try:  # Catch the potential PermissionsError above
                     node_contained.fork_node(
-                        auth=auth,
-                        title='',
-                        parent=forked,
+                        auth=auth, title='', parent=forked,
                     )
                 except PermissionsError:
                     pass  # If this exception is thrown omit the node from the result set
             else:
                 # Copy linked nodes
                 NodeRelation.objects.get_or_create(
-                    is_node_link=True,
-                    parent=forked,
-                    child=node_contained
+                    is_node_link=True, parent=forked, child=node_contained
                 )
 
         if title is None:
@@ -1649,10 +1869,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
 
         self.add_affiliations(user, forked)
         forked.add_contributor(
-            contributor=user,
-            permissions=CREATOR_PERMISSIONS,
-            log=False,
-            save=False
+            contributor=user, permissions=CREATOR_PERMISSIONS, log=False, save=False
         )
 
         forked.root = None  # Recompute root on save
@@ -1680,7 +1897,9 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         forked.save()
 
         # Need to call this after save for the notifications to be created with the _primary_key
-        project_signals.contributor_added.send(forked, contributor=user, auth=auth, email_template='false')
+        project_signals.contributor_added.send(
+            forked, contributor=user, auth=auth, email_template='false'
+        )
 
         return forked
 
@@ -1702,7 +1921,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
                     # to speed things up
                     node_id=node.pk,
                     user_id=log.user_id,
-                    original_node_id=log.original_node_id
+                    original_node_id=log.original_node_id,
                 )
                 for log in page
             ]
@@ -1734,13 +1953,19 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
 
         # Non-contributors can't template private nodes
         if not (self.is_public or self.has_permission(auth.user, READ)):
-            raise PermissionsError('{0!r} does not have permission to template node {1!r}'.format(auth.user, self._id))
+            raise PermissionsError(
+                '{0!r} does not have permission to template node {1!r}'.format(
+                    auth.user, self._id
+                )
+            )
 
         new = self.clone()
         if isinstance(new, Registration):
             new.recast('osf.node')
 
-        new._is_templated_clone = True  # This attribute may be read in post_save handlers
+        new._is_templated_clone = (
+            True  # This attribute may be read in post_save handlers
+        )
 
         # Clear quasi-foreign fields
         new.wiki_private_uuids.clear()
@@ -1760,7 +1985,12 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         new.template_node = self
         # Need to save in order to access contributors m2m table
         new.save(suppress_log=True)
-        new.add_contributor(contributor=auth.user, permissions=CREATOR_PERMISSIONS, log=False, save=False)
+        new.add_contributor(
+            contributor=auth.user,
+            permissions=CREATOR_PERMISSIONS,
+            log=False,
+            save=False,
+        )
         new.is_fork = False
         new.node_license = self.license.copy() if self.license else None
 
@@ -1768,8 +1998,9 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
 
         # If that title hasn't been changed, apply the default prefix (once)
         if (
-            new.title == self.title and top_level and
-            language.TEMPLATED_FROM_PREFIX not in new.title
+            new.title == self.title
+            and top_level
+            and language.TEMPLATED_FROM_PREFIX not in new.title
         ):
             new.title = ''.join((language.TEMPLATED_FROM_PREFIX, new.title,))
 
@@ -1782,7 +2013,9 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         new.save(suppress_log=True)
 
         # Need to call this after save for the notifications to be created with the _primary_key
-        project_signals.contributor_added.send(new, contributor=auth.user, auth=auth, email_template='false')
+        project_signals.contributor_added.send(
+            new, contributor=auth.user, auth=auth, email_template='false'
+        )
 
         # Log the creation
         new.add_log(
@@ -1802,16 +2035,24 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         new.save()
 
         if parent:
-            node_relation = NodeRelation.objects.get(parent=parent.template_node, child=self)
-            NodeRelation.objects.get_or_create(_order=node_relation._order, parent=parent, child=new)
+            node_relation = NodeRelation.objects.get(
+                parent=parent.template_node, child=self
+            )
+            NodeRelation.objects.get_or_create(
+                _order=node_relation._order, parent=parent, child=new
+            )
 
         # deal with the children of the node, if any
-        for node_relation in self.node_relations.select_related('child').filter(child__is_deleted=False):
+        for node_relation in self.node_relations.select_related('child').filter(
+            child__is_deleted=False
+        ):
             node_contained = node_relation.child
             # template child nodes
             if not node_relation.is_node_link:
                 try:  # Catch the potential PermissionsError above
-                    node_contained.use_as_template(auth, changes, top_level=False, parent=new)
+                    node_contained.use_as_template(
+                        auth, changes, top_level=False, parent=new
+                    )
                 except PermissionsError:
                     pass
 
@@ -1832,7 +2073,9 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
                 ret.append((node, []))
             else:
                 ret.append((node, node.next_descendants(auth, condition)))
-        ret = [item for item in ret if item[1] or condition(auth, item[0])]  # prune empty branches
+        ret = [
+            item for item in ret if item[1] or condition(auth, item[0])
+        ]  # prune empty branches
         return ret
 
     def node_and_primary_descendants(self):
@@ -1840,7 +2083,9 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
 
         :param node Node: target Node
         """
-        return itertools.chain([self], self.get_descendants_recursive(primary_only=True))
+        return itertools.chain(
+            [self], self.get_descendants_recursive(primary_only=True)
+        )
 
     def get_active_contributors_recursive(self, unique_users=False, *args, **kwargs):
         """Yield (admin, node) tuples for this node and
@@ -1886,28 +2131,21 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         if self.access_requests_enabled:
             self.add_log(
                 NodeLog.NODE_ACCESS_REQUESTS_ENABLED,
-                {
-                    'project': self.parent_id,
-                    'node': self._id,
-                    'user': user._id,
-                },
-                auth=auth
+                {'project': self.parent_id, 'node': self._id, 'user': user._id,},
+                auth=auth,
             )
         else:
             self.add_log(
                 NodeLog.NODE_ACCESS_REQUESTS_DISABLED,
-                {
-                    'project': self.parent_id,
-                    'node': self._id,
-                    'user': user._id,
-                },
-                auth=auth
+                {'project': self.parent_id, 'node': self._id, 'user': user._id,},
+                auth=auth,
             )
         if save:
             self.save()
 
     def save(self, *args, **kwargs):
         from osf.models import Registration
+
         first_save = not bool(self.pk)
         if 'old_subjects' in kwargs.keys():
             # TODO: send this data to SHARE
@@ -1923,7 +2161,11 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
             self.on_update(first_save, saved_fields)
 
         if 'node_license' in saved_fields:
-            children = list(self.descendants.filter(node_license=None, is_public=True, is_deleted=False))
+            children = list(
+                self.descendants.filter(
+                    node_license=None, is_public=True, is_deleted=False
+                )
+            )
             while len(children):
                 batch = children[:99]
                 self.bulk_update_search(batch)
@@ -1933,9 +2175,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
             self.update_group_permissions()
             if not isinstance(self, Registration):
                 Contributor.objects.get_or_create(
-                    user=self.creator,
-                    node=self,
-                    visible=True,
+                    user=self.creator, node=self, visible=True,
                 )
                 self.add_permission(self.creator, ADMIN)
         return ret
@@ -1948,12 +2188,24 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         This ensures that on_node_updated is only queued once for a given node.
         """
         # All arguments passed as kwargs so that we can check signature.kwargs and update as necessary
-        task = get_task_from_queue('website.project.tasks.on_node_updated', predicate=lambda task: task.kwargs['node_id'] == self._id)
+        task = get_task_from_queue(
+            'website.project.tasks.on_node_updated',
+            predicate=lambda task: task.kwargs['node_id'] == self._id,
+        )
         if task:
             # Ensure saved_fields is JSON-serializable by coercing it to a list
-            task.kwargs['saved_fields'] = list(set(task.kwargs['saved_fields']).union(saved_fields))
+            task.kwargs['saved_fields'] = list(
+                set(task.kwargs['saved_fields']).union(saved_fields)
+            )
         else:
-            enqueue_task(node_tasks.on_node_updated.s(node_id=self._id, user_id=user_id, first_save=first_save, saved_fields=saved_fields))
+            enqueue_task(
+                node_tasks.on_node_updated.s(
+                    node_id=self._id,
+                    user_id=user_id,
+                    first_save=first_save,
+                    saved_fields=saved_fields,
+                )
+            )
 
     def update_or_enqueue_on_resource_updated(self, user_id, first_save, saved_fields):
         # Needed for ContributorMixin
@@ -2022,7 +2274,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
                 'parent_node': self.parent_id,
                 'node': self._primary_key,
                 'description_new': self.description,
-                'description_original': original
+                'description_original': original,
             },
             auth=auth,
             save=False,
@@ -2049,7 +2301,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
                 'parent_node': self.parent_id,
                 'node': self._primary_key,
                 'category_new': self.category,
-                'category_original': original
+                'category_original': original,
             },
             auth=auth,
             save=False,
@@ -2076,7 +2328,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
                 'parent_node': self.parent_id,
                 'node': self._primary_key,
                 'article_doi_new': self.article_doi,
-                'article_doi_original': original
+                'article_doi_original': original,
             },
             auth=auth,
             save=False,
@@ -2098,7 +2350,9 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         for key, value in fields.items():
             if key not in self.WRITABLE_WHITELIST:
                 if self.is_registration:
-                    raise NodeUpdateError(reason='Registered content cannot be updated', key=key)
+                    raise NodeUpdateError(
+                        reason='Registered content cannot be updated', key=key
+                    )
                 else:
                     continue
             # Title, description, and category have special methods for logging purposes
@@ -2106,7 +2360,10 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
                 if not self.is_bookmark_collection or not self.is_quickfiles:
                     self.set_title(title=value, auth=auth, save=False)
                 else:
-                    raise NodeUpdateError(reason='Bookmark collections or QuickFilesNodes cannot be renamed.', key=key)
+                    raise NodeUpdateError(
+                        reason='Bookmark collections or QuickFilesNodes cannot be renamed.',
+                        key=key,
+                    )
             elif key == 'description':
                 self.set_description(description=value, auth=auth, save=False)
             elif key == 'category':
@@ -2116,17 +2373,18 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
                     Node.PUBLIC if value else Node.PRIVATE,
                     auth=auth,
                     log=True,
-                    save=False
+                    save=False,
                 )
             elif key == 'node_license':
                 self.set_node_license(
                     {
                         'id': value.get('id'),
                         'year': value.get('year'),
-                        'copyrightHolders': value.get('copyrightHolders') or value.get('copyright_holders', [])
+                        'copyrightHolders': value.get('copyrightHolders')
+                        or value.get('copyright_holders', []),
                     },
                     auth,
-                    save=save
+                    save=save,
                 )
             elif key == 'article_doi' and self.type == 'osf.registration':
                 self.set_article_doi(article_doi=value, auth=auth, save=False)
@@ -2150,9 +2408,17 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
                             }
                             setattr(self, key, value)
                     except AttributeError:
-                        raise NodeUpdateError(reason="Invalid value for attribute '{0}'".format(key), key=key)
+                        raise NodeUpdateError(
+                            reason="Invalid value for attribute '{0}'".format(key),
+                            key=key,
+                        )
                     except warnings.Warning:
-                        raise NodeUpdateError(reason="Attribute '{0}' doesn't exist on the Node class".format(key), key=key)
+                        raise NodeUpdateError(
+                            reason="Attribute '{0}' doesn't exist on the Node class".format(
+                                key
+                            ),
+                            key=key,
+                        )
         if save:
             updated = self.get_dirty_fields()
             self.save()
@@ -2166,24 +2432,22 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
                 params={
                     'node': self._id,
                     'updated_fields': {
-                        key: {
-                            'old': values[key]['old'],
-                            'new': values[key]['new']
-                        }
+                        key: {'old': values[key]['old'], 'new': values[key]['new']}
                         for key in values
-                    }
+                    },
                 },
-                auth=auth)
+                auth=auth,
+            )
         return updated
 
     def add_remove_node_log(self, auth, date):
         node_to_log = self.parent_node if self.parent_node else self
-        log_action = NodeLog.NODE_REMOVED if self.parent_node else NodeLog.PROJECT_DELETED
+        log_action = (
+            NodeLog.NODE_REMOVED if self.parent_node else NodeLog.PROJECT_DELETED
+        )
         node_to_log.add_log(
             log_action,
-            params={
-                'project': self._primary_key,
-            },
+            params={'project': self._primary_key,},
             auth=auth,
             log_date=date,
             save=True,
@@ -2200,11 +2464,19 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         :param datetime date: `datetime.datetime` or `None`
         """
         # TODO: rename "date" param - it's shadowing a global
-        hierarchy = Node.objects.get_children(self, active=True, include_root=True).filter(is_deleted=False)
+        hierarchy = Node.objects.get_children(
+            self, active=True, include_root=True
+        ).filter(is_deleted=False)
         if (not auth or isinstance(auth.user, AnonymousUser)) or (
-                len(hierarchy) != (Node.objects.get_nodes_for_user(auth.user, ADMIN_NODE, hierarchy)).count()):
+            len(hierarchy)
+            != (
+                Node.objects.get_nodes_for_user(auth.user, ADMIN_NODE, hierarchy)
+            ).count()
+        ):
             raise PermissionsError(
-                '{0!r} does not have permission to modify this {1}, or a component in its hierarchy.'.format(auth.user, self.category or 'node')
+                '{0!r} does not have permission to modify this {1}, or a component in its hierarchy.'.format(
+                    auth.user, self.category or 'node'
+                )
             )
 
         # After delete callback
@@ -2280,8 +2552,9 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
             return True
 
         # TODO: Optimize me into one query
-        for node_relation in self.node_relations.filter(is_node_link=False, child__is_deleted=False).select_related(
-                'child'):
+        for node_relation in self.node_relations.filter(
+            is_node_link=False, child__is_deleted=False
+        ).select_related('child'):
             node = node_relation.child
             if node.has_addon_on_children(addon):
                 return True
@@ -2335,7 +2608,9 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
 
     def get_doi_client(self):
         if settings.DATACITE_URL and settings.DATACITE_PREFIX:
-            return DataCiteClient(base_url=settings.DATACITE_URL, prefix=settings.DATACITE_PREFIX)
+            return DataCiteClient(
+                base_url=settings.DATACITE_URL, prefix=settings.DATACITE_PREFIX
+            )
         else:
             return None
 
@@ -2343,7 +2618,9 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         if not self.has_permission(auth.user, ADMIN):
             raise PermissionsError('Only admins can update a custom citation')
 
-        if (custom_citation == self.custom_citation) or not (custom_citation or self.custom_citation):
+        if (custom_citation == self.custom_citation) or not (
+            custom_citation or self.custom_citation
+        ):
             return
         elif custom_citation == '':
             log_action = NodeLog.CUSTOM_CITATION_REMOVED
@@ -2355,9 +2632,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         self.custom_citation = custom_citation
         self.add_log(
             log_action,
-            params={
-                'node': self._primary_key,
-            },
+            params={'node': self._primary_key,},
             auth=auth,
             log_date=timezone.now(),
         )
@@ -2385,15 +2660,20 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
 
     # Overrides ContributorMixin
     def _add_related_source_tags(self, contributor):
-        osf_provider_tag, created = Tag.all_tags.get_or_create(name=OsfSourceTags.Osf.value, system=True)
-        source_tag = self.all_tags.filter(
-            system=True,
-            name__in=[
-                CampaignSourceTags.Prereg.value,
-                CampaignSourceTags.OsfRegisteredReports.value,
-                CampaignSourceTags.Osf4m.value
-            ]
-        ).first() or osf_provider_tag
+        osf_provider_tag, created = Tag.all_tags.get_or_create(
+            name=OsfSourceTags.Osf.value, system=True
+        )
+        source_tag = (
+            self.all_tags.filter(
+                system=True,
+                name__in=[
+                    CampaignSourceTags.Prereg.value,
+                    CampaignSourceTags.OsfRegisteredReports.value,
+                    CampaignSourceTags.Osf4m.value,
+                ],
+            ).first()
+            or osf_provider_tag
+        )
         contributor.add_system_tag(source_tag)
 
 
@@ -2402,6 +2682,7 @@ class NodeUserObjectPermission(UserObjectPermissionBase):
     Direct Foreign Key Table for guardian - User models - we typically add object
     perms directly to Django groups instead of users, so this will be used infrequently
     """
+
     content_object = models.ForeignKey(AbstractNode, on_delete=models.CASCADE)
 
 
@@ -2415,6 +2696,7 @@ class NodeGroupObjectPermission(GroupObjectPermissionBase):
 
     Those links are stored here:  content_object_id (node_id), group_id, permission_id
     """
+
     content_object = models.ForeignKey(AbstractNode, on_delete=models.CASCADE)
 
 
@@ -2428,12 +2710,15 @@ class Node(AbstractNode):
 
     @property
     def api_v2_url(self):
-        return reverse('nodes:node-detail', kwargs={'node_id': self._id, 'version': 'v2'})
+        return reverse(
+            'nodes:node-detail', kwargs={'node_id': self._id, 'version': 'v2'}
+        )
 
     @property
     def is_bookmark_collection(self):
         """For v1 compat"""
         return False
+
 
 def remove_addons(auth, resource_object_list):
     for config in AbstractNode.ADDONS_AVAILABLE:
@@ -2443,7 +2728,9 @@ def remove_addons(auth, resource_object_list):
             settings_model = None
 
         if settings_model:
-            addon_list = settings_model.objects.filter(owner__in=resource_object_list, is_deleted=False)
+            addon_list = settings_model.objects.filter(
+                owner__in=resource_object_list, is_deleted=False
+            )
             for addon in addon_list:
                 addon.after_delete(auth.user)
 
@@ -2478,10 +2765,15 @@ def send_osf_signal(sender, instance, created, **kwargs):
 @receiver(post_save, sender=Node)
 @receiver(post_save, sender='osf.DraftNode')
 def add_default_node_addons(sender, instance, created, **kwargs):
-    if (created or instance._is_templated_clone) and instance.is_original and not instance._suppress_log:
+    if (
+        (created or instance._is_templated_clone)
+        and instance.is_original
+        and not instance._suppress_log
+    ):
         for addon in settings.ADDONS_AVAILABLE:
             if 'node' in addon.added_default:
                 instance.add_addon(addon.short_name, auth=None, log=False)
+
 
 @receiver(post_save, sender=Node)
 @receiver(post_save, sender='osf.Registration')
@@ -2490,9 +2782,7 @@ def add_default_node_addons(sender, instance, created, **kwargs):
 def set_parent_and_root(sender, instance, created, *args, **kwargs):
     if getattr(instance, '_parent', None):
         NodeRelation.objects.get_or_create(
-            parent=instance._parent,
-            child=instance,
-            is_node_link=False
+            parent=instance._parent, child=instance, is_node_link=False
         )
         # remove cached copy of parent_node
         try:

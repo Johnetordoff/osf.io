@@ -15,17 +15,13 @@ def _is_image(filename):
     mtype, _ = mimetypes.guess_type(filename)
     return mtype and mtype.startswith('image')
 
+
 NODE_SETTINGS_TEMPLATE_DEFAULT = os.path.join(
-    settings.TEMPLATES_PATH,
-    'project',
-    'addon',
-    'node_settings_default.mako',
+    settings.TEMPLATES_PATH, 'project', 'addon', 'node_settings_default.mako',
 )
 
 USER_SETTINGS_TEMPLATE_DEFAULT = os.path.join(
-    settings.TEMPLATES_PATH,
-    'profile',
-    'user_settings_default.mako',
+    settings.TEMPLATES_PATH, 'profile', 'user_settings_default.mako',
 )
 
 
@@ -45,6 +41,7 @@ def generic_root_folder(addon_short_name):
             private_key=kwargs.get('view_only', None),
         )
         return [root]
+
     _root_folder.__name__ = '{0}_root_folder'.format(addon_short_name)
     return _root_folder
 
@@ -81,15 +78,7 @@ class BaseAddonAppConfig(AppConfig):
             paths.append(os.path.dirname(self.user_settings_template))
         if self.node_settings_template:
             paths.append(os.path.dirname(self.node_settings_template))
-        template_dirs = list(
-            set(
-                [
-                    path
-                    for path in paths
-                    if os.path.exists(path)
-                ]
-            )
-        )
+        template_dirs = list(set([path for path in paths if os.path.exists(path)]))
         if template_dirs:
             self.template_lookup = TemplateLookup(
                 directories=template_dirs,
@@ -102,7 +91,7 @@ class BaseAddonAppConfig(AppConfig):
                 imports=[
                     'from website.util.sanitize import temp_ampersand_fixer',
                     # FIXME: Temporary workaround for data stored in wrong format in DB. Unescape it before it gets re-escaped by Markupsafe. See [#OSF-4432]
-                ]
+                ],
             )
         else:
             self.template_lookup = None
@@ -149,8 +138,7 @@ class BaseAddonAppConfig(AppConfig):
         if filename.startswith('/'):
             return filename
         return '/static/addons/{addon}/{filename}'.format(
-            addon=self.short_name,
-            filename=filename,
+            addon=self.short_name, filename=filename,
         )
 
     def to_json(self):

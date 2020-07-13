@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0037_remove_emails_for_unconfirmed_users'),
     ]
 
-    operations = [
-    ]
+    operations = []

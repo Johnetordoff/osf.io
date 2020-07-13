@@ -34,7 +34,9 @@ class CommentMixin(object):
 
     def get_comment(self, check_permissions=True):
         pk = self.kwargs[self.comment_lookup_url_kwarg]
-        comment = get_object_or_404(Comment, guids___id=pk, root_target__isnull=False, guids___id__isnull=False)
+        comment = get_object_or_404(
+            Comment, guids___id=pk, root_target__isnull=False, guids___id__isnull=False,
+        )
 
         if comment.root_target is None:
             raise NotFound
@@ -45,9 +47,12 @@ class CommentMixin(object):
         return comment
 
 
-class CommentDetail(JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView, CommentMixin):
+class CommentDetail(
+    JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView, CommentMixin,
+):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/comments_read).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         CommentDetailPermissions,
@@ -141,6 +146,7 @@ class CommentReportsList(JSONAPIBaseView, generics.ListCreateAPIView, CommentMix
 
     #This Request/Response
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticated,
         CommentReportsPermissions,
@@ -163,12 +169,16 @@ class CommentReportsList(JSONAPIBaseView, generics.ListCreateAPIView, CommentMix
         reports = comment.reports
         serialized_reports = []
         if user_id in reports:
-            report = CommentReport(user_id, reports[user_id]['category'], reports[user_id]['text'])
+            report = CommentReport(
+                user_id, reports[user_id]['category'], reports[user_id]['text'],
+            )
             serialized_reports.append(report)
         return serialized_reports
 
 
-class CommentReportDetail(JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView, CommentMixin):
+class CommentReportDetail(
+    JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView, CommentMixin,
+):
     """Details about a specific comment report. *Writeable*.
 
     ###Permissions
@@ -227,6 +237,7 @@ class CommentReportDetail(JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView
 
     #This Request/Response
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticated,
         CommentReportsPermissions,
@@ -251,7 +262,9 @@ class CommentReportDetail(JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView
             raise PermissionDenied('Not authorized to comment on this project.')
 
         if reporter_id in reports:
-            return CommentReport(user_id, reports[user_id]['category'], reports[user_id]['text'])
+            return CommentReport(
+                user_id, reports[user_id]['category'], reports[user_id]['text'],
+            )
         else:
             raise Gone(detail='The requested comment report is no longer available.')
 

@@ -1,9 +1,11 @@
 from addons.base.tests.base import OAuthAddonTestCaseMixin, AddonTestCase
 from addons.owncloud.models import OwnCloudProvider, NodeSettings
 from addons.owncloud.tests.factories import (
-    OwnCloudAccountFactory, OwnCloudNodeSettingsFactory,
-    OwnCloudUserSettingsFactory
+    OwnCloudAccountFactory,
+    OwnCloudNodeSettingsFactory,
+    OwnCloudUserSettingsFactory,
 )
+
 
 class OwnCloudAddonTestCase(OAuthAddonTestCaseMixin, AddonTestCase):
 
@@ -15,8 +17,4 @@ class OwnCloudAddonTestCase(OAuthAddonTestCaseMixin, AddonTestCase):
     NodeSettingsFactory = OwnCloudNodeSettingsFactory
     NodeSettingsClass = NodeSettings
     UserSettingsFactory = OwnCloudUserSettingsFactory
-    folder = {
-        'path': '/Documents/',
-        'name': '/Documents',
-        'id': '/Documents/'
-    }
+    folder = {'path': '/Documents/', 'name': '/Documents', 'id': '/Documents/'}

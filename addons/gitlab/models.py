@@ -7,8 +7,11 @@ import markupsafe
 import gitlab
 
 from addons.base import exceptions
-from addons.base.models import (BaseOAuthNodeSettings, BaseOAuthUserSettings,
-                                BaseStorageAddon)
+from addons.base.models import (
+    BaseOAuthNodeSettings,
+    BaseOAuthUserSettings,
+    BaseStorageAddon,
+)
 
 from addons.gitlab import utils
 from addons.gitlab.api import GitLabClient
@@ -45,6 +48,7 @@ class GitLabFile(GitLabFileNode, File):
         revision = revision or ref or branch
         return super(GitLabFile, self).touch(auth_header, revision=revision, **kwargs)
 
+
 class GitLabProvider(object):
     name = 'GitLab'
     short_name = 'gitlab'
@@ -58,7 +62,7 @@ class GitLabProvider(object):
     def __repr__(self):
         return '<{name}: {status}>'.format(
             name=self.__class__.__name__,
-            status=self.account.display_name if self.account else 'anonymous'
+            status=self.account.display_name if self.account else 'anonymous',
         )
 
 
@@ -76,7 +80,9 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
     repo_id = models.TextField(blank=True, null=True)
     hook_id = models.TextField(blank=True, null=True)
     hook_secret = models.TextField(blank=True, null=True)
-    user_settings = models.ForeignKey(UserSettings, null=True, blank=True, on_delete=models.CASCADE)
+    user_settings = models.ForeignKey(
+        UserSettings, null=True, blank=True, on_delete=models.CASCADE
+    )
 
     @property
     def folder_id(self):
@@ -104,10 +110,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
         self.user_settings = user_settings
         self.owner.add_log(
             action='gitlab_node_authorized',
-            params={
-                'project': self.owner.parent_id,
-                'node': self.owner._id,
-            },
+            params={'project': self.owner.parent_id, 'node': self.owner._id,},
             auth=Auth(user_settings.owner),
         )
         if save:
@@ -126,10 +129,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
         if log:
             self.owner.add_log(
                 action='gitlab_node_deauthorized',
-                params={
-                    'project': self.owner.parent_id,
-                    'node': self.owner._id,
-                },
+                params={'project': self.owner.parent_id, 'node': self.owner._id,},
                 auth=auth,
             )
 
@@ -144,7 +144,9 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
     @property
     def repo_url(self):
         if self.repo:
-            return 'https://{0}/{1}'.format(self.external_account.display_name, self.repo)
+            return 'https://{0}/{1}'.format(
+                self.external_account.display_name, self.repo
+            )
 
     @property
     def short_url(self):
@@ -160,10 +162,12 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
 
         ret = super(NodeSettings, self).to_json(user)
         user_settings = user.get_addon('gitlab')
-        ret.update({
-            'user_has_auth': user_settings and user_settings.has_auth,
-            'is_registration': self.owner.is_registration,
-        })
+        ret.update(
+            {
+                'user_has_auth': user_settings and user_settings.has_auth,
+                'is_registration': self.owner.is_registration,
+            }
+        )
 
         if self.user_settings and self.user_settings.has_auth:
 
@@ -179,23 +183,27 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
             if owner == user:
                 ret.update({'repos': repos})
 
-            ret.update({
-                'node_has_auth': True,
-                'gitlab_user': self.user or '',
-                'gitlab_repo': self.repo or '',
-                'gitlab_repo_id': self.repo_id if self.repo_id is not None else '0',
-                'gitlab_repo_full_name': '{0} / {1}'.format(self.user, self.repo) if (self.user and self.repo) else '',
-                'auth_osf_name': owner.fullname,
-                'auth_osf_url': owner.url,
-                'auth_osf_id': owner._id,
-                'gitlab_host': self.external_account.display_name,
-                'gitlab_user_name': self.external_account.display_name,
-                'gitlab_user_url': self.external_account.profile_url,
-                'is_owner': owner == user,
-                'valid_credentials': valid_credentials,
-                'addons_url': web_url_for('user_addons'),
-                'files_url': self.owner.web_url_for('collect_file_trees')
-            })
+            ret.update(
+                {
+                    'node_has_auth': True,
+                    'gitlab_user': self.user or '',
+                    'gitlab_repo': self.repo or '',
+                    'gitlab_repo_id': self.repo_id if self.repo_id is not None else '0',
+                    'gitlab_repo_full_name': '{0} / {1}'.format(self.user, self.repo)
+                    if (self.user and self.repo)
+                    else '',
+                    'auth_osf_name': owner.fullname,
+                    'auth_osf_url': owner.url,
+                    'auth_osf_id': owner._id,
+                    'gitlab_host': self.external_account.display_name,
+                    'gitlab_user_name': self.external_account.display_name,
+                    'gitlab_user_url': self.external_account.profile_url,
+                    'is_owner': owner == user,
+                    'valid_credentials': valid_credentials,
+                    'addons_url': web_url_for('user_addons'),
+                    'files_url': self.owner.web_url_for('collect_file_trees'),
+                }
+            )
         return ret
 
     def serialize_waterbutler_credentials(self):
@@ -210,13 +218,15 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
             'host': self.external_account.oauth_secret,
             'owner': self.user,
             'repo': self.repo,
-            'repo_id': self.repo_id
+            'repo_id': self.repo_id,
         }
 
     def create_waterbutler_log(self, auth, action, metadata):
         path = metadata['path']
 
-        url = self.owner.web_url_for('addon_view_or_download_file', path=path, provider='gitlab')
+        url = self.owner.web_url_for(
+            'addon_view_or_download_file', path=path, provider='gitlab'
+        )
 
         if not metadata.get('extra'):
             sha = None
@@ -225,7 +235,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
             sha = metadata['extra']['fileSha']
             urls = {
                 'view': '{0}?branch={1}'.format(url, sha),
-                'download': '{0}?action=download&branch={1}'.format(url, sha)
+                'download': '{0}?action=download&branch={1}'.format(url, sha),
             }
 
         self.owner.add_log(
@@ -277,9 +287,16 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
         except (ApiError, GitLabError):
             return
         except gitlab.exceptions.GitlabError as exc:
-            if exc.response_code == 403 and 'must accept the Terms of Service' in exc.error_message:
-                return [('Your gitlab account does not have proper authentication. Ensure you have agreed to Gitlab\'s '
-                         'current Terms of Service by disabling and re-enabling your account.')]
+            if (
+                exc.response_code == 403
+                and 'must accept the Terms of Service' in exc.error_message
+            ):
+                return [
+                    (
+                        "Your gitlab account does not have proper authentication. Ensure you have agreed to Gitlab's "
+                        'current Terms of Service by disabling and re-enabling your account.'
+                    )
+                ]
             else:
                 raise exc
 
@@ -318,11 +335,11 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
 
         """
         try:
-            message = (super(NodeSettings, self).before_remove_contributor_message(node, removed) +
-            'You can download the contents of this repository before removing '
-            'this contributor <u><a href="{url}">here</a></u>.'.format(
+            message = super(NodeSettings, self).before_remove_contributor_message(
+                node, removed
+            ) + 'You can download the contents of this repository before removing ' 'this contributor <u><a href="{url}">here</a></u>.'.format(
                 url=node.api_url + 'gitlab/tarball/'
-            ))
+            )
         except TypeError:
             # super call returned None due to lack of user auth
             return None
@@ -349,7 +366,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
             ).format(
                 category=markupsafe.escape(node.category_display),
                 title=markupsafe.escape(node.title),
-                user=markupsafe.escape(removed.fullname)
+                user=markupsafe.escape(removed.fullname),
             )
 
             if not auth or auth.user != removed:
@@ -368,9 +385,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
         :param bool save: Save settings after callback
         :return tuple: Tuple of cloned settings and alert message
         """
-        clone = super(NodeSettings, self).after_fork(
-            node, fork, user, save=False
-        )
+        clone = super(NodeSettings, self).after_fork(node, fork, user, save=False)
 
         # Copy authentication if authenticated by forking user
         if self.user_settings and self.user_settings.owner == user:
@@ -391,9 +406,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
                 'This {cat} is connected to a private GitLab repository. Users '
                 '(other than contributors) will not be able to see the '
                 'contents of this repo unless it is made public on GitLab.'
-            ).format(
-                cat=node.project_or_component,
-            )
+            ).format(cat=node.project_or_component,)
 
     def after_delete(self, user):
         self.deauthorize(Auth(user=user), log=True)
@@ -410,14 +423,12 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
             connect = GitLabClient(external_account=self.external_account)
             secret = utils.make_hook_secret()
             hook = connect.add_hook(
-                self.user, self.repo,
+                self.user,
+                self.repo,
                 'web',
                 {
                     'url': urljoin(
-                        hook_domain,
-                        os.path.join(
-                            self.owner.api_url, 'gitlab', 'hook/'
-                        )
+                        hook_domain, os.path.join(self.owner.api_url, 'gitlab', 'hook/')
                     ),
                     'content_type': gitlab_settings.HOOK_CONTENT_TYPE,
                     'secret': secret,

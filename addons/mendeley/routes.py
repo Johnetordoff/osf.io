@@ -7,9 +7,7 @@ from addons.mendeley.views import mendeley_views
 api_routes = {
     'rules': [
         Rule(
-            [
-                '/settings/mendeley/accounts/',
-            ],
+            ['/settings/mendeley/accounts/',],
             'get',
             mendeley_views.account_list(),
             json_renderer,

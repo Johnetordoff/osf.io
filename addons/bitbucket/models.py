@@ -5,8 +5,11 @@ import markupsafe
 from django.db import models
 
 from addons.base import exceptions
-from addons.base.models import (BaseOAuthNodeSettings, BaseOAuthUserSettings,
-                                BaseStorageAddon)
+from addons.base.models import (
+    BaseOAuthNodeSettings,
+    BaseOAuthUserSettings,
+    BaseStorageAddon,
+)
 
 from addons.bitbucket.api import BitbucketClient
 from addons.bitbucket.serializer import BitbucketSerializer
@@ -34,7 +37,9 @@ class BitbucketFile(BitbucketFileNode, File):
 
     def touch(self, auth_header, revision=None, commitSha=None, branch=None, **kwargs):
         revision = revision or commitSha or branch
-        return super(BitbucketFile, self).touch(auth_header, revision=revision, **kwargs)
+        return super(BitbucketFile, self).touch(
+            auth_header, revision=revision, **kwargs
+        )
 
     @property
     def _hashes(self):
@@ -42,6 +47,7 @@ class BitbucketFile(BitbucketFileNode, File):
             return {'commit': self._history[-1]['extra']['commitSha']}
         except (IndexError, KeyError):
             return None
+
 
 class BitbucketProvider(ExternalProvider):
     """Provider to handler Bitbucket OAuth workflow
@@ -79,7 +85,7 @@ class BitbucketProvider(ExternalProvider):
         return {
             'provider_id': user_info['uuid'],
             'profile_url': user_info['links']['html']['href'],
-            'display_name': user_info['username']
+            'display_name': user_info['username'],
         }
 
     def fetch_access_token(self, force_refresh=False):
@@ -95,6 +101,7 @@ class UserSettings(BaseOAuthUserSettings):
     * Bitbucket does not support remote revocation of access tokens.
 
     """
+
     oauth_provider = BitbucketProvider
     serializer = BitbucketSerializer
 
@@ -102,7 +109,9 @@ class UserSettings(BaseOAuthUserSettings):
     # Assumes oldest connected account is primary.
     @property
     def public_id(self):
-        bitbucket_accounts = self.owner.external_accounts.filter(provider=self.oauth_provider.short_name)
+        bitbucket_accounts = self.owner.external_accounts.filter(
+            provider=self.oauth_provider.short_name
+        )
         if bitbucket_accounts:
             return bitbucket_accounts[0].display_name
         return None
@@ -115,7 +124,9 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
     user = models.TextField(blank=True, null=True)
     repo = models.TextField(blank=True, null=True)
     hook_id = models.TextField(blank=True, null=True)
-    user_settings = models.ForeignKey(UserSettings, null=True, blank=True, on_delete=models.CASCADE)
+    user_settings = models.ForeignKey(
+        UserSettings, null=True, blank=True, on_delete=models.CASCADE
+    )
 
     _api = None
 
@@ -148,10 +159,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
         self.user_settings = user_settings
         self.owner.add_log(
             action='bitbucket_node_authorized',
-            params={
-                'project': self.owner.parent_id,
-                'node': self.owner._id,
-            },
+            params={'project': self.owner.parent_id, 'node': self.owner._id,},
             auth=Auth(user_settings.owner),
         )
         if save:
@@ -168,10 +176,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
         if log:
             self.owner.add_log(
                 action='bitbucket_node_deauthorized',
-                params={
-                    'project': self.owner.parent_id,
-                    'node': self.owner._id,
-                },
+                params={'project': self.owner.parent_id, 'node': self.owner._id,},
                 auth=auth,
             )
 
@@ -186,9 +191,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
     @property
     def repo_url(self):
         if self.user and self.repo:
-            return 'https://bitbucket.org/{0}/{1}/'.format(
-                self.user, self.repo
-            )
+            return 'https://bitbucket.org/{0}/{1}/'.format(self.user, self.repo)
 
     @property
     def short_url(self):
@@ -213,10 +216,12 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
     def to_json(self, user):
         ret = super(NodeSettings, self).to_json(user)
         user_settings = user.get_addon('bitbucket')
-        ret.update({
-            'user_has_auth': user_settings and user_settings.has_auth,
-            'is_registration': self.owner.is_registration,
-        })
+        ret.update(
+            {
+                'user_has_auth': user_settings and user_settings.has_auth,
+                'is_registration': self.owner.is_registration,
+            }
+        )
         if self.user_settings and self.user_settings.has_auth:
             connection = BitbucketClient(access_token=self.api.fetch_access_token())
 
@@ -225,8 +230,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
                 mine = connection.repos()
                 ours = connection.team_repos()
                 repo_names = [
-                    repo['full_name'].replace('/', ' / ')
-                    for repo in mine + ours
+                    repo['full_name'].replace('/', ' / ') for repo in mine + ours
                 ]
             except Exception:
                 repo_names = []
@@ -235,21 +239,25 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
             owner = self.user_settings.owner
             if owner == user:
                 ret.update({'repo_names': repo_names})
-            ret.update({
-                'node_has_auth': True,
-                'bitbucket_user': self.user or '',
-                'bitbucket_repo': self.repo or '',
-                'bitbucket_repo_full_name': '{0} / {1}'.format(self.user, self.repo) if (self.user and self.repo) else '',
-                'auth_osf_name': owner.fullname,
-                'auth_osf_url': owner.url,
-                'auth_osf_id': owner._id,
-                'bitbucket_user_name': self.external_account.display_name,
-                'bitbucket_user_url': self.external_account.profile_url,
-                'is_owner': owner == user,
-                'valid_credentials': valid_credentials,
-                'addons_url': web_url_for('user_addons'),
-                'files_url': self.owner.web_url_for('collect_file_trees')
-            })
+            ret.update(
+                {
+                    'node_has_auth': True,
+                    'bitbucket_user': self.user or '',
+                    'bitbucket_repo': self.repo or '',
+                    'bitbucket_repo_full_name': '{0} / {1}'.format(self.user, self.repo)
+                    if (self.user and self.repo)
+                    else '',
+                    'auth_osf_name': owner.fullname,
+                    'auth_osf_url': owner.url,
+                    'auth_osf_id': owner._id,
+                    'bitbucket_user_name': self.external_account.display_name,
+                    'bitbucket_user_url': self.external_account.profile_url,
+                    'is_owner': owner == user,
+                    'valid_credentials': valid_credentials,
+                    'addons_url': web_url_for('user_addons'),
+                    'files_url': self.owner.web_url_for('collect_file_trees'),
+                }
+            )
 
         return ret
 
@@ -269,14 +277,16 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
     def create_waterbutler_log(self, auth, action, metadata):
         path = metadata['path']
 
-        url = self.owner.web_url_for('addon_view_or_download_file', path=path, provider='bitbucket')
+        url = self.owner.web_url_for(
+            'addon_view_or_download_file', path=path, provider='bitbucket'
+        )
 
         sha, urls = None, {}
         try:
             sha = metadata['extra']['commitSha']
             urls = {
                 'view': '{0}?commitSha={1}'.format(url, sha),
-                'download': '{0}?action=download&commitSha={1}'.format(url, sha)
+                'download': '{0}?action=download&commitSha={1}'.format(url, sha),
             }
         except KeyError:
             pass
@@ -289,11 +299,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
                 'node': self.owner._id,
                 'path': path,
                 'urls': urls,
-                'bitbucket': {
-                    'user': self.user,
-                    'repo': self.repo,
-                    'commitSha': sha,
-                },
+                'bitbucket': {'user': self.user, 'repo': self.repo, 'commitSha': sha,},
             },
         )
 
@@ -346,18 +352,13 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
                     message += (
                         ' The files in this Bitbucket repo can be viewed on Bitbucket '
                         '<u><a href="https://bitbucket.org/{user}/{repo}/">here</a></u>.'
-                    ).format(
-                        user=self.user,
-                        repo=self.repo,
-                    )
+                    ).format(user=self.user, repo=self.repo,)
                 messages.append(message)
         else:
-            message = (
-                'Warning: the Bitbucket repo {user} / {repo} connected to this OSF {category} has been deleted.'.format(
-                    category=markupsafe.escape(node.project_or_component),
-                    user=markupsafe.escape(self.user),
-                    repo=markupsafe.escape(self.repo),
-                )
+            message = 'Warning: the Bitbucket repo {user} / {repo} connected to this OSF {category} has been deleted.'.format(
+                category=markupsafe.escape(node.project_or_component),
+                user=markupsafe.escape(self.user),
+                repo=markupsafe.escape(self.repo),
             )
             messages.append(message)
 
@@ -372,11 +373,11 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
 
         """
         try:
-            message = (super(NodeSettings, self).before_remove_contributor_message(node, removed) +
-            'You can download the contents of this repository before removing '
-            'this contributor <u><a href="{url}">here</a></u>.'.format(
+            message = super(NodeSettings, self).before_remove_contributor_message(
+                node, removed
+            ) + 'You can download the contents of this repository before removing ' 'this contributor <u><a href="{url}">here</a></u>.'.format(
                 url=node.api_url + 'bitbucket/tarball/'
-            ))
+            )
         except TypeError:
             # super call returned None due to lack of user auth
             return None
@@ -403,7 +404,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
             ).format(
                 category=markupsafe.escape(node.category_display),
                 title=markupsafe.escape(node.title),
-                user=markupsafe.escape(removed.fullname)
+                user=markupsafe.escape(removed.fullname),
             )
 
             if not auth or auth.user != removed:
@@ -425,9 +426,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
         :param bool save: Save settings after callback
         :return tuple: Tuple of cloned settings and alert message
         """
-        clone = super(NodeSettings, self).after_fork(
-            node, fork, user, save=False
-        )
+        clone = super(NodeSettings, self).after_fork(node, fork, user, save=False)
 
         # Copy authentication if authenticated by forking user
         if self.user_settings and self.user_settings.owner == user:
@@ -449,9 +448,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
                 'This {cat} is connected to a private Bitbucket repository. Users '
                 '(other than contributors) will not be able to see the '
                 'contents of this repo unless it is made public on Bitbucket.'
-            ).format(
-                cat=node.project_or_component,
-            )
+            ).format(cat=node.project_or_component,)
 
     def after_delete(self, user):
         self.deauthorize(Auth(user=user), log=True)

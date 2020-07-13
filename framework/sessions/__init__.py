@@ -92,7 +92,9 @@ def create_session(response, data=None):
     if current_session:
         current_session.data.update(data or {})
         current_session.save()
-        cookie_value = itsdangerous.Signer(settings.SECRET_KEY).sign(current_session._id)
+        cookie_value = itsdangerous.Signer(settings.SECRET_KEY).sign(
+            current_session._id
+        )
     else:
         session_id = str(bson.objectid.ObjectId())
         new_session = Session(_id=session_id, data=data or {})
@@ -100,9 +102,14 @@ def create_session(response, data=None):
         cookie_value = itsdangerous.Signer(settings.SECRET_KEY).sign(session_id)
         set_session(new_session)
     if response is not None:
-        response.set_cookie(settings.COOKIE_NAME, value=cookie_value, domain=settings.OSF_COOKIE_DOMAIN,
-                            secure=settings.SESSION_COOKIE_SECURE, httponly=settings.SESSION_COOKIE_HTTPONLY,
-                            samesite=settings.SESSION_COOKIE_SAMESITE)
+        response.set_cookie(
+            settings.COOKIE_NAME,
+            value=cookie_value,
+            domain=settings.OSF_COOKIE_DOMAIN,
+            secure=settings.SESSION_COOKIE_SECURE,
+            httponly=settings.SESSION_COOKIE_HTTPONLY,
+            samesite=settings.SESSION_COOKIE_SAMESITE,
+        )
         return response
 
 
@@ -117,6 +124,7 @@ def before_request():
     from framework.auth.core import get_user
     from framework.auth import cas
     from framework.utils import throttle_period_expired
+
     Session = apps.get_model('osf.Session')
 
     # Central Authentication Server Ticket Validation and Authentication
@@ -130,7 +138,7 @@ def before_request():
     if request.authorization:
         user = get_user(
             email=request.authorization.username,
-            password=request.authorization.password
+            password=request.authorization.password,
         )
         # Create an empty session
         # TODO: Shoudn't need to create a session for Basic Auth
@@ -143,7 +151,9 @@ def before_request():
                 otp = request.headers.get('X-OSF-OTP')
                 if otp is None or not user_addon.verify_code(otp):
                     # Must specify two-factor authentication OTP code or invalid two-factor authentication OTP code.
-                    user_session.data['auth_error_code'] = http_status.HTTP_401_UNAUTHORIZED
+                    user_session.data[
+                        'auth_error_code'
+                    ] = http_status.HTTP_401_UNAUTHORIZED
                     return
             user_session.data['auth_user_username'] = user.username
             user_session.data['auth_user_fullname'] = user.fullname
@@ -162,15 +172,25 @@ def before_request():
             user_session = Session.load(session_id) or Session(_id=session_id)
         except itsdangerous.BadData:
             return
-        if not throttle_period_expired(user_session.created, settings.OSF_SESSION_TIMEOUT):
+        if not throttle_period_expired(
+            user_session.created, settings.OSF_SESSION_TIMEOUT
+        ):
             # Update date last login when making non-api requests
             if user_session.data.get('auth_user_id') and 'api' not in request.url:
                 OSFUser = apps.get_model('osf.OSFUser')
                 (
-                    OSFUser.objects
-                    .filter(guids___id__isnull=False, guids___id=user_session.data['auth_user_id'])
+                    OSFUser.objects.filter(
+                        guids___id__isnull=False,
+                        guids___id=user_session.data['auth_user_id'],
+                    )
                     # Throttle updates
-                    .filter(Q(date_last_login__isnull=True) | Q(date_last_login__lt=timezone.now() - settings.DATE_LAST_LOGIN_THROTTLE_DELTA))
+                    .filter(
+                        Q(date_last_login__isnull=True)
+                        | Q(
+                            date_last_login__lt=timezone.now()
+                            - settings.DATE_LAST_LOGIN_THROTTLE_DELTA
+                        )
+                    )
                 ).update(date_last_login=timezone.now())
             set_session(user_session)
         else:

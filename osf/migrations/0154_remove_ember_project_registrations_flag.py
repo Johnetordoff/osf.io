@@ -6,12 +6,11 @@ from django.db import migrations
 from osf.utils.migrations import DeleteWaffleFlags
 from osf.features import EMBER_PROJECT_REGISTRATIONS
 
+
 class Migration(migrations.Migration):
 
     dependencies = [
         ('osf', '0153_merge_20181221_1842'),
     ]
 
-    operations = [
-        DeleteWaffleFlags([EMBER_PROJECT_REGISTRATIONS])
-    ]
+    operations = [DeleteWaffleFlags([EMBER_PROJECT_REGISTRATIONS])]

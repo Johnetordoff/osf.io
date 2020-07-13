@@ -11,7 +11,6 @@ from osf_tests.factories import (
 @pytest.mark.django_db
 @pytest.mark.enable_quickfiles_creation
 class TestLogEmbeds:
-
     @pytest.fixture()
     def user(self):
         return AuthUserFactory()
@@ -22,8 +21,7 @@ class TestLogEmbeds:
 
     @pytest.fixture()
     def registration(self, user, project):
-        return RegistrationFactory(
-            project=project, creator=user, is_public=True)
+        return RegistrationFactory(project=project, creator=user, is_public=True)
 
     @pytest.fixture()
     def registration_log(self, registration):
@@ -33,16 +31,17 @@ class TestLogEmbeds:
     def make_url_registration_log(self, registration_log):
         def url_registration_log(type_embed):
             return '/{}logs/{}/?embed={}'.format(
-                API_BASE, registration_log._id, type_embed)
+                API_BASE, registration_log._id, type_embed
+            )
+
         return url_registration_log
 
     def test_log_embed_types(
-            self, app, make_url_registration_log,
-            user, project, registration):
+        self, app, make_url_registration_log, user, project, registration
+    ):
 
         # test_embed_original_node
-        url_registration_log = make_url_registration_log(
-            type_embed='original_node')
+        url_registration_log = make_url_registration_log(type_embed='original_node')
 
         res = app.get(url_registration_log, auth=user.auth)
         assert res.status_code == 200
@@ -73,4 +72,7 @@ class TestLogEmbeds:
 
         res = app.get(url_registration_log, expect_errors=True)
         assert res.status_code == 400
-        assert res.json['errors'][0]['detail'] == 'The following fields are not embeddable: action'
+        assert (
+            res.json['errors'][0]['detail']
+            == 'The following fields are not embeddable: action'
+        )

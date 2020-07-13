@@ -17,6 +17,7 @@ class BitbucketAddonTestCase(OAuthAddonTestCaseMixin, AddonTestCase):
         settings.repo = 'abc'
         settings.user = 'octo-cat'
 
+
 def create_mock_bitbucket(user='octo-cat', private=False):
     """Factory for mock BitbucketClients objects.
     Example: ::
@@ -48,7 +49,7 @@ def create_mock_bitbucket(user='octo-cat', private=False):
 
     bitbucket_mock.repo_default_branch.return_value = 'master'
     bitbucket_mock.branches.return_value = [
-        {'name': 'master',  'target': {'hash': 'a1b2c3d4'}},
+        {'name': 'master', 'target': {'hash': 'a1b2c3d4'}},
         {'name': 'develop', 'target': {'hash': '0f9e8d7c'}},
     ]
 

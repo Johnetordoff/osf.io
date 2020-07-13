@@ -6,7 +6,11 @@ from tests.base import OsfTestCase
 from website.models import PreprintProvider
 from scripts.update_taxonomies import main as taxonomy_main
 from scripts.populate_preprint_providers import main as populate_main
-from scripts.populate_preprint_providers import STAGING_PREPRINT_PROVIDERS, PROD_PREPRINT_PROVIDERS
+from scripts.populate_preprint_providers import (
+    STAGING_PREPRINT_PROVIDERS,
+    PROD_PREPRINT_PROVIDERS,
+)
+
 
 class TestAddPreprintProviders(OsfTestCase):
     def setUp(self):
@@ -40,7 +44,9 @@ class TestAddPreprintProviders(OsfTestCase):
     def test_add_staging_providers(self):
         populate_main('stage')
         providers = PreprintProvider.objects.all()
-        assert_equal(PreprintProvider.objects.all().count(), len(STAGING_PREPRINT_PROVIDERS))
+        assert_equal(
+            PreprintProvider.objects.all().count(), len(STAGING_PREPRINT_PROVIDERS)
+        )
         ids = [provider._id for provider in providers]
         for id in STAGING_PREPRINT_PROVIDERS:
             assert_in(id, ids)

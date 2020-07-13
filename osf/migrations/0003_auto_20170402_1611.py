@@ -13,22 +13,11 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterModelOptions(
-            name='tag',
-            options={'ordering': ('name',)},
-        ),
+        migrations.AlterModelOptions(name='tag', options={'ordering': ('name',)},),
         migrations.AlterModelManagers(
             name='fileversion',
-            managers=[
-                ('includable_objects', django.db.models.manager.Manager()),
-            ],
+            managers=[('includable_objects', django.db.models.manager.Manager()),],
         ),
-        migrations.RemoveField(
-            model_name='abstractnode',
-            name='public_comments',
-        ),
-        migrations.RemoveField(
-            model_name='osfuser',
-            name='piwik_token',
-        ),
+        migrations.RemoveField(model_name='abstractnode', name='public_comments',),
+        migrations.RemoveField(model_name='osfuser', name='piwik_token',),
     ]

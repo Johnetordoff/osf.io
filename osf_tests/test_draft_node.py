@@ -28,63 +28,77 @@ pytestmark = pytest.mark.django_db
 NEW_YEAR = '2014'
 COPYLEFT_HOLDERS = ['Richard Stallman']
 
+
 @pytest.fixture()
 def user():
     return UserFactory()
+
 
 @pytest.fixture()
 def draft_node(user):
     return DraftNodeFactory(creator=user)
 
+
 @pytest.fixture()
 def project(user):
     return ProjectFactory(creator=user)
+
 
 @pytest.fixture()
 def draft_registration(user, project):
     return DraftRegistrationFactory(branched_from=project)
 
+
 @pytest.fixture()
 def auth(user):
     return Auth(user)
+
 
 @pytest.fixture()
 def write_contrib():
     return AuthUserFactory()
 
+
 @pytest.fixture()
 def subject():
     return SubjectFactory()
+
 
 @pytest.fixture()
 def institution():
     return InstitutionFactory()
 
+
 @pytest.fixture()
 def title():
     return 'A Study of Elephants'
+
 
 @pytest.fixture()
 def description():
     return 'Loxodonta africana'
 
+
 @pytest.fixture()
 def category():
     return 'Methods and Materials'
+
 
 @pytest.fixture()
 def license():
     return NodeLicense.objects.get(license_id='GPL3')
 
+
 @pytest.fixture()
-def make_complex_draft_registration(title, institution, description, category,
-        write_contrib, license, subject, user):
+def make_complex_draft_registration(
+    title, institution, description, category, write_contrib, license, subject, user
+):
     def make_draft_registration(node=None):
         draft_registration = DraftRegistration.create_from_node(
             user=user,
             schema=get_default_metaschema(),
             data={},
-            node=node if node else None
+            node=node if node else None,
         )
         user.affiliated_institutions.add(institution)
         draft_registration.set_title(title, Auth(user))
@@ -95,33 +109,35 @@ def make_complex_draft_registration(title, institution, description, category,
             {
                 'id': license.license_id,
                 'year': NEW_YEAR,
-                'copyrightHolders': COPYLEFT_HOLDERS
+                'copyrightHolders': COPYLEFT_HOLDERS,
             },
             auth=Auth(user),
-            save=True
+            save=True,
         )
         draft_registration.add_tag('savanna', Auth(user))
         draft_registration.add_tag('taxonomy', Auth(user))
-        draft_registration.set_subjects([[subject._id]], auth=Auth(draft_registration.creator))
+        draft_registration.set_subjects(
+            [[subject._id]], auth=Auth(draft_registration.creator)
+        )
         draft_registration.affiliated_institutions.add(institution)
         draft_registration.save()
         return draft_registration
+
     return make_draft_registration
 
 
 class TestDraftNode:
-
     def test_draft_node_creation(self, user):
-        draft_node = DraftNode.objects.create(title='Draft Registration', creator_id=user.id)
+        draft_node = DraftNode.objects.create(
+            title='Draft Registration', creator_id=user.id
+        )
         assert draft_node.is_public is False
         assert draft_node.has_addon('osfstorage') is True
 
     def test_create_draft_registration_without_node(self, user):
         data = {'some': 'data'}
         draft = DraftRegistration.create_from_node(
-            user=user,
-            schema=get_default_metaschema(),
-            data=data,
+            user=user, schema=get_default_metaschema(), data=data,
         )
         assert draft.title == 'Untitled'
         assert draft.branched_from.title == 'Untitled'
@@ -133,7 +149,9 @@ class TestDraftNode:
         assert draft_node.type == 'osf.draftnode'
 
         with disconnected_from_listeners(after_create_registration):
-            registration = draft_node.register_node(get_default_metaschema(), Auth(user), draft_registration, None)
+            registration = draft_node.register_node(
+                get_default_metaschema(), Auth(user), draft_registration, None
+            )
 
         assert type(registration) is Registration
         assert draft_node._id != registration._id
@@ -142,8 +160,18 @@ class TestDraftNode:
         assert len(draft_node.logs.all()) == 1
         assert draft_node.logs.first().action == NodeLog.PROJECT_CREATED_FROM_DRAFT_REG
 
-    def test_draft_registration_fields_are_copied_back_to_draft_node(self, user, institution,
-            subject, write_contrib, title, description, category, license, make_complex_draft_registration):
+    def test_draft_registration_fields_are_copied_back_to_draft_node(
+        self,
+        user,
+        institution,
+        subject,
+        write_contrib,
+        title,
+        description,
+        category,
+        license,
+        make_complex_draft_registration,
+    ):
         draft_registration = make_complex_draft_registration()
         draft_node = draft_registration.branched_from
 
@@ -171,8 +199,19 @@ class TestDraftNode:
         assert subject in draft_node.subjects.all()
         assert institution in draft_node.affiliated_institutions.all()
 
-    def test_draft_registration_fields_are_not_copied_back_to_original_node(self, user, institution, project,
-            subject, write_contrib, title, description, category, license, make_complex_draft_registration):
+    def test_draft_registration_fields_are_not_copied_back_to_original_node(
+        self,
+        user,
+        institution,
+        project,
+        subject,
+        write_contrib,
+        title,
+        description,
+        category,
+        license,
+        make_complex_draft_registration,
+    ):
         draft_registration = make_complex_draft_registration(node=project)
 
         with disconnected_from_listeners(after_create_registration):

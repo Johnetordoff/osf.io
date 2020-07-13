@@ -1,20 +1,20 @@
-from nose.tools import (
-    assert_equal, assert_true, assert_false, assert_is_instance
-)
+from nose.tools import assert_equal, assert_true, assert_false, assert_is_instance
 import pytest
 
 from dataverse import Dataverse, Dataset, DataverseFile
 
 from addons.dataverse.tests.utils import (
-    create_mock_dataverse, create_mock_dataset, create_mock_draft_file,
-    create_mock_connection, DataverseAddonTestCase,
+    create_mock_dataverse,
+    create_mock_dataset,
+    create_mock_draft_file,
+    create_mock_connection,
+    DataverseAddonTestCase,
 )
 
 pytestmark = pytest.mark.django_db
 
 
 class TestUtils(DataverseAddonTestCase):
-
     def test_mock_connection(self):
         mock_connection = create_mock_connection()
         assert_equal(mock_connection.token, 'snowman-frosty')
@@ -32,16 +32,19 @@ class TestUtils(DataverseAddonTestCase):
         assert_equal(mock_dv.alias, 'ALIAS1')
         assert_equal(len(mock_dv.get_datasets()), 3)
         assert_is_instance(mock_dv.get_datasets()[0], Dataset)
-        assert_equal(mock_dv.get_dataset_by_doi(mock_dv.get_datasets()[1].doi),
-                     mock_dv.get_datasets()[1])
+        assert_equal(
+            mock_dv.get_dataset_by_doi(mock_dv.get_datasets()[1].doi),
+            mock_dv.get_datasets()[1],
+        )
 
     def test_mock_dataset(self):
         dataset_id = 'DVN/23456'
         doi = 'doi:12.3456/{0}'.format(dataset_id)
         mock_dataset = create_mock_dataset(dataset_id)
         assert_equal(mock_dataset.doi, doi)
-        assert_equal(mock_dataset.citation,
-                     'Example Citation for {0}'.format(dataset_id))
+        assert_equal(
+            mock_dataset.citation, 'Example Citation for {0}'.format(dataset_id)
+        )
         assert_equal(mock_dataset.title, 'Example ({0})'.format(dataset_id))
         assert_equal(mock_dataset.doi, doi)
         assert_equal(mock_dataset.get_state(), 'DRAFT')

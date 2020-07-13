@@ -18,6 +18,7 @@ if SENTRY_DSN:
 if CeleryConfig.broker_use_ssl:
     app.setup_security()
 
+
 @app.task
 def error_handler(task_id, task_name):
     """logs detailed message about tasks that raise exceptions
@@ -31,6 +32,8 @@ def error_handler(task_id, task_name):
     result = app.AsyncResult(task_id)
     excep = result.get(propagate=False)
     # log detailed error mesage in error log
-    logger.error('#####FAILURE LOG BEGIN#####\n'
-                r'Task {0} raised exception: {0}\n\{0}\n'
-                '#####FAILURE LOG STOP#####'.format(task_name, excep, result.traceback))
+    logger.error(
+        '#####FAILURE LOG BEGIN#####\n'
+        r'Task {0} raised exception: {0}\n\{0}\n'
+        '#####FAILURE LOG STOP#####'.format(task_name, excep, result.traceback)
+    )

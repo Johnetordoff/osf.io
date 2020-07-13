@@ -16,10 +16,16 @@ from addons.mendeley.serializer import MendeleySerializer
 API_URL = 'https://api.mendeley.com'
 pytestmark = pytest.mark.django_db
 
-class TestAuthViews(MendeleyTestCase, views.OAuthAddonAuthViewsTestCaseMixin, OsfTestCase):
+
+class TestAuthViews(
+    MendeleyTestCase, views.OAuthAddonAuthViewsTestCaseMixin, OsfTestCase
+):
     pass
 
-class TestConfigViews(MendeleyTestCase, views.OAuthCitationAddonConfigViewsTestCaseMixin, OsfTestCase):
+
+class TestConfigViews(
+    MendeleyTestCase, views.OAuthCitationAddonConfigViewsTestCaseMixin, OsfTestCase
+):
     folder = MockFolder()
     Serializer = MendeleySerializer
     client = Mendeley
@@ -28,6 +34,9 @@ class TestConfigViews(MendeleyTestCase, views.OAuthCitationAddonConfigViewsTestC
     documentsApiUrl = urljoin(API_URL, 'documents')
     mockResponses = mock_responses
 
-    @mock.patch('addons.mendeley.models.NodeSettings._fetch_folder_name', mock.PropertyMock(return_value='Fake Name'))
+    @mock.patch(
+        'addons.mendeley.models.NodeSettings._fetch_folder_name',
+        mock.PropertyMock(return_value='Fake Name'),
+    )
     def test_deauthorize_node(self):
         super(TestConfigViews, self).test_deauthorize_node()

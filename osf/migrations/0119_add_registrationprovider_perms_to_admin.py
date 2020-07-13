@@ -10,6 +10,7 @@ def noop(*args):
     # This is now handled by the post_migrate signal
     pass
 
+
 class Migration(migrations.Migration):
 
     dependencies = [

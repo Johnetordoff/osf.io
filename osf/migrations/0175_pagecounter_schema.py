@@ -21,12 +21,24 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='pagecounter',
             name='file',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='pagecounters', to='osf.BaseFileNode'),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='pagecounters',
+                to='osf.BaseFileNode',
+            ),
         ),
         migrations.AddField(
             model_name='pagecounter',
             name='resource',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='pagecounters', to='osf.Guid'),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='pagecounters',
+                to='osf.Guid',
+            ),
         ),
         migrations.AddField(
             model_name='pagecounter',

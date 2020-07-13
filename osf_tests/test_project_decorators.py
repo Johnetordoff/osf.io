@@ -7,7 +7,13 @@ from website.project.decorators import must_be_valid_project
 from osf.models import Sanction
 
 from tests.base import OsfTestCase
-from osf_tests.factories import ProjectFactory, NodeFactory, RetractionFactory, CollectionFactory, RegistrationFactory
+from osf_tests.factories import (
+    ProjectFactory,
+    NodeFactory,
+    RetractionFactory,
+    CollectionFactory,
+    RegistrationFactory,
+)
 
 from framework.exceptions import HTTPError
 from framework.auth import Auth
@@ -17,13 +23,13 @@ from framework.auth import Auth
 def valid_project_helper(**kwargs):
     return kwargs
 
+
 @must_be_valid_project(retractions_valid=True)
 def as_factory_allow_retractions(**kwargs):
     return kwargs
 
 
 class TestValidProject(OsfTestCase):
-
     def setUp(self):
         super(TestValidProject, self).setUp()
         self.project = ProjectFactory()

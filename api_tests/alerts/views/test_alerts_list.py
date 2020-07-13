@@ -9,24 +9,27 @@ from osf_tests.factories import (
 
 url_alerts_list = '/{}alerts/'.format(API_BASE)
 
+
 @pytest.fixture()
 def user_one():
     return AuthUserFactory()
+
 
 @pytest.fixture()
 def user_two():
     return AuthUserFactory()
 
+
 @pytest.mark.django_db
 class TestDismissedAlertList:
-
     @pytest.fixture(autouse=True)
     def alerts_user_one(self, user_one):
         for i in range(3):
             DismissedAlertFactory(
                 user=user_one,
                 location='solar/eclipse{}/'.format(i),
-                _id='solarEclipse{}'.format(i))
+                _id='solarEclipse{}'.format(i),
+            )
 
     def test_dismissed_alerts_list(self, app, user_one, user_two):
 
@@ -36,9 +39,7 @@ class TestDismissedAlertList:
             'data': {
                 'type': 'alerts',
                 'id': alert_id,
-                'attributes': {
-                    'location': alert_location
-                }
+                'attributes': {'location': alert_location},
             }
         }
 
@@ -84,15 +85,21 @@ class TestDismissedAlertList:
         # test_alerts_create_with_bad_data_gets_400
         params_empty_id = params.copy()
         params_empty_id['data']['id'] = ''
-        res = app.post_json_api(url_alerts_list, params_empty_id, auth=user_one.auth, expect_errors=True)
+        res = app.post_json_api(
+            url_alerts_list, params_empty_id, auth=user_one.auth, expect_errors=True
+        )
         assert res.status_code == http_status.HTTP_400_BAD_REQUEST
 
         params_empty_loc = params.copy()
         params_empty_loc['data']['attributes']['location'] = ''
-        res = app.post_json_api(url_alerts_list, params_empty_loc, auth=user_one.auth, expect_errors=True)
+        res = app.post_json_api(
+            url_alerts_list, params_empty_loc, auth=user_one.auth, expect_errors=True
+        )
         assert res.status_code == http_status.HTTP_400_BAD_REQUEST
 
         params_extra_attr = params.copy()
         params_extra_attr['data']['attributes']['what'] = 'extra'
-        res = app.post_json_api(url_alerts_list, params_extra_attr, auth=user_one.auth, expect_errors=True)
+        res = app.post_json_api(
+            url_alerts_list, params_extra_attr, auth=user_one.auth, expect_errors=True
+        )
         assert res.status_code == http_status.HTTP_400_BAD_REQUEST

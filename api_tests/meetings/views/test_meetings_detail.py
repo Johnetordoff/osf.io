@@ -7,7 +7,6 @@ from api_tests import utils as api_utils
 
 @pytest.mark.django_db
 class TestMeetingDetail:
-
     @pytest.fixture()
     def meeting(self):
         return ConferenceFactory(
@@ -41,14 +40,18 @@ class TestMeetingDetail:
         submission.add_tag('poster', Auth(user))
         return submission
 
-    def test_meeting_detail(self, app, meeting, url, meeting_submission_one, private_meeting_submission):
+    def test_meeting_detail(
+        self, app, meeting, url, meeting_submission_one, private_meeting_submission
+    ):
         res = app.get(url)
         assert res.status_code == 200
         data = res.json['data']
         assert data['id'] == meeting.endpoint
         assert data['type'] == 'meetings'
         assert data['attributes']['name'] == meeting.name
-        assert data['attributes']['type_one_submission_email'] == 'osf2019-poster@osf.io'
+        assert (
+            data['attributes']['type_one_submission_email'] == 'osf2019-poster@osf.io'
+        )
         assert data['attributes']['type_two_submission_email'] == 'osf2019-talk@osf.io'
         assert data['attributes']['submissions_count'] == 1
         assert data['attributes']['location'] == 'Boulder, CO'
@@ -60,8 +63,14 @@ class TestMeetingDetail:
         assert data['attributes']['field_names']['submission1'] == 'poster'
         assert data['attributes']['field_names']['submission2'] == 'talk'
         assert '_/meetings/{}/'.format(meeting.endpoint) in data['links']['self']
-        assert '_/meetings/{}/submissions'.format(meeting.endpoint) in data['relationships']['submissions']['links']['related']['href']
-        assert data['relationships']['submissions']['links']['related']['meta']['count'] == 1
+        assert (
+            '_/meetings/{}/submissions'.format(meeting.endpoint)
+            in data['relationships']['submissions']['links']['related']['href']
+        )
+        assert (
+            data['relationships']['submissions']['links']['related']['meta']['count']
+            == 1
+        )
 
         # Inactive meetings do not serialize submission emails
         meeting.active = False

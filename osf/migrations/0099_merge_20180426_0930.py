@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0096_add_provider_doi_prefixes'),
     ]
 
-    operations = [
-    ]
+    operations = []

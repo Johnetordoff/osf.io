@@ -1,6 +1,7 @@
 from django.utils.six.moves import input
 import sqlparse
 
+
 def print_sql(sql):
     """Pretty-print a SQL string. Also works with Django Query objects.
 

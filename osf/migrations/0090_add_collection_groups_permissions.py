@@ -40,7 +40,8 @@ class Migration(migrations.Migration):
                             SELECT *
                             FROM auth_permission
                             WHERE codename = 'admin_collection');
-                """, """
+                """,
+                """
                 -- Create collection groups - Read/Write/Admin
                 INSERT INTO auth_group (id, name)
                     SELECT nextval('auth_group_id_seq'), 'collections_' || C.id || '_read'
@@ -51,7 +52,8 @@ class Migration(migrations.Migration):
                 INSERT INTO auth_group (id, name)
                     SELECT nextval('auth_group_id_seq'), 'collections_' || C.id || '_admin'
                     FROM osf_collection C;
-                """, """
+                """,
+                """
                 -- Grant collection groups perms
                 -- -- Because the collection id is encoded in the group name, we can use split_part to extract it
                 -- ---- and avoid doing an extra join on osf_collection
@@ -86,7 +88,8 @@ class Migration(migrations.Migration):
                         WHERE codename = 'admin_collection'
                     ) P ON TRUE
                     WHERE G.name LIKE 'collections_%_admin';
-                """, """
+                """,
+                """
                 -- Add collection creators to their respective admin groups
                 INSERT INTO osf_osfuser_groups (id, osfuser_id, group_id)
                     SELECT nextval('osf_osfuser_groups_id_seq'), C.creator_id, G.id
@@ -96,8 +99,9 @@ class Migration(migrations.Migration):
                         FROM auth_group
                         WHERE name = 'collections_' || C.id || '_admin'
                     ) G ON TRUE;
-                """
-            ], [
+                """,
+            ],
+            [
                 """
                 -- Delete things from the forward
                 DELETE FROM osf_osfuser_groups
@@ -107,14 +111,15 @@ class Migration(migrations.Migration):
                 DELETE FROM osf_collectiongroupobjectpermission;
                 DELETE FROM auth_group
                     WHERE name LIKE 'collections_%';
-                """, """
+                """,
+                """
                 -- Reset id sequence values
                 SELECT setval('osf_osfuser_groups_id_seq', max(id) + 1)
                     FROM osf_osfuser_groups;
                 SELECT setval('osf_collectiongroupobjectpermission_id_seq', 1);
                 SELECT setval('auth_group_id_seq', max(id) + 1)
                     FROM auth_group;
-                """
-            ]
+                """,
+            ],
         )
     ]

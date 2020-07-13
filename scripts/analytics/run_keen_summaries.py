@@ -1,5 +1,6 @@
 import logging
 import django
+
 django.setup()
 
 from framework.celery_tasks import app as celery_app
@@ -16,10 +17,16 @@ logger = logging.getLogger('scripts.analytics')
 
 
 class SummaryHarness(DateAnalyticsHarness):
-
     @property
     def analytics_classes(self):
-        return [NodeSummary, FileSummary, UserSummary, InstitutionSummary, PreprintSummary, DownloadCountSummary]
+        return [
+            NodeSummary,
+            FileSummary,
+            UserSummary,
+            InstitutionSummary,
+            PreprintSummary,
+            DownloadCountSummary,
+        ]
 
 
 @celery_app.task(name='scripts.analytics.run_keen_summaries')

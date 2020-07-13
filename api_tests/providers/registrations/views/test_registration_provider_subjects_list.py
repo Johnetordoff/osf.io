@@ -16,11 +16,15 @@ class TestRegistrationProviderSpecificTaxonomies(ProviderSpecificSubjectsMixin):
 
     @pytest.fixture()
     def url_1(self, provider_1):
-        return '/{}providers/registrations/{}/taxonomies/?page[size]=15&'.format(API_BASE, provider_1._id)
+        return '/{}providers/registrations/{}/taxonomies/?page[size]=15&'.format(
+            API_BASE, provider_1._id
+        )
 
     @pytest.fixture()
     def url_2(self, provider_2):
-        return '/{}providers/registrations/{}/taxonomies/?page[size]=15&'.format(API_BASE, provider_2._id)
+        return '/{}providers/registrations/{}/taxonomies/?page[size]=15&'.format(
+            API_BASE, provider_2._id
+        )
 
 
 class TestRegistrationProviderHighlightedTaxonomies(ProviderHighlightedSubjectsMixin):
@@ -28,7 +32,9 @@ class TestRegistrationProviderHighlightedTaxonomies(ProviderHighlightedSubjectsM
 
     @pytest.fixture()
     def url(self, provider):
-        return '/{}providers/registrations/{}/taxonomies/highlighted/'.format(API_BASE, provider._id)
+        return '/{}providers/registrations/{}/taxonomies/highlighted/'.format(
+            API_BASE, provider._id
+        )
 
 
 class TestRegistrationProviderCustomTaxonomy(ProviderCustomTaxonomyMixin):
@@ -44,11 +50,15 @@ class TestRegistrationProviderSpecificSubjects(ProviderSpecificSubjectsMixin):
 
     @pytest.fixture()
     def url_1(self, provider_1):
-        return '/{}providers/registrations/{}/subjects/?page[size]=15&'.format(API_BASE, provider_1._id)
+        return '/{}providers/registrations/{}/subjects/?page[size]=15&'.format(
+            API_BASE, provider_1._id
+        )
 
     @pytest.fixture()
     def url_2(self, provider_2):
-        return '/{}providers/registrations/{}/subjects/?page[size]=15&'.format(API_BASE, provider_2._id)
+        return '/{}providers/registrations/{}/subjects/?page[size]=15&'.format(
+            API_BASE, provider_2._id
+        )
 
 
 class TestRegistrationProviderHighlightedSubjects(ProviderHighlightedSubjectsMixin):
@@ -56,7 +66,9 @@ class TestRegistrationProviderHighlightedSubjects(ProviderHighlightedSubjectsMix
 
     @pytest.fixture()
     def url(self, provider):
-        return '/{}providers/registrations/{}/subjects/highlighted/'.format(API_BASE, provider._id)
+        return '/{}providers/registrations/{}/subjects/highlighted/'.format(
+            API_BASE, provider._id
+        )
 
 
 class TestRegistrationProviderCustomSubjects(ProviderCustomSubjectMixin):

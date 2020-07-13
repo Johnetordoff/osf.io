@@ -21,21 +21,14 @@ from api.base.utils import absolute_reverse
 
 class InstitutionSerializer(JSONAPISerializer):
 
-    filterable_fields = frozenset([
-        'id',
-        'name',
-        'auth_url',
-    ])
+    filterable_fields = frozenset(['id', 'name', 'auth_url',])
 
     name = ser.CharField(read_only=True)
     id = ser.CharField(read_only=True, source='_id')
     description = ser.CharField(read_only=True)
     auth_url = ser.CharField(read_only=True)
     assets = ser.SerializerMethodField(read_only=True)
-    links = LinksField({
-        'self': 'get_api_url',
-        'html': 'get_absolute_html_url',
-    })
+    links = LinksField({'self': 'get_api_url', 'html': 'get_absolute_html_url',})
 
     nodes = RelationshipField(
         related_view='institutions:institution-nodes',
@@ -85,20 +78,21 @@ class InstitutionSerializer(JSONAPISerializer):
     # Deprecated fields
     logo_path = ShowIfVersion(
         ser.CharField(read_only=True, default=''),
-        min_version='2.0', max_version='2.13',
+        min_version='2.0',
+        max_version='2.13',
     )
+
 
 class NodeRelated(JSONAPIRelationshipSerializer):
     id = ser.CharField(source='_id', required=False, allow_null=True)
+
     class Meta:
         type_ = 'nodes'
 
+
 class InstitutionNodesRelationshipSerializer(BaseAPISerializer):
     data = ser.ListField(child=NodeRelated())
-    links = LinksField({
-        'self': 'get_self_url',
-        'html': 'get_related_url',
-    })
+    links = LinksField({'self': 'get_self_url', 'html': 'get_related_url',})
 
     def get_self_url(self, obj):
         return obj['self'].nodes_relationship_url
@@ -118,9 +112,15 @@ class InstitutionNodesRelationshipSerializer(BaseAPISerializer):
         for node_dict in node_dicts:
             node = Node.load(node_dict['_id'])
             if not node:
-                raise exceptions.NotFound(detail='Node with id "{}" was not found'.format(node_dict['_id']))
+                raise exceptions.NotFound(
+                    detail='Node with id "{}" was not found'.format(node_dict['_id']),
+                )
             if not node.has_permission(user, osf_permissions.WRITE):
-                raise exceptions.PermissionDenied(detail='Write permission on node {} required'.format(node_dict['_id']))
+                raise exceptions.PermissionDenied(
+                    detail='Write permission on node {} required'.format(
+                        node_dict['_id'],
+                    ),
+                )
             if not node.is_affiliated_with_institution(inst):
                 node.add_affiliated_institution(inst, user, save=True)
                 changes_flag = True
@@ -133,17 +133,17 @@ class InstitutionNodesRelationshipSerializer(BaseAPISerializer):
             'self': inst,
         }
 
+
 class RegistrationRelated(JSONAPIRelationshipSerializer):
     id = ser.CharField(source='_id', required=False, allow_null=True)
+
     class Meta:
         type_ = 'registrations'
 
+
 class InstitutionRegistrationsRelationshipSerializer(BaseAPISerializer):
     data = ser.ListField(child=RegistrationRelated())
-    links = LinksField({
-        'self': 'get_self_url',
-        'html': 'get_related_url',
-    })
+    links = LinksField({'self': 'get_self_url', 'html': 'get_related_url',})
 
     def get_self_url(self, obj):
         return obj['self'].registrations_relationship_url
@@ -163,9 +163,17 @@ class InstitutionRegistrationsRelationshipSerializer(BaseAPISerializer):
         for registration_dict in registration_dicts:
             registration = Registration.load(registration_dict['_id'])
             if not registration:
-                raise exceptions.NotFound(detail='Registration with id "{}" was not found'.format(registration_dict['_id']))
+                raise exceptions.NotFound(
+                    detail='Registration with id "{}" was not found'.format(
+                        registration_dict['_id'],
+                    ),
+                )
             if not registration.has_permission(user, osf_permissions.WRITE):
-                raise exceptions.PermissionDenied(detail='Write permission on registration {} required'.format(registration_dict['_id']))
+                raise exceptions.PermissionDenied(
+                    detail='Write permission on registration {} required'.format(
+                        registration_dict['_id'],
+                    ),
+                )
             if not registration.is_affiliated_with_institution(inst):
                 registration.add_affiliated_institution(inst, user, save=True)
                 changes_flag = True
@@ -180,7 +188,6 @@ class InstitutionRegistrationsRelationshipSerializer(BaseAPISerializer):
 
 
 class InstitutionSummaryMetricSerializer(JSONAPISerializer):
-
     class Meta:
         type_ = 'institution-summary-metrics'
 
@@ -189,15 +196,15 @@ class InstitutionSummaryMetricSerializer(JSONAPISerializer):
     private_project_count = ser.IntegerField(read_only=True)
     user_count = ser.IntegerField(read_only=True)
 
-    links = LinksField({
-        'self': 'get_absolute_url',
-    })
+    links = LinksField({'self': 'get_absolute_url',})
 
     def get_absolute_url(self, obj):
         return absolute_reverse(
             'institutions:institution-summary-metrics',
             kwargs={
-                'institution_id': self.context['request'].parser_context['kwargs']['institution_id'],
+                'institution_id': self.context['request'].parser_context['kwargs'][
+                    'institution_id'
+                ],
                 'version': 'v2',
             },
         )
@@ -208,7 +215,10 @@ class UniqueDeptIDField(CompoundIDField):
 
     def __init__(self, *args, **kwargs):
         kwargs['source'] = kwargs.pop('source', 'name')
-        kwargs['help_text'] = kwargs.get('help_text', 'Unique ID that is a compound of two objects. Has the form "<institution-id>-<dept-id>". Example: "cos-psych"')
+        kwargs['help_text'] = kwargs.get(
+            'help_text',
+            'Unique ID that is a compound of two objects. Has the form "<institution-id>-<dept-id>". Example: "cos-psych"',
+        )
         super().__init__(*args, **kwargs)
 
     def _get_resource_id(self):
@@ -216,12 +226,13 @@ class UniqueDeptIDField(CompoundIDField):
 
     def to_representation(self, value):
         resource_id = self._get_resource_id()
-        related_id = super(CompoundIDField, self).to_representation(value).replace(' ', '-')
+        related_id = (
+            super(CompoundIDField, self).to_representation(value).replace(' ', '-')
+        )
         return '{}-{}'.format(resource_id, related_id)
 
 
 class InstitutionDepartmentMetricsSerializer(JSONAPISerializer):
-
     class Meta:
         type_ = 'institution-departments'
 
@@ -229,28 +240,23 @@ class InstitutionDepartmentMetricsSerializer(JSONAPISerializer):
     name = ser.CharField(read_only=True)
     number_of_users = ser.IntegerField(read_only=True)
 
-    links = LinksField({
-        'self': 'get_absolute_url',
-    })
+    links = LinksField({'self': 'get_absolute_url',})
 
-    filterable_fields = frozenset([
-        'id',
-        'name',
-        'number_of_users',
-    ])
+    filterable_fields = frozenset(['id', 'name', 'number_of_users',])
 
     def get_absolute_url(self, obj):
         return absolute_reverse(
             'institutions:institution-department-metrics',
             kwargs={
-                'institution_id': self.context['request'].parser_context['kwargs']['institution_id'],
+                'institution_id': self.context['request'].parser_context['kwargs'][
+                    'institution_id'
+                ],
                 'version': 'v2',
             },
         )
 
 
 class InstitutionUserMetricsSerializer(JSONAPISerializer):
-
     class Meta:
         type_ = 'institution-users'
 
@@ -261,27 +267,22 @@ class InstitutionUserMetricsSerializer(JSONAPISerializer):
     department = ser.CharField(read_only=True)
 
     user = RelationshipField(
-        related_view='users:user-detail',
-        related_view_kwargs={'user_id': '<user_id>'},
+        related_view='users:user-detail', related_view_kwargs={'user_id': '<user_id>'},
     )
 
-    links = LinksField({
-        'self': 'get_absolute_url',
-    })
+    links = LinksField({'self': 'get_absolute_url',})
 
-    filterable_fields = frozenset([
-        'id',
-        'user_name',
-        'public_projects',
-        'private_projects',
-        'department',
-    ])
+    filterable_fields = frozenset(
+        ['id', 'user_name', 'public_projects', 'private_projects', 'department',],
+    )
 
     def get_absolute_url(self, obj):
         return absolute_reverse(
             'institutions:institution-user-metrics',
             kwargs={
-                'institution_id': self.context['request'].parser_context['kwargs']['institution_id'],
+                'institution_id': self.context['request'].parser_context['kwargs'][
+                    'institution_id'
+                ],
                 'version': 'v2',
             },
         )

@@ -36,7 +36,11 @@ class CurrentBanner(JSONAPIBaseView, generics.RetrieveAPIView):
 
     def get_object(self):
         try:
-            return get_object_or_error(ScheduledBanner, Q(start_date__lte=timezone.now(), end_date__gte=timezone.now()), self.request)
+            return get_object_or_error(
+                ScheduledBanner,
+                Q(start_date__lte=timezone.now(), end_date__gte=timezone.now()),
+                self.request,
+            )
         except NotFound:
             return ScheduledBanner()
 
@@ -58,7 +62,9 @@ class BannerMedia(JSONAPIBaseView):
     required_write_scopes = [CoreScopes.NULL]
 
     def get_object(self):
-        return get_object_or_error(BannerImage, Q(filename=self.kwargs.get('filename')), self.request)
+        return get_object_or_error(
+            BannerImage, Q(filename=self.kwargs.get('filename')), self.request,
+        )
 
     def get(self, request, *args, **kwargs):
         response = FileResponse(ContentFile(self.get_object().image))

@@ -1,6 +1,4 @@
-from api.base.serializers import (
-    JSONAPISerializer,
-)
+from api.base.serializers import JSONAPISerializer
 from api.base.utils import absolute_reverse
 from api.files.serializers import FileSerializer
 from api.nodes.serializers import NodeSerializer
@@ -17,8 +15,8 @@ from osf.models import (
     CollectionSubmission,
 )
 
-class SearchSerializer(JSONAPISerializer):
 
+class SearchSerializer(JSONAPISerializer):
     def to_representation(self, data, envelope='data'):
 
         if isinstance(data, AbstractNode):

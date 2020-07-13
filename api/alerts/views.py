@@ -31,7 +31,9 @@ class DismissedAlertDetail(JSONAPIBaseView, generics.RetrieveAPIView):
     # overrides RetrieveAPIView
     def get_object(self):
         try:
-            obj = get_object_or_error(DismissedAlert, Q(_id=self.kwargs['_id']), self.request)
+            obj = get_object_or_error(
+                DismissedAlert, Q(_id=self.kwargs['_id']), self.request,
+            )
         except DismissedAlert.DoesNotExist:
             raise NotFound
         return obj
@@ -55,6 +57,7 @@ class DismissedAlertList(JSONAPIBaseView, generics.ListCreateAPIView, ListFilter
                        }
         Success:       201 CREATED + alert representation
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,

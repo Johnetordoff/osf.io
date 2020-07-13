@@ -21,11 +21,19 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='pagecounter',
             name='file',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='pagecounters', to='osf.BaseFileNode'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='pagecounters',
+                to='osf.BaseFileNode',
+            ),
         ),
         migrations.AlterField(
             model_name='pagecounter',
             name='resource',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='pagecounters', to='osf.Guid'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='pagecounters',
+                to='osf.Guid',
+            ),
         ),
     ]

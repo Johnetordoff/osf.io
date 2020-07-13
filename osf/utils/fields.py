@@ -7,8 +7,10 @@ from osf.utils.functional import rapply
 
 from osf.exceptions import NaiveDatetimeException
 
-SENSITIVE_DATA_KEY = jwe.kdf(settings.SENSITIVE_DATA_SECRET.encode('utf-8'),
-                             settings.SENSITIVE_DATA_SALT.encode('utf-8'))
+SENSITIVE_DATA_KEY = jwe.kdf(
+    settings.SENSITIVE_DATA_SECRET.encode('utf-8'),
+    settings.SENSITIVE_DATA_SALT.encode('utf-8'),
+)
 
 
 def ensure_bytes(value):
@@ -22,6 +24,7 @@ def ensure_str(value):
     if isinstance(value, bytes):
         return value.decode()
     return value
+
 
 def encrypt_string(value, prefix='jwe:::'):
     prefix = ensure_bytes(prefix)
@@ -45,7 +48,7 @@ def decrypt_string(value, prefix='jwe:::'):
         value = ensure_bytes(value)
         if value.startswith(prefix):
             try:
-                value = jwe.decrypt(value[len(prefix):], SENSITIVE_DATA_KEY).decode()
+                value = jwe.decrypt(value[len(prefix) :], SENSITIVE_DATA_KEY).decode()
             except InvalidTag:
                 # Allow use of an encrypted DB locally without decrypting fields
                 if settings.DEBUG_MODE:
@@ -54,12 +57,14 @@ def decrypt_string(value, prefix='jwe:::'):
                     raise
     return value
 
+
 class LowercaseCharField(models.CharField):
     def get_prep_value(self, value):
         value = super(models.CharField, self).get_prep_value(value)
         if value is not None:
             value = value.lower()
         return value
+
 
 class LowercaseEmailField(models.EmailField):
     # Note: This is technically not compliant with RFC 822, which requires
@@ -73,11 +78,13 @@ class LowercaseEmailField(models.EmailField):
             value = value.lower().strip()
         return value
 
+
 class EncryptedTextField(models.TextField):
     """
     This field transparently encrypts data in the database. It should probably only be used with PG unless
     the user takes into account the db specific trade-offs with TextFields.
     """
+
     prefix = 'jwe:::'
 
     def get_db_prep_value(self, value, **kwargs):
@@ -93,7 +100,9 @@ class EncryptedTextField(models.TextField):
 class NonNaiveDateTimeField(models.DateTimeField):
     def get_prep_value(self, value):
         value = super(NonNaiveDateTimeField, self).get_prep_value(value)
-        if value is not None and (value.tzinfo is None or value.tzinfo.utcoffset(value) is None):
+        if value is not None and (
+            value.tzinfo is None or value.tzinfo.utcoffset(value) is None
+        ):
             raise NaiveDatetimeException('Tried to encode a naive datetime.')
         return value
 
@@ -102,6 +111,7 @@ class EncryptedJSONField(JSONField):
     """
     Very similar to EncryptedTextField, but for postgresql's JSONField
     """
+
     prefix = 'jwe:::'
 
     def get_prep_value(self, value, **kwargs):

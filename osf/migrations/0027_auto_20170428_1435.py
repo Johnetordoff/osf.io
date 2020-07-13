@@ -13,12 +13,9 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
-            model_name='subject',
-            name='text',
-            field=models.CharField(max_length=256),
+            model_name='subject', name='text', field=models.CharField(max_length=256),
         ),
         migrations.AlterUniqueTogether(
-            name='subject',
-            unique_together=set([('text', 'provider')]),
+            name='subject', unique_together=set([('text', 'provider')]),
         ),
     ]

@@ -13,12 +13,13 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RenameModel(
-            old_name='CollectedGuidMetadata',
-            new_name='CollectionSubmission',
+            old_name='CollectedGuidMetadata', new_name='CollectionSubmission',
         ),
         migrations.AlterField(
             model_name='collectionsubmission',
             name='subjects',
-            field=models.ManyToManyField(blank=True, related_name='collectionsubmissions', to='osf.Subject'),
+            field=models.ManyToManyField(
+                blank=True, related_name='collectionsubmissions', to='osf.Subject'
+            ),
         ),
     ]

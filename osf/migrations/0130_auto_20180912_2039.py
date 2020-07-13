@@ -16,17 +16,32 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='collection',
             name='issue_choices',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=31), blank=True, default=list, size=None),
+            field=django.contrib.postgres.fields.ArrayField(
+                base_field=models.CharField(max_length=31),
+                blank=True,
+                default=list,
+                size=None,
+            ),
         ),
         migrations.AddField(
             model_name='collection',
             name='program_area_choices',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=31), blank=True, default=list, size=None),
+            field=django.contrib.postgres.fields.ArrayField(
+                base_field=models.CharField(max_length=31),
+                blank=True,
+                default=list,
+                size=None,
+            ),
         ),
         migrations.AddField(
             model_name='collection',
             name='volume_choices',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=31), blank=True, default=list, size=None),
+            field=django.contrib.postgres.fields.ArrayField(
+                base_field=models.CharField(max_length=31),
+                blank=True,
+                default=list,
+                size=None,
+            ),
         ),
         migrations.AddField(
             model_name='collectionsubmission',

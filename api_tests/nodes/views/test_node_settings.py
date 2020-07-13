@@ -11,25 +11,31 @@ from osf_tests.factories import (
 from osf.models import NodeLog
 from osf.utils import permissions
 
+
 @pytest.fixture()
 def admin_contrib():
     return AuthUserFactory()
+
 
 @pytest.fixture()
 def write_contrib():
     return AuthUserFactory()
 
+
 @pytest.fixture()
 def read_contrib():
     return AuthUserFactory()
+
 
 @pytest.fixture()
 def group_member():
     return AuthUserFactory()
 
+
 @pytest.fixture()
 def osf_group(group_member):
     return OSFGroupFactory(creator=group_member)
+
 
 @pytest.fixture()
 def project(admin_contrib, write_contrib, read_contrib):
@@ -39,6 +45,7 @@ def project(admin_contrib, write_contrib, read_contrib):
     project.save()
     return project
 
+
 @pytest.fixture()
 def url(project):
     return '/{}nodes/{}/settings/'.format(API_BASE, project._id)
@@ -46,12 +53,21 @@ def url(project):
 
 @pytest.mark.django_db
 class TestNodeSettingsGet:
-
     @pytest.fixture()
     def non_contrib(self):
         return AuthUserFactory()
 
-    def test_node_settings_detail(self, app, admin_contrib, non_contrib, write_contrib, osf_group, group_member, url, project):
+    def test_node_settings_detail(
+        self,
+        app,
+        admin_contrib,
+        non_contrib,
+        write_contrib,
+        osf_group,
+        group_member,
+        url,
+        project,
+    ):
 
         # non logged in uers can't access node settings
         res = app.get(url, expect_errors=True)
@@ -142,12 +158,23 @@ class TestNodeSettingsPUT:
                 'type': 'node-settings',
                 'attributes': {
                     'redirect_link_enabled': True,
-                    'redirect_link_url': 'https://cos.io'
-                }
+                    'redirect_link_url': 'https://cos.io',
+                },
             }
         }
 
-    def test_put_permissions(self, app, project, payload, admin_contrib, write_contrib, read_contrib, url, osf_group, group_member):
+    def test_put_permissions(
+        self,
+        app,
+        project,
+        payload,
+        admin_contrib,
+        write_contrib,
+        read_contrib,
+        url,
+        osf_group,
+        group_member,
+    ):
         assert project.access_requests_enabled is True
         payload['data']['attributes']['access_requests_enabled'] = False
         # Logged out
@@ -170,7 +197,9 @@ class TestNodeSettingsPUT:
         assert res.status_code == 403
 
         # Logged in write (Write contribs can only change some node settings)
-        res = app.put_json_api(url, payload, auth=write_contrib.auth, expect_errors=True)
+        res = app.put_json_api(
+            url, payload, auth=write_contrib.auth, expect_errors=True
+        )
         assert res.status_code == 403
 
         # group member write
@@ -192,19 +221,22 @@ class TestNodeSettingsPUT:
 
 @pytest.mark.django_db
 class TestNodeSettingsUpdate:
-
     @pytest.fixture()
     def payload(self, project):
-        return {
-            'data': {
-                'id': project._id,
-                'type': 'node-settings',
-                'attributes': {
-                }
-            }
-        }
+        return {'data': {'id': project._id, 'type': 'node-settings', 'attributes': {}}}
 
-    def test_patch_permissions(self, app, project, payload, admin_contrib, write_contrib, read_contrib, group_member, osf_group, url):
+    def test_patch_permissions(
+        self,
+        app,
+        project,
+        payload,
+        admin_contrib,
+        write_contrib,
+        read_contrib,
+        group_member,
+        osf_group,
+        url,
+    ):
         payload['data']['attributes']['redirect_link_enabled'] = True
         payload['data']['attributes']['redirect_link_url'] = 'https://cos.io'
         # Logged out
@@ -217,11 +249,15 @@ class TestNodeSettingsUpdate:
         assert res.status_code == 403
 
         # Logged in read
-        res = app.patch_json_api(url, payload, auth=read_contrib.auth, expect_errors=True)
+        res = app.patch_json_api(
+            url, payload, auth=read_contrib.auth, expect_errors=True
+        )
         assert res.status_code == 403
 
         # Logged in write (Write contribs can only change some node settings)
-        res = app.patch_json_api(url, payload, auth=write_contrib.auth, expect_errors=True)
+        res = app.patch_json_api(
+            url, payload, auth=write_contrib.auth, expect_errors=True
+        )
         assert res.status_code == 200
 
         # Logged in admin
@@ -230,12 +266,16 @@ class TestNodeSettingsUpdate:
 
         # Logged in read group mem
         project.add_osf_group(osf_group, permissions.READ)
-        res = app.patch_json_api(url, payload, auth=read_contrib.auth, expect_errors=True)
+        res = app.patch_json_api(
+            url, payload, auth=read_contrib.auth, expect_errors=True
+        )
         assert res.status_code == 403
 
         # Logged in write group mem (Write group mems can only change some node settings)
         project.add_osf_group(osf_group, permissions.WRITE)
-        res = app.patch_json_api(url, payload, auth=write_contrib.auth, expect_errors=True)
+        res = app.patch_json_api(
+            url, payload, auth=write_contrib.auth, expect_errors=True
+        )
         assert res.status_code == 200
 
         # Logged in admin group mem
@@ -247,15 +287,21 @@ class TestNodeSettingsUpdate:
         payload['data']['type'] = 'Invalid Type'
 
         # Logged in admin
-        res = app.patch_json_api(url, payload, auth=admin_contrib.auth, expect_errors=True)
+        res = app.patch_json_api(
+            url, payload, auth=admin_contrib.auth, expect_errors=True
+        )
         assert res.status_code == 409
 
-    def test_patch_access_requests_enabled(self, app, project, payload, admin_contrib, write_contrib, url):
+    def test_patch_access_requests_enabled(
+        self, app, project, payload, admin_contrib, write_contrib, url
+    ):
         assert project.access_requests_enabled is True
         payload['data']['attributes']['access_requests_enabled'] = False
 
         # Write cannot modify this field
-        res = app.patch_json_api(url, payload, auth=write_contrib.auth, expect_errors=True)
+        res = app.patch_json_api(
+            url, payload, auth=write_contrib.auth, expect_errors=True
+        )
         assert res.status_code == 403
 
         # Logged in admin
@@ -275,12 +321,16 @@ class TestNodeSettingsUpdate:
         assert project.logs.latest().action == NodeLog.NODE_ACCESS_REQUESTS_ENABLED
         assert res.json['data']['attributes']['access_requests_enabled'] is True
 
-    def test_patch_anyone_can_comment(self, app, project, payload, admin_contrib, write_contrib, url):
+    def test_patch_anyone_can_comment(
+        self, app, project, payload, admin_contrib, write_contrib, url
+    ):
         assert project.comment_level == 'public'
         payload['data']['attributes']['anyone_can_comment'] = False
 
         # Write cannot modify this field
-        res = app.patch_json_api(url, payload, auth=write_contrib.auth, expect_errors=True)
+        res = app.patch_json_api(
+            url, payload, auth=write_contrib.auth, expect_errors=True
+        )
         assert res.status_code == 403
 
         # Logged in admin
@@ -298,7 +348,9 @@ class TestNodeSettingsUpdate:
         assert project.comment_level == 'public'
         assert res.json['data']['attributes']['anyone_can_comment'] is True
 
-    def test_patch_anyone_can_edit_wiki(self, app, project, payload, admin_contrib, write_contrib, url):
+    def test_patch_anyone_can_edit_wiki(
+        self, app, project, payload, admin_contrib, write_contrib, url
+    ):
         project.is_public = True
         project.save()
         wiki_addon = project.get_addon('wiki')
@@ -306,7 +358,9 @@ class TestNodeSettingsUpdate:
         payload['data']['attributes']['anyone_can_edit_wiki'] = True
 
         # Write cannot modify this field
-        res = app.patch_json_api(url, payload, auth=write_contrib.auth, expect_errors=True)
+        res = app.patch_json_api(
+            url, payload, auth=write_contrib.auth, expect_errors=True
+        )
         assert res.status_code == 403
 
         # Logged in admin
@@ -328,18 +382,24 @@ class TestNodeSettingsUpdate:
 
         # Test wiki disabled in same request so cannot change wiki_settings
         payload['data']['attributes']['wiki_enabled'] = False
-        res = app.patch_json_api(url, payload, auth=admin_contrib.auth, expect_errors=True)
+        res = app.patch_json_api(
+            url, payload, auth=admin_contrib.auth, expect_errors=True
+        )
         assert res.status_code == 400
 
         # Test wiki disabled so cannot change wiki settings
         project.delete_addon('wiki', Auth(admin_contrib))
-        res = app.patch_json_api(url, payload, auth=admin_contrib.auth, expect_errors=True)
+        res = app.patch_json_api(
+            url, payload, auth=admin_contrib.auth, expect_errors=True
+        )
         assert res.status_code == 400
 
         # Test wiki enabled so can change wiki settings
         payload['data']['attributes']['wiki_enabled'] = True
         payload['data']['attributes']['anyone_can_edit_wiki'] = True
-        res = app.patch_json_api(url, payload, auth=admin_contrib.auth, expect_errors=True)
+        res = app.patch_json_api(
+            url, payload, auth=admin_contrib.auth, expect_errors=True
+        )
         assert res.status_code == 200
         assert project.get_addon('wiki').is_publicly_editable is True
         assert project.logs.latest().action == NodeLog.MADE_WIKI_PUBLIC
@@ -348,16 +408,25 @@ class TestNodeSettingsUpdate:
         # If project is private, cannot change settings to allow anyone to edit wiki
         project.is_public = False
         project.save()
-        res = app.patch_json_api(url, payload, auth=admin_contrib.auth, expect_errors=True)
+        res = app.patch_json_api(
+            url, payload, auth=admin_contrib.auth, expect_errors=True
+        )
         assert res.status_code == 400
-        assert res.json['errors'][0]['detail'] == 'To allow all OSF users to edit the wiki, the project must be public.'
+        assert (
+            res.json['errors'][0]['detail']
+            == 'To allow all OSF users to edit the wiki, the project must be public.'
+        )
 
-    def test_patch_wiki_enabled(self, app, project, payload, admin_contrib, write_contrib, url):
+    def test_patch_wiki_enabled(
+        self, app, project, payload, admin_contrib, write_contrib, url
+    ):
         assert project.get_addon('wiki') is not None
         payload['data']['attributes']['wiki_enabled'] = False
 
         # Write cannot modify this field
-        res = app.patch_json_api(url, payload, auth=write_contrib.auth, expect_errors=True)
+        res = app.patch_json_api(
+            url, payload, auth=write_contrib.auth, expect_errors=True
+        )
         assert res.status_code == 403
 
         # Logged in admin
@@ -383,7 +452,9 @@ class TestNodeSettingsUpdate:
         assert res.status_code == 200
         assert project.get_addon('wiki') is not None
 
-    def test_redirect_link_enabled(self, app, project, payload, admin_contrib, write_contrib, url):
+    def test_redirect_link_enabled(
+        self, app, project, payload, admin_contrib, write_contrib, url
+    ):
         assert project.get_addon('forward') is None
         payload['data']['attributes']['redirect_link_enabled'] = True
 
@@ -391,9 +462,14 @@ class TestNodeSettingsUpdate:
         link = 'https://cos.io'
 
         # Redirect link not included
-        res = app.patch_json_api(url, payload, auth=admin_contrib.auth, expect_errors=True)
+        res = app.patch_json_api(
+            url, payload, auth=admin_contrib.auth, expect_errors=True
+        )
         assert res.status_code == 400
-        assert res.json['errors'][0]['detail'] == 'You must include a redirect URL to enable a redirect.'
+        assert (
+            res.json['errors'][0]['detail']
+            == 'You must include a redirect URL to enable a redirect.'
+        )
 
         payload['data']['attributes']['redirect_link_url'] = link
         payload['data']['attributes']['redirect_link_label'] = label
@@ -412,17 +488,27 @@ class TestNodeSettingsUpdate:
         # Attempting to set redirect_link_url when redirect_link not enabled
         payload['data']['attributes']['redirect_link_enabled'] = False
         del payload['data']['attributes']['redirect_link_label']
-        res = app.patch_json_api(url, payload, auth=admin_contrib.auth, expect_errors=True)
+        res = app.patch_json_api(
+            url, payload, auth=admin_contrib.auth, expect_errors=True
+        )
         assert res.status_code == 400
-        assert res.json['errors'][0]['detail'] == 'You must first set redirect_link_enabled to True before specifying a redirect link URL.'
+        assert (
+            res.json['errors'][0]['detail']
+            == 'You must first set redirect_link_enabled to True before specifying a redirect link URL.'
+        )
 
         # Attempting to set redirect_link_label when redirect_link not enabled
         payload['data']['attributes']['redirect_link_enabled'] = False
         del payload['data']['attributes']['redirect_link_url']
         payload['data']['attributes']['redirect_link_label'] = label
-        res = app.patch_json_api(url, payload, auth=admin_contrib.auth, expect_errors=True)
+        res = app.patch_json_api(
+            url, payload, auth=admin_contrib.auth, expect_errors=True
+        )
         assert res.status_code == 400
-        assert res.json['errors'][0]['detail'] == 'You must first set redirect_link_enabled to True before specifying a redirect link label.'
+        assert (
+            res.json['errors'][0]['detail']
+            == 'You must first set redirect_link_enabled to True before specifying a redirect link label.'
+        )
 
         payload['data']['attributes']['redirect_link_enabled'] = False
         del payload['data']['attributes']['redirect_link_label']
@@ -434,11 +520,18 @@ class TestNodeSettingsUpdate:
         assert res.json['data']['attributes']['redirect_link_url'] is None
         assert res.json['data']['attributes']['redirect_link_label'] is None
 
-    def test_redirect_link_label_char_limit(self, app, project, payload, admin_contrib, url):
+    def test_redirect_link_label_char_limit(
+        self, app, project, payload, admin_contrib, url
+    ):
         project.add_addon('forward', ())
         project.save()
 
         payload['data']['attributes']['redirect_link_label'] = 'a' * 52
-        res = app.patch_json_api(url, payload, auth=admin_contrib.auth, expect_errors=True)
+        res = app.patch_json_api(
+            url, payload, auth=admin_contrib.auth, expect_errors=True
+        )
         assert res.status_code == 400
-        assert res.json['errors'][0]['detail'] == 'Ensure this field has no more than 50 characters.'
+        assert (
+            res.json['errors'][0]['detail']
+            == 'Ensure this field has no more than 50 characters.'
+        )

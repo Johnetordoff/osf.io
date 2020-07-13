@@ -15,5 +15,8 @@ def update_submissions_status_async(ids):
     ChronosSubmission = apps.get_model('osf.ChronosSubmission')
     for submission_id in ids:
         submission = ChronosSubmission.load(submission_id)
-        if submission.modified < timezone.now() - settings.CHRONOS_SUBMISSION_UPDATE_TIME:
+        if (
+            submission.modified
+            < timezone.now() - settings.CHRONOS_SUBMISSION_UPDATE_TIME
+        ):
             client.sync_manuscript(submission)

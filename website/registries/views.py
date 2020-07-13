@@ -6,6 +6,7 @@ from osf.utils.permissions import ADMIN
 from website.registries import utils
 from website import util
 
+
 def _view_registries_landing_page(campaign=None, **kwargs):
     """Landing page for the various registrations"""
     auth = kwargs['auth'] = Auth.from_kwargs(request.args.to_dict(), kwargs)
@@ -14,8 +15,8 @@ def _view_registries_landing_page(campaign=None, **kwargs):
         # Using contributor_to instead of contributor_to_or_group_member.
         # You need to be an admin contributor to register a node
         registerable_nodes = [
-            node for node
-            in auth.user.contributor_to
+            node
+            for node in auth.user.contributor_to
             if node.has_permission(user=auth.user, permission=ADMIN)
         ]
         has_projects = bool(registerable_nodes)
@@ -35,7 +36,12 @@ def _view_registries_landing_page(campaign=None, **kwargs):
         'has_projects': has_projects,
         'campaign_long': utils.REG_CAMPAIGNS.get(campaign),
         'campaign_short': campaign,
-        'sign_up_url': util.web_url_for('auth_register', _absolute=True, campaign=campaign_url_param, next=request.url),
+        'sign_up_url': util.web_url_for(
+            'auth_register',
+            _absolute=True,
+            campaign=campaign_url_param,
+            next=request.url,
+        ),
     }
 
 
@@ -53,15 +59,10 @@ def draft_registrations(auth, **kwargs):
             {
                 'dateUpdated': iso8601format(draft.datetime_updated),
                 'dateInitiated': iso8601format(draft.datetime_initiated),
-                'node': {
-                    'title': draft.branched_from.title,
-                },
-                'initiator': {
-                    'name': draft.initiator.fullname,
-                },
+                'node': {'title': draft.branched_from.title,},
+                'initiator': {'name': draft.initiator.fullname,},
                 'url': draft.branched_from.web_url_for(
-                    'edit_draft_registration_page',
-                    draft_id=draft._id,
+                    'edit_draft_registration_page', draft_id=draft._id,
                 ),
             }
             for draft in drafts

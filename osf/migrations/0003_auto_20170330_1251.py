@@ -17,6 +17,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='preprintservice',
             name='date_modified',
-            field=osf.utils.fields.NonNaiveDateTimeField(default=django.utils.timezone.now),
+            field=osf.utils.fields.NonNaiveDateTimeField(
+                default=django.utils.timezone.now
+            ),
         ),
     ]

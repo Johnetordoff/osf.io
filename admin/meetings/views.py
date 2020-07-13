@@ -47,9 +47,7 @@ class MeetingFormView(PermissionRequiredMixin, FormView):
         try:
             self.conf = Conference.get_by_endpoint(endpoint, active=False)
         except ConferenceError:
-            raise Http404('Meeting with endpoint "{}" not found'.format(
-                endpoint
-            ))
+            raise Http404('Meeting with endpoint "{}" not found'.format(endpoint))
         return super(MeetingFormView, self).dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -84,8 +82,9 @@ class MeetingFormView(PermissionRequiredMixin, FormView):
 
     @property
     def success_url(self):
-        return reverse('meetings:detail',
-                       kwargs={'endpoint': self.kwargs.get('endpoint')})
+        return reverse(
+            'meetings:detail', kwargs={'endpoint': self.kwargs.get('endpoint')}
+        )
 
 
 class MeetingCreateFormView(PermissionRequiredMixin, FormView):
@@ -109,10 +108,7 @@ class MeetingCreateFormView(PermissionRequiredMixin, FormView):
         # This edit variable was unused in the past, but keeping it in case we want to use it in the future.
         data.pop('edit')
         # Form validation already catches if a conference endpoint exists
-        new_conf = Conference(
-            endpoint=endpoint,
-            **data
-        )
+        new_conf = Conference(endpoint=endpoint, **data)
         new_conf.save()
         new_conf.admins.add(*admin_users)
         new_conf.field_names.update(custom_fields)
@@ -120,8 +116,9 @@ class MeetingCreateFormView(PermissionRequiredMixin, FormView):
         return super(MeetingCreateFormView, self).form_valid(form)
 
     def get_success_url(self):
-        return reverse('meetings:detail',
-                       kwargs={'endpoint': self.kwargs.get('endpoint')})
+        return reverse(
+            'meetings:detail', kwargs={'endpoint': self.kwargs.get('endpoint')}
+        )
 
 
 def get_custom_fields(data):

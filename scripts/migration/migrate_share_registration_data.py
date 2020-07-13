@@ -3,6 +3,7 @@ import logging
 import sys
 import django
 from django.db import transaction
+
 django.setup()
 
 from osf.models import Registration
@@ -37,6 +38,7 @@ def main():
     init_app(set_backends=True, routes=False)
     with transaction.atomic():
         migrate(dry_run)
+
 
 if __name__ == '__main__':
     main()

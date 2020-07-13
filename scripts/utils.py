@@ -19,10 +19,7 @@ def add_file_logger(logger, script_name, suffix=None):
     if suffix is not None:
         name = '{0}-{1}'.format(name, suffix)
     file_handler = logging.FileHandler(
-        os.path.join(
-            settings.LOG_PATH,
-            '.'.join([name, format_now(), 'log'])
-        )
+        os.path.join(settings.LOG_PATH, '.'.join([name, format_now(), 'log']))
     )
     logger.addHandler(file_handler)
 
@@ -48,7 +45,9 @@ class Progress(object):
         filled_len = int(round(self.bar_len * self.count / float(self.total)))
         bar = '=' * filled_len + '-' * (self.bar_len - filled_len)
         sys.stdout.flush()
-        sys.stdout.write(self.bar_format.format(self.prefix, bar, percents, str(self.total)))
+        sys.stdout.write(
+            self.bar_format.format(self.prefix, bar, percents, str(self.total))
+        )
 
     def stop(self):
         # To preserve line, there is probably a better way to do this

@@ -19,35 +19,27 @@ from dataverse.exceptions import VersionJsonNotFoundError, OperationFailedError
 from osf.models import ExternalAccount
 from osf.utils.permissions import WRITE
 from website.project.decorators import (
-    must_have_addon, must_be_addon_authorizer,
-    must_have_permission, must_not_be_registration,
-    must_be_contributor_or_public
+    must_have_addon,
+    must_be_addon_authorizer,
+    must_have_permission,
+    must_not_be_registration,
+    must_be_contributor_or_public,
 )
 from website.util import rubeus, api_url_for
 
 SHORT_NAME = 'dataverse'
 FULL_NAME = 'Dataverse'
 
-dataverse_account_list = generic_views.account_list(
-    SHORT_NAME,
-    DataverseSerializer
-)
+dataverse_account_list = generic_views.account_list(SHORT_NAME, DataverseSerializer)
 
-dataverse_import_auth = generic_views.import_auth(
-    SHORT_NAME,
-    DataverseSerializer
-)
+dataverse_import_auth = generic_views.import_auth(SHORT_NAME, DataverseSerializer)
 
-dataverse_deauthorize_node = generic_views.deauthorize_node(
-    SHORT_NAME
-)
+dataverse_deauthorize_node = generic_views.deauthorize_node(SHORT_NAME)
 
-dataverse_get_config = generic_views.get_config(
-    SHORT_NAME,
-    DataverseSerializer
-)
+dataverse_get_config = generic_views.get_config(SHORT_NAME, DataverseSerializer)
 
 ## Auth ##
+
 
 @must_be_logged_in
 def dataverse_user_config_get(auth, **kwargs):
@@ -60,19 +52,23 @@ def dataverse_user_config_get(auth, **kwargs):
     if user_addon:
         user_has_auth = user_addon.has_auth
 
-    return {
-        'result': {
-            'userHasAuth': user_has_auth,
-            'urls': {
-                'create': api_url_for('dataverse_add_user_account'),
-                'accounts': api_url_for('dataverse_account_list'),
+    return (
+        {
+            'result': {
+                'userHasAuth': user_has_auth,
+                'urls': {
+                    'create': api_url_for('dataverse_add_user_account'),
+                    'accounts': api_url_for('dataverse_account_list'),
+                },
+                'hosts': DEFAULT_HOSTS,
             },
-            'hosts': DEFAULT_HOSTS,
         },
-    }, http_status.HTTP_200_OK
+        http_status.HTTP_200_OK,
+    )
 
 
 ## Config ##
+
 
 @must_be_logged_in
 def dataverse_add_user_account(auth, **kwargs):
@@ -91,17 +87,16 @@ def dataverse_add_user_account(auth, **kwargs):
         provider.account = ExternalAccount(
             provider=provider.short_name,
             provider_name=provider.name,
-            display_name=host,       # no username; show host
-            oauth_key=host,          # hijacked; now host
+            display_name=host,  # no username; show host
+            oauth_key=host,  # hijacked; now host
             oauth_secret=api_token,  # hijacked; now api_token
-            provider_id=api_token,   # Change to username if Dataverse allows
+            provider_id=api_token,  # Change to username if Dataverse allows
         )
         provider.account.save()
     except ValidationError:
         # ... or get the old one
         provider.account = ExternalAccount.objects.get(
-            provider=provider.short_name,
-            provider_id=api_token
+            provider=provider.short_name, provider_id=api_token
         )
 
     if not user.external_accounts.filter(id=provider.account.id).exists():
@@ -117,6 +112,7 @@ def dataverse_add_user_account(auth, **kwargs):
     user.save()
 
     return {}
+
 
 @must_have_permission(WRITE)
 @must_have_addon(SHORT_NAME, 'user')
@@ -143,7 +139,10 @@ def dataverse_set_config(node_addon, auth, **kwargs):
 
     node_addon.set_folder(dataverse, dataset, auth)
 
-    return {'dataverse': dataverse.title, 'dataset': dataset.title}, http_status.HTTP_200_OK
+    return (
+        {'dataverse': dataverse.title, 'dataset': dataset.title},
+        http_status.HTTP_200_OK,
+    )
 
 
 @must_have_permission(WRITE)
@@ -158,9 +157,12 @@ def dataverse_get_datasets(node_addon, **kwargs):
     datasets = client.get_datasets(dataverse)
     ret = {
         'alias': alias,  # include alias to verify dataset container
-        'datasets': [{'title': dataset.title, 'doi': dataset.doi} for dataset in datasets],
+        'datasets': [
+            {'title': dataset.title, 'doi': dataset.doi} for dataset in datasets
+        ],
     }
     return ret, http_status.HTTP_200_OK
+
 
 ## Crud ##
 
@@ -187,18 +189,16 @@ def dataverse_publish_dataset(node_addon, auth, **kwargs):
     # Add a log
     node.add_log(
         action='dataverse_dataset_published',
-        params={
-            'project': node.parent_id,
-            'node': node._id,
-            'dataset': dataset.title,
-        },
+        params={'project': node.parent_id, 'node': node._id, 'dataset': dataset.title,},
         auth=auth,
         log_date=now,
     )
 
     return {'dataset': dataset.title}, http_status.HTTP_200_OK
 
+
 ## HGRID ##
+
 
 def _dataverse_root_folder(node_addon, auth, **kwargs):
     node = node_addon.owner
@@ -214,7 +214,7 @@ def _dataverse_root_folder(node_addon, auth, **kwargs):
 
     permissions = {
         'edit': can_edit and not node.is_registration,
-        'view': node.can_view(auth)
+        'view': node.can_view(auth),
     }
 
     try:
@@ -222,12 +222,14 @@ def _dataverse_root_folder(node_addon, auth, **kwargs):
         dataverse = client.get_dataverse(connection, node_addon.dataverse_alias)
         dataset = client.get_dataset(dataverse, node_addon.dataset_doi)
     except SSLError:
-        return [rubeus.build_addon_root(
-            node_addon,
-            node_addon.dataset,
-            permissions=permissions,
-            private_key=kwargs.get('view_only', None),
-        )]
+        return [
+            rubeus.build_addon_root(
+                node_addon,
+                node_addon.dataset,
+                permissions=permissions,
+                private_key=kwargs.get('view_only', None),
+            )
+        ]
 
     # Quit if doi does not produce a dataset
     if dataset is None:
@@ -265,23 +267,25 @@ def _dataverse_root_folder(node_addon, auth, **kwargs):
     except OperationFailedError:
         host_custom_publish_text = ''
 
-    return [rubeus.build_addon_root(
-        node_addon,
-        node_addon.dataset,
-        urls=urls,
-        permissions=permissions,
-        dataset=node_addon.dataset,
-        doi=dataset.doi,
-        dataverse=dataverse.title,
-        hasPublishedFiles=bool(published_files),
-        dataverseIsPublished=dataverse.is_published,
-        datasetIsPublished=dataset_is_published,
-        datasetDraftModified=dataset_draft_modified,
-        version=version,
-        host=dataverse_host,
-        hostCustomPublishText=host_custom_publish_text,
-        private_key=kwargs.get('view_only', None),
-    )]
+    return [
+        rubeus.build_addon_root(
+            node_addon,
+            node_addon.dataset,
+            urls=urls,
+            permissions=permissions,
+            dataset=node_addon.dataset,
+            doi=dataset.doi,
+            dataverse=dataverse.title,
+            hasPublishedFiles=bool(published_files),
+            dataverseIsPublished=dataverse.is_published,
+            datasetIsPublished=dataset_is_published,
+            datasetDraftModified=dataset_draft_modified,
+            version=version,
+            host=dataverse_host,
+            hostCustomPublishText=host_custom_publish_text,
+            private_key=kwargs.get('view_only', None),
+        )
+    ]
 
 
 @must_be_contributor_or_public
@@ -315,13 +319,15 @@ def dataverse_get_widget_contents(node_addon, **kwargs):
     dataverse_url = 'http://{0}/dataverse/{1}'.format(dataverse_host, alias)
     dataset_url = 'https://doi.org/' + doi
 
-    data.update({
-        'connected': True,
-        'dataverse': node_addon.dataverse,
-        'dataverseUrl': dataverse_url,
-        'dataset': node_addon.dataset,
-        'doi': doi,
-        'datasetUrl': dataset_url,
-        'citation': dataset.citation,
-    })
+    data.update(
+        {
+            'connected': True,
+            'dataverse': node_addon.dataverse,
+            'dataverseUrl': dataverse_url,
+            'dataset': node_addon.dataset,
+            'doi': doi,
+            'datasetUrl': dataset_url,
+            'citation': dataset.citation,
+        }
+    )
     return {'data': data}, http_status.HTTP_200_OK

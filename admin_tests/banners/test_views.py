@@ -22,19 +22,21 @@ pytestmark = pytest.mark.django_db
 def date():
     return timezone.now()
 
+
 @pytest.fixture()
 def today_banner():
     return ScheduledBannerFactory()
 
+
 @pytest.fixture()
 def tomorrow_banner(date):
-    return ScheduledBannerFactory(
-        start_date=date + timedelta(days=1)
-    )
+    return ScheduledBannerFactory(start_date=date + timedelta(days=1))
+
 
 @pytest.fixture()
 def user():
     return AuthUserFactory()
+
 
 @pytest.fixture()
 def req(user):
@@ -44,7 +46,6 @@ def req(user):
 
 
 class TestBannerList:
-
     @pytest.fixture()
     def plain_view(self):
         return views.BannerList
@@ -83,7 +84,6 @@ class TestBannerList:
 
 @pytest.mark.urls('admin.base.urls')
 class TestBannerDisplay:
-
     @pytest.fixture()
     def plain_view(self):
         return views.BannerDisplay
@@ -120,7 +120,6 @@ class TestBannerDisplay:
 
 @pytest.mark.urls('admin.base.urls')
 class TestDeleteBanner:
-
     @pytest.fixture()
     def plain_view(self):
         return views.DeleteBanner
@@ -148,8 +147,8 @@ class TestDeleteBanner:
         res = plain_view.as_view()(req, banner_id=today_banner.id)
         assert res.status_code == 200
 
-class TestCreateBanner:
 
+class TestCreateBanner:
     @pytest.fixture()
     def plain_view(self):
         return views.CreateBanner

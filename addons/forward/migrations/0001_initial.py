@@ -12,22 +12,42 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
             name='NodeSettings',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('_id', models.CharField(db_index=True, default=osf.models.base.generate_object_id, max_length=24, unique=True)),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    '_id',
+                    models.CharField(
+                        db_index=True,
+                        default=osf.models.base.generate_object_id,
+                        max_length=24,
+                        unique=True,
+                    ),
+                ),
                 ('deleted', models.BooleanField(default=False)),
                 ('url', models.URLField(blank=True, max_length=255, null=True)),
-                ('label', models.TextField(blank=True, null=True, validators=[osf.models.validators.validate_no_html])),
+                (
+                    'label',
+                    models.TextField(
+                        blank=True,
+                        null=True,
+                        validators=[osf.models.validators.validate_no_html],
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={'abstract': False,},
             bases=(dirtyfields.dirtyfields.DirtyFieldsMixin, models.Model),
         ),
     ]

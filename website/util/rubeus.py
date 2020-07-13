@@ -32,10 +32,15 @@ DEFAULT_PERMISSIONS = {
     'edit': False,
 }
 
+
 def default_urls(node_api, short_name):
     return {
-        'fetch': u'{node_api}{addonshort}/hgrid/'.format(node_api=node_api, addonshort=short_name),
-        'upload': u'{node_api}{addonshort}/'.format(node_api=node_api, addonshort=short_name),
+        'fetch': u'{node_api}{addonshort}/hgrid/'.format(
+            node_api=node_api, addonshort=short_name
+        ),
+        'upload': u'{node_api}{addonshort}/'.format(
+            node_api=node_api, addonshort=short_name
+        ),
     }
 
 
@@ -50,9 +55,17 @@ def to_hgrid(node, auth, **data):
     return NodeFileCollector(node, auth, **data).to_hgrid()
 
 
-def build_addon_root(node_settings, name, permissions=None,
-                     urls=None, extra=None, buttons=None, user=None,
-                     private_key=None, **kwargs):
+def build_addon_root(
+    node_settings,
+    name,
+    permissions=None,
+    urls=None,
+    extra=None,
+    buttons=None,
+    user=None,
+    private_key=None,
+    **kwargs
+):
     """Builds the root or "dummy" folder for an addon.
 
     :param addonNodeSettingsBase node_settings: Addon settings
@@ -80,16 +93,22 @@ def build_addon_root(node_settings, name, permissions=None,
     if hasattr(node_settings.config, 'urls') and node_settings.config.urls:
         urls = node_settings.config.urls
     if urls is None:
-        urls = default_urls(node_settings.owner.api_url, node_settings.config.short_name)
+        urls = default_urls(
+            node_settings.owner.api_url, node_settings.config.short_name
+        )
 
-    forbid_edit = DISK_SAVING_MODE if node_settings.config.short_name == 'osfstorage' else False
+    forbid_edit = (
+        DISK_SAVING_MODE if node_settings.config.short_name == 'osfstorage' else False
+    )
     if isinstance(permissions, Auth):
         auth = permissions
         permissions = {
             'view': node_settings.owner.can_view(auth),
-            'edit': (node_settings.owner.can_edit(auth)
-                     and not node_settings.owner.is_registration
-                     and not forbid_edit),
+            'edit': (
+                node_settings.owner.can_edit(auth)
+                and not node_settings.owner.is_registration
+                and not forbid_edit
+            ),
         }
 
     max_size = node_settings.config.max_file_size
@@ -139,7 +158,11 @@ def build_addon_button(text, action, title=''):
         'action': action,
     }
     if title:
-        button['attributes'] = 'title="{title}" data-toggle="tooltip" data-placement="right" '.format(title=title)
+        button[
+            'attributes'
+        ] = 'title="{title}" data-toggle="tooltip" data-placement="right" '.format(
+            title=title
+        )
     return button
 
 
@@ -153,6 +176,7 @@ def sort_by_name(hgrid_data):
 class NodeFileCollector(object):
 
     """A utility class for creating rubeus formatted node data"""
+
     def __init__(self, node, auth, **kwargs):
         NodeRelation = apps.get_model('osf.NodeRelation')
         self.node = node.child if isinstance(node, NodeRelation) else node
@@ -179,16 +203,25 @@ class NodeFileCollector(object):
 
         new_branches = []
 
-        linked_node_sqs = node.node_relations.filter(is_node_link=True, child=OuterRef('pk'))
+        linked_node_sqs = node.node_relations.filter(
+            is_node_link=True, child=OuterRef('pk')
+        )
         if self.auth and self.auth.user:
-            can_write = Node.objects.get_nodes_for_user(self.auth.user, WRITE_NODE, node._nodes.all())
+            can_write = Node.objects.get_nodes_for_user(
+                self.auth.user, WRITE_NODE, node._nodes.all()
+            )
         else:
             can_write = node._nodes.none()
         descendants_qs = (
-            node._nodes
-            .filter(is_deleted=False)
+            node._nodes.filter(is_deleted=False)
             .annotate(is_linked_node=Exists(linked_node_sqs))
-            .annotate(has_write_perm=Case(When(id__in=can_write, then=Value(1)), default=Value(0), output_field=IntegerField()))
+            .annotate(
+                has_write_perm=Case(
+                    When(id__in=can_write, then=Value(1)),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                )
+            )
             .order_by('_parents')
         )
 
@@ -206,7 +239,11 @@ class NodeFileCollector(object):
     def _serialize_node(self, node, parent=None, grid_root=None, children=None):
         children = children or []
         is_pointer = parent and node.is_linked_node
-        can_edit = node.has_write_perm if hasattr(node, 'has_write_perm') else node.can_edit(auth=self.auth)
+        can_edit = (
+            node.has_write_perm
+            if hasattr(node, 'has_write_perm')
+            else node.can_edit(auth=self.auth)
+        )
 
         # Determines if `node` is within two levels of `grid_root`
         # Used to prevent complete serialization of deeply nested projects
@@ -225,10 +262,7 @@ class NodeFileCollector(object):
                 'edit': can_edit and not node.is_registration,
                 'view': True,
             },
-            'urls': {
-                'upload': None,
-                'fetch': None,
-            },
+            'urls': {'upload': None, 'fetch': None,},
             'children': children,
             'isPointer': is_pointer,
             'isSmartFolder': False,
@@ -259,19 +293,25 @@ class NodeFileCollector(object):
                         getattr(
                             e,
                             'data',
-                            'Unexpected error when fetching file contents for {0}.'.format(addon.config.full_name)
+                            'Unexpected error when fetching file contents for {0}.'.format(
+                                addon.config.full_name
+                            ),
                         )
                     )
                     sentry.log_exception()
-                    rv.append({
-                        KIND: FOLDER,
-                        'unavailable': True,
-                        'iconUrl': addon.config.icon_url,
-                        'provider': addon.config.short_name,
-                        'addonFullname': addon.config.full_name,
-                        'permissions': {'view': False, 'edit': False},
-                        'name': '{} is currently unavailable'.format(addon.config.full_name),
-                    })
+                    rv.append(
+                        {
+                            KIND: FOLDER,
+                            'unavailable': True,
+                            'iconUrl': addon.config.icon_url,
+                            'provider': addon.config.short_name,
+                            'addonFullname': addon.config.full_name,
+                            'permissions': {'view': False, 'edit': False},
+                            'name': '{} is currently unavailable'.format(
+                                addon.config.full_name
+                            ),
+                        }
+                    )
                     continue
                 rv.extend(sort_by_name(temp) or [])
         return rv

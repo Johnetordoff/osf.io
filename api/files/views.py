@@ -17,7 +17,12 @@ from osf.models import (
 
 from api.base.exceptions import Gone
 from api.base.permissions import PermissionWithGetter
-from api.base.throttling import CreateGuidThrottle, NonCookieAuthThrottle, UserRateThrottle, BurstRateThrottle
+from api.base.throttling import (
+    CreateGuidThrottle,
+    NonCookieAuthThrottle,
+    UserRateThrottle,
+    BurstRateThrottle,
+)
 from api.base import utils
 from api.base.views import JSONAPIBaseView
 from api.base import permissions as base_permissions
@@ -43,9 +48,16 @@ class FileMixin(object):
 
     def get_file(self, check_permissions=True):
         try:
-            obj = utils.get_object_or_error(BaseFileNode, self.kwargs[self.file_lookup_url_kwarg], self.request, display_name='file')
+            obj = utils.get_object_or_error(
+                BaseFileNode,
+                self.kwargs[self.file_lookup_url_kwarg],
+                self.request,
+                display_name='file',
+            )
         except NotFound:
-            obj = utils.get_object_or_error(Guid, self.kwargs[self.file_lookup_url_kwarg], self.request).referent
+            obj = utils.get_object_or_error(
+                Guid, self.kwargs[self.file_lookup_url_kwarg], self.request,
+            ).referent
             if not isinstance(obj, BaseFileNode):
                 raise NotFound
             if obj.is_deleted:
@@ -54,9 +66,13 @@ class FileMixin(object):
         if getattr(obj.target, 'deleted', None):
             raise Gone(detail='The requested file is no longer available')
 
-        if getattr(obj.target, 'is_quickfiles', False) and getattr(obj.target, 'creator'):
+        if getattr(obj.target, 'is_quickfiles', False) and getattr(
+            obj.target, 'creator',
+        ):
             if obj.target.creator.is_disabled:
-                raise Gone(detail='This user has been deactivated and their quickfiles are no longer available.')
+                raise Gone(
+                    detail='This user has been deactivated and their quickfiles are no longer available.',
+                )
 
         if check_permissions:
             # May raise a permission denied
@@ -67,6 +83,7 @@ class FileMixin(object):
 class FileDetail(JSONAPIBaseView, generics.RetrieveUpdateAPIView, FileMixin):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/files_detail).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         IsPreprintFile,
@@ -80,7 +97,12 @@ class FileDetail(JSONAPIBaseView, generics.RetrieveUpdateAPIView, FileMixin):
     required_write_scopes = [CoreScopes.NODE_FILE_WRITE]
 
     serializer_class = FileDetailSerializer
-    throttle_classes = (CreateGuidThrottle, NonCookieAuthThrottle, UserRateThrottle, BurstRateThrottle, )
+    throttle_classes = (
+        CreateGuidThrottle,
+        NonCookieAuthThrottle,
+        UserRateThrottle,
+        BurstRateThrottle,
+    )
     view_category = 'files'
     view_name = 'file-detail'
 
@@ -104,7 +126,10 @@ class FileDetail(JSONAPIBaseView, generics.RetrieveUpdateAPIView, FileMixin):
 
         if self.request.GET.get('create_guid', False):
             # allows quickfiles to be given guids when another user wants a permanent link to it
-            if (self.get_target().has_permission(user, ADMIN) and utils.has_admin_scope(self.request)) or getattr(file.target, 'is_quickfiles', False):
+            if (
+                self.get_target().has_permission(user, ADMIN)
+                and utils.has_admin_scope(self.request)
+            ) or getattr(file.target, 'is_quickfiles', False):
                 file.get_guid(create=True)
         return file
 
@@ -112,6 +137,7 @@ class FileDetail(JSONAPIBaseView, generics.RetrieveUpdateAPIView, FileMixin):
 class FileVersionsList(JSONAPIBaseView, generics.ListAPIView, FileMixin):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/files_versions).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -144,6 +170,7 @@ def node_from_version(request, view, obj):
 class FileVersionDetail(JSONAPIBaseView, generics.RetrieveAPIView, FileMixin):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/files_version_detail).
     """
+
     version_lookup_url_kwarg = 'version_id'
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
@@ -161,12 +188,16 @@ class FileVersionDetail(JSONAPIBaseView, generics.RetrieveAPIView, FileMixin):
     # overrides RetrieveAPIView
     def get_object(self):
         self.file = self.get_file()
-        maybe_version = self.file.get_version(self.kwargs[self.version_lookup_url_kwarg])
+        maybe_version = self.file.get_version(
+            self.kwargs[self.version_lookup_url_kwarg],
+        )
 
         # May raise a permission denied
         # Kinda hacky but versions have no reference to node or file
         self.check_object_permissions(self.request, self.file)
-        return utils.get_object_or_error(FileVersion, getattr(maybe_version, '_id', ''), self.request)
+        return utils.get_object_or_error(
+            FileVersion, getattr(maybe_version, '_id', ''), self.request,
+        )
 
     def get_serializer_context(self):
         context = JSONAPIBaseView.get_serializer_context(self)
@@ -195,7 +226,9 @@ class FileMetadataRecordsList(JSONAPIBaseView, generics.ListAPIView, FileMixin):
         return self.get_file().records.all()
 
 
-class FileMetadataRecordDetail(JSONAPIBaseView, generics.RetrieveUpdateAPIView, FileMixin):
+class FileMetadataRecordDetail(
+    JSONAPIBaseView, generics.RetrieveUpdateAPIView, FileMixin,
+):
 
     record_lookup_url_kwarg = 'record_id'
     permission_classes = (
@@ -214,7 +247,9 @@ class FileMetadataRecordDetail(JSONAPIBaseView, generics.RetrieveUpdateAPIView, 
 
     def get_object(self):
         return utils.get_object_or_error(
-            self.get_file().records.filter(_id=self.kwargs[self.record_lookup_url_kwarg]),
+            self.get_file().records.filter(
+                _id=self.kwargs[self.record_lookup_url_kwarg],
+            ),
             request=self.request,
         )
 
@@ -239,7 +274,9 @@ class FileMetadataRecordDownload(JSONAPIBaseView, generics.RetrieveAPIView, File
 
     def get_object(self):
         return utils.get_object_or_error(
-            self.get_file().records.filter(_id=self.kwargs[self.record_lookup_url_kwarg]).select_related('schema', 'file'),
+            self.get_file()
+            .records.filter(_id=self.kwargs[self.record_lookup_url_kwarg])
+            .select_related('schema', 'file'),
             request=self.request,
         )
 
@@ -252,7 +289,9 @@ class FileMetadataRecordDownload(JSONAPIBaseView, generics.RetrieveAPIView, File
         except ValueError as e:
             detail = str(e).replace('.', '')
             raise ValidationError(detail='{} for metadata file export.'.format(detail))
-        file_name = 'file_metadata_{}_{}.{}'.format(record.schema._id, record.file.name, file_type)
+        file_name = 'file_metadata_{}_{}.{}'.format(
+            record.schema._id, record.file.name, file_type,
+        )
         response['Content-Disposition'] = 'attachment; filename="{}"'.format(file_name)
         response['Content-Type'] = 'application/{}'.format(file_type)
         return response

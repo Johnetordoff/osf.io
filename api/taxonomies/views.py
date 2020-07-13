@@ -12,9 +12,12 @@ from osf.models import Subject
 from framework.auth.oauth_scopes import CoreScopes
 
 
-class TaxonomyList(DeprecatedView, JSONAPIBaseView, generics.ListAPIView, ListFilterMixin):
+class TaxonomyList(
+    DeprecatedView, JSONAPIBaseView, generics.ListAPIView, ListFilterMixin,
+):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/taxonomies_list).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -56,6 +59,7 @@ class TaxonomyList(DeprecatedView, JSONAPIBaseView, generics.ListAPIView, ListFi
 class TaxonomyDetail(JSONAPIBaseView, generics.RetrieveAPIView):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/taxonomies_read).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -69,6 +73,8 @@ class TaxonomyDetail(JSONAPIBaseView, generics.RetrieveAPIView):
 
     def get_object(self):
         try:
-            return optimize_subject_query(Subject.objects).get(_id=self.kwargs['taxonomy_id'])
+            return optimize_subject_query(Subject.objects).get(
+                _id=self.kwargs['taxonomy_id'],
+            )
         except ObjectDoesNotExist:
             raise NotFound

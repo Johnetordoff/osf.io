@@ -9,31 +9,39 @@ from django.core.exceptions import ValidationError
 from nose.tools import *  # noqa: F403 (PEP8 asserts)
 
 from framework.auth import Auth
-from osf_tests.factories import (AuthUserFactory, NodeLicenseRecordFactory,
-                                 ProjectFactory)
+from osf_tests.factories import (
+    AuthUserFactory,
+    NodeLicenseRecordFactory,
+    ProjectFactory,
+)
 from tests.base import OsfTestCase
 from osf.utils.migrations import ensure_licenses
 from tests.utils import assert_logs, assert_not_logs
 from website import settings
-from osf.models.licenses import NodeLicense, serialize_node_license_record, serialize_node_license
+from osf.models.licenses import (
+    NodeLicense,
+    serialize_node_license_record,
+    serialize_node_license,
+)
 from osf.models import NodeLog
 from osf.exceptions import NodeStateError
-
 
 
 CHANGED_NAME = 'FOO BAR'
 CHANGED_TEXT = 'Some good new text'
 CHANGED_PROPERTIES = ['foo', 'bar']
-LICENSE_TEXT = json.dumps({
-    'MIT': {
-        'name': CHANGED_NAME,
-        'text': CHANGED_TEXT,
-        'properties': CHANGED_PROPERTIES
+LICENSE_TEXT = json.dumps(
+    {
+        'MIT': {
+            'name': CHANGED_NAME,
+            'text': CHANGED_TEXT,
+            'properties': CHANGED_PROPERTIES,
+        }
     }
-})
+)
+
 
 class TestNodeLicenses(OsfTestCase):
-
     def setUp(self):
         super(TestNodeLicenses, self).setUp()
 
@@ -46,7 +54,7 @@ class TestNodeLicenses(OsfTestCase):
         self.node.node_license = NodeLicenseRecordFactory(
             node_license=self.node_license,
             year=self.YEAR,
-            copyright_holders=self.COPYRIGHT_HOLDERS
+            copyright_holders=self.COPYRIGHT_HOLDERS,
         )
         self.node.save()
 
@@ -80,7 +88,9 @@ class TestNodeLicenses(OsfTestCase):
     @pytest.mark.enable_implicit_clean
     def test_license_uniqueness_on_id_is_enforced_in_the_database(self):
         NodeLicense(license_id='foo', name='bar', text='baz').save()
-        assert_raises(ValidationError, NodeLicense(license_id='foo', name='buz', text='boo').save)
+        assert_raises(
+            ValidationError, NodeLicense(license_id='foo', name='buz', text='boo').save
+        )
 
     def test_ensure_licenses_updates_existing_licenses(self):
         assert_equal(ensure_licenses(), (0, 18))
@@ -102,7 +112,9 @@ class TestNodeLicenses(OsfTestCase):
         assert_is_not_none(found)
 
     def test_ensure_licenses_updates_existing(self):
-        with mock.patch.object(builtins, 'open', mock.mock_open(read_data=LICENSE_TEXT)):
+        with mock.patch.object(
+            builtins, 'open', mock.mock_open(read_data=LICENSE_TEXT)
+        ):
             ensure_licenses()
         MIT = NodeLicense.objects.get(license_id='MIT')
         assert_equal(MIT.name, CHANGED_NAME)
@@ -118,10 +130,10 @@ class TestNodeLicenses(OsfTestCase):
             {
                 'id': GPL3.license_id,
                 'year': NEW_YEAR,
-                'copyrightHolders': COPYLEFT_HOLDERS
+                'copyrightHolders': COPYLEFT_HOLDERS,
             },
             auth=Auth(self.user),
-            save=True
+            save=True,
         )
 
         assert_equal(self.node.node_license.license_id, GPL3.license_id)
@@ -132,10 +144,6 @@ class TestNodeLicenses(OsfTestCase):
     def test_Node_set_node_license_invalid(self):
         with assert_raises(NodeStateError):
             self.node.set_node_license(
-                {
-                    'id': 'SOME ID',
-                    'year': 'foo',
-                    'copyrightHolders': []
-                },
-                auth=Auth(self.user)
+                {'id': 'SOME ID', 'year': 'foo', 'copyrightHolders': []},
+                auth=Auth(self.user),
             )

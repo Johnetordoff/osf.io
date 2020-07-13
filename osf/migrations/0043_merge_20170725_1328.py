@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0042_preprintprovider_share_title'),
     ]
 
-    operations = [
-    ]
+    operations = []

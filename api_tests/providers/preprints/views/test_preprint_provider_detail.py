@@ -19,13 +19,11 @@ class TestPreprintProviderExistsForDeprecatedEndpoint(ProviderExistsMixin):
 
     @pytest.fixture()
     def provider_url(self, provider):
-        return '/{}preprint_providers/{}/'.format(
-            API_BASE, provider._id)
+        return '/{}preprint_providers/{}/'.format(API_BASE, provider._id)
 
     @pytest.fixture()
     def provider_url_two(self, provider_two):
-        return '/{}preprint_providers/{}/'.format(
-            API_BASE, provider_two._id)
+        return '/{}preprint_providers/{}/'.format(API_BASE, provider_two._id)
 
     @pytest.fixture()
     def provider_list_url(self, provider):
@@ -35,11 +33,17 @@ class TestPreprintProviderExistsForDeprecatedEndpoint(ProviderExistsMixin):
     def provider_list_url_fake(self, fake_url):
         return '{}preprints/'.format(fake_url)
 
-    @pytest.mark.skipif('2.8' not in REST_FRAMEWORK['ALLOWED_VERSIONS'], reason='New API version required to test full deprecation')
+    @pytest.mark.skipif(
+        '2.8' not in REST_FRAMEWORK['ALLOWED_VERSIONS'],
+        reason='New API version required to test full deprecation',
+    )
     def test_version_deprecation(self, app, provider_url):
         res = app.get('{}?version=2.8'.format(provider_url), expect_errors=True)
         assert res.status_code == 404
-        assert res.json['errors'][0]['detail'] == 'This route has been deprecated. It was last available in version 2.7'
+        assert (
+            res.json['errors'][0]['detail']
+            == 'This route has been deprecated. It was last available in version 2.7'
+        )
 
 
 class TestPreprintProviderExists(ProviderExistsMixin):
@@ -51,13 +55,11 @@ class TestPreprintProviderExists(ProviderExistsMixin):
 
     @pytest.fixture()
     def provider_url(self, provider):
-        return '/{}providers/preprints/{}/'.format(
-            API_BASE, provider._id)
+        return '/{}providers/preprints/{}/'.format(API_BASE, provider._id)
 
     @pytest.fixture()
     def provider_url_two(self, provider_two):
-        return '/{}providers/preprints/{}/'.format(
-            API_BASE, provider_two._id)
+        return '/{}providers/preprints/{}/'.format(API_BASE, provider_two._id)
 
     @pytest.fixture()
     def provider_list_url(self, provider):
@@ -70,14 +72,9 @@ class TestPreprintProviderExists(ProviderExistsMixin):
 
 @pytest.mark.django_db
 class TestPreprintProviderUpdate:
-
     def settings_payload(self, provider_id, jsonapi_type='preprintproviders', **kwargs):
         payload = {
-            'data': {
-                'id': provider_id,
-                'type': jsonapi_type,
-                'attributes': kwargs
-            }
+            'data': {'id': provider_id, 'type': jsonapi_type, 'attributes': kwargs}
         }
         return payload
 
@@ -100,16 +97,14 @@ class TestPreprintProviderUpdate:
     @pytest.fixture(params=['/{}preprint_providers/{}/', '/{}providers/preprints/{}/'])
     def url(self, provider, request):
         url = request.param
-        return url.format(
-            API_BASE, provider._id)
+        return url.format(API_BASE, provider._id)
 
-    def test_update_reviews_settings(
-            self, app, provider, url, admin, moderator):
+    def test_update_reviews_settings(self, app, provider, url, admin, moderator):
         payload = self.settings_payload(
             provider.id,
             reviews_workflow='pre-moderation',
             reviews_comments_private=False,
-            reviews_comments_anonymous=False
+            reviews_comments_anonymous=False,
         )
 
         # Unauthorized user can't set up moderation
@@ -118,15 +113,11 @@ class TestPreprintProviderUpdate:
 
         # Random user can't set up moderation
         some_rando = AuthUserFactory()
-        res = app.patch_json_api(
-            url, payload, auth=some_rando.auth,
-            expect_errors=True)
+        res = app.patch_json_api(url, payload, auth=some_rando.auth, expect_errors=True)
         assert res.status_code == 403
 
         # Moderator can't set up moderation
-        res = app.patch_json_api(
-            url, payload, auth=moderator.auth,
-            expect_errors=True)
+        res = app.patch_json_api(url, payload, auth=moderator.auth, expect_errors=True)
         assert res.status_code == 403
 
         # Admin must include all settings
@@ -136,8 +127,8 @@ class TestPreprintProviderUpdate:
             reviews_comments_private=False,
         )
         res = app.patch_json_api(
-            url, partial_payload,
-            auth=admin.auth, expect_errors=True)
+            url, partial_payload, auth=admin.auth, expect_errors=True
+        )
         assert res.status_code == 400
 
         partial_payload = self.settings_payload(
@@ -146,8 +137,8 @@ class TestPreprintProviderUpdate:
             reviews_comments_anonymous=False,
         )
         res = app.patch_json_api(
-            url, partial_payload,
-            auth=admin.auth, expect_errors=True)
+            url, partial_payload, auth=admin.auth, expect_errors=True
+        )
         assert res.status_code == 400
 
         # Admin can set up moderation
@@ -159,20 +150,18 @@ class TestPreprintProviderUpdate:
         assert not provider.reviews_comments_anonymous
 
         # ...but only once
-        res = app.patch_json_api(
-            url, payload, auth=admin.auth,
-            expect_errors=True)
+        res = app.patch_json_api(url, payload, auth=admin.auth, expect_errors=True)
         assert res.status_code == 409
 
         another_payload = self.settings_payload(
             provider.id,
             reviews_workflow='post-moderation',
             reviews_comments_private=True,
-            reviews_comments_anonymous=True
+            reviews_comments_anonymous=True,
         )
         res = app.patch_json_api(
-            url, another_payload,
-            auth=admin.auth, expect_errors=True)
+            url, another_payload, auth=admin.auth, expect_errors=True
+        )
         assert res.status_code == 409
 
         provider.refresh_from_db()
@@ -201,26 +190,37 @@ class TestPreprintProviderAssets:
 
     @pytest.fixture()
     def provider_one_url(self, provider_one):
-        return '/{}providers/preprints/{}/'.format(
-            API_BASE, provider_one._id)
+        return '/{}providers/preprints/{}/'.format(API_BASE, provider_one._id)
 
     @pytest.fixture()
     def provider_two_url(self, provider_two):
-        return '/{}providers/preprints/{}/'.format(
-            API_BASE, provider_two._id)
+        return '/{}providers/preprints/{}/'.format(API_BASE, provider_two._id)
 
-    def test_asset_attribute_correct(self, app, provider_one, provider_two, provider_asset_one, provider_asset_two,
-                                     provider_one_url, provider_two_url):
+    def test_asset_attribute_correct(
+        self,
+        app,
+        provider_one,
+        provider_two,
+        provider_asset_one,
+        provider_asset_two,
+        provider_one_url,
+        provider_two_url,
+    ):
         res = app.get(provider_one_url)
-        assert res.json['data']['attributes']['assets'][provider_asset_one.name] == provider_asset_one.file.url
+        assert (
+            res.json['data']['attributes']['assets'][provider_asset_one.name]
+            == provider_asset_one.file.url
+        )
 
         res = app.get(provider_two_url)
-        assert res.json['data']['attributes']['assets'][provider_asset_two.name] == provider_asset_two.file.url
+        assert (
+            res.json['data']['attributes']['assets'][provider_asset_two.name]
+            == provider_asset_two.file.url
+        )
 
 
 @pytest.mark.django_db
 class TestPreprintProvider:
-
     @pytest.fixture()
     def provider(self):
         return PreprintProviderFactory()

@@ -52,10 +52,7 @@ def to_subscription_key(uid, event):
 
 def from_subscription_key(key):
     parsed_key = key.split('_', 1)
-    return {
-        'uid': parsed_key[0],
-        'event': parsed_key[1]
-    }
+    return {'uid': parsed_key[0], 'event': parsed_key[1]}
 
 
 @signals.contributor_removed.connect
@@ -73,7 +70,10 @@ def remove_contributor_from_subscriptions(node, user):
 
     # If user still has permissions through being a contributor or group member, or has
     # admin perms on a parent, don't remove their subscription
-    if not(node.is_contributor_or_group_member(user)) and user._id not in node.admin_contributor_or_group_member_ids:
+    if (
+        not (node.is_contributor_or_group_member(user))
+        and user._id not in node.admin_contributor_or_group_member_ids
+    ):
         node_subscriptions = get_all_node_subscriptions(user, node)
         for subscription in node_subscriptions:
             subscription.remove_user_from_subscription(user)
@@ -83,9 +83,11 @@ def remove_contributor_from_subscriptions(node, user):
 def remove_subscription(node):
     remove_subscription_task(node._id)
 
+
 @signals.node_deleted.connect
 def remove_supplemental_node(node):
     remove_supplemental_node_from_preprints(node._id)
+
 
 @run_postcommit(once_per_request=False, celery=True)
 @app.task(max_retries=5, default_retry_delay=60)
@@ -148,17 +150,26 @@ def users_to_remove(source_event, source_node, new_node):
     removed_users = {key: [] for key in constants.NOTIFICATION_TYPES}
     if source_node == new_node:
         return removed_users
-    old_sub = NotificationSubscription.load(to_subscription_key(source_node._id, source_event))
-    old_node_sub = NotificationSubscription.load(to_subscription_key(source_node._id,
-                                                                     '_'.join(source_event.split('_')[-2:])))
+    old_sub = NotificationSubscription.load(
+        to_subscription_key(source_node._id, source_event)
+    )
+    old_node_sub = NotificationSubscription.load(
+        to_subscription_key(source_node._id, '_'.join(source_event.split('_')[-2:]))
+    )
     if not old_sub and not old_node_sub:
         return removed_users
     for notification_type in constants.NOTIFICATION_TYPES:
         users = []
         if hasattr(old_sub, notification_type):
-            users += list(getattr(old_sub, notification_type).values_list('guids___id', flat=True))
+            users += list(
+                getattr(old_sub, notification_type).values_list('guids___id', flat=True)
+            )
         if hasattr(old_node_sub, notification_type):
-            users += list(getattr(old_node_sub, notification_type).values_list('guids___id', flat=True))
+            users += list(
+                getattr(old_node_sub, notification_type).values_list(
+                    'guids___id', flat=True
+                )
+            )
         subbed, removed_users[notification_type] = separate_users(new_node, users)
     return removed_users
 
@@ -176,7 +187,9 @@ def move_subscription(remove_users, source_event, source_node, new_event, new_no
     OSFUser = apps.get_model('osf.OSFUser')
     if source_node == new_node:
         return
-    old_sub = NotificationSubscription.load(to_subscription_key(source_node._id, source_event))
+    old_sub = NotificationSubscription.load(
+        to_subscription_key(source_node._id, source_event)
+    )
     if not old_sub:
         return
     elif old_sub:
@@ -203,20 +216,22 @@ def get_configured_projects(user):
     :return: list of node objects for projects with no parent
     """
     configured_projects = set()
-    user_subscriptions = get_all_user_subscriptions(user, extra=(
-        ~Q(node__type='osf.collection') &
-        ~Q(node__type='osf.quickfilesnode') &
-        Q(node__is_deleted=False)
-    ))
+    user_subscriptions = get_all_user_subscriptions(
+        user,
+        extra=(
+            ~Q(node__type='osf.collection')
+            & ~Q(node__type='osf.quickfilesnode')
+            & Q(node__is_deleted=False)
+        ),
+    )
 
     for subscription in user_subscriptions:
         # If the user has opted out of emails skip
         node = subscription.owner
 
         if (
-            (subscription.none.filter(id=user.id).exists() and not node.parent_id) or
-            node._id not in user.notifications_configured
-        ):
+            subscription.none.filter(id=user.id).exists() and not node.parent_id
+        ) or node._id not in user.notifications_configured:
             continue
 
         root = node.root
@@ -239,9 +254,7 @@ def get_all_user_subscriptions(user, extra=None):
     """ Get all Subscription objects that the user is subscribed to"""
     NotificationSubscription = apps.get_model('osf.NotificationSubscription')
     queryset = NotificationSubscription.objects.filter(
-        Q(none=user.pk) |
-        Q(email_digest=user.pk) |
-        Q(email_transactional=user.pk)
+        Q(none=user.pk) | Q(email_digest=user.pk) | Q(email_transactional=user.pk)
     ).distinct()
     return queryset.filter(extra) if extra else queryset
 
@@ -283,14 +296,24 @@ def format_data(user, nodes):
 
         if can_read:
             node_sub_available = list(constants.NODE_SUBSCRIPTIONS_AVAILABLE.keys())
-            subscriptions = get_all_node_subscriptions(user, node, user_subscriptions=user_subscriptions).filter(event_name__in=node_sub_available)
+            subscriptions = get_all_node_subscriptions(
+                user, node, user_subscriptions=user_subscriptions
+            ).filter(event_name__in=node_sub_available)
 
             for subscription in subscriptions:
                 index = node_sub_available.index(getattr(subscription, 'event_name'))
-                children_tree.append(serialize_event(user, subscription=subscription,
-                                                node=node, event_description=node_sub_available.pop(index)))
+                children_tree.append(
+                    serialize_event(
+                        user,
+                        subscription=subscription,
+                        node=node,
+                        event_description=node_sub_available.pop(index),
+                    )
+                )
             for node_sub in node_sub_available:
-                children_tree.append(serialize_event(user, node=node, event_description=node_sub))
+                children_tree.append(
+                    serialize_event(user, node=node, event_description=node_sub)
+                )
             children_tree.sort(key=lambda s: s['event']['title'])
 
         children_tree.extend(format_data(user, children))
@@ -302,12 +325,12 @@ def format_data(user, nodes):
                 'title': node.title if can_read else 'Private Project',
             },
             'children': children_tree,
-            'kind': 'folder' if not node.parent_node or not node.parent_node.has_permission(user, READ) else 'node',
+            'kind': 'folder'
+            if not node.parent_node or not node.parent_node.has_permission(user, READ)
+            else 'node',
             'nodeType': node.project_or_component,
             'category': node.category,
-            'permissions': {
-                'view': can_read,
-            },
+            'permissions': {'view': can_read,},
         }
 
         items.append(item)
@@ -320,13 +343,19 @@ def format_user_subscriptions(user):
     user_subs_available = list(constants.USER_SUBSCRIPTIONS_AVAILABLE.keys())
     subscriptions = [
         serialize_event(
-            user, subscription,
-            event_description=user_subs_available.pop(user_subs_available.index(getattr(subscription, 'event_name')))
+            user,
+            subscription,
+            event_description=user_subs_available.pop(
+                user_subs_available.index(getattr(subscription, 'event_name'))
+            ),
         )
         for subscription in get_all_user_subscriptions(user)
-        if subscription is not None and getattr(subscription, 'event_name') in user_subs_available
+        if subscription is not None
+        and getattr(subscription, 'event_name') in user_subs_available
     ]
-    subscriptions.extend([serialize_event(user, event_description=sub) for sub in user_subs_available])
+    subscriptions.extend(
+        [serialize_event(user, event_description=sub) for sub in user_subs_available]
+    )
     return subscriptions
 
 
@@ -344,6 +373,7 @@ def format_file_subscription(user, node_id, path, provider):
 all_subs = constants.NODE_SUBSCRIPTIONS_AVAILABLE.copy()
 all_subs.update(constants.USER_SUBSCRIPTIONS_AVAILABLE)
 
+
 def serialize_event(user, subscription=None, node=None, event_description=None):
     """
     :param user: OSFUser object
@@ -354,7 +384,7 @@ def serialize_event(user, subscription=None, node=None, event_description=None):
     """
     if not event_description:
         event_description = getattr(subscription, 'event_name')
-    # Looks at only the types available. Deals with pre-pending file names.
+        # Looks at only the types available. Deals with pre-pending file names.
         for sub_type in all_subs:
             if sub_type in event_description:
                 event_type = sub_type
@@ -375,10 +405,12 @@ def serialize_event(user, subscription=None, node=None, event_description=None):
             'title': event_description,
             'description': all_subs[event_type],
             'notificationType': notification_type,
-            'parent_notification_type': get_parent_notification_type(node, event_type, user)
+            'parent_notification_type': get_parent_notification_type(
+                node, event_type, user
+            ),
         },
         'kind': 'event',
-        'children': []
+        'children': [],
     }
 
 
@@ -394,7 +426,12 @@ def get_parent_notification_type(node, event, user):
     AbstractNode = apps.get_model('osf.AbstractNode')
     NotificationSubscription = apps.get_model('osf.NotificationSubscription')
 
-    if node and isinstance(node, AbstractNode) and node.parent_node and node.parent_node.has_permission(user, READ):
+    if (
+        node
+        and isinstance(node, AbstractNode)
+        and node.parent_node
+        and node.parent_node.has_permission(user, READ)
+    ):
         parent = node.parent_node
         key = to_subscription_key(parent._id, event)
         try:
@@ -431,7 +468,9 @@ def check_if_all_global_subscriptions_are_none(user):
     for user_subscription in user_sunscriptions:
         if user_subscription.event_name.startswith('global_'):
             all_global_subscriptions_none = True
-            global_notification_type = get_global_notification_type(user_subscription, user)
+            global_notification_type = get_global_notification_type(
+                user_subscription, user
+            )
             if global_notification_type != 'none':
                 return False
 
@@ -446,7 +485,9 @@ def subscribe_user_to_global_notifications(user):
         user_event_id = to_subscription_key(user._id, user_event)
 
         # get_or_create saves on creation
-        subscription, created = NotificationSubscription.objects.get_or_create(_id=user_event_id, user=user, event_name=user_event)
+        subscription, created = NotificationSubscription.objects.get_or_create(
+            _id=user_event_id, user=user, event_name=user_event
+        )
         subscription.add_user_to_subscription(user, notification_type)
         subscription.save()
 
@@ -459,19 +500,29 @@ def subscribe_user_to_notifications(node, user):
     Preprint = apps.get_model('osf.Preprint')
     DraftRegistration = apps.get_model('osf.DraftRegistration')
     if isinstance(node, Preprint):
-        raise InvalidSubscriptionError('Preprints are invalid targets for subscriptions at this time.')
+        raise InvalidSubscriptionError(
+            'Preprints are invalid targets for subscriptions at this time.'
+        )
 
     if isinstance(node, DraftRegistration):
-        raise InvalidSubscriptionError('DraftRegistrations are invalid targets for subscriptions at this time.')
+        raise InvalidSubscriptionError(
+            'DraftRegistrations are invalid targets for subscriptions at this time.'
+        )
 
     if node.is_collection:
-        raise InvalidSubscriptionError('Collections are invalid targets for subscriptions')
+        raise InvalidSubscriptionError(
+            'Collections are invalid targets for subscriptions'
+        )
 
     if node.is_deleted:
-        raise InvalidSubscriptionError('Deleted Nodes are invalid targets for subscriptions')
+        raise InvalidSubscriptionError(
+            'Deleted Nodes are invalid targets for subscriptions'
+        )
 
     if getattr(node, 'is_registration', False):
-        raise InvalidSubscriptionError('Registrations are invalid targets for subscriptions')
+        raise InvalidSubscriptionError(
+            'Registrations are invalid targets for subscriptions'
+        )
 
     events = constants.NODE_SUBSCRIPTIONS_AVAILABLE
     notification_type = 'email_transactional'
@@ -488,14 +539,22 @@ def subscribe_user_to_notifications(node, user):
             # If no subscription for component and creator is the user, do not create subscription
             # If no subscription exists for the component, this means that it should adopt its
             # parent's settings
-            if not(node and node.parent_node and not subscription and node.creator == user):
+            if not (
+                node and node.parent_node and not subscription and node.creator == user
+            ):
                 if not subscription:
-                    subscription = NotificationSubscription(_id=event_id, owner=node, event_name=event)
+                    subscription = NotificationSubscription(
+                        _id=event_id, owner=node, event_name=event
+                    )
                     # Need to save here in order to access m2m fields
                     subscription.save()
                 if global_subscription:
-                    global_notification_type = get_global_notification_type(global_subscription, user)
-                    subscription.add_user_to_subscription(user, global_notification_type)
+                    global_notification_type = get_global_notification_type(
+                        global_subscription, user
+                    )
+                    subscription.add_user_to_subscription(
+                        user, global_notification_type
+                    )
                 else:
                     subscription.add_user_to_subscription(user, notification_type)
                 subscription.save()
@@ -508,20 +567,21 @@ def format_user_and_project_subscriptions(user):
             'node': {
                 'id': user._id,
                 'title': 'Default Notification Settings',
-                'help': 'These are default settings for new projects you create ' +
-                        'or are added to. Modifying these settings will not ' +
-                        'modify settings on existing projects.'
+                'help': 'These are default settings for new projects you create '
+                + 'or are added to. Modifying these settings will not '
+                + 'modify settings on existing projects.',
             },
             'kind': 'heading',
-            'children': format_user_subscriptions(user)
+            'children': format_user_subscriptions(user),
         },
         {
             'node': {
                 'id': '',
                 'title': 'Project Notifications',
-                'help': 'These are settings for each of your projects. Modifying ' +
-                        'these settings will only modify the settings for the selected project.'
+                'help': 'These are settings for each of your projects. Modifying '
+                + 'these settings will only modify the settings for the selected project.',
             },
             'kind': 'heading',
-            'children': format_data(user, get_configured_projects(user))
-        }]
+            'children': format_data(user, get_configured_projects(user)),
+        },
+    ]

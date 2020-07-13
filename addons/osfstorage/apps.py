@@ -54,11 +54,16 @@ class OSFStorageAddonAppConfig(BaseAddonAppConfig):
     NODE_AUTHORIZED = 'osfstorage_node_authorized'
     NODE_DEAUTHORIZED = 'osfstorage_node_deauthorized'
 
-    actions = (FOLDER_SELECTED, NODE_AUTHORIZED, NODE_DEAUTHORIZED, )
+    actions = (
+        FOLDER_SELECTED,
+        NODE_AUTHORIZED,
+        NODE_DEAUTHORIZED,
+    )
 
     @property
     def routes(self):
         from addons.osfstorage import routes
+
         return [routes.api_routes]
 
     @property

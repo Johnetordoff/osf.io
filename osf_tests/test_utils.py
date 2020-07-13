@@ -6,13 +6,13 @@ from osf_tests.factories import NodeFactory
 
 pytestmark = pytest.mark.django_db
 
+
 @pytest.fixture()
 def node():
     return NodeFactory()
 
 
 class TestDisableAutoNowContextManager:
-
     def test_auto_now_not_updated(self, node):
         # update, save, confirm date changes
         original_date_modified = node.modified

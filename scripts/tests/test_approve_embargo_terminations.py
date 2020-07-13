@@ -7,15 +7,26 @@ from django.utils import timezone
 from nose.tools import *  # noqa
 
 from tests.base import OsfTestCase
-from osf_tests.factories import AuthUserFactory, NodeFactory, EmbargoTerminationApprovalFactory, RegistrationFactory, EmbargoFactory
+from osf_tests.factories import (
+    AuthUserFactory,
+    NodeFactory,
+    EmbargoTerminationApprovalFactory,
+    RegistrationFactory,
+    EmbargoFactory,
+)
 from osf.models import Sanction, Registration
 
-from scripts.approve_embargo_terminations import main, get_pending_embargo_termination_requests
+from scripts.approve_embargo_terminations import (
+    main,
+    get_pending_embargo_termination_requests,
+)
+
 
 class TestApproveEmbargoTerminations(OsfTestCase):
-
     def tearDown(self):
-        with mock.patch('framework.celery_tasks.handlers.queue', mock.Mock(return_value=None)):
+        with mock.patch(
+            'framework.celery_tasks.handlers.queue', mock.Mock(return_value=None)
+        ):
             super(TestApproveEmbargoTerminations, self).tearDown()
 
     @mock.patch('osf.models.sanctions.EmailApprovableSanction.ask', mock.Mock())
@@ -25,13 +36,14 @@ class TestApproveEmbargoTerminations(OsfTestCase):
 
         self.node = NodeFactory(creator=self.user)
         NodeFactory(
-            creator=self.user,
-            parent=NodeFactory(creator=self.user, parent=self.node)
+            creator=self.user, parent=NodeFactory(creator=self.user, parent=self.node)
         )
 
         # requesting termination but less than 48 hours old
         embargo_termination_approval = EmbargoTerminationApprovalFactory()
-        self.registration1 = Registration.objects.get(embargo_termination_approval=embargo_termination_approval)
+        self.registration1 = Registration.objects.get(
+            embargo_termination_approval=embargo_termination_approval
+        )
 
         # requesting termination and older than 48 hours
         old_time = timezone.now() - timedelta(days=5)
@@ -39,7 +51,9 @@ class TestApproveEmbargoTerminations(OsfTestCase):
         embargo_termination_approval_2.initiation_date = old_time
         embargo_termination_approval_2.save()
         embargo_termination_approval_2.reload()
-        self.registration2 = Registration.objects.get(embargo_termination_approval=embargo_termination_approval_2)
+        self.registration2 = Registration.objects.get(
+            embargo_termination_approval=embargo_termination_approval_2
+        )
 
         # requesting termination and older than 48 hours, but approved
         embargo_termination_approval_3 = EmbargoTerminationApprovalFactory()
@@ -47,7 +61,9 @@ class TestApproveEmbargoTerminations(OsfTestCase):
         embargo_termination_approval_3.state = Sanction.APPROVED
         embargo_termination_approval_2.save()
         embargo_termination_approval_2.reload()
-        self.registration3 = Registration.objects.get(embargo_termination_approval=embargo_termination_approval_3)
+        self.registration3 = Registration.objects.get(
+            embargo_termination_approval=embargo_termination_approval_3
+        )
 
         # embargoed but not requesting termination
         embargo = EmbargoFactory()
@@ -56,7 +72,9 @@ class TestApproveEmbargoTerminations(OsfTestCase):
     def test_get_pending_embargo_termination_requests_returns_only_unapproved(self):
         targets = get_pending_embargo_termination_requests()
         assert_equal(targets.count(), 1)
-        assert_equal(targets.first()._id, self.registration2.embargo_termination_approval._id)
+        assert_equal(
+            targets.first()._id, self.registration2.embargo_termination_approval._id
+        )
 
     def test_main_auto_approves_embargo_termination_request(self):
         for node in self.registration2.node_and_primary_descendants():

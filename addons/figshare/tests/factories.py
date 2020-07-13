@@ -8,6 +8,7 @@ from osf_tests.factories import UserFactory, ProjectFactory, ExternalAccountFact
 
 from addons.figshare.models import UserSettings, NodeSettings
 
+
 class FigshareAccountFactory(ExternalAccountFactory):
     provider = 'figshare'
     provider_id = factory.Sequence(lambda n: 'id-{0}'.format(n))

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from enum import Enum
 
+
 def get_entry_point(user):
     """
     Given the user system_tags, return the user entry point (osf, osf4m, prereg, institution)

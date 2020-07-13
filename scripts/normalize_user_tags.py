@@ -6,7 +6,14 @@ from website.app import init_app
 from scripts import utils as script_utils
 import sys
 from django.db import transaction, IntegrityError
-from website.util.metrics import OsfSourceTags, OsfClaimedTags, CampaignSourceTags, CampaignClaimedTags, provider_source_tag, provider_claimed_tag
+from website.util.metrics import (
+    OsfSourceTags,
+    OsfClaimedTags,
+    CampaignSourceTags,
+    CampaignClaimedTags,
+    provider_source_tag,
+    provider_claimed_tag,
+)
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -154,28 +161,45 @@ def add_prereg_campaign_tags():
 
     try:
         # Try to get prereg challenge source tag
-        prereg_challenge_source_tag = Tag.all_tags.get(name=CampaignSourceTags.PreregChallenge.value, system=True)
+        prereg_challenge_source_tag = Tag.all_tags.get(
+            name=CampaignSourceTags.PreregChallenge.value, system=True
+        )
     except Tag.DoesNotExist:
         # If prereg challenge source tag doesn't exist, create the prereg source tag and we are done.
-        prereg_source_tag, created = Tag.all_tags.get_or_create(name=CampaignSourceTags.Prereg.value, system=True)
+        prereg_source_tag, created = Tag.all_tags.get_or_create(
+            name=CampaignSourceTags.Prereg.value, system=True
+        )
         logger.info('Added tag ' + prereg_source_tag.name)
     else:
         # Otherwise, we create the prereg source tag, and then migrate the users.
-        prereg_source_tag, created = Tag.all_tags.get_or_create(name=CampaignSourceTags.Prereg.value, system=True)
+        prereg_source_tag, created = Tag.all_tags.get_or_create(
+            name=CampaignSourceTags.Prereg.value, system=True
+        )
         logger.info('Added tag ' + prereg_source_tag.name)
         prereg_challenge_cutoff_date = pytz.utc.localize(datetime(2019, 1, 1, 5, 59))
-        prereg_users_registered_after_january_first = OSFUser.objects.filter(tags__id=prereg_challenge_source_tag.id,
-                                                                             date_registered__gt=prereg_challenge_cutoff_date)
+        prereg_users_registered_after_january_first = OSFUser.objects.filter(
+            tags__id=prereg_challenge_source_tag.id,
+            date_registered__gt=prereg_challenge_cutoff_date,
+        )
         logger.info(
-            'Number of OSFUsers created on/after 2019-01-01: ' + str(len(prereg_users_registered_after_january_first)))
+            'Number of OSFUsers created on/after 2019-01-01: '
+            + str(len(prereg_users_registered_after_january_first))
+        )
         for user in prereg_users_registered_after_january_first:
-            user.tags.through.objects.filter(tag=prereg_challenge_source_tag, osfuser=user).delete()
+            user.tags.through.objects.filter(
+                tag=prereg_challenge_source_tag, osfuser=user
+            ).delete()
             user.add_system_tag(prereg_source_tag)
             # Check  whether the user is merged to another user
             # If so, add the same tag to that user as well
             if user.merged_by is not None:
                 user.merged_by.add_system_tag(prereg_source_tag)
-        logger.info('Migrated users from ' + prereg_challenge_source_tag.name + ' to ' + prereg_source_tag.name)
+        logger.info(
+            'Migrated users from '
+            + prereg_challenge_source_tag.name
+            + ' to '
+            + prereg_source_tag.name
+        )
 
 
 def main():

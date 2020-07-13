@@ -1,5 +1,9 @@
 from rest_framework import permissions
-from rest_framework.throttling import UserRateThrottle, AnonRateThrottle, SimpleRateThrottle
+from rest_framework.throttling import (
+    UserRateThrottle,
+    AnonRateThrottle,
+    SimpleRateThrottle,
+)
 import logging
 
 from api.base import settings
@@ -8,7 +12,6 @@ logger = logging.getLogger(__name__)
 
 
 class BaseThrottle(SimpleRateThrottle):
-
     def get_ident(self, request):
         if request.META.get('HTTP_X_THROTTLE_TOKEN'):
             return request.META['HTTP_X_THROTTLE_TOKEN']
@@ -63,7 +66,10 @@ class AddContributorThrottle(BaseThrottle, UserRateThrottle):
         """
         Allow all add contributor requests that do not send contributor emails.
         """
-        if request.method == 'POST' and request.query_params.get('send_email') == 'false':
+        if (
+            request.method == 'POST'
+            and request.query_params.get('send_email') == 'false'
+        ):
             return True
 
         return super(AddContributorThrottle, self).allow_request(request, view)
@@ -110,7 +116,6 @@ class SendEmailThrottle(BaseThrottle, UserRateThrottle):
 
 
 class SendEmailDeactivationThrottle(SendEmailThrottle):
-
     def allow_request(self, request, view):
         """
         Throttle deactivation requests on the UserSettings endpoint

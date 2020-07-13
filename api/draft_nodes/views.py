@@ -7,7 +7,10 @@ from api.base import permissions as base_permissions
 from api.base.utils import get_object_or_error
 from api.base.views import JSONAPIBaseView
 from api.draft_nodes.permissions import ContributorOnDraftRegistration
-from api.draft_nodes.serializers import DraftNodeSerializer, DraftNodeStorageProviderSerializer
+from api.draft_nodes.serializers import (
+    DraftNodeSerializer,
+    DraftNodeStorageProviderSerializer,
+)
 
 from api.nodes.views import (
     NodeStorageProvidersList,

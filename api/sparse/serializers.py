@@ -9,26 +9,29 @@ from api.registrations.serializers import RegistrationSerializer
 
 # Todo: Return relationships as relationships
 class SparseNodeSerializer(NodeSerializer):
-    filterable_fields = frozenset([
-        'id',
-        'title',
-        'description',
-        'public',
-        'tags',
-        'category',
-        'date_created',
-        'date_modified',
-        'root',
-        'parent',
-        'contributors',
-    ])
-    links = LinksField({
-        'self': 'get_absolute_url',  # self links will break ember data unless we make a specific sparse detail serializer
-        'html': 'get_absolute_html_url',
-    })
+    filterable_fields = frozenset(
+        [
+            'id',
+            'title',
+            'description',
+            'public',
+            'tags',
+            'category',
+            'date_created',
+            'date_modified',
+            'root',
+            'parent',
+            'contributors',
+        ],
+    )
+    links = LinksField(
+        {
+            'self': 'get_absolute_url',  # self links will break ember data unless we make a specific sparse detail serializer
+            'html': 'get_absolute_html_url',
+        },
+    )
     detail = RelationshipField(
-        related_view='nodes:node-detail',
-        related_view_kwargs={'node_id': '<_id>'},
+        related_view='nodes:node-detail', related_view_kwargs={'node_id': '<_id>'},
     )
     children = RelationshipField(
         related_view='sparse:node-children',
@@ -86,32 +89,38 @@ class SparseNodeSerializer(NodeSerializer):
                 continue
             if field_name not in fieldset:
                 self.fields.pop(field_name)
-        return super(SparseNodeSerializer, self).parse_sparse_fields(allow_unsafe, **kwargs)
+        return super(SparseNodeSerializer, self).parse_sparse_fields(
+            allow_unsafe, **kwargs
+        )
 
     class Meta:
         type_ = 'sparse-nodes'
 
 
 class SparseRegistrationSerializer(RegistrationSerializer):
-    filterable_fields = frozenset([
-        'category',
-        'contributors',
-        'date_created',
-        'date_modified',
-        'description',
-        'detail',
-        'id',
-        'parent',
-        'public',
-        'root',
-        'tags',
-        'title',
-    ])
+    filterable_fields = frozenset(
+        [
+            'category',
+            'contributors',
+            'date_created',
+            'date_modified',
+            'description',
+            'detail',
+            'id',
+            'parent',
+            'public',
+            'root',
+            'tags',
+            'title',
+        ],
+    )
 
-    links = LinksField({
-        'self': 'get_absolute_url',  # self links will break ember data unless we make a specific sparse detail serializer
-        'html': 'get_absolute_html_url',
-    })
+    links = LinksField(
+        {
+            'self': 'get_absolute_url',  # self links will break ember data unless we make a specific sparse detail serializer
+            'html': 'get_absolute_html_url',
+        },
+    )
     detail = RelationshipField(
         related_view='registrations:registration-detail',
         related_view_kwargs={'node_id': '<_id>'},
@@ -173,7 +182,6 @@ class SparseRegistrationSerializer(RegistrationSerializer):
             'tags',
             'title',
             'withdrawn',
-
         ]
         for field_name in self.fields.fields.copy().keys():
             if field_name in ('id', 'links', 'type'):
@@ -181,7 +189,9 @@ class SparseRegistrationSerializer(RegistrationSerializer):
                 continue
             if field_name not in fieldset:
                 self.fields.pop(field_name)
-        return super(SparseRegistrationSerializer, self).parse_sparse_fields(allow_unsafe, **kwargs)
+        return super(SparseRegistrationSerializer, self).parse_sparse_fields(
+            allow_unsafe, **kwargs
+        )
 
     class Meta:
         type_ = 'sparse-registrations'

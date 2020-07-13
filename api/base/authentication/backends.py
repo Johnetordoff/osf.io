@@ -4,7 +4,6 @@ from django.contrib.auth.backends import ModelBackend
 
 # https://docs.djangoproject.com/en/1.8/topics/auth/customizing/
 class ODMBackend(ModelBackend):
-
     def authenticate(self, username=None, password=None):
         return get_user(email=username, password=password) or None
 

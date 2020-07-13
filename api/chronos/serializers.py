@@ -2,7 +2,12 @@ from rest_framework import serializers as ser
 from rest_framework.exceptions import NotFound
 
 from api.base.exceptions import Conflict
-from api.base.serializers import JSONAPISerializer, RelationshipField, LinksField, ConditionalField
+from api.base.serializers import (
+    JSONAPISerializer,
+    RelationshipField,
+    LinksField,
+    ConditionalField,
+)
 from api.base.utils import absolute_reverse, get_user_auth
 from osf.external.chronos import ChronosClient
 from osf.models import ChronosJournal
@@ -45,7 +50,9 @@ class ChronosJournalSerializer(JSONAPISerializer):
     links = LinksField({'self': 'get_absolute_url'})
 
     def get_absolute_url(self, obj):
-        return absolute_reverse('chronos:chronos-journal-detail', kwargs={'journal_id': obj.journal_id})
+        return absolute_reverse(
+            'chronos:chronos-journal-detail', kwargs={'journal_id': obj.journal_id},
+        )
 
 
 class ChronosSubmissionSerializer(JSONAPISerializer):
@@ -75,10 +82,18 @@ class ChronosSubmissionSerializer(JSONAPISerializer):
     links = LinksField({'self': 'get_absolute_url'})
 
     def get_absolute_url(self, obj):
-        return absolute_reverse('chronos:chronos-submission-detail', kwargs={'preprint_id': obj.preprint._id, 'submission_id': obj.publication_id})
+        return absolute_reverse(
+            'chronos:chronos-submission-detail',
+            kwargs={
+                'preprint_id': obj.preprint._id,
+                'submission_id': obj.publication_id,
+            },
+        )
 
     def get_status(self, obj):
-        value_lookup = {val.value: key for key, val in ChronosSubmissionStatus.__members__.items()}
+        value_lookup = {
+            val.value: key for key, val in ChronosSubmissionStatus.__members__.items()
+        }
         return value_lookup[obj.status]
 
 
@@ -101,6 +116,8 @@ class ChronosSubmissionCreateSerializer(ChronosSubmissionSerializer):
         preprint = validated_data.pop('preprint')
         submitter = validated_data.pop('submitter')
         try:
-            return ChronosClient().submit_manuscript(journal=journal, preprint=preprint, submitter=submitter)
+            return ChronosClient().submit_manuscript(
+                journal=journal, preprint=preprint, submitter=submitter,
+            )
         except ValueError as e:
             raise Conflict(e)

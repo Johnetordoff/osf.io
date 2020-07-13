@@ -9,12 +9,8 @@ from api.base.settings.defaults import API_BASE
 def user():
     user = AuthUserFactory()
     user.external_identity = {
-        'ORCID': {
-            '0000-0001-9143-4653': 'VERIFIED'
-        },
-        'LOTUS': {
-            '0000-0001-9143-4652': 'LINK'
-        }
+        'ORCID': {'0000-0001-9143-4653': 'VERIFIED'},
+        'LOTUS': {'0000-0001-9143-4652': 'LINK'},
     }
     user.save()
     return user
@@ -27,7 +23,6 @@ def unauthorized_user():
 
 @pytest.mark.django_db
 class TestUserIdentitiesList:
-
     @pytest.fixture()
     def url(self, user):
         return '/{}users/{}/settings/identities/'.format(API_BASE, user._id)
@@ -59,7 +54,6 @@ class TestUserIdentitiesList:
 
 @pytest.mark.django_db
 class TestUserIdentitiesDetail:
-
     @pytest.fixture()
     def url(self, user):
         return '/{}users/{}/settings/identities/ORCID/'.format(API_BASE, user._id)
@@ -75,18 +69,17 @@ class TestUserIdentitiesDetail:
         assert res.json['data']['attributes']['status'] == 'VERIFIED'
         assert res.json['data']['attributes']['external_id'] == '0000-0001-9143-4653'
         assert res.json['data']['type'] == 'external-identities'
-        assert '/v2/users/{}/settings/identities/ORCID/'.format(user._id) in res.json['data']['links']['self']
+        assert (
+            '/v2/users/{}/settings/identities/ORCID/'.format(user._id)
+            in res.json['data']['links']['self']
+        )
 
     def test_delete_204(self, app, user, url):
         res = app.delete(url, auth=user.auth)
         assert res.status_code == 204
 
         user.refresh_from_db()
-        assert user.external_identity == {
-            'LOTUS': {
-                '0000-0001-9143-4652': 'LINK'
-            }
-        }
+        assert user.external_identity == {'LOTUS': {'0000-0001-9143-4652': 'LINK'}}
 
     def test_anonymous_gets_401(self, app, url):
         res = app.get(url, expect_errors=True)

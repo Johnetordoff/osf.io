@@ -6,6 +6,7 @@ from osf_tests.factories import UserFactory, ProjectFactory, ExternalAccountFact
 
 from addons.dataverse.models import UserSettings, NodeSettings
 
+
 class DataverseAccountFactory(ExternalAccountFactory):
     provider = 'dataverse'
     provider_name = 'Dataverse'

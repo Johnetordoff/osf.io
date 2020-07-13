@@ -5,9 +5,11 @@ from django.db import migrations
 from django.db import connection
 from django.contrib.contenttypes.models import ContentType
 
+
 def reverse_func(state, schema):
     NodeWikiPage = state.get_model('addons_wiki', 'nodewikipage')
     return NodeWikiPage.objects.update(former_guid=None)
+
 
 def add_guid_field(state, schema):
     NodeWikiPage = state.get_model('addons_wiki', 'nodewikipage')
@@ -24,7 +26,8 @@ def add_guid_field(state, schema):
               )
             FROM addons_wiki_nodewikipage as nwp2
             WHERE nwp.id = nwp2.id
-            """, [content_type_id]
+            """,
+            [content_type_id],
         )
     return
 
@@ -35,6 +38,4 @@ class Migration(migrations.Migration):
         ('addons_wiki', '0007_nodewikipage_former_guid'),
     ]
 
-    operations = [
-        migrations.RunPython(add_guid_field, reverse_func)
-    ]
+    operations = [migrations.RunPython(add_guid_field, reverse_func)]

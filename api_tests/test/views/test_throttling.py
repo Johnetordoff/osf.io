@@ -7,7 +7,6 @@ from osf_tests.factories import AuthUserFactory
 
 @pytest.mark.django_db
 class TestThrottling:
-
     @pytest.fixture()
     def user(self):
         return AuthUserFactory()
@@ -58,8 +57,7 @@ class TestThrottling:
         res = app.get(url, headers=headers)
         assert res.status_code == 200
 
-    def test_user_rate_throttle_with_incorrect_throttle_token(
-            self, app, url, user):
+    def test_user_rate_throttle_with_incorrect_throttle_token(self, app, url, user):
         headers = {'X-THROTTLE-TOKEN': 'fake-token'}
         res = app.get(url, auth=user.auth, headers=headers)
         assert res.status_code == 200

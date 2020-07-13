@@ -13,7 +13,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterModelOptions(
-            name='fileversion',
-            options={'ordering': ('-date_created',)},
+            name='fileversion', options={'ordering': ('-date_created',)},
         ),
     ]

@@ -10,6 +10,7 @@ from website.preprints.tasks import on_preprint_updated
 
 logger = logging.getLogger(__name__)
 
+
 def update_share_preprint_modified_dates(dry_run=False):
     for preprint in Preprint.objects.filter(date_modified__lt=F('node__modified')):
         if dry_run:
@@ -18,10 +19,12 @@ def update_share_preprint_modified_dates(dry_run=False):
             on_preprint_updated(preprint._id)
             logger.info(preprint._id + ' data sent to SHARE')
 
+
 class Command(BaseCommand):
     """
     Send more accurate preprint modified dates to SHARE (sends updates if preprint.modified < node.modified)
     """
+
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
         parser.add_argument(

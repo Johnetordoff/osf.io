@@ -13,8 +13,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RemoveField(
-            model_name='abstractnode',
-            name='external_registered_date',
+            model_name='abstractnode', name='external_registered_date',
         ),
         migrations.AddField(
             model_name='abstractnode',

@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0100_notificationdigest_provider'),
     ]
 
-    operations = [
-    ]
+    operations = []

@@ -11,8 +11,12 @@ from rest_framework import exceptions
 from addons.twofactor.models import UserSettings as TwoFactorUserSettings
 from api.base import settings as api_settings
 from api.base.exceptions import (
-    UnconfirmedAccountError, UnclaimedAccountError, DeactivatedAccountError,
-    MergedAccountError, InvalidAccountError, TwoFactorRequiredError,
+    UnconfirmedAccountError,
+    UnclaimedAccountError,
+    DeactivatedAccountError,
+    MergedAccountError,
+    InvalidAccountError,
+    TwoFactorRequiredError,
 )
 from framework.auth import cas
 from framework.auth.core import get_user
@@ -31,7 +35,9 @@ def get_session_from_cookie(cookie_val):
     """
 
     try:
-        session_id = ensure_str(itsdangerous.Signer(settings.SECRET_KEY).unsign(cookie_val))
+        session_id = ensure_str(
+            itsdangerous.Signer(settings.SECRET_KEY).unsign(cookie_val),
+        )
     except itsdangerous.BadSignature:
         return None
     try:
@@ -101,7 +107,11 @@ def created_by_external_idp_and_unconfirmed(user):
     external IdP and is unconfirmed.
     """
 
-    return 'CREATE' in set(sum([list(each.values()) for each in list(user.external_identity.values())], []))
+    return 'CREATE' in set(
+        sum(
+            [list(each.values()) for each in list(user.external_identity.values())], [],
+        ),
+    )
 
 
 # Three customized DRF authentication classes: basic, session/cookie and access token.
@@ -212,7 +222,9 @@ class OSFBasicAuthentication(BasicAuthentication):
             if otp is None:
                 raise TwoFactorRequiredError()
             if not two_factor.verify_code(otp):
-                raise exceptions.AuthenticationFailed(_('Invalid two-factor authentication OTP code.'))
+                raise exceptions.AuthenticationFailed(
+                    _('Invalid two-factor authentication OTP code.'),
+                )
 
     def authenticate_header(self, request):
         """
@@ -222,7 +234,6 @@ class OSFBasicAuthentication(BasicAuthentication):
 
 
 class OSFCASAuthentication(authentication.BaseAuthentication):
-
     def authenticate(self, request):
         """
         Check whether the request provides a valid OAuth2 bearer token.
@@ -243,14 +254,20 @@ class OSFCASAuthentication(authentication.BaseAuthentication):
         try:
             cas_auth_response = client.profile(auth_token)
         except cas.CasHTTPError:
-            raise exceptions.NotAuthenticated(_('User provided an invalid OAuth2 access token'))
+            raise exceptions.NotAuthenticated(
+                _('User provided an invalid OAuth2 access token'),
+            )
 
         if cas_auth_response.authenticated is False:
-            raise exceptions.NotAuthenticated(_('CAS server failed to authenticate this token'))
+            raise exceptions.NotAuthenticated(
+                _('CAS server failed to authenticate this token'),
+            )
 
         user = OSFUser.load(cas_auth_response.user)
         if not user:
-            raise exceptions.AuthenticationFailed(_('Could not find the user associated with this token'))
+            raise exceptions.AuthenticationFailed(
+                _('Could not find the user associated with this token'),
+            )
 
         check_user(user)
         return user, cas_auth_response

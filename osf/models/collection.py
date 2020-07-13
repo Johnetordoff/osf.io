@@ -23,6 +23,7 @@ from website.search.exceptions import SearchUnavailableError
 
 logger = logging.getLogger(__name__)
 
+
 class CollectionSubmission(TaxonomizableMixin, BaseModel):
     primary_identifier_name = 'guid___id'
 
@@ -48,34 +49,53 @@ class CollectionSubmission(TaxonomizableMixin, BaseModel):
         try:
             cgm_id, collection_id = data.split('-')
         except ValueError:
-            raise ValueError('Invalid CollectionSubmission object <_id {}>'.format(data))
+            raise ValueError(
+                'Invalid CollectionSubmission object <_id {}>'.format(data)
+            )
         else:
             if cgm_id and collection_id:
                 try:
                     if isinstance(data, basestring):
-                        return (cls.objects.get(guid___id=cgm_id, collection__guids___id=collection_id) if not select_for_update
-                                else cls.objects.filter(guid___id=cgm_id, collection__guids___id=collection_id).select_for_update().get())
+                        return (
+                            cls.objects.get(
+                                guid___id=cgm_id, collection__guids___id=collection_id
+                            )
+                            if not select_for_update
+                            else cls.objects.filter(
+                                guid___id=cgm_id, collection__guids___id=collection_id
+                            )
+                            .select_for_update()
+                            .get()
+                        )
                 except cls.DoesNotExist:
                     return None
             return None
 
     @property
     def absolute_api_v2_url(self):
-        path = '/collections/{}/collected_metadata/{}/'.format(self.collection._id, self.guid._id)
+        path = '/collections/{}/collected_metadata/{}/'.format(
+            self.collection._id, self.guid._id
+        )
         return api_v2_url(path)
 
     def update_index(self):
         if self.collection.is_public:
             from website.search.search import update_collected_metadata
+
             try:
-                update_collected_metadata(self.guid._id, collection_id=self.collection.id)
+                update_collected_metadata(
+                    self.guid._id, collection_id=self.collection.id
+                )
             except SearchUnavailableError as e:
                 logger.exception(e)
 
     def remove_from_index(self):
         from website.search.search import update_collected_metadata
+
         try:
-            update_collected_metadata(self.guid._id, collection_id=self.collection.id, op='delete')
+            update_collected_metadata(
+                self.guid._id, collection_id=self.collection.id, op='delete'
+            )
         except SearchUnavailableError as e:
             logger.exception(e)
 
@@ -85,13 +105,14 @@ class CollectionSubmission(TaxonomizableMixin, BaseModel):
         self.update_index()
         return ret
 
+
 class Collection(DirtyFieldsMixin, GuidMixin, BaseModel, GuardianMixin):
     objects = IncludeManager()
 
     groups = {
-        'read': ('read_collection', ),
-        'write': ('read_collection', 'write_collection', ),
-        'admin': ('read_collection', 'write_collection', 'admin_collection', )
+        'read': ('read_collection',),
+        'write': ('read_collection', 'write_collection',),
+        'admin': ('read_collection', 'write_collection', 'admin_collection',),
     }
     group_format = 'collections_{self.id}_{group}'
 
@@ -102,21 +123,36 @@ class Collection(DirtyFieldsMixin, GuidMixin, BaseModel, GuardianMixin):
             ('admin_collection', 'Admin Collection'),
         )
 
-    provider = models.ForeignKey('AbstractProvider', blank=True, null=True, on_delete=models.CASCADE)
+    provider = models.ForeignKey(
+        'AbstractProvider', blank=True, null=True, on_delete=models.CASCADE
+    )
     creator = models.ForeignKey('OSFUser', on_delete=models.CASCADE)
-    guid_links = models.ManyToManyField('Guid', through=CollectionSubmission, related_name='collections')
+    guid_links = models.ManyToManyField(
+        'Guid', through=CollectionSubmission, related_name='collections'
+    )
     collected_types = models.ManyToManyField(
         'contenttypes.ContentType',
         related_name='+',
         limit_choices_to={
             'model__in': ['abstractnode', 'basefilenode', 'collection', 'preprint']
-        })
+        },
+    )
     title = models.CharField(max_length=200, validators=[validate_title])
-    collected_type_choices = ArrayField(models.CharField(max_length=127), blank=True, default=list)
-    status_choices = ArrayField(models.CharField(max_length=127), blank=True, default=list)
-    volume_choices = ArrayField(models.CharField(max_length=127), blank=True, default=list)
-    issue_choices = ArrayField(models.CharField(max_length=127), blank=True, default=list)
-    program_area_choices = ArrayField(models.CharField(max_length=127), blank=True, default=list)
+    collected_type_choices = ArrayField(
+        models.CharField(max_length=127), blank=True, default=list
+    )
+    status_choices = ArrayField(
+        models.CharField(max_length=127), blank=True, default=list
+    )
+    volume_choices = ArrayField(
+        models.CharField(max_length=127), blank=True, default=list
+    )
+    issue_choices = ArrayField(
+        models.CharField(max_length=127), blank=True, default=list
+    )
+    program_area_choices = ArrayField(
+        models.CharField(max_length=127), blank=True, default=list
+    )
     is_public = models.BooleanField(default=False, db_index=True)
     is_promoted = models.BooleanField(default=False, db_index=True)
     is_bookmark_collection = models.BooleanField(default=False, db_index=True)
@@ -163,6 +199,7 @@ class Collection(DirtyFieldsMixin, GuidMixin, BaseModel, GuardianMixin):
     @classmethod
     def bulk_update_search(cls, cgms, op='update', index=None):
         from website import search
+
         try:
             search.search.bulk_update_collected_metadata(cgms, op=op, index=index)
         except search.exceptions.SearchUnavailableError as e:
@@ -171,8 +208,15 @@ class Collection(DirtyFieldsMixin, GuidMixin, BaseModel, GuardianMixin):
     def save(self, *args, **kwargs):
         first_save = self.id is None
         if self.is_bookmark_collection:
-            if first_save and self.creator.collection_set.filter(is_bookmark_collection=True, deleted__isnull=True).exists():
-                raise IntegrityError('Each user cannot have more than one Bookmark collection.')
+            if (
+                first_save
+                and self.creator.collection_set.filter(
+                    is_bookmark_collection=True, deleted__isnull=True
+                ).exists()
+            ):
+                raise IntegrityError(
+                    'Each user cannot have more than one Bookmark collection.'
+                )
             if self.title != 'Bookmarks':
                 # Bookmark collections are always named 'Bookmarks'
                 self.title = 'Bookmarks'
@@ -182,18 +226,18 @@ class Collection(DirtyFieldsMixin, GuidMixin, BaseModel, GuardianMixin):
         if first_save:
             # Set defaults for M2M
             content_type = ContentType.objects.filter(
-                app_label='osf',
-                model__in=['abstractnode', 'collection', 'preprint']
+                app_label='osf', model__in=['abstractnode', 'collection', 'preprint']
             )
 
             self.collected_types.add(*content_type)
 
-        # Set up initial permissions
+            # Set up initial permissions
             self.update_group_permissions()
             self.get_group(ADMIN).user_set.add(self.creator)
 
         elif 'is_public' in saved_fields:
             from website.collections.tasks import on_collection_updated
+
             enqueue_task(on_collection_updated.s(self._id))
 
         return ret
@@ -201,7 +245,16 @@ class Collection(DirtyFieldsMixin, GuidMixin, BaseModel, GuardianMixin):
     def has_permission(self, user, perm):
         return user.has_perms(self.groups[perm], self)
 
-    def collect_object(self, obj, collector, collected_type=None, status=None, volume=None, issue=None, program_area=None):
+    def collect_object(
+        self,
+        obj,
+        collector,
+        collected_type=None,
+        status=None,
+        volume=None,
+        issue=None,
+        program_area=None,
+    ):
         """ Adds object to collection, creates CollectionSubmission reference
             Performs type / metadata validation. User permissions checked in view.
 
@@ -232,32 +285,57 @@ class Collection(DirtyFieldsMixin, GuidMixin, BaseModel, GuardianMixin):
         if not self.program_area_choices and program_area:
             raise ValidationError('May not specify "program_area" for this collection')
 
-        if self.collected_type_choices and collected_type not in self.collected_type_choices:
-            raise ValidationError('"{}" is not an acceptable "type" for this collection'.format(collected_type))
+        if (
+            self.collected_type_choices
+            and collected_type not in self.collected_type_choices
+        ):
+            raise ValidationError(
+                '"{}" is not an acceptable "type" for this collection'.format(
+                    collected_type
+                )
+            )
 
         if self.status_choices and status not in self.status_choices:
-            raise ValidationError('"{}" is not an acceptable "status" for this collection'.format(status))
+            raise ValidationError(
+                '"{}" is not an acceptable "status" for this collection'.format(status)
+            )
 
         if self.volume_choices and volume not in self.volume_choices:
-            raise ValidationError('"{}" is not an acceptable "volume" for this collection'.format(volume))
+            raise ValidationError(
+                '"{}" is not an acceptable "volume" for this collection'.format(volume)
+            )
 
         if self.issue_choices and issue not in self.issue_choices:
-            raise ValidationError('"{}" is not an acceptable "issue" for this collection'.format(issue))
+            raise ValidationError(
+                '"{}" is not an acceptable "issue" for this collection'.format(issue)
+            )
 
         if self.program_area_choices and program_area not in self.program_area_choices:
-            raise ValidationError('"{}" is not an acceptable "program_area" for this collection'.format(program_area))
+            raise ValidationError(
+                '"{}" is not an acceptable "program_area" for this collection'.format(
+                    program_area
+                )
+            )
 
-        if not any([isinstance(obj, t.model_class()) for t in self.collected_types.all()]):
+        if not any(
+            [isinstance(obj, t.model_class()) for t in self.collected_types.all()]
+        ):
             # Not all objects have a content_type_pk, have to look the other way.
             # Ideally, all objects would, and we could do:
             #   self.content_types.filter(id=obj.content_type_pk).exists()
-            raise ValidationError('"{}" is not an acceptable "ContentType" for this collection'.format(ContentType.objects.get_for_model(obj).model))
+            raise ValidationError(
+                '"{}" is not an acceptable "ContentType" for this collection'.format(
+                    ContentType.objects.get_for_model(obj).model
+                )
+            )
 
         # Unique together -- self and guid
         if self.collectionsubmission_set.filter(guid=obj.guids.first()).exists():
             raise ValidationError('Object already exists in collection.')
 
-        cgm = self.collectionsubmission_set.create(guid=obj.guids.first(), creator=collector)
+        cgm = self.collectionsubmission_set.create(
+            guid=obj.guids.first(), creator=collector
+        )
         cgm.collected_type = collected_type
         cgm.status = status
         cgm.volume = volume
@@ -296,7 +374,9 @@ class Collection(DirtyFieldsMixin, GuidMixin, BaseModel, GuardianMixin):
         self.deleted = timezone.now()
 
         if self.is_public:
-            self.bulk_update_search(list(self.collectionsubmission_set.all()), op='delete')
+            self.bulk_update_search(
+                list(self.collectionsubmission_set.all()), op='delete'
+            )
 
         self.save()
 

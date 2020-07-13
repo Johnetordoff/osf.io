@@ -58,11 +58,16 @@ Contains helps for "flatten_registration_metadata" for converting from old to ne
 
 # relative urls from the legacy 'nested' format
 FILE_VIEW_URL_TEMPLATE = '/project/{node_id}/files/osfstorage/{file_id}'
-FILE_VIEW_URL_REGEX = re.compile(r'/(?:project/)?(?P<node_id>\w{5})/files/osfstorage/(?P<file_id>\w{24})')
+FILE_VIEW_URL_REGEX = re.compile(
+    r'/(?:project/)?(?P<node_id>\w{5})/files/osfstorage/(?P<file_id>\w{24})'
+)
 
 # use absolute URLs in new 'flattened' format
-FILE_HTML_URL_TEMPLATE = urljoin(settings.DOMAIN, '/project/{node_id}/files/osfstorage/{file_id}')
+FILE_HTML_URL_TEMPLATE = urljoin(
+    settings.DOMAIN, '/project/{node_id}/files/osfstorage/{file_id}'
+)
 FILE_DOWNLOAD_URL_TEMPLATE = urljoin(settings.DOMAIN, '/download/{file_id}')
+
 
 def flatten_registration_metadata(schema, registered_meta):
     """
@@ -81,19 +86,17 @@ def flatten_registration_metadata(schema, registered_meta):
     registration_responses = {}
     registration_response_keys = schema.schema_blocks.filter(
         registration_response_key__isnull=False
-    ).values(
-        'registration_response_key',
-        'block_type'
-    )
+    ).values('registration_response_key', 'block_type')
 
     for registration_response_key_dict in registration_response_keys:
         key = registration_response_key_dict['registration_response_key']
         registration_responses[key] = get_nested_answer(
             registered_meta,
             registration_response_key_dict['block_type'],
-            key.split('.')
+            key.split('.'),
         )
     return registration_responses
+
 
 # For flatten_registration_metadata
 def build_file_ref(file):
@@ -127,7 +130,9 @@ def build_file_ref(file):
     if view_url:
         url_match = FILE_VIEW_URL_REGEX.search(view_url)
         if not url_match:
-            raise SchemaBlockConversionError('Unexpected file viewUrl: {}'.format(view_url))
+            raise SchemaBlockConversionError(
+                'Unexpected file viewUrl: {}'.format(view_url)
+            )
         groupdict = url_match.groupdict()
         file_id = groupdict['file_id']
         node_id = groupdict['node_id']
@@ -138,7 +143,9 @@ def build_file_ref(file):
         node_id = file.get('nodeId')
 
     if not (file_id and node_id):
-        raise SchemaBlockConversionError('Could not find file and node ids in file info: {}'.format(file))
+        raise SchemaBlockConversionError(
+            'Could not find file and node ids in file info: {}'.format(file)
+        )
 
     file_name = file.get('selectedFileName')
     if file_data and not file_name:
@@ -158,14 +165,19 @@ def build_file_ref(file):
         },
     }
 
+
 # For flatten_registration_metadata
 def build_file_refs(messy_file_infos):
     for file_info in messy_file_infos:
         if not file_info:
             continue
-        if len(file_info) == 1 and file_info.get('selectedFileName') == 'No file selected':
+        if (
+            len(file_info) == 1
+            and file_info.get('selectedFileName') == 'No file selected'
+        ):
             continue
         yield build_file_ref(file_info)
+
 
 # For flatten_registration_metadata
 def get_value_or_extra(nested_response, block_type, key, keys):
@@ -200,6 +212,7 @@ def get_value_or_extra(nested_response, block_type, key, keys):
         return str(value)
     return value
 
+
 # For flatten_registration_metadata
 def get_nested_answer(nested_response, block_type, keys):
     """
@@ -211,7 +224,9 @@ def get_nested_answer(nested_response, block_type, keys):
     """
     if isinstance(nested_response, dict):
         if not keys:
-            raise SchemaBlockConversionError('Unexpected nested object (expected list or string)', nested_response)
+            raise SchemaBlockConversionError(
+                'Unexpected nested object (expected list or string)', nested_response
+            )
         key = keys.pop(0)
         # Returns the value associated with the given key
         value = get_value_or_extra(nested_response, block_type, key, keys)
@@ -220,10 +235,15 @@ def get_nested_answer(nested_response, block_type, keys):
         # Once we've drilled down through the entire dictionary, our nested_response
         # should be an array or a string
         if not isinstance(nested_response, (list, basestring)):
-            raise SchemaBlockConversionError('Unexpected value type (expected list or string)', nested_response)
+            raise SchemaBlockConversionError(
+                'Unexpected value type (expected list or string)', nested_response
+            )
         return nested_response
 
-def expand_registration_responses(schema, registration_responses, file_storage_resource):
+
+def expand_registration_responses(
+    schema, registration_responses, file_storage_resource
+):
     """
     Expanding `registration_responses` into Draft.registration_metadata or
     Registration.registered_meta. registration_responses are more flat;
@@ -236,10 +256,7 @@ def expand_registration_responses(schema, registration_responses, file_storage_r
     # Pull out all registration_response_keys and their block types
     registration_response_keys = schema.schema_blocks.filter(
         registration_response_key__isnull=False
-    ).values(
-        'registration_response_key',
-        'block_type'
-    )
+    ).values('registration_response_key', 'block_type')
 
     metadata = {}
 
@@ -257,10 +274,11 @@ def expand_registration_responses(schema, registration_responses, file_storage_r
             value=build_answer_block(
                 block_type,
                 registration_responses.get(response_key, ''),
-                file_storage_resource=file_storage_resource
-            )
+                file_storage_resource=file_storage_resource,
+            ),
         )
     return metadata
+
 
 # For expanding registration_responses
 def set_nested_values(nested_dictionary, keys, value):
@@ -281,11 +299,14 @@ def set_nested_values(nested_dictionary, keys, value):
     if not nested_dictionary.get(final_key):
         nested_dictionary[final_key] = value
 
+
 # For expanding registration_responses
 def build_extra_file_dict(file_ref):
     url_match = FILE_VIEW_URL_REGEX.search(file_ref['file_urls']['html'])
     if not url_match:
-        raise SchemaBlockConversionError('Expected `file_urls.html` in format `/project/<node_id>/files/osfstorage/<file_id>`')
+        raise SchemaBlockConversionError(
+            'Expected `file_urls.html` in format `/project/<node_id>/files/osfstorage/<file_id>`'
+        )
 
     groups = url_match.groupdict()
     node_id = groups['node_id']
@@ -303,8 +324,9 @@ def build_extra_file_dict(file_ref):
         'nodeId': node_id,  # Used in _find_orphan_files
         'data': {
             'name': file_name,  # What legacy FE needs for rendering file on the draft
-        }
+        },
     }
+
 
 # For expanding registration_responses
 def build_answer_block(block_type, value, file_storage_resource=None):
@@ -312,11 +334,8 @@ def build_answer_block(block_type, value, file_storage_resource=None):
     if block_type == 'file-input':
         extra = list(map(build_extra_file_dict, value))
         value = ''
-    return {
-        'comments': [],
-        'value': value,
-        'extra': extra
-    }
+    return {'comments': [], 'value': value, 'extra': extra}
+
 
 # For expanding registration_responses
 def build_registration_metadata_dict(keys, current_index=0, metadata={}, value={}):
@@ -349,10 +368,12 @@ def build_registration_metadata_dict(keys, current_index=0, metadata={}, value={
         return metadata
     else:
         # All keys from left to right including the current key.
-        current_chain = keys[0:current_index + 1]
+        current_chain = keys[0 : current_index + 1]
         # If we're on the final key, use the passed in value
         val = value if current_index == len(keys) - 1 else {}
         # set_nested_values incrementally adds another layer of nesting to the dictionary,
         # until we get to the deepest level where we can set the value equal to the user's response
         set_nested_values(metadata, current_chain, val)
-        return build_registration_metadata_dict(keys, current_index + 1, metadata, value)
+        return build_registration_metadata_dict(
+            keys, current_index + 1, metadata, value
+        )

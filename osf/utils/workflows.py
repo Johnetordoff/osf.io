@@ -1,9 +1,9 @@
-
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
 from enum import Enum
 from enum import unique
+
 
 @unique
 class ChoiceEnum(Enum):
@@ -14,6 +14,7 @@ class ChoiceEnum(Enum):
     @classmethod
     def values(cls):
         return tuple(c.value for c in cls)
+
 
 DEFAULT_STATES = [
     ('INITIAL', 'initial'),
@@ -30,9 +31,7 @@ DEFAULT_TRIGGERS = [
 REVIEW_STATES = DEFAULT_STATES + [
     ('WITHDRAWN', 'withdrawn'),
 ]
-REVIEW_TRIGGERS = DEFAULT_TRIGGERS + [
-    ('WITHDRAW', 'withdraw')
-]
+REVIEW_TRIGGERS = DEFAULT_TRIGGERS + [('WITHDRAW', 'withdraw')]
 
 DefaultStates = ChoiceEnum('DefaultStates', DEFAULT_STATES)
 ReviewStates = ChoiceEnum('ReviewStates', REVIEW_STATES)
@@ -56,30 +55,54 @@ DEFAULT_TRANSITIONS = [
         'trigger': DefaultTriggers.SUBMIT.value,
         'source': [DefaultStates.INITIAL.value],
         'dest': DefaultStates.PENDING.value,
-        'after': ['save_action', 'update_last_transitioned', 'save_changes', 'notify_submit'],
+        'after': [
+            'save_action',
+            'update_last_transitioned',
+            'save_changes',
+            'notify_submit',
+        ],
     },
     {
         'trigger': DefaultTriggers.SUBMIT.value,
         'source': [DefaultStates.PENDING.value, DefaultStates.REJECTED.value],
         'conditions': 'resubmission_allowed',
         'dest': DefaultStates.PENDING.value,
-        'after': ['save_action', 'update_last_transitioned', 'save_changes', 'notify_resubmit'],
+        'after': [
+            'save_action',
+            'update_last_transitioned',
+            'save_changes',
+            'notify_resubmit',
+        ],
     },
     {
         'trigger': DefaultTriggers.ACCEPT.value,
         'source': [DefaultStates.PENDING.value, DefaultStates.REJECTED.value],
         'dest': DefaultStates.ACCEPTED.value,
-        'after': ['save_action', 'update_last_transitioned', 'save_changes', 'notify_accept_reject'],
+        'after': [
+            'save_action',
+            'update_last_transitioned',
+            'save_changes',
+            'notify_accept_reject',
+        ],
     },
     {
         'trigger': DefaultTriggers.REJECT.value,
         'source': [DefaultStates.PENDING.value, DefaultStates.ACCEPTED.value],
         'dest': DefaultStates.REJECTED.value,
-        'after': ['save_action', 'update_last_transitioned', 'save_changes', 'notify_accept_reject'],
+        'after': [
+            'save_action',
+            'update_last_transitioned',
+            'save_changes',
+            'notify_accept_reject',
+        ],
     },
     {
         'trigger': DefaultTriggers.EDIT_COMMENT.value,
-        'source': [DefaultStates.PENDING.value, DefaultStates.REJECTED.value, DefaultStates.ACCEPTED.value],
+        'source': [
+            DefaultStates.PENDING.value,
+            DefaultStates.REJECTED.value,
+            DefaultStates.ACCEPTED.value,
+        ],
         'dest': '=',
         'after': ['save_action', 'save_changes', 'notify_edit_comment'],
     },
@@ -90,9 +113,16 @@ REVIEWABLE_TRANSITIONS = DEFAULT_TRANSITIONS + [
         'trigger': ReviewTriggers.WITHDRAW.value,
         'source': [ReviewStates.PENDING.value, ReviewStates.ACCEPTED.value],
         'dest': ReviewStates.WITHDRAWN.value,
-        'after': ['save_action', 'update_last_transitioned', 'perform_withdraw', 'save_changes', 'notify_withdraw']
+        'after': [
+            'save_action',
+            'update_last_transitioned',
+            'perform_withdraw',
+            'save_changes',
+            'notify_withdraw',
+        ],
     }
 ]
+
 
 @unique
 class RequestTypes(ChoiceEnum):

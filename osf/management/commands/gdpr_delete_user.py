@@ -15,16 +15,16 @@ from osf.models import OSFUser
 
 logger = logging.getLogger(__name__)
 
+
 class Command(BaseCommand):
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
         parser.add_argument(
-            '--dry',
-            action='store_true',
-            dest='dry_run',
-            help='Dry run',
+            '--dry', action='store_true', dest='dry_run', help='Dry run',
         )
-        parser.add_argument('guids', type=str, nargs='+', help='user guid to be deleted')
+        parser.add_argument(
+            'guids', type=str, nargs='+', help='user guid to be deleted'
+        )
 
     def handle(self, *args, **options):
         guids = options.get('guids', None)

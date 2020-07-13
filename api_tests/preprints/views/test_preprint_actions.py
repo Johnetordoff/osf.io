@@ -1,9 +1,7 @@
 import pytest
 
 from api.base.settings.defaults import API_BASE
-from osf_tests.factories import (
-    AuthUserFactory,
-)
+from osf_tests.factories import AuthUserFactory
 from osf.utils import permissions as osf_permissions
 
 from api_tests.reviews.mixins.filter_mixins import ReviewActionFilterMixin
@@ -12,7 +10,6 @@ from api_tests.reviews.mixins.comment_settings import ReviewActionCommentSetting
 
 @pytest.mark.enable_quickfiles_creation
 class TestPreprintActionFilters(ReviewActionFilterMixin):
-
     @pytest.fixture()
     def preprint(self, all_actions):
         return all_actions[0].target
@@ -23,9 +20,7 @@ class TestPreprintActionFilters(ReviewActionFilterMixin):
         if request.param:
             user.groups.add(preprint.provider.get_group('moderator'))
         else:
-            preprint.add_contributor(
-                user,
-                permissions=osf_permissions.ADMIN)
+            preprint.add_contributor(user, permissions=osf_permissions.ADMIN)
         return user
 
     @pytest.fixture()

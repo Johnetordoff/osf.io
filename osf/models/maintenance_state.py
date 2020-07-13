@@ -8,6 +8,7 @@ LEVELS = [
     (3, 'danger'),
 ]
 
+
 class MaintenanceState(models.Model):
 
     level = models.IntegerField(choices=LEVELS, default=1)

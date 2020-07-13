@@ -16,4 +16,3 @@ def app():
 
     test_app.testing = True
     return test_app
-

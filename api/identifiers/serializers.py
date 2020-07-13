@@ -3,7 +3,12 @@ from rest_framework import exceptions
 
 from api.base.utils import absolute_reverse, get_user_auth
 from api.base.exceptions import ServiceUnavailableError
-from api.base.serializers import JSONAPISerializer, RelationshipField, IDField, LinksField
+from api.base.serializers import (
+    JSONAPISerializer,
+    RelationshipField,
+    IDField,
+    LinksField,
+)
 from osf.models import NodeLog
 from framework.exceptions import HTTPError
 
@@ -11,9 +16,7 @@ from website.identifiers.utils import get_or_create_identifiers
 
 
 class RegistrationIdentifierSerializer(JSONAPISerializer):
-    writeable_method_fields = frozenset([
-        'category',
-    ])
+    writeable_method_fields = frozenset(['category',])
 
     category = ser.SerializerMethodField()
 
@@ -49,7 +52,8 @@ class RegistrationIdentifierSerializer(JSONAPISerializer):
 
     def self_url(self, obj):
         return absolute_reverse(
-            'identifiers:identifier-detail', kwargs={
+            'identifiers:identifier-detail',
+            kwargs={
                 'identifier_id': obj._id,
                 'version': self.context['request'].parser_context['kwargs']['version'],
             },
@@ -60,7 +64,9 @@ class RegistrationIdentifierSerializer(JSONAPISerializer):
         auth = get_user_auth(self.context['request'])
         if validated_data.get('category', None) == 'doi':
             if node.get_identifier('doi'):
-                raise exceptions.ValidationError('A DOI already exists for this resource.')
+                raise exceptions.ValidationError(
+                    'A DOI already exists for this resource.',
+                )
             try:
                 identifiers = get_or_create_identifiers(node)
             except HTTPError:
@@ -80,7 +86,9 @@ class RegistrationIdentifierSerializer(JSONAPISerializer):
             )
             return node.identifiers.get(category='doi')
         else:
-            raise exceptions.ValidationError('You can only mint a DOI, not a different type of identifier.')
+            raise exceptions.ValidationError(
+                'You can only mint a DOI, not a different type of identifier.',
+            )
 
 
 class NodeIdentifierSerializer(RegistrationIdentifierSerializer):

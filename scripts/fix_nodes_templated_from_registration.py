@@ -13,7 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 def do_migration():
-    nodes = AbstractNode.objects.filter(template_node__type='osf.registration', type='osf.registration')
+    nodes = AbstractNode.objects.filter(
+        template_node__type='osf.registration', type='osf.registration'
+    )
     # Avoid updating date_modified for migration
     date_modified_field = AbstractNode._meta.get_field('date_modified')
     date_modified_field.auto_now = False

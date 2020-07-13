@@ -10,8 +10,7 @@ from framework.auth.decorators import must_be_logged_in
 
 from addons.base import generic_views
 from osf.models import ExternalAccount
-from website.project.decorators import (
-    must_have_addon)
+from website.project.decorators import must_have_addon
 
 import owncloud
 from addons.owncloud.models import OwnCloudProvider
@@ -21,21 +20,14 @@ from addons.owncloud import settings
 SHORT_NAME = 'owncloud'
 FULL_NAME = 'OwnCloud'
 
-owncloud_account_list = generic_views.account_list(
-    SHORT_NAME,
-    OwnCloudSerializer
-)
+owncloud_account_list = generic_views.account_list(SHORT_NAME, OwnCloudSerializer)
 
-owncloud_import_auth = generic_views.import_auth(
-    SHORT_NAME,
-    OwnCloudSerializer
-)
+owncloud_import_auth = generic_views.import_auth(SHORT_NAME, OwnCloudSerializer)
 
-owncloud_deauthorize_node = generic_views.deauthorize_node(
-    SHORT_NAME
-)
+owncloud_deauthorize_node = generic_views.deauthorize_node(SHORT_NAME)
 
 ## Config ##
+
 
 @must_be_logged_in
 def owncloud_add_user_account(auth, **kwargs):
@@ -60,23 +52,20 @@ def owncloud_add_user_account(auth, **kwargs):
         oc.login(username, password)
         oc.logout()
     except requests.exceptions.ConnectionError:
-        return {
-            'message': 'Invalid ownCloud server.'
-        }, http_status.HTTP_400_BAD_REQUEST
+        return {'message': 'Invalid ownCloud server.'}, http_status.HTTP_400_BAD_REQUEST
     except owncloud.owncloud.HTTPResponseError:
-        return {
-            'message': 'ownCloud Login failed.'
-        }, http_status.HTTP_401_UNAUTHORIZED
+        return {'message': 'ownCloud Login failed.'}, http_status.HTTP_401_UNAUTHORIZED
 
-    provider = OwnCloudProvider(account=None, host=host.url,
-                            username=username, password=password)
+    provider = OwnCloudProvider(
+        account=None, host=host.url, username=username, password=password
+    )
     try:
         provider.account.save()
     except ValidationError:
         # ... or get the old one
         provider.account = ExternalAccount.objects.get(
             provider=provider.short_name,
-            provider_id='{}:{}'.format(host.url, username).lower()
+            provider_id='{}:{}'.format(host.url, username).lower(),
         )
         if provider.account.oauth_key != password:
             provider.account.oauth_key = password
@@ -91,6 +80,7 @@ def owncloud_add_user_account(auth, **kwargs):
 
     return {}
 
+
 @must_have_addon(SHORT_NAME, 'user')
 @must_have_addon(SHORT_NAME, 'node')
 def owncloud_folder_list(node_addon, user_addon, **kwargs):
@@ -100,18 +90,14 @@ def owncloud_folder_list(node_addon, user_addon, **kwargs):
     path = request.args.get('path')
     return node_addon.get_folders(path=path)
 
+
 def _set_folder(node_addon, folder, auth):
     node_addon.set_folder(folder['path'], auth=auth)
     node_addon.save()
 
+
 owncloud_set_config = generic_views.set_config(
-    SHORT_NAME,
-    FULL_NAME,
-    OwnCloudSerializer,
-    _set_folder
+    SHORT_NAME, FULL_NAME, OwnCloudSerializer, _set_folder
 )
 
-owncloud_get_config = generic_views.get_config(
-    SHORT_NAME,
-    OwnCloudSerializer
-)
+owncloud_get_config = generic_views.get_config(SHORT_NAME, OwnCloudSerializer)

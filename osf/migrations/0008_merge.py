@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0007_auto_20170404_0857'),
     ]
 
-    operations = [
-    ]
+    operations = []

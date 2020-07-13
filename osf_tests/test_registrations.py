@@ -19,7 +19,7 @@ from osf_tests.management_commands.test_migration_registration_responses import 
     prereg_registration_responses,
     prereg_registration_metadata_built,
     veer_registration_responses,
-    veer_condensed
+    veer_condensed,
 )
 
 pytestmark = pytest.mark.django_db
@@ -60,22 +60,18 @@ def test_factory(user, project):
     project.add_contributor(user2)
 
     data = {'some': 'data'}
-    draft_reg = DraftRegistrationFactory(registration_metadata=data, branched_from=project)
+    draft_reg = DraftRegistrationFactory(
+        registration_metadata=data, branched_from=project
+    )
     registration2 = factories.RegistrationFactory(
-        project=project,
-        user=user2,
-        draft_registration=draft_reg,
+        project=project, user=user2, draft_registration=draft_reg,
     )
     assert registration2.registered_from == project
     assert registration2.registered_user == user2
-    assert (
-        registration2.registered_meta[get_default_metaschema()._id] ==
-        data
-    )
+    assert registration2.registered_meta[get_default_metaschema()._id] == data
 
 
 class TestRegistration:
-
     def test_registered_schema_id(self):
         reg = factories.RegistrationFactory()
         assert reg.registered_schema_id == reg.registered_schema.get()._id
@@ -114,7 +110,6 @@ class TestRegistration:
 
 # copied from tests/test_models.py
 class TestRegisterNode:
-
     @pytest.fixture()
     def registration(self, project):
         reg = factories.RegistrationFactory(project=project)
@@ -125,7 +120,9 @@ class TestRegisterNode:
 
     def test_does_not_have_addon_added_log(self, registration):
         # should not have addon_added log from wiki addon being added
-        assert NodeLog.ADDON_ADDED not in list(registration.logs.values_list('action', flat=True))
+        assert NodeLog.ADDON_ADDED not in list(
+            registration.logs.values_list('action', flat=True)
+        )
 
     def test_title(self, registration, project):
         assert registration.title == project.title
@@ -144,9 +141,8 @@ class TestRegisterNode:
 
     def test_contributors(self, registration, project):
         assert registration.contributors.count() == project.contributors.count()
-        assert (
-            set(registration.contributors.values_list('id', flat=True)) ==
-            set(project.contributors.values_list('id', flat=True))
+        assert set(registration.contributors.values_list('id', flat=True)) == set(
+            project.contributors.values_list('id', flat=True)
         )
 
     def test_forked_from(self, registration, project, auth):
@@ -174,9 +170,8 @@ class TestRegisterNode:
         assert registration.logs.first().action == project_second_log.action
 
     def test_tags(self, registration, project):
-        assert (
-            set(registration.tags.values_list('name', flat=True)) ==
-            set(project.tags.values_list('name', flat=True))
+        assert set(registration.tags.values_list('name', flat=True)) == set(
+            project.tags.values_list('name', flat=True)
         )
 
     def test_nodes(self, project, user):
@@ -184,20 +179,14 @@ class TestRegisterNode:
         # Create some nodes
         # component of project
         factories.NodeFactory(
-            creator=user,
-            parent=project,
-            title='Title1',
+            creator=user, parent=project, title='Title1',
         )
         subproject = factories.ProjectFactory(
-            creator=user,
-            parent=project,
-            title='Title2',
+            creator=user, parent=project, title='Title2',
         )
         # component of subproject
         factories.NodeFactory(
-            creator=user,
-            parent=subproject,
-            title='Title3',
+            creator=user, parent=subproject, title='Title3',
         )
 
         # Make a registration
@@ -208,9 +197,8 @@ class TestRegisterNode:
 
         # Registration has the nodes
         assert registration._nodes.count() == 2
-        assert(
-            set(registration._nodes.values_list('title', flat=True)) ==
-            set(project._nodes.values_list('title', flat=True))
+        assert set(registration._nodes.values_list('title', flat=True)) == set(
+            project._nodes.values_list('title', flat=True)
         )
         # Nodes are copies and not the original versions
         for node in registration._nodes.all():
@@ -225,34 +213,29 @@ class TestRegisterNode:
         registration.refresh_from_db()
 
         assert project.linked_nodes.count() == registration.linked_nodes.count()
-        assert project.linked_nodes.first().title == registration.linked_nodes.first().title
+        assert (
+            project.linked_nodes.first().title
+            == registration.linked_nodes.first().title
+        )
 
     def test_private_contributor_registration(self, project, user):
 
         # Create some nodes
         # component
         comp1 = factories.NodeFactory(  # noqa
-            title='Comp1',
-            creator=user,
-            parent=project,
+            title='Comp1', creator=user, parent=project,
         )
         # subproject
         comp2 = factories.ProjectFactory(  # noqa
-            title='Comp1',
-            creator=user,
-            parent=project,
+            title='Comp1', creator=user, parent=project,
         )
 
         # Create some nodes to share
         shared_component = factories.NodeFactory(
-            title='Shared Component',
-            creator=user,
-            parent=project,
+            title='Shared Component', creator=user, parent=project,
         )
         shared_subproject = factories.ProjectFactory(
-            title='Shared Subproject',
-            creator=user,
-            parent=project,
+            title='Shared Subproject', creator=user, parent=project,
         )
 
         # Share the project and some nodes
@@ -276,13 +259,15 @@ class TestRegisterNode:
 
     def test_registered_date(self, registration):
         # allowance increased in OSF-9050, if this fails sporadically again then registrations may need to be optimized or this test reworked
-        assert_datetime_equal(registration.registered_date, timezone.now(), allowance=10000)
+        assert_datetime_equal(
+            registration.registered_date, timezone.now(), allowance=10000
+        )
 
     def test_registered_addons(self, registration):
-        assert (
-            [addon.config.short_name for addon in registration.get_addons()] ==
-            [addon.config.short_name for addon in registration.registered_from.get_addons()]
-        )
+        assert [addon.config.short_name for addon in registration.get_addons()] == [
+            addon.config.short_name
+            for addon in registration.registered_from.get_addons()
+        ]
 
     def test_registered_user(self, project):
         # Add a second contributor
@@ -296,9 +281,8 @@ class TestRegisterNode:
         assert registration.registered_from == project
 
     def test_registered_get_absolute_url(self, registration):
-        assert (
-            registration.get_absolute_url() ==
-            '{}v2/registrations/{}/'.format(settings.API_DOMAIN, registration._id)
+        assert registration.get_absolute_url() == '{}v2/registrations/{}/'.format(
+            settings.API_DOMAIN, registration._id
         )
 
     def test_registration_list(self, registration, project):
@@ -315,10 +299,9 @@ class TestRegisterNode:
         node.save()
 
         registration = factories.RegistrationFactory(project=node)
-        assert (
-            set(registration.affiliated_institutions.values_list('id', flat=True)) ==
-            set(node.affiliated_institutions.values_list('id', flat=True))
-        )
+        assert set(
+            registration.affiliated_institutions.values_list('id', flat=True)
+        ) == set(node.affiliated_institutions.values_list('id', flat=True))
 
     def test_registration_of_project_with_no_wiki_pages(self, registration):
         assert WikiPage.objects.get_wiki_pages_latest(registration).exists() is False
@@ -328,27 +311,25 @@ class TestRegisterNode:
     @mock.patch('website.project.signals.after_create_registration')
     def test_registration_clones_project_wiki_pages(self, mock_signal, project, user):
         project = factories.ProjectFactory(creator=user, is_public=True)
-        wiki_page = WikiFactory(
-            user=user,
-            node=project,
-        )
-        wiki = WikiVersionFactory(
-            wiki_page=wiki_page,
-        )
-        current_wiki = WikiVersionFactory(
-            wiki_page=wiki_page,
-            identifier=2
-        )
+        wiki_page = WikiFactory(user=user, node=project,)
+        wiki = WikiVersionFactory(wiki_page=wiki_page,)
+        current_wiki = WikiVersionFactory(wiki_page=wiki_page, identifier=2)
         draft_reg = factories.DraftRegistrationFactory(branched_from=project)
-        registration = project.register_node(get_default_metaschema(), Auth(user), draft_reg, None)
+        registration = project.register_node(
+            get_default_metaschema(), Auth(user), draft_reg, None
+        )
         assert registration.wiki_private_uuids == {}
 
-        registration_wiki_current = WikiVersion.objects.get_for_node(registration, current_wiki.wiki_page.page_name)
+        registration_wiki_current = WikiVersion.objects.get_for_node(
+            registration, current_wiki.wiki_page.page_name
+        )
         assert registration_wiki_current.wiki_page.node == registration
         assert registration_wiki_current._id != current_wiki._id
         assert registration_wiki_current.identifier == 2
 
-        registration_wiki_version = WikiVersion.objects.get_for_node(registration, wiki.wiki_page.page_name, version=1)
+        registration_wiki_version = WikiVersion.objects.get_for_node(
+            registration, wiki.wiki_page.page_name, version=1
+        )
         assert registration_wiki_version.wiki_page.node == registration
         assert registration_wiki_version._id != wiki._id
         assert registration_wiki_version.identifier == 1
@@ -360,36 +341,50 @@ class TestRegisterNode:
 
 
 class TestRegisterNodeContributors:
-
     @pytest.fixture()
     def project_two(self, user, auth):
         return factories.ProjectFactory(creator=user)
 
     @pytest.fixture()
     def component(self, user, auth, project_two):
-        return factories.NodeFactory(
-            creator=user,
-            parent=project_two,
-        )
+        return factories.NodeFactory(creator=user, parent=project_two,)
 
     @pytest.fixture()
     def contributor_unregistered(self, user, auth, project_two):
-        ret = project_two.add_unregistered_contributor(fullname='Johnny Git Gud', email='ford.prefect@hitchhikers.com', auth=auth)
+        ret = project_two.add_unregistered_contributor(
+            fullname='Johnny Git Gud', email='ford.prefect@hitchhikers.com', auth=auth
+        )
         project_two.save()
         return ret
 
     @pytest.fixture()
     def contributor_unregistered_no_email(self, user, auth, project_two, component):
-        ret = component.add_unregistered_contributor(fullname='Johnny B. Bard', email='', auth=auth)
+        ret = component.add_unregistered_contributor(
+            fullname='Johnny B. Bard', email='', auth=auth
+        )
         component.save()
         return ret
 
     @pytest.fixture()
-    def registration(self, project_two, component, contributor_unregistered, contributor_unregistered_no_email):
+    def registration(
+        self,
+        project_two,
+        component,
+        contributor_unregistered,
+        contributor_unregistered_no_email,
+    ):
         with mock_archive(project_two, autoapprove=True) as registration:
             return registration
 
-    def test_unregistered_contributors_unclaimed_records_get_copied(self, user, project, component, registration, contributor_unregistered, contributor_unregistered_no_email):
+    def test_unregistered_contributors_unclaimed_records_get_copied(
+        self,
+        user,
+        project,
+        component,
+        registration,
+        contributor_unregistered,
+        contributor_unregistered_no_email,
+    ):
         contributor_unregistered.refresh_from_db()
         contributor_unregistered_no_email.refresh_from_db()
         assert registration.contributors.filter(id=contributor_unregistered.id).exists()
@@ -397,20 +392,26 @@ class TestRegisterNodeContributors:
 
         # component
         component_registration = registration.nodes[0]
-        assert component_registration.contributors.filter(id=contributor_unregistered_no_email.id).exists()
-        assert component_registration._id in contributor_unregistered_no_email.unclaimed_records
+        assert component_registration.contributors.filter(
+            id=contributor_unregistered_no_email.id
+        ).exists()
+        assert (
+            component_registration._id
+            in contributor_unregistered_no_email.unclaimed_records
+        )
 
 
 # copied from tests/test_registrations
 class TestNodeSanctionStates:
-
     def test_sanction_none(self):
         node = factories.NodeFactory()
         assert bool(node.sanction) is False
 
     def test_sanction_embargo_termination_first(self):
         embargo_termination_approval = factories.EmbargoTerminationApprovalFactory()
-        registration = Registration.objects.get(embargo_termination_approval=embargo_termination_approval)
+        registration = Registration.objects.get(
+            embargo_termination_approval=embargo_termination_approval
+        )
         assert registration.sanction == embargo_termination_approval
 
     def test_sanction_retraction(self):
@@ -425,7 +426,9 @@ class TestNodeSanctionStates:
 
     def test_sanction_registration_approval(self):
         registration_approval = factories.RegistrationApprovalFactory()
-        registration = Registration.objects.get(registration_approval=registration_approval)
+        registration = Registration.objects.get(
+            registration_approval=registration_approval
+        )
         assert registration.sanction == registration_approval
 
     def test_sanction_searches_parents(self):
@@ -440,7 +443,9 @@ class TestNodeSanctionStates:
 
     def test_is_pending_registration(self):
         registration_approval = factories.RegistrationApprovalFactory()
-        registration = Registration.objects.get(registration_approval=registration_approval)
+        registration = Registration.objects.get(
+            registration_approval=registration_approval
+        )
         assert registration_approval.is_pending_approval
         assert registration.is_pending_registration
 
@@ -454,8 +459,12 @@ class TestNodeSanctionStates:
             assert sub_reg.is_pending_registration
 
     def test_is_registration_approved(self):
-        registration_approval = factories.RegistrationApprovalFactory(state=Sanction.APPROVED, approve=True)
-        registration = Registration.objects.get(registration_approval=registration_approval)
+        registration_approval = factories.RegistrationApprovalFactory(
+            state=Sanction.APPROVED, approve=True
+        )
+        registration = Registration.objects.get(
+            registration_approval=registration_approval
+        )
         assert registration.is_registration_approved
 
     def test_is_registration_approved_searches_parents(self):
@@ -476,12 +485,16 @@ class TestNodeSanctionStates:
 
     @mock.patch('website.project.tasks.send_share_node_data')
     @mock.patch('osf.models.node.AbstractNode.update_search')
-    def test_is_retracted_searches_parents(self, mock_registration_updated, mock_update_search):
+    def test_is_retracted_searches_parents(
+        self, mock_registration_updated, mock_update_search
+    ):
         user = factories.UserFactory()
         node = factories.ProjectFactory(creator=user)
         child = factories.NodeFactory(creator=user, parent=node)
         factories.NodeFactory(creator=user, parent=child)
-        with mock_archive(node, autoapprove=True, retraction=True, autoapprove_retraction=True) as registration:
+        with mock_archive(
+            node, autoapprove=True, retraction=True, autoapprove_retraction=True
+        ) as registration:
             sub_reg = registration._nodes.first()._nodes.first()
             assert sub_reg.is_retracted is True
 
@@ -549,7 +562,6 @@ class TestNodeSanctionStates:
 
 @pytest.mark.enable_implicit_clean
 class TestDOIValidation:
-
     def test_validate_bad_doi(self):
         reg = factories.RegistrationFactory()
 
@@ -576,29 +588,23 @@ class TestRegistrationMixin:
     @pytest.fixture()
     def draft_prereg(self, prereg_schema):
         return factories.DraftRegistrationFactory(
-            registration_schema=prereg_schema,
-            registration_metadata={},
+            registration_schema=prereg_schema, registration_metadata={},
         )
 
     @pytest.fixture()
     def draft_veer(self, veer_schema):
         return factories.DraftRegistrationFactory(
-            registration_schema=veer_schema,
-            registration_metadata={},
+            registration_schema=veer_schema, registration_metadata={},
         )
 
     @pytest.fixture()
     def prereg_schema(self):
-        return RegistrationSchema.objects.get(
-            name='Prereg Challenge',
-            schema_version=2
-        )
+        return RegistrationSchema.objects.get(name='Prereg Challenge', schema_version=2)
 
     @pytest.fixture()
     def veer_schema(self):
         return RegistrationSchema.objects.get(
-            name__icontains='Pre-Registration in Social Psychology',
-            schema_version=2
+            name__icontains='Pre-Registration in Social Psychology', schema_version=2
         )
 
     def test_expand_registration_responses(self, draft_prereg):

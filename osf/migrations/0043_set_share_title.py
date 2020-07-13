@@ -20,6 +20,7 @@ SHARE_TITLES = {
     'socarxiv': 'SocArXiv',
 }
 
+
 def set_share_titles(state, *args, **kwargs):
     PreprintProvider = state.get_model('osf', 'preprintprovider')
     for provider in PreprintProvider.objects.filter(_id__in=list(SHARE_TITLES.keys())):
@@ -29,7 +30,10 @@ def set_share_titles(state, *args, **kwargs):
 
 def unset_share_titles(state, *args, **kwargs):
     PreprintProvider = state.get_model('osf', 'preprintprovider')
-    PreprintProvider.objects.filter(_id__in=list(SHARE_TITLES.keys())).update(share_title='')
+    PreprintProvider.objects.filter(_id__in=list(SHARE_TITLES.keys())).update(
+        share_title=''
+    )
+
 
 class Migration(migrations.Migration):
 
@@ -38,7 +42,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(
-            set_share_titles, unset_share_titles
-        ),
+        migrations.RunPython(set_share_titles, unset_share_titles),
     ]

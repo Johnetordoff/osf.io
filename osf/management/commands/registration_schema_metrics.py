@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 # SQL with comments provided by Courtney Soderberg
 
-REGISTRATION_METRICS_SQL = '''
+REGISTRATION_METRICS_SQL = """
 /*  calculate the number of registrations made and the number of retractions made of each type for each date that were
     made on the site during the last month, not including registrations that were canceled */
 
@@ -73,7 +73,7 @@ coalesce(reg_events, 0) - coalesce(retract_events,0) AS net_events
     ON setup.event_date = reg_by_date.event_date AND setup.name = reg_by_date.name
     LEFT JOIN retracts_by_date
     ON setup.event_date = retracts_by_date.event_date AND setup.name = retracts_by_date.name;
-'''
+"""
 TEMP_FOLDER = tempfile.mkdtemp(suffix='/')
 VALUES = (
     'event_date',
@@ -83,11 +83,9 @@ VALUES = (
     'net_events',
 )
 
+
 def bearer_token_auth(token):
-    token_dict = {
-        'token_type': 'Bearer',
-        'access_token': token
-    }
+    token_dict = {'token_type': 'Bearer', 'access_token': token}
     return OAuth2(token=token_dict)
 
 
@@ -118,11 +116,15 @@ def write_raw_data(cursor, filename):
     }
     logger.debug('Writing to {}'.format(file_path))
     with open(file_path, 'w') as new_file:
-        writer = csv.writer(new_file, delimiter=',', lineterminator='\n', quoting=csv.QUOTE_ALL)
+        writer = csv.writer(
+            new_file, delimiter=',', lineterminator='\n', quoting=csv.QUOTE_ALL
+        )
         writer.writerow(list(VALUES))
         for row in cursor.fetchall():
             writer.writerow(row)
-    upload_to_storage(file_path=file_path, upload_url=REG_METRICS_BASE_FOLDER, params=params)
+    upload_to_storage(
+        file_path=file_path, upload_url=REG_METRICS_BASE_FOLDER, params=params
+    )
 
 
 @celery_app.task(name='management.commands.registration_schema_metrics')
@@ -142,7 +144,7 @@ def gather_metrics(dry_run=False):
 
 
 class Command(BaseCommand):
-    help = '''Counts the number of registrations made and retracted in the past month, grouped by provider'''
+    help = """Counts the number of registrations made and retracted in the past month, grouped by provider"""
 
     def add_arguments(self, parser):
         parser.add_argument(

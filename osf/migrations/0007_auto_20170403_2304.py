@@ -14,10 +14,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='osfuser',
-            name='mailing_lists',
-        ),
+        migrations.RemoveField(model_name='osfuser', name='mailing_lists',),
         migrations.AlterField(
             model_name='abstractnode',
             name='date_created',
@@ -26,7 +23,9 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='abstractnode',
             name='date_modified',
-            field=osf.utils.fields.NonNaiveDateTimeField(auto_now=True, db_index=True, default=django.utils.timezone.now),
+            field=osf.utils.fields.NonNaiveDateTimeField(
+                auto_now=True, db_index=True, default=django.utils.timezone.now
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
@@ -62,12 +61,16 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='guid',
             name='created',
-            field=osf.utils.fields.NonNaiveDateTimeField(auto_now_add=True, db_index=True),
+            field=osf.utils.fields.NonNaiveDateTimeField(
+                auto_now_add=True, db_index=True
+            ),
         ),
         migrations.AlterField(
             model_name='osfuser',
             name='date_registered',
-            field=osf.utils.fields.NonNaiveDateTimeField(auto_now_add=True, db_index=True),
+            field=osf.utils.fields.NonNaiveDateTimeField(
+                auto_now_add=True, db_index=True
+            ),
         ),
         migrations.AlterField(
             model_name='preprintservice',

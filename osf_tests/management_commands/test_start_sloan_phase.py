@@ -2,17 +2,12 @@ import pytest
 
 from django.core.management import call_command
 
-from osf_tests.factories import (
-    AuthUserFactory
-)
-from waffle.models import (
-    Switch,
-    Flag
-)
+from osf_tests.factories import AuthUserFactory
+from waffle.models import Switch, Flag
+
 
 @pytest.mark.django_db
 class TestStartSloanPhase:
-
     @pytest.fixture()
     def user(self):
         user = AuthUserFactory()
@@ -39,4 +34,4 @@ class TestStartSloanPhase:
         with pytest.raises(AssertionError) as e:
             call_command('start_sloan_phase', '--flag=notright')
 
-        assert str(e.value) == 'the given flag : \'notright\' was invalid'
+        assert str(e.value) == "the given flag : 'notright' was invalid"

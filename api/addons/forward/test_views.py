@@ -8,6 +8,7 @@ from tests.json_api_test_app import JSONAPITestApp
 
 pytestmark = pytest.mark.django_db
 
+
 class TestForward(ForwardAddonTestCase, OsfTestCase):
     """
     Forward (the redirect url has two v2 routes, one is addon based `/v2/nodes/{}/addons/forward/` one is node settings
@@ -73,7 +74,8 @@ class TestForward(ForwardAddonTestCase, OsfTestCase):
         res = self.django_app.put_json_api(
             '/v2/nodes/{}/addons/forward/'.format(self.project._id),
             {'data': {'attributes': {'url': 'bad url'}}},
-            auth=self.user.auth, expect_errors=True,
+            auth=self.user.auth,
+            expect_errors=True,
         )
         assert res.status_code == 400
         error = res.json['errors'][0]

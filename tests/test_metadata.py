@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''Unit tests for models and their factories.'''
+"""Unit tests for models and their factories."""
 import unittest
 
 import pytest
@@ -17,26 +17,22 @@ from tests.base import OsfTestCase
 
 @pytest.mark.enable_implicit_clean
 class TestMetaData(OsfTestCase):
-
     def test_ensure_schemas(self):
 
         # Should be zero RegistrationSchema records to begin with
         RegistrationSchema.objects.all().delete()
-        assert_equal(
-            RegistrationSchema.objects.all().count(),
-            0
-        )
+        assert_equal(RegistrationSchema.objects.all().count(), 0)
 
         ensure_schemas()
 
-        assert_equal(
-            RegistrationSchema.objects.all().count(),
-            len(OSF_META_SCHEMAS)
-        )
+        assert_equal(RegistrationSchema.objects.all().count(), len(OSF_META_SCHEMAS))
 
     def test_reigstrationschema_uniqueness_is_enforced_in_the_database(self):
         RegistrationSchema(name='foo', schema={'foo': 42}, schema_version=1).save()
-        assert_raises(ValidationError, RegistrationSchema(name='foo', schema={'bar': 24}, schema_version=1).save)
+        assert_raises(
+            ValidationError,
+            RegistrationSchema(name='foo', schema={'bar': 24}, schema_version=1).save,
+        )
 
     def test_registrationschema_is_fine_with_same_name_but_different_version(self):
         RegistrationSchema(name='foo', schema={'foo': 42}, schema_version=1).save()

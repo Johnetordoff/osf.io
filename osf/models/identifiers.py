@@ -11,7 +11,9 @@ class Identifier(ObjectIDMixin, BaseModel):
 
     # object to which the identifier points
     object_id = models.PositiveIntegerField(null=True, blank=True)
-    content_type = models.ForeignKey(ContentType, null=True, blank=True, on_delete=models.CASCADE)
+    content_type = models.ForeignKey(
+        ContentType, null=True, blank=True, on_delete=models.CASCADE
+    )
     referent = GenericForeignKey()
     # category: e.g. 'ark', 'doi'
     category = models.CharField(max_length=20)  # longest was 3, 8/19/2016
@@ -59,9 +61,19 @@ class IdentifierMixin(models.Model):
     def get_identifier(self, category):
         """Returns None of no identifier matches"""
         content_type = ContentType.objects.get_for_model(self)
-        found_identifier = Identifier.objects.filter(object_id=self.id, category=category, content_type=content_type, deleted__isnull=True).first()
+        found_identifier = Identifier.objects.filter(
+            object_id=self.id,
+            category=category,
+            content_type=content_type,
+            deleted__isnull=True,
+        ).first()
         if category == 'doi' and not found_identifier:
-            found_identifier = Identifier.objects.filter(object_id=self.id, category='legacy_doi', content_type=content_type, deleted__isnull=True).first()
+            found_identifier = Identifier.objects.filter(
+                object_id=self.id,
+                category='legacy_doi',
+                content_type=content_type,
+                deleted__isnull=True,
+            ).first()
         return found_identifier
 
     def get_identifier_value(self, category):
@@ -69,10 +81,12 @@ class IdentifierMixin(models.Model):
         return identifier.value if identifier else None
 
     def set_identifier_value(self, category, value):
-        identifier, created = Identifier.objects.get_or_create(object_id=self.pk,
-                                                               content_type=ContentType.objects.get_for_model(self),
-                                                               category=category,
-                                                               defaults=dict(value=value))
+        identifier, created = Identifier.objects.get_or_create(
+            object_id=self.pk,
+            content_type=ContentType.objects.get_for_model(self),
+            category=category,
+            defaults=dict(value=value),
+        )
         if not created:
             identifier.value = value
             identifier.save()

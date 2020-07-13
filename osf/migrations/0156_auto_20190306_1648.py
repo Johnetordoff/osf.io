@@ -19,30 +19,93 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ChronosJournal',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
-                ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'created',
+                    django_extensions.db.fields.CreationDateTimeField(
+                        auto_now_add=True, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    django_extensions.db.fields.ModificationDateTimeField(
+                        auto_now=True, verbose_name='modified'
+                    ),
+                ),
                 ('name', models.TextField()),
                 ('title', models.TextField()),
                 ('journal_id', models.TextField(unique=True)),
-                ('raw_response', osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONField(encoder=osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONEncoder)),
+                (
+                    'raw_response',
+                    osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONField(
+                        encoder=osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONEncoder
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={'abstract': False,},
         ),
         migrations.CreateModel(
             name='ChronosSubmission',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
-                ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'created',
+                    django_extensions.db.fields.CreationDateTimeField(
+                        auto_now_add=True, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    django_extensions.db.fields.ModificationDateTimeField(
+                        auto_now=True, verbose_name='modified'
+                    ),
+                ),
                 ('publication_id', models.TextField(unique=True)),
-                ('status', models.IntegerField(blank=True, choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5')], default=None, null=True)),
-                ('raw_response', osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONField(encoder=osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONEncoder)),
+                (
+                    'status',
+                    models.IntegerField(
+                        blank=True,
+                        choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5')],
+                        default=None,
+                        null=True,
+                    ),
+                ),
+                (
+                    'raw_response',
+                    osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONField(
+                        encoder=osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONEncoder
+                    ),
+                ),
                 ('submission_url', models.TextField()),
-                ('journal', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='osf.ChronosJournal')),
-                ('preprint', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='osf.Preprint')),
+                (
+                    'journal',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to='osf.ChronosJournal',
+                    ),
+                ),
+                (
+                    'preprint',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to='osf.Preprint'
+                    ),
+                ),
             ],
         ),
         migrations.AddField(
@@ -53,10 +116,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='chronossubmission',
             name='submitter',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='chronossubmission',
-            unique_together=set([('preprint', 'journal')]),
+            name='chronossubmission', unique_together=set([('preprint', 'journal')]),
         ),
     ]

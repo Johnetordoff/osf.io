@@ -18,19 +18,23 @@ from website import settings
 _local = threading.local()
 logger = logging.getLogger(__name__)
 
+
 def postcommit_queue():
     if not hasattr(_local, 'postcommit_queue'):
         _local.postcommit_queue = OrderedDict()
     return _local.postcommit_queue
+
 
 def postcommit_celery_queue():
     if not hasattr(_local, 'postcommit_celery_queue'):
         _local.postcommit_celery_queue = OrderedDict()
     return _local.postcommit_celery_queue
 
+
 def postcommit_before_request():
     _local.postcommit_queue = OrderedDict()
     _local.postcommit_celery_queue = OrderedDict()
+
 
 def postcommit_after_request(response, base_status_error_code=500):
     if response.status_code >= base_status_error_code:
@@ -43,7 +47,9 @@ def postcommit_after_request(response, base_status_error_code=500):
             pool = Pool(number_of_threads)
             for func in postcommit_queue().values():
                 pool.spawn(func)
-            pool.join(timeout=5.0, raise_error=True)  # 5 second timeout and reraise exceptions
+            pool.join(
+                timeout=5.0, raise_error=True
+            )  # 5 second timeout and reraise exceptions
 
         if postcommit_celery_queue():
             if settings.USE_CELERY:
@@ -59,14 +65,20 @@ def postcommit_after_request(response, base_status_error_code=500):
             logger.error('Post commit task queue not initialized: {}'.format(ex))
     return response
 
+
 def get_task_from_postcommit_queue(name, predicate, celery=True):
     queue = postcommit_celery_queue() if celery else postcommit_queue()
-    matches = [task for key, task in queue.items() if task.type.name == name and predicate(task)]
+    matches = [
+        task
+        for key, task in queue.items()
+        if task.type.name == name and predicate(task)
+    ]
     if len(matches) == 1:
         return matches[0]
     elif len(matches) > 1:
         raise ValueError()
     return False
+
 
 def enqueue_postcommit_task(fn, args, kwargs, celery=False, once_per_request=True):
     """
@@ -91,10 +103,12 @@ def enqueue_postcommit_task(fn, args, kwargs, celery=False, once_per_request=Tru
         else:
             postcommit_queue().update({key: functools.partial(fn, *args, **kwargs)})
 
+
 handlers = {
     'before_request': postcommit_before_request,
     'after_request': postcommit_after_request,
 }
+
 
 def run_postcommit(once_per_request=True, celery=False):
     """
@@ -104,6 +118,7 @@ def run_postcommit(once_per_request=True, celery=False):
     Any task queued with this function where celery=True will be run asynchronously.
     :return:
     """
+
     def wrapper(func):
         # if we're local dev or running unit tests, run without queueing
         if settings.DEBUG_MODE:
@@ -111,6 +126,10 @@ def run_postcommit(once_per_request=True, celery=False):
 
         @functools.wraps(func)
         def wrapped(*args, **kwargs):
-            enqueue_postcommit_task(func, args, kwargs, celery=celery, once_per_request=once_per_request)
+            enqueue_postcommit_task(
+                func, args, kwargs, celery=celery, once_per_request=once_per_request
+            )
+
         return wrapped
+
     return wrapper

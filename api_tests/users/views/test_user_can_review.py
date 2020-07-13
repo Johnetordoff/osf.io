@@ -7,9 +7,9 @@ from osf_tests.factories import (
 )
 from osf.utils.permissions import ADMIN
 
+
 @pytest.mark.django_db
 class TestUserCanReview:
-
     @pytest.fixture()
     def user(self):
         return AuthUserFactory()

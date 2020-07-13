@@ -15,6 +15,7 @@ class RequestComesFromMailgun(permissions.BasePermission):
     Signature comparisons as recomended from mailgun docs:
     https://documentation.mailgun.com/en/latest/user_manual.html#webhooks
     """
+
     def has_permission(self, request, view):
         if request.method != 'POST':
             raise exceptions.MethodNotAllowed(method=request.method)
@@ -25,10 +26,7 @@ class RequestComesFromMailgun(permissions.BasePermission):
             return False
         signature = hmac.new(
             key=settings.MAILGUN_API_KEY.encode(),
-            msg='{}{}'.format(
-                data['timestamp'],
-                data['token'],
-            ).encode(),
+            msg='{}{}'.format(data['timestamp'], data['token'],).encode(),
             digestmod=hashlib.sha256,
         ).hexdigest()
         if 'signature' not in data:

@@ -14,6 +14,7 @@ from addons.dataverse.serializer import DataverseSerializer
 
 pytestmark = pytest.mark.django_db
 
+
 class TestDataverseSerializer(OAuthAddonSerializerTestSuiteMixin, OsfTestCase):
     addon_short_name = 'dataverse'
 
@@ -22,15 +23,16 @@ class TestDataverseSerializer(OAuthAddonSerializerTestSuiteMixin, OsfTestCase):
     client = DataverseProvider
 
     required_settings = ('userIsOwner', 'nodeHasAuth', 'urls', 'userHasAuth')
-    required_settings_authorized = ('ownerName', )
+    required_settings_authorized = ('ownerName',)
 
     def setUp(self):
         super(TestDataverseSerializer, self).setUp()
         self.ser = self.Serializer(
-            user_settings=self.user_settings,
-            node_settings=self.node_settings
+            user_settings=self.user_settings, node_settings=self.node_settings
         )
-        self.mock_api = mock.patch('addons.dataverse.serializer.client.connect_from_settings')
+        self.mock_api = mock.patch(
+            'addons.dataverse.serializer.client.connect_from_settings'
+        )
         self.mock_api.return_value = create_mock_connection()
         self.mock_api.start()
 

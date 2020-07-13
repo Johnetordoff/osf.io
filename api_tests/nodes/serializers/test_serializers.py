@@ -12,7 +12,7 @@ from osf_tests.factories import (
     UserFactory,
     NodeFactory,
     RegistrationFactory,
-    ProjectFactory
+    ProjectFactory,
 )
 from tests.base import assert_datetime_equal
 from tests.utils import make_drf_request_with_version
@@ -25,7 +25,6 @@ def user():
 
 @pytest.mark.django_db
 class TestNodeSerializer:
-
     def test_node_serializer(self, user):
 
         #   test_node_serialization
@@ -62,10 +61,9 @@ class TestNodeSerializer:
         assert 'registrations' in relationships
         assert 'forked_from' not in relationships
         parent_link = relationships['parent']['links']['related']['href']
-        assert urlparse(
-            parent_link).path == '/{}nodes/{}/'.format(API_BASE, parent._id)
+        assert urlparse(parent_link).path == '/{}nodes/{}/'.format(API_BASE, parent._id)
 
-    #   test_fork_serialization
+        #   test_fork_serialization
         node = NodeFactory(creator=user)
         fork = node.fork_node(auth=Auth(user))
         req = make_drf_request_with_version(version='2.0')
@@ -75,10 +73,9 @@ class TestNodeSerializer:
         # Relationships
         relationships = data['relationships']
         forked_from = relationships['forked_from']['links']['related']['href']
-        assert urlparse(
-            forked_from).path == '/{}nodes/{}/'.format(API_BASE, node._id)
+        assert urlparse(forked_from).path == '/{}nodes/{}/'.format(API_BASE, node._id)
 
-    #   test_template_serialization
+        #   test_template_serialization
         node = NodeFactory(creator=user)
         fork = node.use_as_template(auth=Auth(user))
         req = make_drf_request_with_version(version='2.0')
@@ -88,13 +85,13 @@ class TestNodeSerializer:
         # Relationships
         relationships = data['relationships']
         templated_from = relationships['template_node']['links']['related']['href']
-        assert urlparse(
-            templated_from).path == '/{}nodes/{}/'.format(API_BASE, node._id)
+        assert urlparse(templated_from).path == '/{}nodes/{}/'.format(
+            API_BASE, node._id
+        )
 
 
 @pytest.mark.django_db
 class TestSparseNodeSerializer:
-
     def test_sparse_node_serializer(self, user):
 
         #   test_node_serialization
@@ -130,22 +127,27 @@ class TestSparseNodeSerializer:
         assert 'registrations' not in relationships
         assert 'forked_from' not in relationships
         parent_link = relationships['parent']['links']['related']['href']
-        assert urlparse(parent_link).path == '/{}sparse/nodes/{}/'.format(API_BASE, parent._id)
+        assert urlparse(parent_link).path == '/{}sparse/nodes/{}/'.format(
+            API_BASE, parent._id
+        )
         assert 'sparse' not in relationships['detail']['links']['related']['href']
-        sparse_children_path = urlparse(relationships['children']['links']['related']['href']).path
-        assert sparse_children_path == '/{}sparse/nodes/{}/children/'.format(API_BASE, node._id)
+        sparse_children_path = urlparse(
+            relationships['children']['links']['related']['href']
+        ).path
+        assert sparse_children_path == '/{}sparse/nodes/{}/children/'.format(
+            API_BASE, node._id
+        )
 
 
 @pytest.mark.django_db
 class TestNodeRegistrationSerializer:
-
     def test_serialization(self):
         user = UserFactory()
         versioned_request = make_drf_request_with_version(version='2.2')
         registration = RegistrationFactory(creator=user)
         result = RegistrationSerializer(
-            registration, context={
-                'request': versioned_request}).data
+            registration, context={'request': versioned_request}
+        ).data
         data = result['data']
         assert data['id'] == registration._id
         assert data['type'] == 'registrations'
@@ -161,8 +163,7 @@ class TestNodeRegistrationSerializer:
         # Attributes
         attributes = data['attributes']
         assert_datetime_equal(
-            parse_date(attributes['date_registered']),
-            registration.registered_date
+            parse_date(attributes['date_registered']), registration.registered_date
         )
         assert attributes['withdrawn'] == registration.is_retracted
 
@@ -171,36 +172,36 @@ class TestNodeRegistrationSerializer:
 
         # Relationships with data
         relationship_urls = {
-            k: v['links']['related']['href'] for k, v
-            in relationships.items()}
+            k: v['links']['related']['href'] for k, v in relationships.items()
+        }
 
         assert 'registered_by' in relationships
         registered_by = relationships['registered_by']['links']['related']['href']
-        assert urlparse(
-            registered_by).path == '/{}users/{}/'.format(API_BASE, user._id)
+        assert urlparse(registered_by).path == '/{}users/{}/'.format(API_BASE, user._id)
         assert 'registered_from' in relationships
         registered_from = relationships['registered_from']['links']['related']['href']
         assert urlparse(registered_from).path == '/{}nodes/{}/'.format(
-            API_BASE, registration.registered_from._id)
+            API_BASE, registration.registered_from._id
+        )
         api_registrations_url = '/{}registrations/'.format(API_BASE)
         for relationship in relationship_urls:
             if relationship in should_not_relate_to_registrations:
                 assert api_registrations_url not in relationship_urls[relationship]
             else:
-                assert api_registrations_url in relationship_urls[relationship], 'For key {}'.format(
-                    relationship)
+                assert (
+                    api_registrations_url in relationship_urls[relationship]
+                ), 'For key {}'.format(relationship)
 
 
 @pytest.mark.django_db
 class TestSparseRegistrationSerializer:
-
     def test_sparse_registration_serializer(self, user):
         user = UserFactory()
         versioned_request = make_drf_request_with_version(version='2.2')
         registration = RegistrationFactory(creator=user)
         result = SparseRegistrationSerializer(
-            registration, context={
-                'request': versioned_request}).data
+            registration, context={'request': versioned_request}
+        ).data
         data = result['data']
         assert data['id'] == registration._id
         assert data['type'] == 'sparse-registrations'
@@ -211,7 +212,9 @@ class TestSparseRegistrationSerializer:
         assert attributes['title'] == registration.title
         assert attributes['description'] == registration.description
         assert attributes['public'] == registration.is_public
-        assert set(attributes['tags']) == set(registration.tags.values_list('name', flat=True))
+        assert set(attributes['tags']) == set(
+            registration.tags.values_list('name', flat=True)
+        )
         assert 'current_user_can_comment' not in attributes
         assert 'license' not in attributes
         assert attributes['category'] == registration.category

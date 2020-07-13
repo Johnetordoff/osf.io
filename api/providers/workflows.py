@@ -11,6 +11,7 @@ class Workflows(ChoiceEnum):
     PRE_MODERATION = 'pre-moderation'
     POST_MODERATION = 'post-moderation'
 
+
 PUBLIC_STATES = {
     Workflows.NONE.value: (
         DefaultStates.INITIAL.value,
@@ -18,9 +19,7 @@ PUBLIC_STATES = {
         DefaultStates.ACCEPTED.value,
         DefaultStates.REJECTED.value,
     ),
-    Workflows.PRE_MODERATION.value: (
-        DefaultStates.ACCEPTED.value,
-    ),
+    Workflows.PRE_MODERATION.value: (DefaultStates.ACCEPTED.value,),
     Workflows.POST_MODERATION.value: (
         DefaultStates.PENDING.value,
         DefaultStates.ACCEPTED.value,

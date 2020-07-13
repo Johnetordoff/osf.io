@@ -6,9 +6,7 @@ from osf.models import Guid
 from rest_framework.views import APIView
 from addons.osfstorage.models import OsfStorageFileNode, OsfStorageFolder
 from api.base.parsers import HMACSignedParser
-from api.wb.serializers import (
-    WaterbutlerMetadataSerializer,
-)
+from api.wb.serializers import WaterbutlerMetadataSerializer
 
 from api.caching.tasks import update_storage_usage
 
@@ -17,6 +15,7 @@ class FileMetadataView(APIView):
     """
     Mixin with common code for WB move/copy hooks
     """
+
     parser_classes = (HMACSignedParser,)
     serializer_class = WaterbutlerMetadataSerializer
     view_category = 'wb'
@@ -30,7 +29,9 @@ class FileMetadataView(APIView):
         if not guid:
             raise NotFound
         target = guid.referent
-        if getattr(target, 'is_registration', False) and not getattr(target, 'archiving', False):
+        if getattr(target, 'is_registration', False) and not getattr(
+            target, 'archiving', False,
+        ):
             raise ValidationError('Registrations cannot be changed.')
         return target
 
@@ -43,7 +44,9 @@ class FileMetadataView(APIView):
         }
 
     def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data, context=self.get_serializer_context())
+        serializer = self.serializer_class(
+            data=request.data, context=self.get_serializer_context(),
+        )
         if serializer.is_valid():
             source = serializer.validated_data.pop('source')
             destination = serializer.validated_data.pop('destination')
@@ -55,7 +58,9 @@ class FileMetadataView(APIView):
                 raise NotFound
 
             try:
-                dest_parent = OsfStorageFolder.get(destination.get('parent'), dest_target)
+                dest_parent = OsfStorageFolder.get(
+                    destination.get('parent'), dest_target,
+                )
             except OsfStorageFolder.DoesNotExist:
                 raise NotFound
             serializer.save(source=source, destination=dest_parent, name=name)

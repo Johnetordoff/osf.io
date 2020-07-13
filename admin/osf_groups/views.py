@@ -11,6 +11,7 @@ from admin.osf_groups.serializers import serialize_group
 class OSFGroupsView(PermissionRequiredMixin, GuidView):
     """ Allow authorized admin user to view an osf group
     """
+
     template_name = 'osf_groups/osf_groups.html'
     context_object_name = 'group'
     permission_required = 'osf.view_group'
@@ -41,7 +42,9 @@ class OSFGroupsFormView(PermissionRequiredMixin, FormView):
         if id:
             self.redirect_url = reverse('osf_groups:osf_group', kwargs={'id': id})
         elif name:
-            self.redirect_url = reverse('osf_groups:osf_groups_list',) + '?name={}'.format(name)
+            self.redirect_url = reverse(
+                'osf_groups:osf_groups_list',
+            ) + '?name={}'.format(name)
 
         return super(OSFGroupsFormView, self).form_valid(form)
 
@@ -53,6 +56,7 @@ class OSFGroupsFormView(PermissionRequiredMixin, FormView):
 class OSFGroupsListView(PermissionRequiredMixin, ListView):
     """ Allow authorized admin user to view list of osf groups
     """
+
     template_name = 'osf_groups/osf_groups_list.html'
     paginate_by = 10
     paginate_orphans = 1
@@ -70,7 +74,8 @@ class OSFGroupsListView(PermissionRequiredMixin, ListView):
         query_set = kwargs.pop('object_list', self.object_list)
         page_size = self.get_paginate_by(query_set)
         paginator, page, query_set, is_paginated = self.paginate_queryset(
-            query_set, page_size)
+            query_set, page_size
+        )
 
         return {
             'groups': list(map(serialize_group, query_set)),

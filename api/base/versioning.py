@@ -21,6 +21,7 @@ CREATE_REGISTRATION_FIELD_CHANGE_VERSION = '2.19'
 # Note that this version will not deprecate snake_case yet.
 KEBAB_CASE_VERSION = '2.18'
 
+
 def get_major_version(version):
     return int(version.split('.')[0])
 
@@ -39,14 +40,15 @@ def get_latest_sub_version(major_version):
     # '2' --> '2.6'
     return LATEST_VERSIONS.get(major_version, None)
 
+
 def get_kebab_snake_case_field(version, field):
     if StrictVersion(version) < StrictVersion(KEBAB_CASE_VERSION):
         return field.replace('-', '_')
     else:
         return field
 
-class BaseVersioning(drf_versioning.BaseVersioning):
 
+class BaseVersioning(drf_versioning.BaseVersioning):
     def __init__(self):
         super(BaseVersioning, self).__init__()
 
@@ -92,29 +94,38 @@ class BaseVersioning(drf_versioning.BaseVersioning):
             raise drf_exceptions.NotFound(invalid_version_message)
         return version
 
-    def validate_pinned_versions(self, url_path_version, header_version, query_parameter_version):
+    def validate_pinned_versions(
+        self, url_path_version, header_version, query_parameter_version,
+    ):
         url_path_major_version = get_major_version(url_path_version)
-        header_major_version = get_major_version(header_version) if header_version else None
-        query_major_version = get_major_version(query_parameter_version) if query_parameter_version else None
+        header_major_version = (
+            get_major_version(header_version) if header_version else None
+        )
+        query_major_version = (
+            get_major_version(query_parameter_version)
+            if query_parameter_version
+            else None
+        )
         if header_version and header_major_version != url_path_major_version:
             raise exceptions.Conflict(
                 detail='Version {} specified in "Accept" header does not fall within URL path version {}'.format(
-                    header_version,
-                    url_path_version,
+                    header_version, url_path_version,
                 ),
             )
         if query_parameter_version and query_major_version != url_path_major_version:
             raise exceptions.Conflict(
                 detail='Version {} specified in query parameter does not fall within URL path version {}'.format(
-                    query_parameter_version,
-                    url_path_version,
+                    query_parameter_version, url_path_version,
                 ),
             )
-        if header_version and query_parameter_version and (header_version != query_parameter_version):
+        if (
+            header_version
+            and query_parameter_version
+            and (header_version != query_parameter_version)
+        ):
             raise exceptions.Conflict(
                 detail='Version {} specified in "Accept" header does not match version {} specified in query parameter'.format(
-                    header_version,
-                    query_parameter_version,
+                    header_version, query_parameter_version,
                 ),
             )
 
@@ -127,28 +138,36 @@ class BaseVersioning(drf_versioning.BaseVersioning):
 
         version = url_path_version
         if header_version or query_parameter_version:
-            self.validate_pinned_versions(url_path_version, header_version, query_parameter_version)
+            self.validate_pinned_versions(
+                url_path_version, header_version, query_parameter_version,
+            )
             version = header_version if header_version else query_parameter_version
         else:
             version = self.get_default_version(request, major_version)
         return version
 
-    def reverse(self, viewname, args=None, kwargs=None, request=None, format=None, **extra):
+    def reverse(
+        self, viewname, args=None, kwargs=None, request=None, format=None, **extra
+    ):
         url_path_version = self.get_url_path_version(kwargs)
         major_version = get_major_version(url_path_version)
         query_parameter_version = self.get_query_param_version(request, major_version)
 
         kwargs = {} if (kwargs is None) else kwargs
         kwargs[self.version_param] = decimal_version_to_url_path(url_path_version)
-        query_kwargs = {'version': query_parameter_version} if query_parameter_version else None
+        query_kwargs = (
+            {'version': query_parameter_version} if query_parameter_version else None
+        )
 
         return utils.absolute_reverse(
             viewname, query_kwargs=query_kwargs, args=args, kwargs=kwargs,
         )
 
-class PrivateVersioning(BaseVersioning):
 
-    def reverse(self, viewname, args=None, kwargs=None, request=None, format=None, **extra):
+class PrivateVersioning(BaseVersioning):
+    def reverse(
+        self, viewname, args=None, kwargs=None, request=None, format=None, **extra
+    ):
         """ Overrides BaseVersioning.reverse to maybe ignore 'version' arg
 
         Requests to private views in the '_' namespace don't have any version associated
@@ -157,7 +176,14 @@ class PrivateVersioning(BaseVersioning):
         reverse with one, then without if that fails.
         """
         try:
-            return super(PrivateVersioning, self).reverse(viewname, args=args, kwargs=kwargs, request=request, format=format, **extra)
+            return super(PrivateVersioning, self).reverse(
+                viewname,
+                args=args,
+                kwargs=kwargs,
+                request=request,
+                format=format,
+                **extra
+            )
         except NoReverseMatch:
             kwargs = kwargs or {}
             if kwargs.get('version', False):
@@ -166,4 +192,11 @@ class PrivateVersioning(BaseVersioning):
                     viewname, query_kwargs=None, args=args, kwargs=kwargs,
                 )
             kwargs['version'] = get_latest_sub_version('2')
-            return super(PrivateVersioning, self).reverse(viewname, args=args, kwargs=kwargs, request=request, format=format, **extra)
+            return super(PrivateVersioning, self).reverse(
+                viewname,
+                args=args,
+                kwargs=kwargs,
+                request=request,
+                format=format,
+                **extra
+            )

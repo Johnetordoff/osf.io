@@ -11,6 +11,7 @@ from addons.figshare.serializer import FigshareSerializer
 
 pytestmark = pytest.mark.django_db
 
+
 class TestFigshareSerializer(StorageAddonSerializerTestSuiteMixin, OsfTestCase):
     addon_short_name = 'figshare'
     Serializer = FigshareSerializer
@@ -23,4 +24,6 @@ class TestFigshareSerializer(StorageAddonSerializerTestSuiteMixin, OsfTestCase):
     @mock.patch.object(FigshareSerializer, 'credentials_are_valid')
     def test_serialize_settings_authorized_folder_is_set(self, mock_valid):
         mock_valid.return_value = True
-        super(TestFigshareSerializer, self).test_serialize_settings_authorized_folder_is_set()
+        super(
+            TestFigshareSerializer, self
+        ).test_serialize_settings_authorized_folder_is_set()

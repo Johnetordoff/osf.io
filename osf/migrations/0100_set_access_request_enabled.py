@@ -23,11 +23,12 @@ class Migration(migrations.Migration):
         max_pk = Node.objects.aggregate(models.Max('pk'))['pk__max']
         if max_pk is not None:
             for offset in range(0, max_pk + 1, BATCHSIZE):
-                (Node.objects
-                 .filter(pk__gte=offset)
-                 .filter(pk__lt=offset + BATCHSIZE)
-                 .filter(access_requests_enabled__isnull=True)
-                 .update(access_requests_enabled=True))
+                (
+                    Node.objects.filter(pk__gte=offset)
+                    .filter(pk__lt=offset + BATCHSIZE)
+                    .filter(access_requests_enabled__isnull=True)
+                    .update(access_requests_enabled=True)
+                )
 
     def remove_default_access_requests_enabled(self, *args, **kwargs):
         # Get the date the original noderequest migration was applied
@@ -37,13 +38,21 @@ class Migration(migrations.Migration):
             date_noderequest_migration = cursor.fetchall()[0][0]
 
         # Get all projects created before that
-        Node.objects.filter(created__lte=date_noderequest_migration).update(access_requests_enabled=None)
+        Node.objects.filter(created__lte=date_noderequest_migration).update(
+            access_requests_enabled=None
+        )
 
     operations = [
         migrations.AlterField(
             model_name='noderequestaction',
             name='permissions',
-            field=models.CharField(choices=[('read', 'Read'), ('write', 'Write'), ('admin', 'Admin')], default='read', max_length=5),
+            field=models.CharField(
+                choices=[('read', 'Read'), ('write', 'Write'), ('admin', 'Admin')],
+                default='read',
+                max_length=5,
+            ),
         ),
-        migrations.RunPython(add_default_access_requests_enabled, remove_default_access_requests_enabled),
+        migrations.RunPython(
+            add_default_access_requests_enabled, remove_default_access_requests_enabled
+        ),
     ]

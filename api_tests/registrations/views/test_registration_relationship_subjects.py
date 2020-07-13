@@ -2,9 +2,7 @@ import pytest
 
 from api.base.settings.defaults import API_BASE
 from api_tests.subjects.mixins import SubjectsRelationshipMixin
-from osf_tests.factories import (
-    RegistrationFactory
-)
+from osf_tests.factories import RegistrationFactory
 from osf.utils.permissions import WRITE, READ
 
 
@@ -20,4 +18,6 @@ class TestRegistrationRelationshipSubjects(SubjectsRelationshipMixin):
 
     @pytest.fixture()
     def url(self, resource):
-        return '/{}registrations/{}/relationships/subjects/'.format(API_BASE, resource._id)
+        return '/{}registrations/{}/relationships/subjects/'.format(
+            API_BASE, resource._id
+        )

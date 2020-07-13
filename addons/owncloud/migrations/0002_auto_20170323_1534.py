@@ -21,21 +21,44 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='usersettings',
             name='owner',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='addons_owncloud_user_settings', to=settings.AUTH_USER_MODEL),
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='addons_owncloud_user_settings',
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddField(
             model_name='nodesettings',
             name='external_account',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='addons_owncloud_node_settings', to='osf.ExternalAccount'),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='addons_owncloud_node_settings',
+                to='osf.ExternalAccount',
+            ),
         ),
         migrations.AddField(
             model_name='nodesettings',
             name='owner',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='addons_owncloud_node_settings', to='osf.AbstractNode'),
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='addons_owncloud_node_settings',
+                to='osf.AbstractNode',
+            ),
         ),
         migrations.AddField(
             model_name='nodesettings',
             name='user_settings',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='addons_owncloud.UserSettings'),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to='addons_owncloud.UserSettings',
+            ),
         ),
     ]

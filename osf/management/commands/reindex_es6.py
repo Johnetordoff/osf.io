@@ -25,7 +25,9 @@ def increment_index_versions(client, old_indices: list):
     """
     new_indices = []
     for index in old_indices:
-        index_name = list(client.indices.get(index).keys())[0]  # in case we've already aliased this index
+        index_name = list(client.indices.get(index).keys())[
+            0
+        ]  # in case we've already aliased this index
         if '_v' in index_name and index_name[-1].isdigit():
             name, version_num = index_name.split('_v')
             new_index = f'{name}_v{int(version_num) + 1}'
@@ -55,22 +57,23 @@ def reindex_and_alias(old_indices: list, dry_run: bool = False):
     for old_index, new_index in zip(old_indices, new_indices):
         metric_class = get_metric_class(old_index)
         if dry_run:
-            logger.info(f'[DRY RUN] Would reindex {old_index} to {new_index} for {metric_class}')
+            logger.info(
+                f'[DRY RUN] Would reindex {old_index} to {new_index} for {metric_class}'
+            )
             continue
-        client.indices.create(new_index, body=metric_class._index.to_dict(), params={'wait_for_active_shards': 1})
+        client.indices.create(
+            new_index,
+            body=metric_class._index.to_dict(),
+            params={'wait_for_active_shards': 1},
+        )
         logger.info(f'Created index {new_index}')
-        body = {
-            'source': {
-                'index': old_index
-            },
-            'dest': {
-                'index': new_index
-            }
-        }
+        body = {'source': {'index': old_index}, 'dest': {'index': new_index}}
         logger.info(f'Created reindexing {old_index} to {new_index}')
         client.reindex(body, params={'wait_for_completion': 'true'})
         logger.info(f'Reindexing complete')
-        old_index_name = list(client.indices.get(old_index).keys())[0]  # in case we've already aliased this index
+        old_index_name = list(client.indices.get(old_index).keys())[
+            0
+        ]  # in case we've already aliased this index
 
         if old_index_name == old_index:  # True if not aliased
             client.indices.delete(old_index)
@@ -89,7 +92,7 @@ class Command(BaseCommand):
             '--indices',
             type=str,
             nargs='+',
-            help='List of indices to be reindexed and remapped'
+            help='List of indices to be reindexed and remapped',
         )
         parser.add_argument(
             '--dry',

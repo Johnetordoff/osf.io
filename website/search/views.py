@@ -33,25 +33,37 @@ def handle_search_errors(func):
         try:
             return func(*args, **kwargs)
         except exceptions.MalformedQueryError:
-            raise HTTPError(http_status.HTTP_400_BAD_REQUEST, data={
-                'message_short': 'Bad search query',
-                'message_long': language.SEARCH_QUERY_HELP,
-            })
+            raise HTTPError(
+                http_status.HTTP_400_BAD_REQUEST,
+                data={
+                    'message_short': 'Bad search query',
+                    'message_long': language.SEARCH_QUERY_HELP,
+                },
+            )
         except exceptions.SearchUnavailableError:
-            raise HTTPError(http_status.HTTP_503_SERVICE_UNAVAILABLE, data={
-                'message_short': 'Search unavailable',
-                'message_long': ('Our search service is currently unavailable, if the issue persists, '
-                                 + language.SUPPORT_LINK),
-            })
+            raise HTTPError(
+                http_status.HTTP_503_SERVICE_UNAVAILABLE,
+                data={
+                    'message_short': 'Search unavailable',
+                    'message_long': (
+                        'Our search service is currently unavailable, if the issue persists, '
+                        + language.SUPPORT_LINK
+                    ),
+                },
+            )
         except exceptions.SearchException:
             # Interim fix for issue where ES fails with 500 in some settings- ensure exception is still logged until it can be better debugged. See OSF-4538
             sentry.log_exception()
             sentry.log_message('Elasticsearch returned an unexpected error response')
             # TODO: Add a test; may need to mock out the error response due to inability to reproduce error code locally
-            raise HTTPError(http_status.HTTP_400_BAD_REQUEST, data={
-                'message_short': 'Could not perform search query',
-                'message_long': language.SEARCH_QUERY_HELP,
-            })
+            raise HTTPError(
+                http_status.HTTP_400_BAD_REQUEST,
+                data={
+                    'message_short': 'Could not perform search query',
+                    'message_long': language.SEARCH_QUERY_HELP,
+                },
+            )
+
     return wrapped
 
 
@@ -74,9 +86,11 @@ def search_search(**kwargs):
     results['time'] = round(time.time() - tick, 2)
     return results
 
+
 @ember_flag_is_active(features.EMBER_SEARCH_PAGE)
 def search_view():
-    return {'shareUrl': settings.SHARE_URL},
+    return ({'shareUrl': settings.SHARE_URL},)
+
 
 def conditionally_add_query_item(query, item, condition, value):
     """ Helper for the search_projects_by_title function which will add a condition to a query
@@ -129,12 +143,18 @@ def search_projects_by_title(**kwargs):
 
     matching_title = Q(
         title__icontains=term,  # search term (case insensitive)
-        category=category  # is a project
+        category=category,  # is a project
     )
 
-    matching_title = conditionally_add_query_item(matching_title, 'is_deleted', is_deleted, True)
-    matching_title = conditionally_add_query_item(matching_title, 'type', is_registration, 'osf.registration')
-    matching_title = conditionally_add_query_item(matching_title, 'type', is_collection, 'osf.collection')
+    matching_title = conditionally_add_query_item(
+        matching_title, 'is_deleted', is_deleted, True
+    )
+    matching_title = conditionally_add_query_item(
+        matching_title, 'type', is_registration, 'osf.registration'
+    )
+    matching_title = conditionally_add_query_item(
+        matching_title, 'type', is_collection, 'osf.collection'
+    )
 
     if len(ignore_nodes) > 0:
         for node_id in ignore_nodes:
@@ -146,16 +166,14 @@ def search_projects_by_title(**kwargs):
 
     if include_contributed == 'yes':
         my_projects = AbstractNode.objects.filter(
-            matching_title &
-            Q(_contributors=user)  # user is a contributor
+            matching_title & Q(_contributors=user)  # user is a contributor
         )[:max_results]
         my_project_count = my_project_count
 
     if my_project_count < max_results and include_public == 'yes':
         public_projects = AbstractNode.objects.filter(
-            matching_title &
-            Q(is_public=True)  # is public
-        )[:max_results - my_project_count]
+            matching_title & Q(is_public=True)  # is public
+        )[: max_results - my_project_count]
 
     results = list(my_projects) + list(public_projects)
     ret = process_project_search_results(results, **kwargs)
@@ -182,13 +200,17 @@ def process_project_search_results(results, **kwargs):
             authors_html += author['separator'] + ' '
         authors_html += ' ' + authors['others_count']
 
-        ret.append({
-            'id': project._id,
-            'label': project.title,
-            'value': project.title,
-            'category': 'My Projects' if user in project.contributors else 'Public Projects',
-            'authors': authors_html,
-        })
+        ret.append(
+            {
+                'id': project._id,
+                'label': project.title,
+                'value': project.title,
+                'category': 'My Projects'
+                if user in project.contributors
+                else 'Public Projects',
+                'authors': authors_html,
+            }
+        )
 
     return ret
 
@@ -202,5 +224,6 @@ def search_contributor(auth):
     query = bleach.clean(request.args.get('query', ''), tags=[], strip=True)
     page = int(bleach.clean(request.args.get('page', '0'), tags=[], strip=True))
     size = int(bleach.clean(request.args.get('size', '5'), tags=[], strip=True))
-    return search.search_contributor(query=query, page=page, size=size,
-                                     exclude=exclude, current_user=user)
+    return search.search_contributor(
+        query=query, page=page, size=size, exclude=exclude, current_user=user
+    )

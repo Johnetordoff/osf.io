@@ -7,8 +7,10 @@ from django.db import migrations
 
 logger = logging.getLogger(__name__)
 
+
 def remove_duplicate_filenodes(*args):
     from osf.models.files import BaseFileNode
+
     sql = """
         SELECT id
         FROM (SELECT
@@ -36,7 +38,17 @@ def remove_duplicate_filenodes(*args):
         for dupe in dupes:
             visited.append(dupe.id)
             force = False
-            next_dupe = dupes.exclude(id__in=visited).filter(node_id=dupe.node_id, name=dupe.name, parent_id=dupe.parent_id, type=dupe.type, _path=dupe._path).first()
+            next_dupe = (
+                dupes.exclude(id__in=visited)
+                .filter(
+                    node_id=dupe.node_id,
+                    name=dupe.name,
+                    parent_id=dupe.parent_id,
+                    type=dupe.type,
+                    _path=dupe._path,
+                )
+                .first()
+            )
             if dupe.node_id is None:
                 # Bad data, force-delete
                 force = True
@@ -44,7 +56,11 @@ def remove_duplicate_filenodes(*args):
                 # Last one, don't delete
                 continue
             if dupe.versions.count() > 1:
-                logger.warn('{} Expected 0 or 1 versions, got {}'.format(dupe.id, dupe.versions.count()))
+                logger.warn(
+                    '{} Expected 0 or 1 versions, got {}'.format(
+                        dupe.id, dupe.versions.count()
+                    )
+                )
                 # Don't modify versioned files
                 continue
             for guid in list(dupe.guids.all()):
@@ -59,11 +75,17 @@ def remove_duplicate_filenodes(*args):
         cursor.execute(sql)
         dupes = BaseFileNode.objects.filter(id__in=cursor.fetchall())
         if dupes.exists():
-            logger.error('Dupes exist after migration, failing\n{}'.format(dupes.values_list('id', flat=True)))
+            logger.error(
+                'Dupes exist after migration, failing\n{}'.format(
+                    dupes.values_list('id', flat=True)
+                )
+            )
     logger.info('Indexing...')
+
 
 def noop(*args):
     pass
+
 
 class Migration(migrations.Migration):
 
@@ -81,10 +103,11 @@ class Migration(migrations.Migration):
                 WHERE (type NOT IN ('osf.trashedfilenode', 'osf.trashedfile', 'osf.trashedfolder')
                   AND parent_id IS NULL);
                 """
-            ], [
+            ],
+            [
                 """
                 DROP INDEX IF EXISTS active_file_node_path_name_type_unique_index RESTRICT;
                 """
-            ]
-        )
+            ],
+        ),
     ]

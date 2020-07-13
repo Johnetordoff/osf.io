@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0154_remove_ember_project_registrations_flag'),
     ]
 
-    operations = [
-    ]
+    operations = []

@@ -6,13 +6,21 @@ import logging
 from random import randint
 
 from website.app import setup_django
+
 setup_django()
 
 from django.apps import apps
 from django.contrib.auth.models import Permission, Group
 
 from osf.utils.permissions import PERMISSIONS, reduce_permissions
-from osf.models import AbstractNode, Contributor, Preprint, Node, Registration, QuickFilesNode
+from osf.models import (
+    AbstractNode,
+    Contributor,
+    Preprint,
+    Node,
+    Registration,
+    QuickFilesNode,
+)
 from osf.models.node import NodeGroupObjectPermission
 from osf.models.preprint import PreprintGroupObjectPermission
 from osf.utils.permissions import READ, WRITE, ADMIN
@@ -23,9 +31,14 @@ logging.basicConfig(level=logging.INFO)
 
 def check_expected(expected, actual, error_msg):
     if expected != actual:
-        logger.info('{}. Expected {} rows migrated; received {}.'.format(error_msg, expected, actual))
+        logger.info(
+            '{}. Expected {} rows migrated; received {}.'.format(
+                error_msg, expected, actual
+            )
+        )
     else:
         logger.info('{} rows added.'.format(actual))
+
 
 def verify_permissions_created():
     """
@@ -36,6 +49,7 @@ def verify_permissions_created():
 
     check_expected(expected, actual, 'Discepancy in Permission table.')
 
+
 def verify_auth_groups():
     """
     Expecting three groups added for every AbstractNode - read/write/admin
@@ -44,6 +58,7 @@ def verify_auth_groups():
     actual = Group.objects.filter(name__icontains='node_').count()
 
     check_expected(expected, actual, 'Discepancy in auth_group table.')
+
 
 def verify_expected_node_group_object_permission_counts():
     """
@@ -55,7 +70,12 @@ def verify_expected_node_group_object_permission_counts():
     expected_nodegroupobjperm_count = AbstractNode.objects.count() * 6
     actual_nodegroupobjperm_count = NodeGroupObjectPermission.objects.count()
 
-    check_expected(expected_nodegroupobjperm_count, actual_nodegroupobjperm_count, 'Discrepancy in NodeGroupObjectPermission table.')
+    check_expected(
+        expected_nodegroupobjperm_count,
+        actual_nodegroupobjperm_count,
+        'Discrepancy in NodeGroupObjectPermission table.',
+    )
+
 
 def verify_expected_contributor_migration():
     """
@@ -64,21 +84,30 @@ def verify_expected_contributor_migration():
     OSFUserGroup = apps.get_model('osf', 'osfuser_groups')
     expected = Contributor.objects.count()
     actual = OSFUserGroup.objects.filter(group__name__icontains='node_').count()
-    check_expected(expected, actual, 'Discrepancy in contributor migration to OSFUserGroup table.')
+    check_expected(
+        expected, actual, 'Discrepancy in contributor migration to OSFUserGroup table.'
+    )
+
 
 def verify_preprint_foreign_key_migration():
     expected_preprintgroupobjperm_count = Preprint.objects.count() * 6
     actual_preprintgroupobjperm_count = PreprintGroupObjectPermission.objects.count()
 
-    check_expected(expected_preprintgroupobjperm_count, actual_preprintgroupobjperm_count, 'Discrepancy in PreprintGroupObjectPermission table.')
+    check_expected(
+        expected_preprintgroupobjperm_count,
+        actual_preprintgroupobjperm_count,
+        'Discrepancy in PreprintGroupObjectPermission table.',
+    )
+
 
 def verify_random_objects():
     resources = [Node, Registration, QuickFilesNode]
     for resource in resources:
-        for i in range(1,10):
+        for i in range(1, 10):
             random_resource = _get_random_object(resource)
             if random_resource:
                 _verify_contributor_perms(random_resource)
+
 
 def _verify_contributor_perms(resource):
     for user in resource.contributors:

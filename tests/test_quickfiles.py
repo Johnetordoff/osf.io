@@ -35,7 +35,11 @@ def post_to_quickfiles(quickfiles, user, flask_app, **kwargs):
         expect_errors = kwargs.pop('expect_errors', False)
         payload = make_payload(user=user, name=name, **kwargs)
 
-        res = flask_app.post_json(url, signing.sign_data(signing.default_signer, payload), expect_errors=expect_errors)
+        res = flask_app.post_json(
+            url,
+            signing.sign_data(signing.default_signer, payload),
+            expect_errors=expect_errors,
+        )
         return res
 
     return func
@@ -44,7 +48,6 @@ def post_to_quickfiles(quickfiles, user, flask_app, **kwargs):
 @pytest.mark.django_db
 @pytest.mark.enable_quickfiles_creation
 class TestUserQuickFilesNodeFileCreation:
-
     def test_create_file(self, quickfiles, user, post_to_quickfiles):
         name = 'WoopThereItIs.pdf'
 
@@ -54,7 +57,9 @@ class TestUserQuickFilesNodeFileCreation:
         assert res.json['status'] == 'success'
         assert quickfiles.files.filter(name=name).exists()
 
-    def test_create_folder_throws_error(self, flask_app, user, quickfiles, post_to_quickfiles):
+    def test_create_folder_throws_error(
+        self, flask_app, user, quickfiles, post_to_quickfiles
+    ):
         name = 'new_illegal_folder'
         res = post_to_quickfiles(name, kind='folder', expect_errors=True)
 

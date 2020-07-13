@@ -11,14 +11,17 @@ from osf.models import ExternalAccount
 from osf.utils.fields import EncryptedTextField, SENSITIVE_DATA_KEY, ensure_bytes
 from .factories import ExternalAccountFactory
 
+
 @pytest.mark.django_db
 class TestEncryptedExternalAccountFields(object):
     def setup_class(self):
         self.magic_string = ''.join(random.choice(string.hexdigits) for _ in range(25))
 
-        self.encrypted_field_dict = {f.name: self.magic_string for f in
-                                ExternalAccountFactory._meta.model._meta.get_fields() if
-                                isinstance(f, EncryptedTextField)}
+        self.encrypted_field_dict = {
+            f.name: self.magic_string
+            for f in ExternalAccountFactory._meta.model._meta.get_fields()
+            if isinstance(f, EncryptedTextField)
+        }
 
     def test_values_match(self):
         eaf = ExternalAccountFactory(**self.encrypted_field_dict)
@@ -26,7 +29,7 @@ class TestEncryptedExternalAccountFields(object):
         ea.reload()
 
         for field_name, value in self.encrypted_field_dict.items():
-                assert self.encrypted_field_dict[field_name] == getattr(ea, field_name)
+            assert self.encrypted_field_dict[field_name] == getattr(ea, field_name)
 
     def test_database_is_encrypted(self):
         eaf = ExternalAccountFactory(**self.encrypted_field_dict)
@@ -36,10 +39,18 @@ class TestEncryptedExternalAccountFields(object):
             SELECT %s FROM osf_externalaccount WHERE id = %s;
         """
         with connection.cursor() as cursor:
-            cursor.execute(sql, [AsIs(', '.join(self.encrypted_field_dict.keys())), ea.id])
+            cursor.execute(
+                sql, [AsIs(', '.join(self.encrypted_field_dict.keys())), ea.id]
+            )
             row = cursor.fetchone()
             for blicky in row:
-                assert jwe.decrypt(blicky[len(EncryptedTextField.prefix):].encode(), SENSITIVE_DATA_KEY).decode() == self.magic_string
+                assert (
+                    jwe.decrypt(
+                        blicky[len(EncryptedTextField.prefix) :].encode(),
+                        SENSITIVE_DATA_KEY,
+                    ).decode()
+                    == self.magic_string
+                )
 
 
 class TestEncryptedTextField:

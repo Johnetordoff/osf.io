@@ -29,13 +29,22 @@ def get_valid_mentioned_users_guids(comment, contributors):
     :param list contributors: List of contributors or group members on the node
     :return list new_mentions: List of valid contributors or group members mentioned in the comment content
     """
-    mentions = set(re.findall(r'\[[@|\+].*?\]\(htt[ps]{1,2}:\/\/[a-z\d:.]+?\/([a-z\d]{5,})\/\)', comment.content))
+    mentions = set(
+        re.findall(
+            r'\[[@|\+].*?\]\(htt[ps]{1,2}:\/\/[a-z\d:.]+?\/([a-z\d]{5,})\/\)',
+            comment.content,
+        )
+    )
     if not mentions:
         return []
-    old_mentioned_guids = set(comment.ever_mentioned.values_list('guids___id', flat=True))
+    old_mentioned_guids = set(
+        comment.ever_mentioned.values_list('guids___id', flat=True)
+    )
     new_mentions = mentions.difference(old_mentioned_guids)
 
-    if OSFUser.objects.filter(is_registered=True, guids___id__in=new_mentions).count() != len(new_mentions):
+    if OSFUser.objects.filter(
+        is_registered=True, guids___id__in=new_mentions
+    ).count() != len(new_mentions):
         raise ValidationError('User does not exist or is not active.')
     elif contributors.filter(guids___id__in=new_mentions).count() != len(new_mentions):
         raise ValidationError('Mentioned user is not a contributor or group member.')

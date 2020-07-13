@@ -16,9 +16,7 @@ def gravatar(user, use_ssl=False, d=None, r=None, size=None):
     url = base_url + '?'
 
     # Order of query params matters, due to a quirk with gravatar
-    params = [
-        ('d', 'identicon')
-    ]
+    params = [('d', 'identicon')]
     if size:
         params.append(('s', size))
     if r:
@@ -26,6 +24,7 @@ def gravatar(user, use_ssl=False, d=None, r=None, size=None):
     url = base_url + hash_code + '?' + urlencode(params)
 
     return url
+
 
 def profile_image_url(profile_image_filter, *args, **kwargs):
     return filter_providers[profile_image_filter](*args, **kwargs)

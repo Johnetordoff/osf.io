@@ -8,7 +8,10 @@ from framework.auth.oauth_scopes import CoreScopes
 from api.base import generic_bulk_views as bulk_views
 from api.base import permissions as base_permissions
 from api.base.filters import ListFilterMixin
-from api.base.parsers import JSONAPIMultipleRelationshipsParser, JSONAPIMultipleRelationshipsParserForRegularJSON
+from api.base.parsers import (
+    JSONAPIMultipleRelationshipsParser,
+    JSONAPIMultipleRelationshipsParserForRegularJSON,
+)
 
 from api.base.views import JSONAPIBaseView
 from api.base.views import BaseLinkedList
@@ -72,13 +75,17 @@ class CollectionMixin(object):
         return Preprint.objects.can_view(
             Preprint.objects.filter(
                 guids__in=collection.guid_links.all(), deleted__isnull=True,
-            ), user=user,
+            ),
+            user=user,
         )
 
     def get_collection_submission(self, check_object_permissions=True):
         collection_submission = get_object_or_error(
             CollectionSubmission,
-            Q(collection=Collection.load(self.kwargs['collection_id']), guid___id=self.kwargs['cgm_id']),
+            Q(
+                collection=Collection.load(self.kwargs['collection_id']),
+                guid___id=self.kwargs['cgm_id'],
+            ),
             self.request,
             'submission',
         )
@@ -88,7 +95,14 @@ class CollectionMixin(object):
         return collection_submission
 
 
-class CollectionList(JSONAPIBaseView, bulk_views.BulkUpdateJSONAPIView, bulk_views.BulkDestroyJSONAPIView, bulk_views.ListBulkCreateJSONAPIView, ListFilterMixin, CollectionMixin):
+class CollectionList(
+    JSONAPIBaseView,
+    bulk_views.BulkUpdateJSONAPIView,
+    bulk_views.BulkDestroyJSONAPIView,
+    bulk_views.ListBulkCreateJSONAPIView,
+    ListFilterMixin,
+    CollectionMixin,
+):
     """Organizer Collections organize projects and components. *Writeable*.
 
     Paginated list of Project Organizer Collections ordered by their `modified`.
@@ -149,6 +163,7 @@ class CollectionList(JSONAPIBaseView, bulk_views.BulkUpdateJSONAPIView, bulk_vie
     #This Request/Response
 
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -163,7 +178,7 @@ class CollectionList(JSONAPIBaseView, bulk_views.BulkUpdateJSONAPIView, bulk_vie
     view_name = 'collection-list'
     model_class = Collection
 
-    ordering = ('-modified', )  # default ordering
+    ordering = ('-modified',)  # default ordering
 
     def get_default_queryset(self):
         user = self.request.user
@@ -220,7 +235,9 @@ class CollectionList(JSONAPIBaseView, bulk_views.BulkUpdateJSONAPIView, bulk_vie
         instance.delete()
 
 
-class CollectionDetail(JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView, CollectionMixin):
+class CollectionDetail(
+    JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView, CollectionMixin,
+):
     """Details about Organizer Collections. *Writeable*.
 
     The Project Organizer is a tool to allow the user to make Collections of projects, components, and registrations
@@ -290,6 +307,7 @@ class CollectionDetail(JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView, C
     #This Request/Response
 
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         CollectionWriteOrPublic,
@@ -313,7 +331,9 @@ class CollectionDetail(JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView, C
         collection.delete()
 
 
-class CollectedMetaList(JSONAPIBaseView, generics.ListCreateAPIView, CollectionMixin, ListFilterMixin):
+class CollectedMetaList(
+    JSONAPIBaseView, generics.ListCreateAPIView, CollectionMixin, ListFilterMixin,
+):
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         CanSubmitToCollectionOrPublic,
@@ -345,7 +365,9 @@ class CollectedMetaList(JSONAPIBaseView, generics.ListCreateAPIView, CollectionM
         serializer.save(creator=user, collection=collection)
 
 
-class CollectedMetaDetail(JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView, CollectionMixin):
+class CollectedMetaDetail(
+    JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView, CollectionMixin,
+):
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         CanUpdateDeleteCGMOrPublic,
@@ -358,7 +380,10 @@ class CollectedMetaDetail(JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView
     view_category = 'collections'
     view_name = 'collected-metadata-detail'
 
-    parser_classes = (JSONAPIMultipleRelationshipsParser, JSONAPIMultipleRelationshipsParserForRegularJSON,)
+    parser_classes = (
+        JSONAPIMultipleRelationshipsParser,
+        JSONAPIMultipleRelationshipsParserForRegularJSON,
+    )
 
     # overrides RetrieveAPIView
     def get_object(self):
@@ -376,6 +401,7 @@ class CollectedMetaDetail(JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView
 class CollectedMetaSubjectsList(BaseResourceSubjectsList, CollectionMixin):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/collected_meta_subjects).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         CanUpdateDeleteCGMOrPublic,
@@ -394,6 +420,7 @@ class CollectedMetaSubjectsList(BaseResourceSubjectsList, CollectionMixin):
 class CollectedMetaSubjectsRelationship(SubjectRelationshipBaseView, CollectionMixin):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/collected_meta_subjects_relationship).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         CanUpdateDeleteCGMOrPublic,
@@ -458,6 +485,7 @@ class LinkedNodesList(BaseLinkedList, CollectionMixin, NodeOptimizationMixin):
 
     #This Request/Response
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         CollectionWriteOrPublic,
@@ -471,8 +499,18 @@ class LinkedNodesList(BaseLinkedList, CollectionMixin, NodeOptimizationMixin):
 
     def get_queryset(self):
         auth = get_user_auth(self.request)
-        node_ids = self.get_collection().guid_links.filter(content_type_id=ContentType.objects.get_for_model(Node).id).values_list('object_id', flat=True)
-        nodes = Node.objects.filter(id__in=node_ids, is_deleted=False).can_view(user=auth.user, private_link=auth.private_link).order_by('-modified')
+        node_ids = (
+            self.get_collection()
+            .guid_links.filter(
+                content_type_id=ContentType.objects.get_for_model(Node).id,
+            )
+            .values_list('object_id', flat=True)
+        )
+        nodes = (
+            Node.objects.filter(id__in=node_ids, is_deleted=False)
+            .can_view(user=auth.user, private_link=auth.private_link)
+            .order_by('-modified')
+        )
         return self.optimize_node_queryset(nodes)
 
     # overrides APIView
@@ -549,6 +587,7 @@ class LinkedRegistrationsList(BaseLinkedList, CollectionMixin):
 
     #This Request/Response
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         CollectionWriteOrPublic,
@@ -563,7 +602,13 @@ class LinkedRegistrationsList(BaseLinkedList, CollectionMixin):
 
     def get_queryset(self):
         auth = get_user_auth(self.request)
-        return Registration.objects.filter(guids__in=self.get_collection().guid_links.all(), is_deleted=False).can_view(user=auth.user, private_link=auth.private_link).order_by('-modified')
+        return (
+            Registration.objects.filter(
+                guids__in=self.get_collection().guid_links.all(), is_deleted=False,
+            )
+            .can_view(user=auth.user, private_link=auth.private_link)
+            .order_by('-modified')
+        )
 
     # overrides APIView
     def get_parser_context(self, http_request):
@@ -578,6 +623,7 @@ class LinkedRegistrationsList(BaseLinkedList, CollectionMixin):
 class LinkedPreprintsList(BaseLinkedList, CollectionMixin):
     """List of preprints linked to this collection. *Read-only*.
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         CollectionWriteOrPublic,
@@ -603,7 +649,12 @@ class LinkedPreprintsList(BaseLinkedList, CollectionMixin):
         return res
 
 
-class NodeLinksList(JSONAPIBaseView, bulk_views.BulkDestroyJSONAPIView, bulk_views.ListBulkCreateJSONAPIView, CollectionMixin):
+class NodeLinksList(
+    JSONAPIBaseView,
+    bulk_views.BulkDestroyJSONAPIView,
+    bulk_views.ListBulkCreateJSONAPIView,
+    CollectionMixin,
+):
     """Node Links to other nodes. *Writeable*.
 
     # Deprecated
@@ -654,6 +705,7 @@ class NodeLinksList(JSONAPIBaseView, bulk_views.BulkDestroyJSONAPIView, bulk_vie
 
     #This Request/Response
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         CollectionWriteOrPublic,
@@ -672,7 +724,11 @@ class NodeLinksList(JSONAPIBaseView, bulk_views.BulkDestroyJSONAPIView, bulk_vie
     ordering = ('-modified',)
 
     def get_queryset(self):
-        return self.get_collection().collectionsubmission_set.filter(guid___id__in=AbstractNode.objects.filter(guids__in=self.get_collection().guid_links.all(), is_deleted=False).values_list('guids___id', flat=True))
+        return self.get_collection().collectionsubmission_set.filter(
+            guid___id__in=AbstractNode.objects.filter(
+                guids__in=self.get_collection().guid_links.all(), is_deleted=False,
+            ).values_list('guids___id', flat=True),
+        )
 
     # Overrides BulkDestroyJSONAPIView
     def perform_destroy(self, instance):
@@ -692,7 +748,9 @@ class NodeLinksList(JSONAPIBaseView, bulk_views.BulkDestroyJSONAPIView, bulk_vie
         return res
 
 
-class NodeLinksDetail(JSONAPIBaseView, generics.RetrieveDestroyAPIView, CollectionMixin):
+class NodeLinksDetail(
+    JSONAPIBaseView, generics.RetrieveDestroyAPIView, CollectionMixin,
+):
     """Node Link details. *Writeable*.
 
     Node Links act as pointers to other nodes. Unlike Forks, they are not copies of nodes;
@@ -726,6 +784,7 @@ class NodeLinksDetail(JSONAPIBaseView, generics.RetrieveDestroyAPIView, Collecti
 
     #This Request/Response
     """
+
     permission_classes = (
         CollectionWriteOrPublicForPointers,
         drf_permissions.IsAuthenticatedOrReadOnly,
@@ -828,6 +887,7 @@ class CollectionLinkedNodesRelationship(LinkedNodesRelationship, CollectionMixin
     This requires edit permission on the node. This will delete any node_links that have a
     corresponding node_id in the request.
     """
+
     permission_classes = (
         CollectionWriteOrPublicForRelationshipPointers,
         drf_permissions.IsAuthenticatedOrReadOnly,
@@ -844,13 +904,14 @@ class CollectionLinkedNodesRelationship(LinkedNodesRelationship, CollectionMixin
         auth = get_user_auth(self.request)
         obj = {
             'data': [
-                pointer for pointer in
-                Node.objects.filter(
+                pointer
+                for pointer in Node.objects.filter(
                     guids__in=collection.guid_links.all(), is_deleted=False,
-                ).can_view(
-                    user=auth.user, private_link=auth.private_link,
-                ).order_by('-modified')
-            ], 'self': collection,
+                )
+                .can_view(user=auth.user, private_link=auth.private_link,)
+                .order_by('-modified')
+            ],
+            'self': collection,
         }
         self.check_object_permissions(self.request, obj)
         return obj
@@ -867,6 +928,7 @@ class CollectionLinkedNodesRelationship(LinkedNodesRelationship, CollectionMixin
 class CollectionLinkedPreprintsRelationship(CollectionLinkedNodesRelationship):
     """ Relationship Endpoint for Collection -> Linked Preprints relationships
     """
+
     permission_classes = (
         CollectionWriteOrPublicForRelationshipPointers,
         drf_permissions.IsAuthenticatedOrReadOnly,
@@ -883,7 +945,8 @@ class CollectionLinkedPreprintsRelationship(CollectionLinkedNodesRelationship):
         obj = {
             'data': [
                 pointer for pointer in self.collection_preprints(collection, auth.user)
-            ], 'self': collection,
+            ],
+            'self': collection,
         }
         self.check_object_permissions(self.request, obj)
         return obj
@@ -952,6 +1015,7 @@ class CollectionLinkedRegistrationsRelationship(CollectionLinkedNodesRelationshi
     This requires edit permission on the node. This will delete any node_links that have a
     corresponding node_id in the request.
     """
+
     permission_classes = (
         CollectionWriteOrPublicForRelationshipPointers,
         drf_permissions.IsAuthenticatedOrReadOnly,
@@ -967,13 +1031,14 @@ class CollectionLinkedRegistrationsRelationship(CollectionLinkedNodesRelationshi
         auth = get_user_auth(self.request)
         obj = {
             'data': [
-                pointer for pointer in
-                Registration.objects.filter(
+                pointer
+                for pointer in Registration.objects.filter(
                     guids__in=collection.guid_links.all(), is_deleted=False,
-                ).can_view(
-                    user=auth.user, private_link=auth.private_link,
-                ).order_by('-modified')
-            ], 'self': collection,
+                )
+                .can_view(user=auth.user, private_link=auth.private_link,)
+                .order_by('-modified')
+            ],
+            'self': collection,
         }
         self.check_object_permissions(self.request, obj)
         return obj

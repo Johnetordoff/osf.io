@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0054_add_file_version_indices'),
     ]
 
-    operations = [
-    ]
+    operations = []

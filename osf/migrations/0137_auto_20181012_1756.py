@@ -16,27 +16,52 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='collection',
             name='collected_type_choices',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=127), blank=True, default=list, size=None),
+            field=django.contrib.postgres.fields.ArrayField(
+                base_field=models.CharField(max_length=127),
+                blank=True,
+                default=list,
+                size=None,
+            ),
         ),
         migrations.AlterField(
             model_name='collection',
             name='issue_choices',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=127), blank=True, default=list, size=None),
+            field=django.contrib.postgres.fields.ArrayField(
+                base_field=models.CharField(max_length=127),
+                blank=True,
+                default=list,
+                size=None,
+            ),
         ),
         migrations.AlterField(
             model_name='collection',
             name='program_area_choices',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=127), blank=True, default=list, size=None),
+            field=django.contrib.postgres.fields.ArrayField(
+                base_field=models.CharField(max_length=127),
+                blank=True,
+                default=list,
+                size=None,
+            ),
         ),
         migrations.AlterField(
             model_name='collection',
             name='status_choices',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=127), blank=True, default=list, size=None),
+            field=django.contrib.postgres.fields.ArrayField(
+                base_field=models.CharField(max_length=127),
+                blank=True,
+                default=list,
+                size=None,
+            ),
         ),
         migrations.AlterField(
             model_name='collection',
             name='volume_choices',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=127), blank=True, default=list, size=None),
+            field=django.contrib.postgres.fields.ArrayField(
+                base_field=models.CharField(max_length=127),
+                blank=True,
+                default=list,
+                size=None,
+            ),
         ),
         migrations.AlterField(
             model_name='collectionsubmission',

@@ -11,11 +11,7 @@ logger = logging.getLogger(__name__)
 LIMIT_CLAUSE = ' LIMIT %s) RETURNING id;'
 NO_LIMIT_CLAUSE = ');'
 
-TABLES_TO_POPULATE_WITH_MODIFIED = [
-    'osf_comment',
-    'osf_institution',
-    'osf_privatelink'
-]
+TABLES_TO_POPULATE_WITH_MODIFIED = ['osf_comment', 'osf_institution', 'osf_privatelink']
 
 POPULATE_BASE_FILE_NODE = """UPDATE osf_basefilenode SET deleted = deleted_on
     WHERE id IN (SELECT id FROM osf_basefilenode WHERE deleted_on IS NOT NULL AND deleted IS NULL{}"""
@@ -28,7 +24,9 @@ CHECK_ABSTRACT_NODE = """SELECT deleted, deleted_date FROM osf_abstractnode WHER
 UPDATE_DELETED_WITH_MODIFIED = """UPDATE {} SET deleted=modified
 WHERE id IN (SELECT id FROM {} WHERE is_deleted AND deleted IS NULL{}"""
 
-CHECK_POPULATED = """SELECT deleted, is_deleted FROM {} WHERE deleted IS NULL AND is_deleted ;"""
+CHECK_POPULATED = (
+    """SELECT deleted, is_deleted FROM {} WHERE deleted IS NULL AND is_deleted ;"""
+)
 
 FORWARD_BASE_FILE = POPULATE_BASE_FILE_NODE.format(NO_LIMIT_CLAUSE)
 FORWARD_ABSTRACT_NODE = POPULATE_ABSTRACT_NODE.format(NO_LIMIT_CLAUSE)
@@ -36,13 +34,20 @@ FORWARD_ABSTRACT_NODE = POPULATE_ABSTRACT_NODE.format(NO_LIMIT_CLAUSE)
 REVERSE_BASE_FILE = 'UPDATE osf_basefilenode SET deleted = null'
 REVERSE_ABSTRACT_NODE = 'UPDATE osf_abstractnode SET deleted = null'
 
-FORWARD_COMMENT = UPDATE_DELETED_WITH_MODIFIED.format('osf_comment', 'osf_comment', NO_LIMIT_CLAUSE)
-FORWARD_INSTITUTION = UPDATE_DELETED_WITH_MODIFIED.format('osf_institution', 'osf_institution', NO_LIMIT_CLAUSE)
-FORWARD_PRIVATE_LINK = UPDATE_DELETED_WITH_MODIFIED.format('osf_privatelink', 'osf_privatelink', NO_LIMIT_CLAUSE)
+FORWARD_COMMENT = UPDATE_DELETED_WITH_MODIFIED.format(
+    'osf_comment', 'osf_comment', NO_LIMIT_CLAUSE
+)
+FORWARD_INSTITUTION = UPDATE_DELETED_WITH_MODIFIED.format(
+    'osf_institution', 'osf_institution', NO_LIMIT_CLAUSE
+)
+FORWARD_PRIVATE_LINK = UPDATE_DELETED_WITH_MODIFIED.format(
+    'osf_privatelink', 'osf_privatelink', NO_LIMIT_CLAUSE
+)
 
 REVERSE_COMMENT = 'UPDATE osf_comment SET deleted = null'
 REVERSE_INSTITUTION = 'UPDATE osf_institution SET deleted = null'
 REVERSE_PRIVATE_LINK = 'UPDATE osf_privatelink SET deleted = null'
+
 
 @celery_app.task(name='management.commands.migrate_deleted_date')
 def populate_deleted(dry_run=False, page_size=1000):
@@ -54,6 +59,7 @@ def populate_deleted(dry_run=False, page_size=1000):
         if dry_run:
             raise RuntimeError('Dry Run -- Transaction rolled back')
 
+
 def run_statements(statement, page_size, table):
     logger.info('Populating deleted column in table {}'.format(table))
     with connection.cursor() as cursor:
@@ -63,7 +69,10 @@ def run_statements(statement, page_size, table):
             cursor.execute(CHECK_POPULATED.format(table), [page_size])
             remaining_rows = cursor.fetchall()
             if not remaining_rows:
-                sentry.log_message('Deleted field in {} table is populated'.format(table))
+                sentry.log_message(
+                    'Deleted field in {} table is populated'.format(table)
+                )
+
 
 def run_sql(statement, check_statement, page_size):
     table = statement.split(' ')[1]
@@ -74,11 +83,14 @@ def run_sql(statement, check_statement, page_size):
         if not rows:
             with connection.cursor() as cursor:
                 cursor.execute(check_statement, [page_size])
-                sentry.log_message('Deleted field in {} table is populated'.format(table))
+                sentry.log_message(
+                    'Deleted field in {} table is populated'.format(table)
+                )
+
 
 class Command(BaseCommand):
-    help = '''Populates new deleted field for various models. Ensure you have run migrations
-    before running this script.'''
+    help = """Populates new deleted field for various models. Ensure you have run migrations
+    before running this script."""
 
     def add_arguments(self, parser):
         parser.add_argument(

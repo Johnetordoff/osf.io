@@ -9,7 +9,12 @@ from json import dumps
 
 from nose.tools import *  # noqa (PEP8 asserts)
 from tests.base import OsfTestCase, get_default_metaschema
-from osf_tests.factories import ProjectFactory, UserFactory, AuthUserFactory, DraftRegistrationFactory
+from osf_tests.factories import (
+    ProjectFactory,
+    UserFactory,
+    AuthUserFactory,
+    DraftRegistrationFactory,
+)
 
 from github3.repos.branch import Branch
 
@@ -17,7 +22,8 @@ from framework.exceptions import HTTPError
 from framework.auth import Auth
 
 from addons.base.tests.views import (
-    OAuthAddonAuthViewsTestCaseMixin, OAuthAddonConfigViewsTestCaseMixin
+    OAuthAddonAuthViewsTestCaseMixin,
+    OAuthAddonConfigViewsTestCaseMixin,
 )
 from addons.gitlab import utils
 from addons.gitlab.api import GitLabClient
@@ -28,11 +34,13 @@ from addons.gitlab.tests.factories import GitLabAccountFactory
 
 pytestmark = pytest.mark.django_db
 
-class TestGitLabAuthViews(GitLabAddonTestCase, OAuthAddonAuthViewsTestCaseMixin, OsfTestCase):
 
+class TestGitLabAuthViews(
+    GitLabAddonTestCase, OAuthAddonAuthViewsTestCaseMixin, OsfTestCase
+):
     @mock.patch(
         'addons.gitlab.models.UserSettings.revoke_remote_oauth_access',
-        mock.PropertyMock()
+        mock.PropertyMock(),
     )
     def test_delete_external_account(self):
         super(TestGitLabAuthViews, self).test_delete_external_account()
@@ -44,7 +52,9 @@ class TestGitLabAuthViews(GitLabAddonTestCase, OAuthAddonAuthViewsTestCaseMixin,
         pass
 
 
-class TestGitLabConfigViews(GitLabAddonTestCase, OAuthAddonConfigViewsTestCaseMixin, OsfTestCase):
+class TestGitLabConfigViews(
+    GitLabAddonTestCase, OAuthAddonConfigViewsTestCaseMixin, OsfTestCase
+):
     folder = None
     Serializer = GitLabSerializer
     client = GitLabClient
@@ -71,16 +81,20 @@ class TestGitLabConfigViews(GitLabAddonTestCase, OAuthAddonConfigViewsTestCaseMi
         # GH selects repos, not folders, so this needs to be overriden
         mock_repo.return_value = 'repo_name'
         url = self.project.api_url_for('{0}_set_config'.format(self.ADDON_SHORT_NAME))
-        res = self.app.post_json(url, {
-            'gitlab_user': 'octocat',
-            'gitlab_repo': 'repo_name',
-            'gitlab_repo_id': '123',
-        }, auth=self.user.auth)
+        res = self.app.post_json(
+            url,
+            {
+                'gitlab_user': 'octocat',
+                'gitlab_repo': 'repo_name',
+                'gitlab_repo_id': '123',
+            },
+            auth=self.user.auth,
+        )
         assert_equal(res.status_code, http_status.HTTP_200_OK)
         self.project.reload()
         assert_equal(
             self.project.logs.latest().action,
-            '{0}_repo_linked'.format(self.ADDON_SHORT_NAME)
+            '{0}_repo_linked'.format(self.ADDON_SHORT_NAME),
         )
         mock_add_hook.assert_called_once_with(save=False)
 
@@ -88,7 +102,6 @@ class TestGitLabConfigViews(GitLabAddonTestCase, OAuthAddonConfigViewsTestCaseMi
 # TODO: Test remaining CRUD methods
 # TODO: Test exception handling
 class TestCRUD(OsfTestCase):
-
     def setUp(self):
         super(TestCRUD, self).setUp()
         self.gitlab = create_mock_gitlab(user='fred', private=False)
@@ -106,7 +119,6 @@ class TestCRUD(OsfTestCase):
 
 
 class TestGitLabViews(OsfTestCase):
-
     def setUp(self):
         super(TestGitLabViews, self).setUp()
         self.user = AuthUserFactory()
@@ -115,8 +127,7 @@ class TestGitLabViews(OsfTestCase):
         self.project = ProjectFactory(creator=self.user)
         self.non_authenticator = UserFactory()
         self.project.add_contributor(
-            contributor=self.non_authenticator,
-            auth=self.consolidated_auth,
+            contributor=self.non_authenticator, auth=self.consolidated_auth,
         )
         self.project.save()
         self.project.add_addon('gitlab', auth=self.consolidated_auth)
@@ -153,15 +164,9 @@ class TestGitLabViews(OsfTestCase):
         mock_repo.return_value = gitlab_mock.repo
         mock_branches.return_value = gitlab_mock.branches.return_value
         branch, sha, branches = utils.get_refs(self.node_settings)
-        assert_equal(
-            branch,
-            gitlab_mock.repo.default_branch
-        )
+        assert_equal(branch, gitlab_mock.repo.default_branch)
         assert_equal(sha, branches[0].commit['id'])  # Get refs for default branch
-        assert_equal(
-            branches,
-            gitlab_mock.branches.return_value
-        )
+        assert_equal(branches, gitlab_mock.branches.return_value)
 
     @mock.patch('addons.gitlab.api.GitLabClient.branches')
     @mock.patch('addons.gitlab.api.GitLabClient.repo')
@@ -172,10 +177,7 @@ class TestGitLabViews(OsfTestCase):
         branch, sha, branches = utils.get_refs(self.node_settings, 'master')
         assert_equal(branch, 'master')
         assert_equal(sha, branches[0].commit['id'])
-        assert_equal(
-            branches,
-            gitlab_mock.branches.return_value
-        )
+        assert_equal(branches, gitlab_mock.branches.return_value)
 
     def test_before_fork(self):
         url = self.project.api_url + 'fork/before/'
@@ -199,21 +201,30 @@ class TestGitLabViews(OsfTestCase):
     def test_permissions_no_auth(self, mock_repo):
         gitlab_mock = self.gitlab
         # project is set to private right now
-        mock_repository = mock.Mock(**{
-            'user': 'fred',
-            'repo': 'mock-repo',
-            'permissions': {
-                'project_access': {'access_level': 20, 'notification_level': 3}
-            },
-        })
+        mock_repository = mock.Mock(
+            **{
+                'user': 'fred',
+                'repo': 'mock-repo',
+                'permissions': {
+                    'project_access': {'access_level': 20, 'notification_level': 3}
+                },
+            }
+        )
         mock_repo.attributes.return_value = mock_repository
-
 
         connection = gitlab_mock
         non_authenticated_user = UserFactory()
         non_authenticated_auth = Auth(user=non_authenticated_user)
         branch = 'master'
-        assert_false(check_permissions(self.node_settings, non_authenticated_auth, connection, branch, repo=mock_repository))
+        assert_false(
+            check_permissions(
+                self.node_settings,
+                non_authenticated_auth,
+                connection,
+                branch,
+                repo=mock_repository,
+            )
+        )
 
     # make a repository that doesn't allow push access for this user;
     # make sure check_permissions returns false
@@ -224,15 +235,25 @@ class TestGitLabViews(OsfTestCase):
         mock_has_auth.return_value = True
         connection = gitlab_mock
         branch = 'master'
-        mock_repository = mock.Mock(**{
-            'user': 'fred',
-            'repo': 'mock-repo',
-            'permissions': {
-                'project_access': {'access_level': 20, 'notification_level': 3}
-            },
-        })
+        mock_repository = mock.Mock(
+            **{
+                'user': 'fred',
+                'repo': 'mock-repo',
+                'permissions': {
+                    'project_access': {'access_level': 20, 'notification_level': 3}
+                },
+            }
+        )
         mock_repo.attributes.return_value = mock_repository
-        assert_false(check_permissions(self.node_settings, self.consolidated_auth, connection, branch, repo=mock_repository))
+        assert_false(
+            check_permissions(
+                self.node_settings,
+                self.consolidated_auth,
+                connection,
+                branch,
+                repo=mock_repository,
+            )
+        )
 
     # make a branch with a different commit than the commit being passed into check_permissions
     @mock.patch('addons.gitlab.models.UserSettings.has_auth')
@@ -241,20 +262,29 @@ class TestGitLabViews(OsfTestCase):
         gitlab_mock = self.gitlab
         mock_has_auth.return_value = True
         connection = gitlab_mock
-        mock_branch = mock.Mock(**{
-            'commit': {'id': '67890'}
-        })
-        mock_repository = mock.Mock(**{
-            'user': 'fred',
-            'repo': 'mock-repo',
-            'permissions': {
-                'project_access': {'access_level': 20, 'notification_level': 3}
-            },
-        })
+        mock_branch = mock.Mock(**{'commit': {'id': '67890'}})
+        mock_repository = mock.Mock(
+            **{
+                'user': 'fred',
+                'repo': 'mock-repo',
+                'permissions': {
+                    'project_access': {'access_level': 20, 'notification_level': 3}
+                },
+            }
+        )
         mock_repo.attributes.return_value = mock_repository
         connection.branches.return_value = mock_branch
         sha = '12345'
-        assert_false(check_permissions(self.node_settings, self.consolidated_auth, connection, mock_branch, sha=sha, repo=mock_repository))
+        assert_false(
+            check_permissions(
+                self.node_settings,
+                self.consolidated_auth,
+                connection,
+                mock_branch,
+                sha=sha,
+                repo=mock_repository,
+            )
+        )
 
     # make sure permissions are not granted for editing a registration
     @mock.patch('addons.gitlab.models.UserSettings.has_auth')
@@ -263,23 +293,38 @@ class TestGitLabViews(OsfTestCase):
         gitlab_mock = self.gitlab
         mock_has_auth.return_value = True
         connection = gitlab_mock
-        mock_repository = mock.Mock(**{
-            'user': 'fred',
-            'repo': 'mock-repo',
-            'permissions': {
-                'project_access': {'access_level': 20, 'notification_level': 3}
-            },
-        })
+        mock_repository = mock.Mock(
+            **{
+                'user': 'fred',
+                'repo': 'mock-repo',
+                'permissions': {
+                    'project_access': {'access_level': 20, 'notification_level': 3}
+                },
+            }
+        )
         mock_repo.attributes.return_value = mock_repository
-        with mock.patch('osf.models.node.AbstractNode.is_registration', new_callable=mock.PropertyMock) as mock_is_reg:
+        with mock.patch(
+            'osf.models.node.AbstractNode.is_registration',
+            new_callable=mock.PropertyMock,
+        ) as mock_is_reg:
             mock_is_reg.return_value = True
-            assert_false(check_permissions(self.node_settings, self.consolidated_auth, connection, 'master', repo=mock_repository))
+            assert_false(
+                check_permissions(
+                    self.node_settings,
+                    self.consolidated_auth,
+                    connection,
+                    'master',
+                    repo=mock_repository,
+                )
+            )
 
     def check_hook_urls(self, urls, node, path, sha):
-        url = node.web_url_for('addon_view_or_download_file', path=path, provider='gitlab')
+        url = node.web_url_for(
+            'addon_view_or_download_file', path=path, provider='gitlab'
+        )
         expected_urls = {
             'view': '{0}?branch={1}'.format(url, sha),
-            'download': '{0}?action=download&branch={1}'.format(url, sha)
+            'download': '{0}?action=download&branch={1}'.format(url, sha),
         }
 
         assert_equal(urls['view'], expected_urls['view'])
@@ -296,18 +341,24 @@ class TestGitLabViews(OsfTestCase):
             url,
             {
                 'test': True,
-                'commits': [{
-                    'id': 'b08dbb5b6fcd74a592e5281c9d28e2020a1db4ce',
-                    'distinct': True,
-                    'message': 'foo',
-                    'timestamp': timestamp,
-                    'url': 'https://gitlab.com/tester/addontesting/commit/b08dbb5b6fcd74a592e5281c9d28e2020a1db4ce',
-                    'author': {'name': 'Illidan', 'email': 'njqpw@osf.io'},
-                    'committer': {'name': 'Testor', 'email': 'test@osf.io', 'username': 'tester'},
-                    'added': ['PRJWN3TV'],
-                    'removed': [],
-                    'modified': [],
-                }]
+                'commits': [
+                    {
+                        'id': 'b08dbb5b6fcd74a592e5281c9d28e2020a1db4ce',
+                        'distinct': True,
+                        'message': 'foo',
+                        'timestamp': timestamp,
+                        'url': 'https://gitlab.com/tester/addontesting/commit/b08dbb5b6fcd74a592e5281c9d28e2020a1db4ce',
+                        'author': {'name': 'Illidan', 'email': 'njqpw@osf.io'},
+                        'committer': {
+                            'name': 'Testor',
+                            'email': 'test@osf.io',
+                            'username': 'tester',
+                        },
+                        'added': ['PRJWN3TV'],
+                        'removed': [],
+                        'modified': [],
+                    }
+                ],
             },
             content_type='application/json',
         ).maybe_follow()
@@ -327,17 +378,29 @@ class TestGitLabViews(OsfTestCase):
         timestamp = str(datetime.datetime.utcnow())
         self.app.post_json(
             url,
-            {'test': True,
-                 'commits': [{'id': 'b08dbb5b6fcd74a592e5281c9d28e2020a1db4ce',
-                              'distinct': True,
-                              'message': ' foo',
-                              'timestamp': timestamp,
-                              'url': 'https://gitlab.com/tester/addontesting/commit/b08dbb5b6fcd74a592e5281c9d28e2020a1db4ce',
-                              'author': {'name': 'Illidan', 'email': 'njqpw@osf.io'},
-                              'committer': {'name': 'Testor', 'email': 'test@osf.io',
-                                            'username': 'tester'},
-                              'added': [], 'removed':[], 'modified':['PRJWN3TV']}]},
-            content_type='application/json').maybe_follow()
+            {
+                'test': True,
+                'commits': [
+                    {
+                        'id': 'b08dbb5b6fcd74a592e5281c9d28e2020a1db4ce',
+                        'distinct': True,
+                        'message': ' foo',
+                        'timestamp': timestamp,
+                        'url': 'https://gitlab.com/tester/addontesting/commit/b08dbb5b6fcd74a592e5281c9d28e2020a1db4ce',
+                        'author': {'name': 'Illidan', 'email': 'njqpw@osf.io'},
+                        'committer': {
+                            'name': 'Testor',
+                            'email': 'test@osf.io',
+                            'username': 'tester',
+                        },
+                        'added': [],
+                        'removed': [],
+                        'modified': ['PRJWN3TV'],
+                    }
+                ],
+            },
+            content_type='application/json',
+        ).maybe_follow()
         self.project.reload()
         assert_equal(self.project.logs.latest().action, 'gitlab_file_updated')
         urls = self.project.logs.latest().params['urls']
@@ -354,16 +417,29 @@ class TestGitLabViews(OsfTestCase):
         timestamp = str(datetime.datetime.utcnow())
         self.app.post_json(
             url,
-            {'test': True,
-             'commits': [{'id': 'b08dbb5b6fcd74a592e5281c9d28e2020a1db4ce',
-                          'distinct': True,
-                          'message': 'foo',
-                          'timestamp': timestamp,
-                          'url': 'https://gitlab.com/tester/addontesting/commit/b08dbb5b6fcd74a592e5281c9d28e2020a1db4ce',
-                          'author': {'name': 'Illidan', 'email': 'njqpw@osf.io'},
-                          'committer': {'name': 'Testor', 'email': 'test@osf.io', 'username': 'tester'},
-                          'added': [], 'removed': ['PRJWN3TV'], 'modified':[]}]},
-            content_type='application/json').maybe_follow()
+            {
+                'test': True,
+                'commits': [
+                    {
+                        'id': 'b08dbb5b6fcd74a592e5281c9d28e2020a1db4ce',
+                        'distinct': True,
+                        'message': 'foo',
+                        'timestamp': timestamp,
+                        'url': 'https://gitlab.com/tester/addontesting/commit/b08dbb5b6fcd74a592e5281c9d28e2020a1db4ce',
+                        'author': {'name': 'Illidan', 'email': 'njqpw@osf.io'},
+                        'committer': {
+                            'name': 'Testor',
+                            'email': 'test@osf.io',
+                            'username': 'tester',
+                        },
+                        'added': [],
+                        'removed': ['PRJWN3TV'],
+                        'modified': [],
+                    }
+                ],
+            },
+            content_type='application/json',
+        ).maybe_follow()
         self.project.reload()
         assert_equal(self.project.logs.latest().action, 'gitlab_file_removed')
         urls = self.project.logs.latest().params['urls']
@@ -374,16 +450,29 @@ class TestGitLabViews(OsfTestCase):
         url = '/api/v1/project/{0}/gitlab/hook/'.format(self.project._id)
         self.app.post_json(
             url,
-            {'test': True,
-             'commits': [{'id': 'b08dbb5b6fcd74a592e5281c9d28e2020a1db4ce',
-                          'distinct': True,
-                          'message': 'Added via the Open Science Framework',
-                          'timestamp': '2014-01-08T14:15:51-08:00',
-                          'url': 'https://gitlab.com/tester/addontesting/commit/b08dbb5b6fcd74a592e5281c9d28e2020a1db4ce',
-                          'author': {'name': 'Illidan', 'email': 'njqpw@osf.io'},
-                          'committer': {'name': 'Testor', 'email': 'test@osf.io', 'username': 'tester'},
-                          'added': ['PRJWN3TV'], 'removed':[], 'modified':[]}]},
-            content_type='application/json').maybe_follow()
+            {
+                'test': True,
+                'commits': [
+                    {
+                        'id': 'b08dbb5b6fcd74a592e5281c9d28e2020a1db4ce',
+                        'distinct': True,
+                        'message': 'Added via the Open Science Framework',
+                        'timestamp': '2014-01-08T14:15:51-08:00',
+                        'url': 'https://gitlab.com/tester/addontesting/commit/b08dbb5b6fcd74a592e5281c9d28e2020a1db4ce',
+                        'author': {'name': 'Illidan', 'email': 'njqpw@osf.io'},
+                        'committer': {
+                            'name': 'Testor',
+                            'email': 'test@osf.io',
+                            'username': 'tester',
+                        },
+                        'added': ['PRJWN3TV'],
+                        'removed': [],
+                        'modified': [],
+                    }
+                ],
+            },
+            content_type='application/json',
+        ).maybe_follow()
         self.project.reload()
         assert_not_equal(self.project.logs.latest().action, 'gitlab_file_added')
 
@@ -392,16 +481,29 @@ class TestGitLabViews(OsfTestCase):
         url = '/api/v1/project/{0}/gitlab/hook/'.format(self.project._id)
         self.app.post_json(
             url,
-            {'test': True,
-             'commits': [{'id': 'b08dbb5b6fcd74a592e5281c9d28e2020a1db4ce',
-                          'distinct': True,
-                          'message': 'Updated via the Open Science Framework',
-                          'timestamp': '2014-01-08T14:15:51-08:00',
-                          'url': 'https://gitlab.com/tester/addontesting/commit/b08dbb5b6fcd74a592e5281c9d28e2020a1db4ce',
-                          'author': {'name': 'Illidan', 'email': 'njqpw@osf.io'},
-                          'committer': {'name': 'Testor', 'email': 'test@osf.io', 'username': 'tester'},
-                          'added': [], 'removed':[], 'modified':['PRJWN3TV']}]},
-            content_type='application/json').maybe_follow()
+            {
+                'test': True,
+                'commits': [
+                    {
+                        'id': 'b08dbb5b6fcd74a592e5281c9d28e2020a1db4ce',
+                        'distinct': True,
+                        'message': 'Updated via the Open Science Framework',
+                        'timestamp': '2014-01-08T14:15:51-08:00',
+                        'url': 'https://gitlab.com/tester/addontesting/commit/b08dbb5b6fcd74a592e5281c9d28e2020a1db4ce',
+                        'author': {'name': 'Illidan', 'email': 'njqpw@osf.io'},
+                        'committer': {
+                            'name': 'Testor',
+                            'email': 'test@osf.io',
+                            'username': 'tester',
+                        },
+                        'added': [],
+                        'removed': [],
+                        'modified': ['PRJWN3TV'],
+                    }
+                ],
+            },
+            content_type='application/json',
+        ).maybe_follow()
         self.project.reload()
         assert_not_equal(self.project.logs.latest().action, 'gitlab_file_updated')
 
@@ -410,22 +512,34 @@ class TestGitLabViews(OsfTestCase):
         url = '/api/v1/project/{0}/gitlab/hook/'.format(self.project._id)
         self.app.post_json(
             url,
-            {'test': True,
-             'commits': [{'id': 'b08dbb5b6fcd74a592e5281c9d28e2020a1db4ce',
-                          'distinct': True,
-                          'message': 'Deleted via the Open Science Framework',
-                          'timestamp': '2014-01-08T14:15:51-08:00',
-                          'url': 'https://gitlab.com/tester/addontesting/commit/b08dbb5b6fcd74a592e5281c9d28e2020a1db4ce',
-                          'author': {'name': 'Illidan', 'email': 'njqpw@osf.io'},
-                          'committer': {'name': 'Testor', 'email': 'test@osf.io', 'username': 'tester'},
-                          'added': [], 'removed':['PRJWN3TV'], 'modified':[]}]},
-            content_type='application/json').maybe_follow()
+            {
+                'test': True,
+                'commits': [
+                    {
+                        'id': 'b08dbb5b6fcd74a592e5281c9d28e2020a1db4ce',
+                        'distinct': True,
+                        'message': 'Deleted via the Open Science Framework',
+                        'timestamp': '2014-01-08T14:15:51-08:00',
+                        'url': 'https://gitlab.com/tester/addontesting/commit/b08dbb5b6fcd74a592e5281c9d28e2020a1db4ce',
+                        'author': {'name': 'Illidan', 'email': 'njqpw@osf.io'},
+                        'committer': {
+                            'name': 'Testor',
+                            'email': 'test@osf.io',
+                            'username': 'tester',
+                        },
+                        'added': [],
+                        'removed': ['PRJWN3TV'],
+                        'modified': [],
+                    }
+                ],
+            },
+            content_type='application/json',
+        ).maybe_follow()
         self.project.reload()
         assert_not_equal(self.project.logs.latest().action, 'gitlab_file_removed')
 
 
 class TestRegistrationsWithGitLab(OsfTestCase):
-
     def setUp(self):
 
         super(TestRegistrationsWithGitLab, self).setUp()
@@ -444,7 +558,6 @@ class TestRegistrationsWithGitLab(OsfTestCase):
 
 
 class TestGitLabSettings(OsfTestCase):
-
     def setUp(self):
 
         super(TestGitLabSettings, self).setUp()
@@ -477,7 +590,7 @@ class TestGitLabSettings(OsfTestCase):
                 'gitlab_repo': 'night at the opera',
                 'gitlab_repo_id': 'abc',
             },
-            auth=self.auth
+            auth=self.auth,
         ).maybe_follow()
 
         self.project.reload()
@@ -504,7 +617,7 @@ class TestGitLabSettings(OsfTestCase):
                 'gitlab_repo': self.node_settings.repo,
                 'gitlab_repo_id': self.node_settings.repo_id,
             },
-            auth=self.auth
+            auth=self.auth,
         ).maybe_follow()
 
         self.project.reload()
@@ -521,12 +634,9 @@ class TestGitLabSettings(OsfTestCase):
         url = self.project.api_url + 'gitlab/settings/'
         res = self.app.post_json(
             url,
-            {
-                'gitlab_user': 'queen',
-                'gitlab_repo': 'night at the opera',
-            },
+            {'gitlab_user': 'queen', 'gitlab_repo': 'night at the opera',},
             auth=self.auth,
-            expect_errors=True
+            expect_errors=True,
         ).maybe_follow()
 
         assert_equal(res.status_code, 400)
@@ -535,37 +645,42 @@ class TestGitLabSettings(OsfTestCase):
     def test_link_repo_registration(self, mock_branches):
 
         mock_branches.return_value = [
-            Branch.from_json(dumps({
-                'name': 'master',
-                'commit': {
-                    'sha': '6dcb09b5b57875f334f61aebed695e2e4193db5e',
-                    'url': 'https://api.gitlab.com/repos/octocat/Hello-World/commits/c5b97d5ae6c19d5c5df71a34c7fbeeda2479ccbc',
-                }
-            })),
-            Branch.from_json(dumps({
-                'name': 'develop',
-                'commit': {
-                    'sha': '6dcb09b5b57875asdasedawedawedwedaewdwdass',
-                    'url': 'https://api.gitlab.com/repos/octocat/Hello-World/commits/cdcb09b5b57875asdasedawedawedwedaewdwdass',
-                }
-            }))
+            Branch.from_json(
+                dumps(
+                    {
+                        'name': 'master',
+                        'commit': {
+                            'sha': '6dcb09b5b57875f334f61aebed695e2e4193db5e',
+                            'url': 'https://api.gitlab.com/repos/octocat/Hello-World/commits/c5b97d5ae6c19d5c5df71a34c7fbeeda2479ccbc',
+                        },
+                    }
+                )
+            ),
+            Branch.from_json(
+                dumps(
+                    {
+                        'name': 'develop',
+                        'commit': {
+                            'sha': '6dcb09b5b57875asdasedawedawedwedaewdwdass',
+                            'url': 'https://api.gitlab.com/repos/octocat/Hello-World/commits/cdcb09b5b57875asdasedawedawedwedaewdwdass',
+                        },
+                    }
+                )
+            ),
         ]
 
         registration = self.project.register_node(
             schema=get_default_metaschema(),
             auth=self.consolidated_auth,
-             draft_registration=DraftRegistrationFactory(branched_from=self.project)
+            draft_registration=DraftRegistrationFactory(branched_from=self.project),
         )
 
         url = registration.api_url + 'gitlab/settings/'
         res = self.app.post_json(
             url,
-            {
-                'gitlab_user': 'queen',
-                'gitlab_repo': 'night at the opera',
-            },
+            {'gitlab_user': 'queen', 'gitlab_repo': 'night at the opera',},
             auth=self.auth,
-            expect_errors=True
+            expect_errors=True,
         ).maybe_follow()
 
         assert_equal(res.status_code, 400)

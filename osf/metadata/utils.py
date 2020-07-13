@@ -19,7 +19,7 @@ DATACITE_RESOURCE_TYPE_MAP = {
     'Research Tool': 'Text',
     'Thesis': 'Text',
     'Other': 'Text',
-    '(:unas)': 'Other'
+    '(:unas)': 'Other',
 }
 
 
@@ -35,27 +35,35 @@ def datacite_format_contributors(contributors):
             {
                 'nameIdentifier': contributor.absolute_url,
                 'nameIdentifierScheme': 'OSF',
-                'schemeURI': settings.DOMAIN
+                'schemeURI': settings.DOMAIN,
             }
         ]
 
         if contributor.external_identity.get('ORCID'):
-            verified = list(contributor.external_identity['ORCID'].values())[0] == 'VERIFIED'
+            verified = (
+                list(contributor.external_identity['ORCID'].values())[0] == 'VERIFIED'
+            )
             if verified:
-                name_identifiers.append({
-                    'nameIdentifier': list(contributor.external_identity['ORCID'].keys())[0],
-                    'nameIdentifierScheme': 'ORCID',
-                    'schemeURI': 'http://orcid.org/'
-                })
+                name_identifiers.append(
+                    {
+                        'nameIdentifier': list(
+                            contributor.external_identity['ORCID'].keys()
+                        )[0],
+                        'nameIdentifierScheme': 'ORCID',
+                        'schemeURI': 'http://orcid.org/',
+                    }
+                )
 
-        creators.append({
-            'creatorName': {
-                'creatorName': contributor.fullname,
-                'familyName': contributor.family_name,
-                'givenName': contributor.given_name
-            },
-            'nameIdentifiers': name_identifiers
-        })
+        creators.append(
+            {
+                'creatorName': {
+                    'creatorName': contributor.fullname,
+                    'familyName': contributor.family_name,
+                    'givenName': contributor.given_name,
+                },
+                'nameIdentifiers': name_identifiers,
+            }
+        )
 
     return creators
 
@@ -63,8 +71,10 @@ def datacite_format_contributors(contributors):
 def datacite_format_subjects(subjects):
     return [
         {
-            'subject': subject.bepress_subject.text if subject.bepress_subject else subject.text,
-            'subjectScheme': SUBJECT_SCHEME
+            'subject': subject.bepress_subject.text
+            if subject.bepress_subject
+            else subject.text,
+            'subjectScheme': SUBJECT_SCHEME,
         }
         for subject in subjects
     ]
@@ -73,14 +83,8 @@ def datacite_format_subjects(subjects):
 def datacite_format_identifier(target):
     identifier = target.get_identifier('doi')
     if identifier:
-        return {
-            'identifier': identifier.value,
-            'identifierType': 'DOI'
-        }
+        return {'identifier': identifier.value, 'identifierType': 'DOI'}
 
 
 def datacite_format_rights(license):
-    return {
-        'rights': license.name,
-        'rightsURI': license.url
-    }
+    return {'rights': license.name, 'rightsURI': license.url}

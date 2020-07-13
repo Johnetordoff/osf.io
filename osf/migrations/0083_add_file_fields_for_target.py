@@ -21,7 +21,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='basefilenode',
             name='target_content_type',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='basefilenode_target', to='contenttypes.ContentType'),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='basefilenode_target',
+                to='contenttypes.ContentType',
+            ),
         ),
         migrations.AddField(
             model_name='basefilenode',
@@ -29,8 +35,6 @@ class Migration(migrations.Migration):
             field=models.PositiveIntegerField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='basefilenode',
-            name='is_root',
-            field=models.NullBooleanField(),
+            model_name='basefilenode', name='is_root', field=models.NullBooleanField(),
         ),
     ]

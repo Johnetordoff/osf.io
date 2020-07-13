@@ -15,7 +15,6 @@ default_adapter = HTTPAdapter()
 
 
 class GitHubClient(object):
-
     def __init__(self, external_account=None, access_token=None):
 
         self.access_token = getattr(external_account, 'oauth_key', None) or access_token
@@ -156,14 +155,9 @@ class GitHubClient(object):
 
 def ref_to_params(branch=None, sha=None):
 
-    params = urlencode({
-        key: value
-        for key, value in {
-            'branch': branch,
-            'sha': sha,
-        }.items()
-        if value
-    })
+    params = urlencode(
+        {key: value for key, value in {'branch': branch, 'sha': sha,}.items() if value}
+    )
     if params:
         return '?' + params
     return ''

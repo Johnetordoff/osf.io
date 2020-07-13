@@ -4,6 +4,7 @@ from addons.box.settings import MAX_UPLOAD_SIZE
 
 box_root_folder = generic_root_folder('box')
 
+
 class BoxAddonAppConfig(BaseAddonAppConfig):
 
     name = 'addons.box'
@@ -24,11 +25,16 @@ class BoxAddonAppConfig(BaseAddonAppConfig):
     NODE_AUTHORIZED = 'box_node_authorized'
     NODE_DEAUTHORIZED = 'box_node_deauthorized'
 
-    actions = (FOLDER_SELECTED, NODE_AUTHORIZED, NODE_DEAUTHORIZED, )
+    actions = (
+        FOLDER_SELECTED,
+        NODE_AUTHORIZED,
+        NODE_DEAUTHORIZED,
+    )
 
     @property
     def routes(self):
         from . import routes
+
         return [routes.api_routes]
 
     @property

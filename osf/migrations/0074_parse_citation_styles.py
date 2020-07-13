@@ -20,9 +20,11 @@ from website import settings
 
 logger = logging.getLogger(__file__)
 
+
 def get_style_files(path):
     files = (os.path.join(path, x) for x in os.listdir(path))
     return (f for f in files if os.path.isfile(f))
+
 
 def parse_citation_styles(state, schema):
     # drop all styles
@@ -41,7 +43,11 @@ def parse_citation_styles(state, schema):
 
             title = root.find(selector + 'title').text
             # `has_bibliography` is set to `True` for Bluebook citation formats due to the special way we handle them.
-            has_bibliography = root.find('{{{ns}}}{tag}'.format(ns=namespace, tag='bibliography')) is not None or 'Bluebook' in title
+            has_bibliography = (
+                root.find('{{{ns}}}{tag}'.format(ns=namespace, tag='bibliography'))
+                is not None
+                or 'Bluebook' in title
+            )
             # Required
             fields = {
                 '_id': os.path.splitext(os.path.basename(style_file))[0],
@@ -63,10 +69,12 @@ def parse_citation_styles(state, schema):
             style = CitationStyle(**fields)
             style.save()
 
+
 def revert(state, schema):
     # The revert of this migration simply removes all CitationStyle instances.
     CitationStyle = state.get_model('osf', 'citationstyle')
     CitationStyle.objects.all().delete()
+
 
 class Migration(migrations.Migration):
 

@@ -39,11 +39,7 @@ class UpdateSubjectsMixin(object):
 
 
 class SubjectSerializer(JSONAPISerializer):
-    filterable_fields = frozenset([
-        'text',
-        'parent',
-        'id',
-    ])
+    filterable_fields = frozenset(['text', 'parent', 'id',])
     id = ser.CharField(source='_id', required=True)
     text = ser.CharField(max_length=200)
     taxonomy_name = ser.CharField(source='provider.share_title', read_only=True)
@@ -58,12 +54,9 @@ class SubjectSerializer(JSONAPISerializer):
         related_view='subjects:subject-children',
         related_view_kwargs={'subject_id': '<_id>'},
         related_meta={'count': 'get_children_count'},
-
     )
 
-    links = LinksField({
-        'self': 'get_absolute_url',
-    })
+    links = LinksField({'self': 'get_absolute_url',})
 
     def get_absolute_url(self, obj):
         return obj.absolute_api_v2_subject_url
@@ -77,16 +70,14 @@ class SubjectSerializer(JSONAPISerializer):
 
 class SubjectRelated(JSONAPIRelationshipSerializer):
     id = ser.CharField(source='_id', required=False, allow_null=True)
+
     class Meta:
         type_ = 'subjects'
 
 
 class SubjectsRelationshipSerializer(BaseAPISerializer, UpdateSubjectsMixin):
     data = ser.ListField(child=SubjectRelated())
-    links = LinksField({
-        'self': 'get_self_url',
-        'html': 'get_related_url',
-    })
+    links = LinksField({'self': 'get_self_url', 'html': 'get_related_url',})
 
     def get_self_url(self, obj):
         return obj['self'].subjects_relationship_url
@@ -114,5 +105,7 @@ class SubjectsRelationshipSerializer(BaseAPISerializer, UpdateSubjectsMixin):
         resource = instance['self']
         user = self.context['request'].user
         auth = Auth(user if not user.is_anonymous else None)
-        self.update_subjects(resource, self.format_subjects(validated_data['data']), auth)
+        self.update_subjects(
+            resource, self.format_subjects(validated_data['data']), auth,
+        )
         return self.make_instance_obj(resource)

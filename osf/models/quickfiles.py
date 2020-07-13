@@ -10,13 +10,11 @@ logger = logging.getLogger(__name__)
 
 
 class QuickFilesNodeManager(AbstractNodeManager):
-
     def create_for_user(self, user):
         possessive_title = get_quickfiles_project_title(user)
 
         quickfiles, created = QuickFilesNode.objects.get_or_create(
-            title=possessive_title,
-            creator=user
+            title=possessive_title, creator=user
         )
 
         if not created:
@@ -52,11 +50,15 @@ class QuickFilesNode(AbstractNode):
 
     def add_contributor(self, contributor, *args, **kwargs):
         if contributor == self.creator:
-            return super(QuickFilesNode, self).add_contributor(contributor, *args, **kwargs)
+            return super(QuickFilesNode, self).add_contributor(
+                contributor, *args, **kwargs
+            )
         raise NodeStateError('A QuickFilesNode may not have additional contributors.')
 
     def clone(self):
-        raise NodeStateError('A QuickFilesNode may not be forked, used as a template, or registered.')
+        raise NodeStateError(
+            'A QuickFilesNode may not be forked, used as a template, or registered.'
+        )
 
     def add_addon(self, name, auth, log=True):
         if name != 'osfstorage':
@@ -79,5 +81,7 @@ class QuickFilesNode(AbstractNode):
 
 
 def get_quickfiles_project_title(user):
-    possessive_title_name = user.fullname + "'s" if user.fullname[-1] != 's' else user.fullname + "'"
+    possessive_title_name = (
+        user.fullname + "'s" if user.fullname[-1] != 's' else user.fullname + "'"
+    )
     return '{} Quick Files'.format(possessive_title_name)

@@ -11,5 +11,4 @@ class TestRegistrationProviderLicenses(ProviderLicensesViewTestBaseMixin):
 
     @pytest.fixture()
     def url(self, provider):
-        return '/{}providers/registrations/{}/licenses/'.format(
-            API_BASE, provider._id)
+        return '/{}providers/registrations/{}/licenses/'.format(API_BASE, provider._id)

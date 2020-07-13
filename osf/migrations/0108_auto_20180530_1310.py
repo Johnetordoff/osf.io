@@ -21,41 +21,90 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='DismissedAlert',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
-                ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'created',
+                    django_extensions.db.fields.CreationDateTimeField(
+                        auto_now_add=True, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    django_extensions.db.fields.ModificationDateTimeField(
+                        auto_now=True, verbose_name='modified'
+                    ),
+                ),
                 ('_id', models.CharField(db_index=True, max_length=255)),
                 ('location', models.CharField(max_length=255)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='alerts', to=settings.AUTH_USER_MODEL)),
+                (
+                    'user',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='alerts',
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
-            options={
-                'ordering': ['-created'],
-                'get_latest_by': 'created',
-            },
+            options={'ordering': ['-created'], 'get_latest_by': 'created',},
         ),
         migrations.CreateModel(
             name='ProviderAssetFile',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
-                ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'created',
+                    django_extensions.db.fields.CreationDateTimeField(
+                        auto_now_add=True, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    django_extensions.db.fields.ModificationDateTimeField(
+                        auto_now=True, verbose_name='modified'
+                    ),
+                ),
                 ('name', models.CharField(max_length=63)),
                 ('file', models.FileField(upload_to='assets')),
-                ('providers', models.ManyToManyField(blank=True, related_name='asset_files', to='osf.AbstractProvider')),
+                (
+                    'providers',
+                    models.ManyToManyField(
+                        blank=True,
+                        related_name='asset_files',
+                        to='osf.AbstractProvider',
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={'abstract': False,},
         ),
         migrations.AddField(
             model_name='preprintservice',
             name='date_last_reported',
-            field=osf.utils.fields.NonNaiveDateTimeField(blank=True, db_index=True, default=None, null=True),
+            field=osf.utils.fields.NonNaiveDateTimeField(
+                blank=True, db_index=True, default=None, null=True
+            ),
         ),
         migrations.AddField(
             model_name='preprintservice',
             name='date_retracted',
-            field=osf.utils.fields.NonNaiveDateTimeField(blank=True, default=None, null=True),
+            field=osf.utils.fields.NonNaiveDateTimeField(
+                blank=True, default=None, null=True
+            ),
         ),
         migrations.AddField(
             model_name='preprintservice',
@@ -65,7 +114,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='preprintservice',
             name='reports',
-            field=osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONField(blank=True, default=dict, encoder=osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONEncoder, validators=[osf.models.spam._validate_reports]),
+            field=osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONField(
+                blank=True,
+                default=dict,
+                encoder=osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONEncoder,
+                validators=[osf.models.spam._validate_reports],
+            ),
         ),
         migrations.AddField(
             model_name='preprintservice',
@@ -75,7 +129,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='preprintservice',
             name='spam_data',
-            field=osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONField(blank=True, default=dict, encoder=osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONEncoder),
+            field=osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONField(
+                blank=True,
+                default=dict,
+                encoder=osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONEncoder,
+            ),
         ),
         migrations.AddField(
             model_name='preprintservice',
@@ -85,15 +143,18 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='preprintservice',
             name='spam_status',
-            field=models.IntegerField(blank=True, db_index=True, default=None, null=True),
+            field=models.IntegerField(
+                blank=True, db_index=True, default=None, null=True
+            ),
         ),
         migrations.AddField(
             model_name='scheduledbanner',
             name='link',
-            field=models.URLField(blank=True, default='https://www.crowdrise.com/centerforopenscience'),
+            field=models.URLField(
+                blank=True, default='https://www.crowdrise.com/centerforopenscience'
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='dismissedalert',
-            unique_together=set([('_id', 'location')]),
+            name='dismissedalert', unique_together=set([('_id', 'location')]),
         ),
     ]

@@ -13,6 +13,7 @@ from addons.osfstorage.settings import DEFAULT_REGION_ID, DEFAULT_REGION_NAME
 logger = logging.getLogger(__name__)
 osfstorage_config = apps.get_app_config('addons_osfstorage')
 
+
 class Migration(migrations.Migration):
 
     # Avoid locking the addons_osfstorage_nodesettings table
@@ -24,8 +25,7 @@ class Migration(migrations.Migration):
 
     def add_default_region_to_nodesettings(self, *args, **kwargs):
         default_region, created = Region.objects.get_or_create(
-            _id=DEFAULT_REGION_ID,
-            name=DEFAULT_REGION_NAME,
+            _id=DEFAULT_REGION_ID, name=DEFAULT_REGION_NAME,
         )
         if created:
             logger.info('Created default region: {}'.format(DEFAULT_REGION_NAME))
@@ -34,16 +34,15 @@ class Migration(migrations.Migration):
         max_pk = NodeSettings.objects.aggregate(models.Max('pk'))['pk__max']
         if max_pk is not None:
             for offset in range(0, max_pk + 1, BATCHSIZE):
-                (NodeSettings.objects
-                 .filter(pk__gte=offset)
-                 .filter(pk__lt=offset + BATCHSIZE)
-                 .filter(region__isnull=True)
-                 .update(region=default_region))
+                (
+                    NodeSettings.objects.filter(pk__gte=offset)
+                    .filter(pk__lt=offset + BATCHSIZE)
+                    .filter(region__isnull=True)
+                    .update(region=default_region)
+                )
                 logger.info(
                     'Updated addons_osfstorage_nodesettings {}-{}/{}'.format(
-                        offset,
-                        offset + BATCHSIZE,
-                        max_pk,
+                        offset, offset + BATCHSIZE, max_pk,
                     )
                 )
 
@@ -53,16 +52,15 @@ class Migration(migrations.Migration):
         max_pk = NodeSettings.objects.aggregate(models.Max('pk'))['pk__max']
         if max_pk is not None:
             for offset in range(0, max_pk + 1, BATCHSIZE):
-                (NodeSettings.objects
-                 .filter(pk__gte=offset)
-                 .filter(pk__lt=offset + BATCHSIZE)
-                 .filter(region__isnull=False)
-                 .update(region=None))
+                (
+                    NodeSettings.objects.filter(pk__gte=offset)
+                    .filter(pk__lt=offset + BATCHSIZE)
+                    .filter(region__isnull=False)
+                    .update(region=None)
+                )
                 logger.info(
                     'Unset addons_osfstorage_nodesettings {}-{}/{}'.format(
-                        offset,
-                        offset + BATCHSIZE,
-                        max_pk,
+                        offset, offset + BATCHSIZE, max_pk,
                     )
                 )
 

@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0147_repoint_preprint_pagecounters'),
     ]
 
-    operations = [
-    ]
+    operations = []

@@ -18,9 +18,27 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Brand',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
-                ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'created',
+                    django_extensions.db.fields.CreationDateTimeField(
+                        auto_now_add=True, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    django_extensions.db.fields.ModificationDateTimeField(
+                        auto_now=True, verbose_name='modified'
+                    ),
+                ),
                 ('name', models.CharField(blank=True, max_length=30, null=True)),
                 ('hero_logo_image', models.URLField()),
                 ('topnav_logo_image', models.URLField()),
@@ -28,9 +46,7 @@ class Migration(migrations.Migration):
                 ('primary_color', models.CharField(max_length=7)),
                 ('secondary_color', models.CharField(max_length=7)),
             ],
-            options={
-                'abstract': False,
-            },
+            options={'abstract': False,},
             bases=(models.Model, osf.models.base.QuerySetExplainMixin),
         ),
         migrations.AddField(
@@ -51,10 +67,21 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='abstractprovider',
             name='brand',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='providers', to='osf.Brand'),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name='providers',
+                to='osf.Brand',
+            ),
         ),
         migrations.AlterModelOptions(
             name='brand',
-            options={'permissions': (('view_brand', 'Can view brand details'), ('modify_brand', 'Can modify brands'))},
+            options={
+                'permissions': (
+                    ('view_brand', 'Can view brand details'),
+                    ('modify_brand', 'Can modify brands'),
+                )
+            },
         ),
     ]

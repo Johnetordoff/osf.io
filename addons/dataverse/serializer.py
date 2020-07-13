@@ -14,10 +14,9 @@ class DataverseSerializer(OAuthAddonSerializer):
     def serialize_account(self, external_account):
         ret = super(DataverseSerializer, self).serialize_account(external_account)
         host = external_account.oauth_key
-        ret.update({
-            'host': host,
-            'host_url': 'https://{0}'.format(host),
-        })
+        ret.update(
+            {'host': host, 'host_url': 'https://{0}'.format(host),}
+        )
 
         return ret
 
@@ -38,7 +37,9 @@ class DataverseSerializer(OAuthAddonSerializer):
         addon_urls = self.addon_serialized_urls
         # Make sure developer returns set of needed urls
         for url in self.REQUIRED_URLS:
-            assert url in addon_urls, "addon_serilized_urls must include key '{0}'".format(url)
+            assert (
+                url in addon_urls
+            ), "addon_serilized_urls must include key '{0}'".format(url)
         ret.update(addon_urls)
         return ret
 
@@ -71,22 +72,24 @@ class DataverseSerializer(OAuthAddonSerializer):
 
             connection = client.connect_from_settings(self.node_settings)
             dataverses = client.get_dataverses(connection)
-            result.update({
-                'dataverseHost': dataverse_host,
-                'connected': connection is not None,
-                'dataverses': [
-                    {'title': dataverse.title, 'alias': dataverse.alias}
-                    for dataverse in dataverses
-                ],
-                'savedDataverse': {
-                    'title': self.node_settings.dataverse,
-                    'alias': self.node_settings.dataverse_alias,
-                },
-                'savedDataset': {
-                    'title': self.node_settings.dataset,
-                    'doi': self.node_settings.dataset_doi,
+            result.update(
+                {
+                    'dataverseHost': dataverse_host,
+                    'connected': connection is not None,
+                    'dataverses': [
+                        {'title': dataverse.title, 'alias': dataverse.alias}
+                        for dataverse in dataverses
+                    ],
+                    'savedDataverse': {
+                        'title': self.node_settings.dataverse,
+                        'alias': self.node_settings.dataverse_alias,
+                    },
+                    'savedDataset': {
+                        'title': self.node_settings.dataset,
+                        'doi': self.node_settings.dataset_doi,
+                    },
                 }
-            })
+            )
 
         return result
 

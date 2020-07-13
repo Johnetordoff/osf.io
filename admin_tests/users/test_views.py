@@ -23,7 +23,7 @@ from osf_tests.factories import (
     UserFactory,
     AuthUserFactory,
     ProjectFactory,
-    UnconfirmedUserFactory
+    UnconfirmedUserFactory,
 )
 from admin_tests.utilities import setup_view, setup_log_view, setup_form_view
 
@@ -101,19 +101,27 @@ class TestResetPasswordView(AdminTestCase):
         res = self.view.initial
         nt.assert_is_instance(res, dict)
         nt.assert_equal(res['guid'], self.user._id)
-        nt.assert_equal(res['emails'], [(r, r) for r in self.user.emails.values_list('address', flat=True)])
+        nt.assert_equal(
+            res['emails'],
+            [(r, r) for r in self.user.emails.values_list('address', flat=True)],
+        )
 
     def test_reset_password_context(self):
         self.view.user = self.user
         res = self.view.get_context_data()
         nt.assert_is_instance(res, dict)
-        nt.assert_in((self.user.emails.first().address, self.user.emails.first().address), self.view.initial['emails'])
+        nt.assert_in(
+            (self.user.emails.first().address, self.user.emails.first().address),
+            self.view.initial['emails'],
+        )
 
     def test_no_user_permissions_raises_error(self):
         user = UserFactory()
 
         guid = user._id
-        request = RequestFactory().get(reverse('users:reset_password', kwargs={'guid': guid}))
+        request = RequestFactory().get(
+            reverse('users:reset_password', kwargs={'guid': guid})
+        )
         request.user = user
 
         with self.assertRaises(PermissionDenied):
@@ -127,7 +135,9 @@ class TestResetPasswordView(AdminTestCase):
         user.user_permissions.add(change_permission)
         user.save()
 
-        request = RequestFactory().get(reverse('users:reset_password', kwargs={'guid': guid}))
+        request = RequestFactory().get(
+            reverse('users:reset_password', kwargs={'guid': guid})
+        )
         request.user = user
 
         response = views.ResetPasswordView.as_view()(request, guid=guid)
@@ -166,7 +176,9 @@ class TestDeleteUser(AdminTestCase):
     def test_no_user_permissions_raises_error(self):
         user = UserFactory()
         guid = user._id
-        request = RequestFactory().get(reverse('users:GDPR_delete', kwargs={'guid': guid}))
+        request = RequestFactory().get(
+            reverse('users:GDPR_delete', kwargs={'guid': guid})
+        )
         request.user = user
 
         with self.assertRaises(PermissionDenied):
@@ -180,7 +192,9 @@ class TestDeleteUser(AdminTestCase):
         user.user_permissions.add(change_permission)
         user.save()
 
-        request = RequestFactory().get(reverse('users:GDPR_delete', kwargs={'guid': guid}))
+        request = RequestFactory().get(
+            reverse('users:GDPR_delete', kwargs={'guid': guid})
+        )
         request.user = user
 
         response = self.view.as_view()(request, guid=guid)
@@ -314,7 +328,9 @@ class TestDisableSpamUser(AdminTestCase):
     def test_no_user_permissions_raises_error(self):
         user = UserFactory()
         guid = user._id
-        request = RequestFactory().get(reverse('users:spam_disable', kwargs={'guid': guid}))
+        request = RequestFactory().get(
+            reverse('users:spam_disable', kwargs={'guid': guid})
+        )
         request.user = user
 
         with self.assertRaises(PermissionDenied):
@@ -328,7 +344,9 @@ class TestDisableSpamUser(AdminTestCase):
         user.user_permissions.add(change_permission)
         user.save()
 
-        request = RequestFactory().get(reverse('users:spam_disable', kwargs={'guid': guid}))
+        request = RequestFactory().get(
+            reverse('users:spam_disable', kwargs={'guid': guid})
+        )
         request.user = user
 
         response = self.view.as_view()(request, guid=guid)
@@ -376,6 +394,7 @@ class SpamUserListMixin(object):
 
         response = self.plain_view.as_view()(request, guid=guid)
         self.assertEqual(response.status_code, 200)
+
 
 class TestFlaggedSpamUserList(SpamUserListMixin, AdminTestCase):
     def setUp(self):
@@ -467,7 +486,6 @@ class TestRemove2Factor(AdminTestCase):
 
 
 class TestUserWorkshopFormView(AdminTestCase):
-
     def setUp(self):
         self.user = AuthUserFactory()
         self.auth = Auth(self.user)
@@ -478,7 +496,9 @@ class TestUserWorkshopFormView(AdminTestCase):
             csv,
             'reader',
             # parse data into the proper format handling None values as csv reader would
-            side_effect=(lambda values: [[item or '' for item in value] for value in values])
+            side_effect=(
+                lambda values: [[item or '' for item in value] for value in values]
+            ),
         )
         self.mock_data.start()
 
@@ -489,25 +509,60 @@ class TestUserWorkshopFormView(AdminTestCase):
         self.workshop_date = date
         self.data = [
             ['none', 'date', 'none', 'none', 'none', 'email', 'none'],
-            [None, self.workshop_date.strftime('%m/%d/%y'), None, None, None, self.user.username, None],
+            [
+                None,
+                self.workshop_date.strftime('%m/%d/%y'),
+                None,
+                None,
+                None,
+                self.user.username,
+                None,
+            ],
         ]
 
         self.user_exists_by_name_data = [
             ['number', 'date', 'location', 'topic', 'name', 'email', 'other'],
-            [None, self.workshop_date.strftime('%m/%d/%y'), None, None, self.user.fullname, 'unknown@example.com', None],
+            [
+                None,
+                self.workshop_date.strftime('%m/%d/%y'),
+                None,
+                None,
+                self.user.fullname,
+                'unknown@example.com',
+                None,
+            ],
         ]
 
         self.user_not_found_data = [
             ['none', 'date', 'none', 'none', 'none', 'email', 'none'],
-            [None, self.workshop_date.strftime('%m/%d/%y'), None, None, None, 'fake@example.com', None],
+            [
+                None,
+                self.workshop_date.strftime('%m/%d/%y'),
+                None,
+                None,
+                None,
+                'fake@example.com',
+                None,
+            ],
         ]
 
     def _add_log(self, date):
-        self.node.add_log('log_added', params={'project': self.node._id}, auth=self.auth, log_date=date, save=True)
+        self.node.add_log(
+            'log_added',
+            params={'project': self.node._id},
+            auth=self.auth,
+            log_date=date,
+            save=True,
+        )
 
     def test_correct_number_of_columns_added(self):
         self._setup_workshop(self.node.created)
-        added_columns = ['OSF ID', 'Logs Since Workshop', 'Nodes Created Since Workshop', 'Last Log Data']
+        added_columns = [
+            'OSF ID',
+            'Logs Since Workshop',
+            'Nodes Created Since Workshop',
+            'Last Log Data',
+        ]
         result_csv = self.view.parse(self.data)
         nt.assert_equal(len(self.data[0]) + len(added_columns), len(result_csv[0]))
 
@@ -558,7 +613,9 @@ class TestUserWorkshopFormView(AdminTestCase):
     # Regression test for OSF-8089
     def test_utc_new_day(self):
         node_date = self.node.created
-        date = datetime(node_date.year, node_date.month, node_date.day, 0, tzinfo=pytz.utc) + timedelta(days=1)
+        date = datetime(
+            node_date.year, node_date.month, node_date.day, 0, tzinfo=pytz.utc
+        ) + timedelta(days=1)
         self._setup_workshop(date)
         self._add_log(self.workshop_date + timedelta(hours=25))
 
@@ -569,7 +626,9 @@ class TestUserWorkshopFormView(AdminTestCase):
     # Regression test for OSF-8089
     def test_utc_new_day_plus_hour(self):
         node_date = self.node.created
-        date = datetime(node_date.year, node_date.month, node_date.day, 0, tzinfo=pytz.utc) + timedelta(days=1, hours=1)
+        date = datetime(
+            node_date.year, node_date.month, node_date.day, 0, tzinfo=pytz.utc
+        ) + timedelta(days=1, hours=1)
         self._setup_workshop(date)
         self._add_log(self.workshop_date + timedelta(hours=25))
 
@@ -580,7 +639,11 @@ class TestUserWorkshopFormView(AdminTestCase):
     # Regression test for OSF-8089
     def test_utc_new_day_minus_hour(self):
         node_date = self.node.created
-        date = datetime(node_date.year, node_date.month, node_date.day, 0, tzinfo=pytz.utc) + timedelta(days=1) - timedelta(hours=1)
+        date = (
+            datetime(node_date.year, node_date.month, node_date.day, 0, tzinfo=pytz.utc)
+            + timedelta(days=1)
+            - timedelta(hours=1)
+        )
         self._setup_workshop(date)
         self._add_log(self.workshop_date + timedelta(hours=25))
 
@@ -632,7 +695,6 @@ class TestUserWorkshopFormView(AdminTestCase):
 
 
 class TestUserSearchView(AdminTestCase):
-
     def setUp(self):
         self.user_1 = AuthUserFactory(fullname='Broken Matt Hardy')
         self.user_2 = AuthUserFactory(fullname='Jeff Hardy')
@@ -648,19 +710,17 @@ class TestUserSearchView(AdminTestCase):
         self.view = setup_form_view(self.view, self.request, form=UserSearchForm())
 
     def test_search_user_by_guid(self):
-        form_data = {
-            'guid': self.user_1.guids.first()._id
-        }
+        form_data = {'guid': self.user_1.guids.first()._id}
         form = UserSearchForm(data=form_data)
         nt.assert_true(form.is_valid())
         response = self.view.form_valid(form)
         nt.assert_equal(response.status_code, 302)
-        nt.assert_equal(self.view.success_url, '/users/{}/'.format(self.user_1.guids.first()._id))
+        nt.assert_equal(
+            self.view.success_url, '/users/{}/'.format(self.user_1.guids.first()._id)
+        )
 
     def test_search_user_by_name(self):
-        form_data = {
-            'name': 'Hardy'
-        }
+        form_data = {'name': 'Hardy'}
         form = UserSearchForm(data=form_data)
         nt.assert_true(form.is_valid())
         response = self.view.form_valid(form)
@@ -668,34 +728,35 @@ class TestUserSearchView(AdminTestCase):
         nt.assert_equal(self.view.success_url, '/users/search/Hardy/')
 
     def test_search_user_by_name_with_punctuation(self):
-        form_data = {
-            'name': 'Dr. Sportello-Fay, PI @, #, $, %, ^, &, *, (, ), ~'
-        }
+        form_data = {'name': 'Dr. Sportello-Fay, PI @, #, $, %, ^, &, *, (, ), ~'}
         form = UserSearchForm(data=form_data)
         nt.assert_true(form.is_valid())
         response = self.view.form_valid(form)
         nt.assert_equal(response.status_code, 302)
-        nt.assert_equal(self.view.success_url, '/users/search/Dr.%20Sportello-Fay,%20PI%20@,%20%23,%20$,%20%25,%20%5E,%20&,%20*,%20(,%20),%20~/')
+        nt.assert_equal(
+            self.view.success_url,
+            '/users/search/Dr.%20Sportello-Fay,%20PI%20@,%20%23,%20$,%20%25,%20%5E,%20&,%20*,%20(,%20),%20~/',
+        )
 
     def test_search_user_by_username(self):
-        form_data = {
-            'email': self.user_1.username
-        }
+        form_data = {'email': self.user_1.username}
         form = UserSearchForm(data=form_data)
         nt.assert_true(form.is_valid())
         response = self.view.form_valid(form)
         nt.assert_equal(response.status_code, 302)
-        nt.assert_equal(self.view.success_url, '/users/{}/'.format(self.user_1.guids.first()._id))
+        nt.assert_equal(
+            self.view.success_url, '/users/{}/'.format(self.user_1.guids.first()._id)
+        )
 
     def test_search_user_by_alternate_email(self):
-        form_data = {
-            'email': self.user_2_alternate_email
-        }
+        form_data = {'email': self.user_2_alternate_email}
         form = UserSearchForm(data=form_data)
         nt.assert_true(form.is_valid())
         response = self.view.form_valid(form)
         nt.assert_equal(response.status_code, 302)
-        nt.assert_equal(self.view.success_url, '/users/{}/'.format(self.user_2.guids.first()._id))
+        nt.assert_equal(
+            self.view.success_url, '/users/{}/'.format(self.user_2.guids.first()._id)
+        )
 
     def test_search_user_list(self):
         view = views.UserSearchList()
@@ -721,7 +782,6 @@ class TestUserSearchView(AdminTestCase):
 
 
 class TestGetLinkView(AdminTestCase):
-
     def test_get_user_confirmation_link(self):
         user = UnconfirmedUserFactory()
         request = RequestFactory().get('/fake_path')
@@ -742,7 +802,9 @@ class TestGetLinkView(AdminTestCase):
         view = setup_view(view, request, guid=user._id)
 
         old_user_token = list(user.email_verifications.keys())[0]
-        user.email_verifications[old_user_token]['expiration'] = datetime.utcnow().replace(tzinfo=pytz.utc) - timedelta(hours=24)
+        user.email_verifications[old_user_token][
+            'expiration'
+        ] = datetime.utcnow().replace(tzinfo=pytz.utc) - timedelta(hours=24)
         user.save()
 
         link = view.get_link(user)
@@ -771,7 +833,11 @@ class TestGetLinkView(AdminTestCase):
 
     def test_get_unclaimed_node_links(self):
         project = ProjectFactory()
-        unregistered_contributor = project.add_unregistered_contributor(fullname='Brother Nero', email='matt@hardyboyz.biz', auth=Auth(project.creator))
+        unregistered_contributor = project.add_unregistered_contributor(
+            fullname='Brother Nero',
+            email='matt@hardyboyz.biz',
+            auth=Auth(project.creator),
+        )
         project.save()
 
         request = RequestFactory().get('/fake_path')
@@ -786,7 +852,9 @@ class TestGetLinkView(AdminTestCase):
         link = links[0]
 
         nt.assert_in(project._id, link)
-        nt.assert_in(unregistered_contributor.unclaimed_records[project._id]['token'], link)
+        nt.assert_in(
+            unregistered_contributor.unclaimed_records[project._id]['token'], link
+        )
 
 
 class TestUserReindex(AdminTestCase):
@@ -806,6 +874,7 @@ class TestUserReindex(AdminTestCase):
         nt.assert_true(mock_reindex_elastic.called)
         nt.assert_equal(AdminLogEntry.objects.count(), count + 1)
 
+
 class TestUserMerge(AdminTestCase):
     def setUp(self):
         super(TestUserMerge, self).setUp()
@@ -819,7 +888,9 @@ class TestUserMerge(AdminTestCase):
         view = views.UserMergeAccounts()
         view = setup_log_view(view, self.request, guid=user._id)
 
-        invalid_form = MergeUserForm(data={'user_guid_to_be_merged': 'Not a valid Guid'})
+        invalid_form = MergeUserForm(
+            data={'user_guid_to_be_merged': 'Not a valid Guid'}
+        )
         valid_form = MergeUserForm(data={'user_guid_to_be_merged': user_merged._id})
 
         nt.assert_false(invalid_form.is_valid())

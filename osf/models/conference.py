@@ -23,6 +23,7 @@ DEFAULT_FIELD_NAMES = {
     'homepage_link_text': 'Conference homepage',
 }
 
+
 def get_default_field_names():
     return DEFAULT_FIELD_NAMES
 
@@ -69,8 +70,8 @@ class Conference(ObjectIDMixin, BaseModel):
     objects = ConferenceManager()
 
     def __repr__(self):
-        return (
-            '<Conference(endpoint={self.endpoint!r}, active={self.active})>'.format(self=self)
+        return '<Conference(endpoint={self.endpoint!r}, active={self.active})>'.format(
+            self=self
         )
 
     @classmethod

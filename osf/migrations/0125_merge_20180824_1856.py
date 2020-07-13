@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0121_remove_waffle_flags'),
     ]
 
-    operations = [
-    ]
+    operations = []

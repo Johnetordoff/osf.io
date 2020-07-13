@@ -1,12 +1,10 @@
 import pytest
 
-from osf_tests.factories import (
-    FlagFactory,
-)
+from osf_tests.factories import FlagFactory
+
 
 @pytest.mark.django_db
 class TestWaffleCookies:
-
     @pytest.fixture()
     def flag(self):
         flag = FlagFactory(name='test_flag')
@@ -27,8 +25,15 @@ class TestWaffleCookies:
 
         """
         resp = app.get('/v2/')
-        waffle_cookie = [value for key, value in list(resp.headers.items()) if 'dwf_test_flag' in value][0]
+        waffle_cookie = [
+            value
+            for key, value in list(resp.headers.items())
+            if 'dwf_test_flag' in value
+        ][0]
 
         cookie_str = 'dwf_test_flag={};'
 
-        assert cookie_str.format('True') in waffle_cookie or cookie_str.format('False') in waffle_cookie
+        assert (
+            cookie_str.format('True') in waffle_cookie
+            or cookie_str.format('False') in waffle_cookie
+        )

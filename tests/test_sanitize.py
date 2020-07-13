@@ -7,16 +7,9 @@ from osf.utils import sanitize
 
 
 class TestSanitize(unittest.TestCase):
-
     def test_strip_html(self):
-        assert_equal(
-            sanitize.strip_html('<foo>bar</foo>'),
-            'bar'
-        )
-        assert_equal(
-            sanitize.strip_html(b'<foo>bar</foo>'),
-            'bar'
-        )
+        assert_equal(sanitize.strip_html('<foo>bar</foo>'), 'bar')
+        assert_equal(sanitize.strip_html(b'<foo>bar</foo>'), 'bar')
 
     def test_strip_html_on_non_strings_returns_original_value(self):
         assert_true(sanitize.strip_html(True))
@@ -35,66 +28,44 @@ class TestSanitize(unittest.TestCase):
     def test_unescape_html(self):
         assert_equal(
             sanitize.unescape_entities('&lt;&gt; diamonds &amp; diamonds &lt;&gt;'),
-            '&lt;&gt; diamonds & diamonds &lt;&gt;'
+            '&lt;&gt; diamonds & diamonds &lt;&gt;',
         )
+        assert_equal(sanitize.unescape_entities(['&lt;&gt;&amp;'])[0], '&lt;&gt;&')
+        assert_equal(sanitize.unescape_entities(('&lt;&gt;&amp;',))[0], '&lt;&gt;&')
         assert_equal(
-            sanitize.unescape_entities(['&lt;&gt;&amp;'])[0],
-            '&lt;&gt;&'
-        )
-        assert_equal(
-            sanitize.unescape_entities(('&lt;&gt;&amp;', ))[0],
-            '&lt;&gt;&'
-        )
-        assert_equal(
-            sanitize.unescape_entities({'key': '&lt;&gt;&amp;'})['key'],
-            '&lt;&gt;&'
+            sanitize.unescape_entities({'key': '&lt;&gt;&amp;'})['key'], '&lt;&gt;&'
         )
 
     def test_unescape_html_additional_safe_characters(self):
         assert_equal(
             sanitize.unescape_entities(
                 '&lt;&gt; diamonds &amp; diamonds &lt;&gt;',
-                safe={
-                    '&lt;': '<',
-                    '&gt;': '>'
-                }
+                safe={'&lt;': '<', '&gt;': '>'},
             ),
-            '<> diamonds & diamonds <>'
+            '<> diamonds & diamonds <>',
         )
         assert_equal(
             sanitize.unescape_entities(
-                ['&lt;&gt;&amp;'],
-                safe={
-                    '&lt;': '<',
-                    '&gt;': '>'
-                }
+                ['&lt;&gt;&amp;'], safe={'&lt;': '<', '&gt;': '>'}
             )[0],
-            '<>&'
+            '<>&',
         )
         assert_equal(
             sanitize.unescape_entities(
-                ('&lt;&gt;&amp;', ),
-                safe={
-                    '&lt;': '<',
-                    '&gt;': '>'
-                }
+                ('&lt;&gt;&amp;',), safe={'&lt;': '<', '&gt;': '>'}
             )[0],
-            '<>&'
+            '<>&',
         )
         assert_equal(
             sanitize.unescape_entities(
-                {'key': '&lt;&gt;&amp;'},
-                safe={
-                    '&lt;': '<',
-                    '&gt;': '>'
-                }
+                {'key': '&lt;&gt;&amp;'}, safe={'&lt;': '<', '&gt;': '>'}
             )['key'],
-            '<>&'
+            '<>&',
         )
 
     def test_safe_json(self):
         """Add escaping of forward slashes, but only where string literal contains closing markup"""
         assert_equal(
             sanitize.safe_json("I'm a string with / containing </closingtags>"),
-                               '"I\'m a string with / containing <\\/closingtags>"'
+            '"I\'m a string with / containing <\\/closingtags>"',
         )

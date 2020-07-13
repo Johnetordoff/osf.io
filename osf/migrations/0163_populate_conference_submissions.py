@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 import logging
 from django.db import migrations
+
 logger = logging.getLogger(__file__)
 
 
@@ -17,12 +18,15 @@ def forward(state, *args, **kwargs):
 
     # Small number of conferences
     for conference in Conference.objects.all():
-        tags = Tag.objects.filter(system=False, name__iexact=conference.endpoint).values_list('pk', flat=True)
+        tags = Tag.objects.filter(
+            system=False, name__iexact=conference.endpoint
+        ).values_list('pk', flat=True)
         # Not restricting on public/deleted here, just adding all nodes with meeting tags
         # and then API will restrict to only public, non-deleted nodes
         for node in AbstractNode.objects.filter(tags__in=tags):
             conference.submissions.add(node)
     logger.info('Finished adding submissions to conferences.')
+
 
 def backward(state, *args, **kwargs):
     Conference = state.get_model('osf', 'Conference')
@@ -38,6 +42,4 @@ class Migration(migrations.Migration):
         ('osf', '0162_conference_submissions'),
     ]
 
-    operations = [
-        migrations.RunPython(forward, backward)
-    ]
+    operations = [migrations.RunPython(forward, backward)]

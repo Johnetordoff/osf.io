@@ -16,18 +16,20 @@ from .factories import (
 
 pytestmark = pytest.mark.django_db
 
+
 @pytest.fixture()
 def user():
     return UserFactory()
+
 
 @pytest.fixture()
 def auth(user):
     return Auth(user)
 
+
 # copied from tests/test_models.py
 @pytest.mark.enable_bookmark_creation
 class TestBookmarkCollection:
-
     @pytest.fixture()
     def collection(self, user):
         return find_bookmark_collection(user)

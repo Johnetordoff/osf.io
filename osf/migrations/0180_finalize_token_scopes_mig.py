@@ -12,10 +12,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='apioauth2personaltoken',
-            name='scopes',
-        ),
+        migrations.RemoveField(model_name='apioauth2personaltoken', name='scopes',),
         migrations.RenameField(
             model_name='apioauth2personaltoken',
             old_name='scopes_temp',

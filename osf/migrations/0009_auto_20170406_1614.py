@@ -16,6 +16,10 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='noderelation',
             name='child',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='_parents', to='osf.AbstractNode'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='_parents',
+                to='osf.AbstractNode',
+            ),
         ),
     ]

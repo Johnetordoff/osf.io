@@ -14,18 +14,30 @@ class Migration(migrations.Migration):
     operations = [
         migrations.CreateModel(
             name='RegistrationProvider',
-            fields=[
-            ],
+            fields=[],
             options={
                 'indexes': [],
                 'proxy': True,
-                'permissions': (('view_registrationprovider', 'Can view registration provider details'),),
+                'permissions': (
+                    (
+                        'view_registrationprovider',
+                        'Can view registration provider details',
+                    ),
+                ),
             },
             bases=('osf.abstractprovider',),
         ),
         migrations.AlterField(
             model_name='abstractprovider',
             name='type',
-            field=models.CharField(choices=[('osf.collectionprovider', 'collection provider'), ('osf.registrationprovider', 'registration provider'), ('osf.preprintprovider', 'preprint provider')], db_index=True, max_length=255),
+            field=models.CharField(
+                choices=[
+                    ('osf.collectionprovider', 'collection provider'),
+                    ('osf.registrationprovider', 'registration provider'),
+                    ('osf.preprintprovider', 'preprint provider'),
+                ],
+                db_index=True,
+                max_length=255,
+            ),
         ),
     ]

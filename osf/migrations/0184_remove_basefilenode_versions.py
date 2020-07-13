@@ -12,8 +12,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='basefilenode',
-            name='versions',
-        ),
+        migrations.RemoveField(model_name='basefilenode', name='versions',),
     ]

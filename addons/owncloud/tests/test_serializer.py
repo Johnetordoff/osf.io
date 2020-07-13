@@ -8,6 +8,7 @@ from addons.owncloud.serializer import OwnCloudSerializer
 
 pytestmark = pytest.mark.django_db
 
+
 class TestOwnCloudSerializer(StorageAddonSerializerTestSuiteMixin, OsfTestCase):
     addon_short_name = 'owncloud'
     Serializer = OwnCloudSerializer
@@ -18,7 +19,9 @@ class TestOwnCloudSerializer(StorageAddonSerializerTestSuiteMixin, OsfTestCase):
         self.node_settings.folder_id = pid
 
     def setUp(self):
-        self.mock_credentials = mock.patch('addons.owncloud.serializer.OwnCloudSerializer.credentials_are_valid')
+        self.mock_credentials = mock.patch(
+            'addons.owncloud.serializer.OwnCloudSerializer.credentials_are_valid'
+        )
         self.mock_credentials.return_value = True
         self.mock_credentials.start()
         super(TestOwnCloudSerializer, self).setUp()

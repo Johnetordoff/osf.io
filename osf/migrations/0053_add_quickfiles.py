@@ -17,12 +17,20 @@ logging.basicConfig(level=logging.INFO)
 
 
 def add_quickfiles(*args, **kwargs):
-    ids_without_quickfiles = list(OSFUser.objects.exclude(nodes_created__type=QuickFilesNode._typedmodels_type).values_list('id', flat=True))
+    ids_without_quickfiles = list(
+        OSFUser.objects.exclude(
+            nodes_created__type=QuickFilesNode._typedmodels_type
+        ).values_list('id', flat=True)
+    )
 
-    users_without_quickfiles = OSFUser.objects.filter(id__in=ids_without_quickfiles).order_by('id')
+    users_without_quickfiles = OSFUser.objects.filter(
+        id__in=ids_without_quickfiles
+    ).order_by('id')
     total_quickfiles_to_create = users_without_quickfiles.count()
 
-    logger.info('About to add a QuickFilesNode for {} users.'.format(total_quickfiles_to_create))
+    logger.info(
+        'About to add a QuickFilesNode for {} users.'.format(total_quickfiles_to_create)
+    )
 
     paginated_users = Paginator(users_without_quickfiles, 1000)
 
@@ -31,15 +39,16 @@ def add_quickfiles(*args, **kwargs):
         quickfiles_to_create = []
         for user in paginated_users.page(page_num).object_list:
             quickfiles_to_create.append(
-                QuickFilesNode(
-                    title=get_quickfiles_project_title(user),
-                    creator=user
-                )
+                QuickFilesNode(title=get_quickfiles_project_title(user), creator=user)
             )
             total_created += 1
 
         all_quickfiles = QuickFilesNode.objects.bulk_create(quickfiles_to_create)
-        logger.info('Created {}/{} QuickFilesNodes'.format(total_created, total_quickfiles_to_create))
+        logger.info(
+            'Created {}/{} QuickFilesNodes'.format(
+                total_created, total_quickfiles_to_create
+            )
+        )
         logger.info('Preparing to create contributors and folders')
 
         contributors_to_create = []
@@ -58,7 +67,7 @@ def add_quickfiles(*args, **kwargs):
                     read=True,
                     write=True,
                     admin=True,
-                    _order=0
+                    _order=0,
                 )
             )
 
@@ -69,11 +78,10 @@ def add_quickfiles(*args, **kwargs):
         logger.info('Adding storage addons')
         osfs_to_create = []
         for folder in osfs_folders_to_create:
-            osfs_to_create.append(
-                OSFSNodeSettings(owner=folder.node, root_node=folder)
-            )
+            osfs_to_create.append(OSFSNodeSettings(owner=folder.node, root_node=folder))
 
         OSFSNodeSettings.objects.bulk_create(osfs_to_create)
+
 
 def remove_quickfiles(*args, **kwargs):
     QuickFilesNode.objects.all().delete()
@@ -88,18 +96,23 @@ class Migration(migrations.Migration):
     operations = [
         migrations.CreateModel(
             name='QuickFilesNode',
-            fields=[
-            ],
-            options={
-                'proxy': True,
-                'indexes': [],
-            },
+            fields=[],
+            options={'proxy': True, 'indexes': [],},
             bases=('osf.abstractnode',),
         ),
         migrations.AlterField(
             model_name='abstractnode',
             name='type',
-            field=models.CharField(choices=[('osf.node', 'node'), ('osf.collection', 'collection'), ('osf.registration', 'registration'), ('osf.quickfilesnode', 'quickfilesnode')], db_index=True, max_length=255),
+            field=models.CharField(
+                choices=[
+                    ('osf.node', 'node'),
+                    ('osf.collection', 'collection'),
+                    ('osf.registration', 'registration'),
+                    ('osf.quickfilesnode', 'quickfilesnode'),
+                ],
+                db_index=True,
+                max_length=255,
+            ),
         ),
         migrations.RunPython(add_quickfiles, remove_quickfiles),
         migrations.RunSQL(
@@ -108,10 +121,11 @@ class Migration(migrations.Migration):
                 CREATE UNIQUE INDEX one_quickfiles_per_user ON osf_abstractnode (creator_id, type, is_deleted)
                 WHERE type='osf.quickfilesnode' AND is_deleted=FALSE;
                 """
-            ], [
+            ],
+            [
                 """
                 DROP INDEX IF EXISTS one_quickfiles_per_user RESTRICT;
                 """
-            ]
+            ],
         ),
     ]

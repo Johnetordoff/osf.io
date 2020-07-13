@@ -6,13 +6,24 @@ from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.urls import reverse_lazy
 from django.shortcuts import redirect
-from django.views.generic import View, CreateView, ListView, DetailView, UpdateView, DeleteView, TemplateView
+from django.views.generic import (
+    View,
+    CreateView,
+    ListView,
+    DetailView,
+    UpdateView,
+    DeleteView,
+    TemplateView,
+)
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib import messages
 from django.forms.models import model_to_dict
 from django.http import JsonResponse
 
-from admin.registration_providers.forms import RegistrationProviderForm, RegistrationProviderCustomTaxonomyForm
+from admin.registration_providers.forms import (
+    RegistrationProviderForm,
+    RegistrationProviderCustomTaxonomyForm,
+)
 from admin.base import settings
 from admin.base.forms import ImportFileForm
 from osf.models import RegistrationProvider, NodeLicense
@@ -54,7 +65,8 @@ class RegistrationProviderList(PermissionRequiredMixin, ListView):
         query_set = kwargs.pop('object_list', self.object_list)
         page_size = self.get_paginate_by(query_set)
         paginator, page, query_set, is_paginated = self.paginate_queryset(
-            query_set, page_size)
+            query_set, page_size
+        )
         return {
             'registration_providers': query_set,
             'page': page,
@@ -81,16 +93,26 @@ class RegistrationProviderDisplay(PermissionRequiredMixin, DetailView):
     raise_exception = True
 
     def get_object(self, queryset=None):
-        return RegistrationProvider.objects.get(id=self.kwargs.get('registration_provider_id'))
+        return RegistrationProvider.objects.get(
+            id=self.kwargs.get('registration_provider_id')
+        )
 
     def get_context_data(self, *args, **kwargs):
         registration_provider = self.get_object()
         registration_provider_attributes = model_to_dict(registration_provider)
-        registration_provider_attributes['default_license'] = registration_provider.default_license.name if registration_provider.default_license else None
-        registration_provider_attributes['brand'] = registration_provider.brand.name if registration_provider.brand else None
+        registration_provider_attributes['default_license'] = (
+            registration_provider.default_license.name
+            if registration_provider.default_license
+            else None
+        )
+        registration_provider_attributes['brand'] = (
+            registration_provider.brand.name if registration_provider.brand else None
+        )
 
         # compile html list of licenses_acceptable so we can render them as a list
-        licenses_acceptable = list(registration_provider.licenses_acceptable.values_list('name', flat=True))
+        licenses_acceptable = list(
+            registration_provider.licenses_acceptable.values_list('name', flat=True)
+        )
         licenses_html = '<ul>'
         for license in licenses_acceptable:
             licenses_html += '<li>{}</li>'.format(license)
@@ -106,25 +128,56 @@ class RegistrationProviderDisplay(PermissionRequiredMixin, DetailView):
         for parent in registration_provider.top_level_subjects:
             if parent.id in subject_ids:
                 mapped_text = ''
-                if parent.bepress_subject and parent.text != parent.bepress_subject.text:
-                    mapped_text = ' (mapped from {})'.format(parent.bepress_subject.text)
+                if (
+                    parent.bepress_subject
+                    and parent.text != parent.bepress_subject.text
+                ):
+                    mapped_text = ' (mapped from {})'.format(
+                        parent.bepress_subject.text
+                    )
                 hash_id = abs(hash(parent.text))
-                subject_html = subject_html + '<li data-id={}>{}'.format(hash_id, parent.text) + mapped_text + '</li>'
+                subject_html = (
+                    subject_html
+                    + '<li data-id={}>{}'.format(hash_id, parent.text)
+                    + mapped_text
+                    + '</li>'
+                )
                 child_html = '<ul class="three-cols" data-id={}>'.format(hash_id)
                 for child in parent.children.all():
                     grandchild_html = ''
                     if child.id in subject_ids:
                         child_mapped_text = ''
-                        if child.bepress_subject and child.text != child.bepress_subject.text:
-                            child_mapped_text = ' (mapped from {})'.format(child.bepress_subject.text)
-                        child_html = child_html + '<li>{}'.format(child.text) + child_mapped_text + '</li>'
+                        if (
+                            child.bepress_subject
+                            and child.text != child.bepress_subject.text
+                        ):
+                            child_mapped_text = ' (mapped from {})'.format(
+                                child.bepress_subject.text
+                            )
+                        child_html = (
+                            child_html
+                            + '<li>{}'.format(child.text)
+                            + child_mapped_text
+                            + '</li>'
+                        )
                         grandchild_html = '<ul>'
                         for grandchild in child.children.all():
                             if grandchild.id in subject_ids:
                                 grandchild_mapped_text = ''
-                                if grandchild.bepress_subject and grandchild.text != grandchild.bepress_subject.text:
-                                    grandchild_mapped_text = ' (mapped from {})'.format(grandchild.bepress_subject.text)
-                                grandchild_html = grandchild_html + '<li>{}'.format(grandchild.text) + grandchild_mapped_text + '</li>'
+                                if (
+                                    grandchild.bepress_subject
+                                    and grandchild.text
+                                    != grandchild.bepress_subject.text
+                                ):
+                                    grandchild_mapped_text = ' (mapped from {})'.format(
+                                        grandchild.bepress_subject.text
+                                    )
+                                grandchild_html = (
+                                    grandchild_html
+                                    + '<li>{}'.format(grandchild.text)
+                                    + grandchild_mapped_text
+                                    + '</li>'
+                                )
                         grandchild_html += '</ul>'
                     child_html += grandchild_html
 
@@ -135,7 +188,9 @@ class RegistrationProviderDisplay(PermissionRequiredMixin, DetailView):
         registration_provider_attributes['subjects'] = subject_html
 
         fields = model_to_dict(registration_provider)
-        kwargs['show_taxonomies'] = False if registration_provider.subjects.exists() else True
+        kwargs['show_taxonomies'] = (
+            False if registration_provider.subjects.exists() else True
+        )
         kwargs['form'] = RegistrationProviderForm(initial=fields)
         kwargs['import_form'] = ImportFileForm()
         kwargs['taxonomy_form'] = RegistrationProviderCustomTaxonomyForm()
@@ -161,15 +216,21 @@ class RegistrationProviderChangeForm(PermissionRequiredMixin, UpdateView):
 
     def get_context_data(self, *args, **kwargs):
         kwargs['import_form'] = ImportFileForm()
-        return super(RegistrationProviderChangeForm, self).get_context_data(*args, **kwargs)
+        return super(RegistrationProviderChangeForm, self).get_context_data(
+            *args, **kwargs
+        )
 
     def get_object(self, queryset=None):
         provider_id = self.kwargs.get('registration_provider_id')
         return RegistrationProvider.objects.get(id=provider_id)
 
     def get_success_url(self, *args, **kwargs):
-        return reverse_lazy('registration_providers:detail',
-                            kwargs={'registration_provider_id': self.kwargs.get('registration_provider_id')})
+        return reverse_lazy(
+            'registration_providers:detail',
+            kwargs={
+                'registration_provider_id': self.kwargs.get('registration_provider_id')
+            },
+        )
 
 
 class DeleteRegistrationProvider(PermissionRequiredMixin, DeleteView):
@@ -179,25 +240,41 @@ class DeleteRegistrationProvider(PermissionRequiredMixin, DeleteView):
     success_url = reverse_lazy('registration_providers:list')
 
     def delete(self, request, *args, **kwargs):
-        provider = RegistrationProvider.objects.get(id=self.kwargs['registration_provider_id'])
+        provider = RegistrationProvider.objects.get(
+            id=self.kwargs['registration_provider_id']
+        )
         if provider.registrations.count() > 0:
-            return redirect('registration_providers:cannot_delete', registration_provider_id=provider.pk)
+            return redirect(
+                'registration_providers:cannot_delete',
+                registration_provider_id=provider.pk,
+            )
         return super(DeleteRegistrationProvider, self).delete(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        provider = RegistrationProvider.objects.get(id=self.kwargs['registration_provider_id'])
+        provider = RegistrationProvider.objects.get(
+            id=self.kwargs['registration_provider_id']
+        )
         if provider.registrations.count() > 0:
-            return redirect('registration_providers:cannot_delete', registration_provider_id=provider.pk)
+            return redirect(
+                'registration_providers:cannot_delete',
+                registration_provider_id=provider.pk,
+            )
         return super(DeleteRegistrationProvider, self).get(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
-        return RegistrationProvider.objects.get(id=self.kwargs['registration_provider_id'])
+        return RegistrationProvider.objects.get(
+            id=self.kwargs['registration_provider_id']
+        )
 
     def get_context_data(self, *args, **kwargs):
         registration_provider = self.get_object()
         kwargs['provider_name'] = registration_provider.name
-        kwargs['has_collected_submissions'] = registration_provider.primary_collection.collectionsubmission_set.exists()
-        kwargs['collected_submissions_count'] = registration_provider.primary_collection.collectionsubmission_set.count()
+        kwargs[
+            'has_collected_submissions'
+        ] = registration_provider.primary_collection.collectionsubmission_set.exists()
+        kwargs[
+            'collected_submissions_count'
+        ] = registration_provider.primary_collection.collectionsubmission_set.count()
         kwargs['provider_id'] = registration_provider.id
         return super(DeleteRegistrationProvider, self).get_context_data(*args, **kwargs)
 
@@ -207,7 +284,9 @@ class CannotDeleteProvider(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(CannotDeleteProvider, self).get_context_data(**kwargs)
-        context['provider'] = RegistrationProvider.objects.get(id=self.kwargs['registration_provider_id'])
+        context['provider'] = RegistrationProvider.objects.get(
+            id=self.kwargs['registration_provider_id']
+        )
         return context
 
 
@@ -216,13 +295,22 @@ class ExportRegistrationProvider(PermissionRequiredMixin, View):
     raise_exception = True
 
     def get(self, request, *args, **kwargs):
-        registration_provider = RegistrationProvider.objects.get(id=self.kwargs['registration_provider_id'])
+        registration_provider = RegistrationProvider.objects.get(
+            id=self.kwargs['registration_provider_id']
+        )
         data = serializers.serialize('json', [registration_provider])
         cleaned_data = json.loads(data)[0]
         cleaned_fields = cleaned_data['fields']
         cleaned_fields.pop('primary_collection', None)
-        cleaned_fields['licenses_acceptable'] = [node_license.license_id for node_license in registration_provider.licenses_acceptable.all()]
-        cleaned_fields['default_license'] = registration_provider.default_license.license_id if registration_provider.default_license else ''
+        cleaned_fields['licenses_acceptable'] = [
+            node_license.license_id
+            for node_license in registration_provider.licenses_acceptable.all()
+        ]
+        cleaned_fields['default_license'] = (
+            registration_provider.default_license.license_id
+            if registration_provider.default_license
+            else ''
+        )
         cleaned_fields['subjects'] = self.serialize_subjects(registration_provider)
         cleaned_data['fields'] = cleaned_fields
         filename = '{}_export.json'.format(registration_provider.name)
@@ -238,7 +326,7 @@ class ExportRegistrationProvider(PermissionRequiredMixin, View):
             result['custom'] = {
                 subject.text: {
                     'parent': subject.parent.text if subject.parent else '',
-                    'bepress': subject.bepress_subject.text
+                    'bepress': subject.bepress_subject.text,
                 }
                 for subject in provider.subjects.all()
             }
@@ -258,9 +346,15 @@ class ImportRegistrationProvider(PermissionRequiredMixin, View):
             try:
                 registration_provider = self.create_or_update_provider(cleaned_result)
             except ValidationError:
-                messages.error(request, 'A Validation Error occured, this JSON is invalid or shares an id with an already existing provider.')
+                messages.error(
+                    request,
+                    'A Validation Error occured, this JSON is invalid or shares an id with an already existing provider.',
+                )
                 return redirect('registration_providers:create')
-            return redirect('registration_providers:detail', registration_provider_id=registration_provider.id)
+            return redirect(
+                'registration_providers:detail',
+                registration_provider_id=registration_provider.id,
+            )
 
     def parse_file(self, f):
         parsed_file = ''
@@ -276,11 +370,22 @@ class ImportRegistrationProvider(PermissionRequiredMixin, View):
             return RegistrationProvider.objects.get(id=page_provider_id)
 
     def add_subjects(self, provider, subject_data):
-        call_command('populate_custom_taxonomies', '--provider', provider._id, '--data', json.dumps(subject_data), '--type', 'osf.registrationprovider')
+        call_command(
+            'populate_custom_taxonomies',
+            '--provider',
+            provider._id,
+            '--data',
+            json.dumps(subject_data),
+            '--type',
+            'osf.registrationprovider',
+        )
 
     def create_or_update_provider(self, provider_data):
         provider = self.get_page_provider()
-        licenses = [NodeLicense.objects.get(license_id=license_id) for license_id in provider_data.pop('licenses_acceptable', [])]
+        licenses = [
+            NodeLicense.objects.get(license_id=license_id)
+            for license_id in provider_data.pop('licenses_acceptable', [])
+        ]
         default_license = provider_data.pop('default_license', False)
         subject_data = provider_data.pop('subjects', False)
         provider_data.pop('additional_providers')
@@ -297,7 +402,9 @@ class ImportRegistrationProvider(PermissionRequiredMixin, View):
         if licenses:
             provider.licenses_acceptable.set(licenses)
         if default_license:
-            provider.default_license = NodeLicense.objects.get(license_id=default_license)
+            provider.default_license = NodeLicense.objects.get(
+                license_id=default_license
+            )
 
         # Only adds the JSON taxonomy if there is no existing taxonomy data
         if subject_data and not provider.subjects.count():
@@ -312,13 +419,20 @@ class ProcessCustomTaxonomy(PermissionRequiredMixin, View):
 
     def post(self, request, *args, **kwargs):
         # Import here to avoid test DB access errors when importing registration provider views
-        from osf.management.commands.populate_custom_taxonomies import validate_input, migrate
+        from osf.management.commands.populate_custom_taxonomies import (
+            validate_input,
+            migrate,
+        )
 
         provider_form = RegistrationProviderCustomTaxonomyForm(request.POST)
         if provider_form.is_valid():
-            provider = RegistrationProvider.objects.get(id=provider_form.cleaned_data['provider_id'])
+            provider = RegistrationProvider.objects.get(
+                id=provider_form.cleaned_data['provider_id']
+            )
             try:
-                taxonomy_json = json.loads(provider_form.cleaned_data['custom_taxonomy_json'])
+                taxonomy_json = json.loads(
+                    provider_form.cleaned_data['custom_taxonomy_json']
+                )
                 if request.is_ajax():
                     # An ajax request is for validation only, so run that validation!
                     try:
@@ -326,33 +440,51 @@ class ProcessCustomTaxonomy(PermissionRequiredMixin, View):
                             custom_provider=provider,
                             data=taxonomy_json,
                             provider_type='osf.registrationprovider',
-                            add_missing=provider_form.cleaned_data['add_missing'])
+                            add_missing=provider_form.cleaned_data['add_missing'],
+                        )
 
                         if response_data:
                             added_subjects = [subject.text for subject in response_data]
-                            response_data = {'message': 'Custom taxonomy validated with added subjects: {}'.format(added_subjects), 'feedback_type': 'success'}
+                            response_data = {
+                                'message': 'Custom taxonomy validated with added subjects: {}'.format(
+                                    added_subjects
+                                ),
+                                'feedback_type': 'success',
+                            }
                     except (RuntimeError, AssertionError) as script_feedback:
-                        response_data = {'message': script_feedback.message, 'feedback_type': 'error'}
+                        response_data = {
+                            'message': script_feedback.message,
+                            'feedback_type': 'error',
+                        }
                     if not response_data:
-                        response_data = {'message': 'Custom taxonomy validated!', 'feedback_type': 'success'}
+                        response_data = {
+                            'message': 'Custom taxonomy validated!',
+                            'feedback_type': 'success',
+                        }
                 else:
                     # Actually do the migration of the custom taxonomies
                     migrate(
                         provider=provider._id,
                         data=taxonomy_json,
                         provider_type='osf.registrationprovider',
-                        add_missing=provider_form.cleaned_data['add_missing'])
+                        add_missing=provider_form.cleaned_data['add_missing'],
+                    )
 
-                    return redirect('registration_providers:detail', registration_provider_id=provider.id)
+                    return redirect(
+                        'registration_providers:detail',
+                        registration_provider_id=provider.id,
+                    )
             except (ValueError, RuntimeError) as error:
                 response_data = {
-                    'message': 'There is an error with the submitted JSON or the provider. Here are some details: ' + error.message,
-                    'feedback_type': 'error'
+                    'message': 'There is an error with the submitted JSON or the provider. Here are some details: '
+                    + error.message,
+                    'feedback_type': 'error',
                 }
         else:
             response_data = {
-                'message': 'There is a problem with the form. Here are some details: ' + str(provider_form.errors),
-                'feedback_type': 'error'
+                'message': 'There is a problem with the form. Here are some details: '
+                + str(provider_form.errors),
+                'feedback_type': 'error',
             }
         # Return a JsonResponse with the JSON error or the validation error if it's not doing an actual migration
         return JsonResponse(response_data)

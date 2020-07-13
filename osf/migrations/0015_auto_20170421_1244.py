@@ -13,11 +13,9 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterModelOptions(
-            name='abstractnode',
-            options={'base_manager_name': 'objects'},
+            name='abstractnode', options={'base_manager_name': 'objects'},
         ),
         migrations.AlterModelOptions(
-            name='basefilenode',
-            options={'base_manager_name': 'objects'},
+            name='basefilenode', options={'base_manager_name': 'objects'},
         ),
     ]

@@ -27,6 +27,7 @@ class AddonTestCase(object):
         - self.node_settings: AddonNodeSettings object for the addon
 
     """
+
     DISABLE_OUTGOING_CONNECTIONS = True
     DB_NAME = getattr(settings, 'TEST_DB_ADDON_NAME', 'osf_addon')
     ADDON_SHORT_NAME = None
@@ -45,10 +46,14 @@ class AddonTestCase(object):
         e.g. setting access_token.
 
         """
-        raise NotImplementedError('Must define set_user_settings(self, settings) method')
+        raise NotImplementedError(
+            'Must define set_user_settings(self, settings) method'
+        )
 
     def set_node_settings(self, settings):
-        raise NotImplementedError('Must define set_node_settings(self, settings) method')
+        raise NotImplementedError(
+            'Must define set_node_settings(self, settings) method'
+        )
 
     def create_user_settings(self):
         """Initialize user settings object if requested by `self.OWNERS`.
@@ -57,7 +62,9 @@ class AddonTestCase(object):
         if 'user' not in self.OWNERS:
             return
         self.user.add_addon(self.ADDON_SHORT_NAME)
-        assert self.user.has_addon(self.ADDON_SHORT_NAME), '{0} is not enabled'.format(self.ADDON_SHORT_NAME)
+        assert self.user.has_addon(self.ADDON_SHORT_NAME), '{0} is not enabled'.format(
+            self.ADDON_SHORT_NAME
+        )
         self.user_settings = self.user.get_addon(self.ADDON_SHORT_NAME)
         self.set_user_settings(self.user_settings)
         self.user_settings.save()
@@ -93,8 +100,8 @@ class AddonTestCase(object):
         self.create_user_settings()
         self.create_node_settings()
 
-class OAuthAddonTestCaseMixin(object):
 
+class OAuthAddonTestCaseMixin(object):
     @property
     def ExternalAccountFactory(self):
         raise NotImplementedError()

@@ -10,7 +10,6 @@ pytestmark = pytest.mark.django_db
 
 @pytest.mark.urls('admin.base.urls')
 class ProviderListMixinBase:
-
     @pytest.fixture()
     def provider_factory():
         raise NotImplementedError
@@ -47,12 +46,13 @@ class ProviderListMixinBase:
         res = view.get_context_data()
         assert isinstance(res, dict)
         assert len(res['{}_providers'.format(provider_one.readable_type)]) == 2
-        assert isinstance(res['{}_providers'.format(provider_one.readable_type)][0], provider_class)
+        assert isinstance(
+            res['{}_providers'.format(provider_one.readable_type)][0], provider_class
+        )
 
 
 @pytest.mark.urls('admin.base.urls')
 class ProcessCustomTaxonomyMixinBase:
-
     @pytest.fixture()
     def provider_factory():
         raise NotImplementedError
@@ -94,34 +94,57 @@ class ProcessCustomTaxonomyMixinBase:
         return SubjectFactory(parent=subject_three)
 
     def test_process_taxonomy_changes_subjects(
-            self, provider, view, user, req, subject_one,
-            subject_one_a, subject_two, subject_two_a, subject_three_a):
+        self,
+        provider,
+        view,
+        user,
+        req,
+        subject_one,
+        subject_one_a,
+        subject_two,
+        subject_two_a,
+        subject_three_a,
+    ):
 
         custom_taxonomy = {
             'include': [subject_one.text, subject_three_a.text],
             'exclude': [subject_one_a.text],
             'custom': {
-                'Changed Subject Name': {'parent': subject_two.text, 'bepress': subject_two_a.text},
-                subject_two.text: {'parent': '', 'bepress': subject_two.text}
-            }
+                'Changed Subject Name': {
+                    'parent': subject_two.text,
+                    'bepress': subject_two_a.text,
+                },
+                subject_two.text: {'parent': '', 'bepress': subject_two.text},
+            },
         }
         req.POST = {
             'custom_taxonomy_json': json.dumps(custom_taxonomy),
-            'provider_id': provider.id
+            'provider_id': provider.id,
         }
 
         view.post(req)
 
-        actual_provider_subjects = set(provider.subjects.all().values_list('text', flat=True))
-        expected_subjects = set([subject_one.text, subject_two.text, subject_three_a.text, 'Changed Subject Name'])
+        actual_provider_subjects = set(
+            provider.subjects.all().values_list('text', flat=True)
+        )
+        expected_subjects = set(
+            [
+                subject_one.text,
+                subject_two.text,
+                subject_three_a.text,
+                'Changed Subject Name',
+            ]
+        )
 
         assert actual_provider_subjects == expected_subjects
-        assert provider.subjects.get(text='Changed Subject Name').parent.text == subject_two.text
+        assert (
+            provider.subjects.get(text='Changed Subject Name').parent.text
+            == subject_two.text
+        )
 
 
 @pytest.mark.urls('admin.base.urls')
 class ProviderDisplayMixinBase:
-
     @pytest.fixture()
     def provider_factory(self):
         raise NotImplementedError
@@ -151,7 +174,9 @@ class ProviderDisplayMixinBase:
         res = view.get_context_data()
         assert isinstance(res, dict)
         assert isinstance(res['{}_provider'.format(provider.readable_type)], dict)
-        assert res['{}_provider'.format(provider.readable_type)]['name'] == provider.name
+        assert (
+            res['{}_provider'.format(provider.readable_type)]['name'] == provider.name
+        )
 
         assert isinstance(res['form'], form_class)
         assert isinstance(res['import_form'], ImportFileForm)
@@ -160,9 +185,9 @@ class ProviderDisplayMixinBase:
         res = view.get(req)
         assert res.status_code == 200
 
+
 @pytest.mark.urls('admin.base.urls')
 class CreateProviderMixinBase:
-
     @pytest.fixture()
     def provider_factory(self):
         raise NotImplementedError
@@ -188,7 +213,6 @@ class CreateProviderMixinBase:
 
 @pytest.mark.urls('admin.base.urls')
 class DeleteProviderMixinBase:
-
     @pytest.fixture()
     def provider_factory(self):
         raise NotImplementedError

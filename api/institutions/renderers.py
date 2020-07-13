@@ -13,19 +13,32 @@ class MetricsCSVRenderer(CSVRenderer):
         separated into different rows.
         """
         data = data.get('data')
-        return super().render(data, media_type=media_type, renderer_context=renderer_context, writer_opts=writer_opts)
+        return super().render(
+            data,
+            media_type=media_type,
+            renderer_context=renderer_context,
+            writer_opts=writer_opts,
+        )
+
 
 class InstitutionUserMetricsCSVRenderer(MetricsCSVRenderer):
     """
     MetricsCSVRenderer with headers and labels specific to the InstitutionUserMetrics Endpoint
     """
 
-    header = ['id', 'attributes.user_name', 'attributes.public_projects', 'attributes.private_projects', 'type']
+    header = [
+        'id',
+        'attributes.user_name',
+        'attributes.public_projects',
+        'attributes.private_projects',
+        'type',
+    ]
     labels = {
         'attributes.private_projects': 'private_projects',
         'attributes.public_projects': 'public_projects',
         'attributes.user_name': 'user_name',
     }
+
 
 class InstitutionDepartmentMetricsCSVRenderer(MetricsCSVRenderer):
     """

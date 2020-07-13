@@ -13,9 +13,13 @@ if __name__ == '__main__':
         logging.basicConfig(level=logging.INFO)
     else:
         from website.app import init_app
+
         init_app(set_backends=True, routes=False, attach_request_handlers=False)
 
-    if os.environ.get('DJANGO_SETTINGS_MODULE') == 'admin.base.settings' and 'migrate' in sys.argv:
+    if (
+        os.environ.get('DJANGO_SETTINGS_MODULE') == 'admin.base.settings'
+        and 'migrate' in sys.argv
+    ):
         raise RuntimeError('Running migrations from the admin project is disallowed.')
 
     execute_from_command_line(sys.argv)

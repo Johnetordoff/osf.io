@@ -15,6 +15,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='preprintprovider',
             name='share_publish_type',
-            field=models.CharField(choices=[(b'Preprint', b'Preprint'), (b'Thesis', b'Thesis')], default=b'Preprint', help_text=b'This SHARE type will be used when pushing publications to SHARE', max_length=32),
+            field=models.CharField(
+                choices=[(b'Preprint', b'Preprint'), (b'Thesis', b'Thesis')],
+                default=b'Preprint',
+                help_text=b'This SHARE type will be used when pushing publications to SHARE',
+                max_length=32,
+            ),
         ),
     ]

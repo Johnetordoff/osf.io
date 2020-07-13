@@ -9,6 +9,7 @@ from django.utils import timezone
 import django
 from oauthlib.oauth2 import OAuth2Error
 from dateutil.relativedelta import relativedelta
+
 django.setup()
 
 from framework.celery_tasks import app as celery_app
@@ -24,7 +25,11 @@ from osf.models import ExternalAccount
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-PROVIDER_CLASSES = (Box, GoogleDriveProvider, Mendeley, )
+PROVIDER_CLASSES = (
+    Box,
+    GoogleDriveProvider,
+    Mendeley,
+)
 
 
 def look_up_provider(addon_short_name):
@@ -33,29 +38,28 @@ def look_up_provider(addon_short_name):
             return Provider
     return None
 
+
 def get_targets(delta, addon_short_name):
     # NOTE: expires_at is the  access_token's expiration date,
     # NOT the refresh token's
     return ExternalAccount.objects.filter(
         expires_at__lt=timezone.now() - delta,
         date_last_refreshed__lt=timezone.now() - delta,
-        provider=addon_short_name
+        provider=addon_short_name,
     )
+
 
 def main(delta, Provider, rate_limit, dry_run):
     allowance = rate_limit[0]
     last_call = time.time()
     for record in get_targets(delta, Provider.short_name):
         if Provider(record).has_expired_credentials:
-            logger.info(
-                'Found expired record {}, skipping'.format(record.__repr__())
-            )
+            logger.info('Found expired record {}, skipping'.format(record.__repr__()))
             continue
 
         logger.info(
             'Refreshing tokens on record {0}; expires at {1}'.format(
-                record.__repr__(),
-                record.expires_at.strftime('%c')
+                record.__repr__(), record.expires_at.strftime('%c')
             )
         )
         if not dry_run:
@@ -76,8 +80,8 @@ def main(delta, Provider, rate_limit, dry_run):
             else:
                 logger.info(
                     'Status of record {}: {}'.format(
-                        record.__repr__(),
-                        'SUCCESS' if success else 'FAILURE')
+                        record.__repr__(), 'SUCCESS' if success else 'FAILURE'
+                    )
                 )
 
 
@@ -91,7 +95,7 @@ def run_main(addons=None, rate_limit=(5, 1), dry_run=True):
     if not dry_run:
         scripts_utils.add_file_logger(logger, __file__)
     for addon in addons:
-        days = math.ceil(int(addons[addon])*0.75)
+        days = math.ceil(int(addons[addon]) * 0.75)
         delta = relativedelta(days=days)
         Provider = look_up_provider(addon)
         if not Provider:

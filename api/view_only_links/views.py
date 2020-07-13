@@ -7,19 +7,27 @@ from framework.auth.oauth_scopes import CoreScopes
 
 from api.base import permissions as base_permissions
 from api.base.exceptions import RelationshipPostMakesNoChanges
-from api.base.parsers import JSONAPIRelationshipParser, JSONAPIRelationshipParserForRegularJSON
+from api.base.parsers import (
+    JSONAPIRelationshipParser,
+    JSONAPIRelationshipParserForRegularJSON,
+)
 from api.base.utils import get_user_auth
 from api.base.views import JSONAPIBaseView
 from api.nodes.serializers import NodeSerializer, JSONAPISerializer
 from api.registrations.serializers import RegistrationSerializer
-from api.view_only_links.serializers import ViewOnlyLinkDetailSerializer, ViewOnlyLinkNodesSerializer
+from api.view_only_links.serializers import (
+    ViewOnlyLinkDetailSerializer,
+    ViewOnlyLinkNodesSerializer,
+)
 
 from osf.models import PrivateLink
 from osf.utils.permissions import ADMIN
 
+
 class ViewOnlyLinkDetail(JSONAPIBaseView, generics.RetrieveAPIView):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/view_only_links_read).
     """
+
     permission_classes = (
         base_permissions.TokenHasScope,
         drf_permissions.IsAuthenticatedOrReadOnly,
@@ -51,6 +59,7 @@ class ViewOnlyLinkDetail(JSONAPIBaseView, generics.RetrieveAPIView):
 class ViewOnlyLinkNodes(JSONAPIBaseView, generics.ListAPIView):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/view_only_links_node_list).
         """
+
     permission_classes = (
         base_permissions.TokenHasScope,
         drf_permissions.IsAuthenticatedOrReadOnly,
@@ -90,7 +99,9 @@ class ViewOnlyLinkNodes(JSONAPIBaseView, generics.ListAPIView):
         return nodes
 
 
-class ViewOnlyLinkNodesRelationships(JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView, generics.CreateAPIView):
+class ViewOnlyLinkNodesRelationships(
+    JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView, generics.CreateAPIView,
+):
     """
     Relationship Endpoint for VOL -> Nodes Relationship
 
@@ -129,6 +140,7 @@ class ViewOnlyLinkNodesRelationships(JSONAPIBaseView, generics.RetrieveUpdateDes
         This requires admin permissions on all nodes to be associated with this view only link.
 
     """
+
     permission_classes = (
         base_permissions.TokenHasScope,
         drf_permissions.IsAuthenticatedOrReadOnly,
@@ -138,7 +150,10 @@ class ViewOnlyLinkNodesRelationships(JSONAPIBaseView, generics.RetrieveUpdateDes
     required_write_scopes = [CoreScopes.NODE_VIEW_ONLY_LINKS_WRITE]
 
     serializer_class = ViewOnlyLinkNodesSerializer
-    parser_classes = (JSONAPIRelationshipParser, JSONAPIRelationshipParserForRegularJSON, )
+    parser_classes = (
+        JSONAPIRelationshipParser,
+        JSONAPIRelationshipParserForRegularJSON,
+    )
 
     view_category = 'view-only-links'
     view_name = 'view-only-link-nodes-relationships'

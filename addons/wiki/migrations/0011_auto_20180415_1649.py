@@ -12,15 +12,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='nodewikipage',
-            name='node',
-        ),
-        migrations.RemoveField(
-            model_name='nodewikipage',
-            name='user',
-        ),
-        migrations.DeleteModel(
-            name='NodeWikiPage',
-        ),
+        migrations.RemoveField(model_name='nodewikipage', name='node',),
+        migrations.RemoveField(model_name='nodewikipage', name='user',),
+        migrations.DeleteModel(name='NodeWikiPage',),
     ]

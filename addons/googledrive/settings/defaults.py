@@ -2,7 +2,7 @@
 CLIENT_ID = 'chaneme'
 CLIENT_SECRET = 'changeme'
 
-#https://developers.google.com/identity/protocols/OAuth2#expiration
+# https://developers.google.com/identity/protocols/OAuth2#expiration
 EXPIRY_TIME = 60 * 60 * 24 * 175  # 175 days
 REFRESH_TIME = 5 * 60  # 5 minutes
 

@@ -19,6 +19,7 @@ class Command(BaseCommand):
     """
     Strip trailing whitespace from osf_subject.text
     """
+
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
         parser.add_argument(

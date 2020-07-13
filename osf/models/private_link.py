@@ -8,6 +8,7 @@ from osf.models.base import BaseModel, ObjectIDMixin
 from osf.utils.sanitize import unescape_entities
 from osf.utils.fields import NonNaiveDateTimeField
 
+
 class PrivateLink(ObjectIDMixin, BaseModel):
     key = models.CharField(max_length=512, null=False, unique=True, blank=False)
     name = models.CharField(max_length=255, blank=True, null=True)
@@ -16,7 +17,9 @@ class PrivateLink(ObjectIDMixin, BaseModel):
     anonymous = models.BooleanField(default=False)
 
     nodes = models.ManyToManyField('AbstractNode', related_name='private_links')
-    creator = models.ForeignKey('OSFUser', null=True, blank=True, on_delete=models.SET_NULL)
+    creator = models.ForeignKey(
+        'OSFUser', null=True, blank=True, on_delete=models.SET_NULL
+    )
 
     @property
     def node_ids(self):
@@ -36,19 +39,33 @@ class PrivateLink(ObjectIDMixin, BaseModel):
             'date_created': iso8601format(self.created),
             'key': self.key,
             'name': unescape_entities(self.name),
-            'creator': {'fullname': self.creator.fullname, 'url': self.creator.profile_url},
-            'nodes': [{'title': x.title, 'url': x.url,
-                       'scale': str(self.node_scale(x)) + 'px', 'category': x.category}
-                      for x in self.nodes.filter(is_deleted=False)],
-            'anonymous': self.anonymous
+            'creator': {
+                'fullname': self.creator.fullname,
+                'url': self.creator.profile_url,
+            },
+            'nodes': [
+                {
+                    'title': x.title,
+                    'url': x.url,
+                    'scale': str(self.node_scale(x)) + 'px',
+                    'category': x.category,
+                }
+                for x in self.nodes.filter(is_deleted=False)
+            ],
+            'anonymous': self.anonymous,
         }
 
 
 ##### Signal listeners #####
 @receiver(models.signals.m2m_changed, sender=PrivateLink.nodes.through)
-def check_if_private_link_is_to_quickfiles(sender, instance, action, reverse, model, pk_set, **kwargs):
+def check_if_private_link_is_to_quickfiles(
+    sender, instance, action, reverse, model, pk_set, **kwargs
+):
     from osf.models.node import AbstractNode
 
     if action == 'pre_add' and pk_set:
-        if model == AbstractNode and model.objects.get(id=list(pk_set)[0]).is_quickfiles:
+        if (
+            model == AbstractNode
+            and model.objects.get(id=list(pk_set)[0]).is_quickfiles
+        ):
             raise ValidationError('A private link cannot be added to a QuickFilesNode')

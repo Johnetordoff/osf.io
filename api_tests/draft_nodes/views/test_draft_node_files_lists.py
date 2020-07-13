@@ -73,24 +73,25 @@ class TestDraftNodeProvidersList(ApiTestCase):
         assert_equal(data['attributes']['path'], '/')
 
     def test_returns_osfstorage_folder_version_two(self):
-        res = self.app.get(
-            '{}osfstorage/'.format(self.url), auth=self.user.auth)
+        res = self.app.get('{}osfstorage/'.format(self.url), auth=self.user.auth)
         assert_equal(res.status_code, 200)
 
     def test_returns_osf_storage_folder_version_two_point_two(self):
         res = self.app.get(
-            '{}osfstorage/?version=2.2'.format(self.url), auth=self.user.auth)
+            '{}osfstorage/?version=2.2'.format(self.url), auth=self.user.auth
+        )
         assert_equal(res.status_code, 200)
 
 
 def prepare_mock_wb_response(
-        node=None,
-        provider='github',
-        files=None,
-        folder=True,
-        path='/',
-        method=responses.GET,
-        status_code=200):
+    node=None,
+    provider='github',
+    files=None,
+    folder=True,
+    path='/',
+    method=responses.GET,
+    status_code=200,
+):
     """Prepare a mock Waterbutler response with responses library.
 
     :param Node node: Target node.
@@ -104,7 +105,15 @@ def prepare_mock_wb_response(
     """
     node = node
     files = files or []
-    wb_url = waterbutler_api_url_for(node._id, provider=provider, _internal=True, path=path, meta=True, view_only=None, base_url=node.osfstorage_region.waterbutler_url)
+    wb_url = waterbutler_api_url_for(
+        node._id,
+        provider=provider,
+        _internal=True,
+        path=path,
+        meta=True,
+        view_only=None,
+        base_url=node.osfstorage_region.waterbutler_url,
+    )
 
     default_file = {
         u'contentType': None,
@@ -136,20 +145,20 @@ def prepare_mock_wb_response(
             wb_url,
             json={u'data': jsonapi_data},
             status=status_code,
-            content_type='application/json'
+            content_type='application/json',
         )
     )
 
 
 class TestNodeFilesList(ApiTestCase):
-
     def setUp(self):
         super(TestNodeFilesList, self).setUp()
         self.user = AuthUserFactory()
         self.draft_reg = DraftRegistrationFactory(creator=self.user)
         self.draft_node = self.draft_reg.branched_from
         self.private_url = '/{}draft_nodes/{}/files/'.format(
-            API_BASE, self.draft_node._id)
+            API_BASE, self.draft_node._id
+        )
 
         self.user_two = AuthUserFactory()
 
@@ -168,8 +177,7 @@ class TestNodeFilesList(ApiTestCase):
         addon.external_account = oauth_settings
         addon.save()
         self.draft_node.save()
-        addon.user_settings.oauth_grants[self.draft_node._id] = {
-            oauth_settings._id: []}
+        addon.user_settings.oauth_grants[self.draft_node._id] = {oauth_settings._id: []}
         addon.user_settings.save()
 
     def view_only_link(self):
@@ -186,11 +194,11 @@ class TestNodeFilesList(ApiTestCase):
         assert_in('storage_addons', res.json['data'][0]['links'])
 
     def test_returns_file_data(self):
-        fobj = self.draft_node.get_addon(
-            'osfstorage').get_root().append_file('NewFile')
+        fobj = self.draft_node.get_addon('osfstorage').get_root().append_file('NewFile')
         fobj.save()
         res = self.app.get(
-            '{}osfstorage/{}'.format(self.private_url, fobj._id), auth=self.user.auth)
+            '{}osfstorage/{}'.format(self.private_url, fobj._id), auth=self.user.auth
+        )
         assert_equal(res.status_code, 200)
         assert_true(isinstance(res.json['data'], dict))
         assert_equal(res.content_type, 'application/vnd.api+json')
@@ -198,38 +206,54 @@ class TestNodeFilesList(ApiTestCase):
         assert_equal(res.json['data']['attributes']['name'], 'NewFile')
 
     def test_returns_osfstorage_folder_version_two(self):
-        fobj = self.draft_node.get_addon(
-            'osfstorage').get_root().append_folder('NewFolder')
+        fobj = (
+            self.draft_node.get_addon('osfstorage')
+            .get_root()
+            .append_folder('NewFolder')
+        )
         fobj.save()
         res = self.app.get(
-            '{}osfstorage/'.format(self.private_url), auth=self.user.auth)
+            '{}osfstorage/'.format(self.private_url), auth=self.user.auth
+        )
         assert_equal(res.status_code, 200)
 
     def test_returns_osf_storage_folder_version_two_point_two(self):
-        fobj = self.draft_node.get_addon(
-            'osfstorage').get_root().append_folder('NewFolder')
+        fobj = (
+            self.draft_node.get_addon('osfstorage')
+            .get_root()
+            .append_folder('NewFolder')
+        )
         fobj.save()
         res = self.app.get(
-            '{}osfstorage/?version=2.2'.format(self.private_url), auth=self.user.auth)
+            '{}osfstorage/?version=2.2'.format(self.private_url), auth=self.user.auth
+        )
         assert_equal(res.status_code, 200)
 
     def test_list_returns_folder_data(self):
-        fobj = self.draft_node.get_addon(
-            'osfstorage').get_root().append_folder('NewFolder')
+        fobj = (
+            self.draft_node.get_addon('osfstorage')
+            .get_root()
+            .append_folder('NewFolder')
+        )
         fobj.save()
         res = self.app.get(
-            '{}osfstorage/'.format(self.private_url, fobj._id), auth=self.user.auth)
+            '{}osfstorage/'.format(self.private_url, fobj._id), auth=self.user.auth
+        )
         assert_equal(res.status_code, 200)
         assert_equal(len(res.json['data']), 1)
         assert_equal(res.content_type, 'application/vnd.api+json')
         assert_equal(res.json['data'][0]['attributes']['name'], 'NewFolder')
 
     def test_returns_folder_data(self):
-        fobj = self.draft_node.get_addon(
-            'osfstorage').get_root().append_folder('NewFolder')
+        fobj = (
+            self.draft_node.get_addon('osfstorage')
+            .get_root()
+            .append_folder('NewFolder')
+        )
         fobj.save()
         res = self.app.get(
-            '{}osfstorage/{}/'.format(self.private_url, fobj._id), auth=self.user.auth)
+            '{}osfstorage/{}/'.format(self.private_url, fobj._id), auth=self.user.auth
+        )
         assert_equal(res.status_code, 200)
         assert_equal(len(res.json['data']), 0)
         assert_equal(res.content_type, 'application/vnd.api+json')
@@ -244,16 +268,12 @@ class TestNodeFilesList(ApiTestCase):
         assert_equal(res.status_code, 200)
         assert_equal(res.content_type, 'application/vnd.api+json')
         assert_equal(len(res.json['data']), 1)
-        assert_equal(
-            res.json['data'][0]['attributes']['provider'],
-            'osfstorage'
-        )
+        assert_equal(res.json['data'][0]['attributes']['provider'], 'osfstorage')
 
     def test_returns_private_files_logged_in_non_contributor(self):
         res = self.app.get(
-            self.private_url,
-            auth=self.user_two.auth,
-            expect_errors=True)
+            self.private_url, auth=self.user_two.auth, expect_errors=True
+        )
         assert_equal(res.status_code, 403)
         assert_in('detail', res.json['errors'][0])
 
@@ -261,10 +281,7 @@ class TestNodeFilesList(ApiTestCase):
         user_auth = Auth(self.user)
         res = self.app.get(self.private_url, auth=self.user.auth)
         assert_equal(len(res.json['data']), 1)
-        assert_equal(
-            res.json['data'][0]['attributes']['provider'],
-            'osfstorage'
-        )
+        assert_equal(res.json['data'][0]['attributes']['provider'], 'osfstorage')
 
         self.draft_node.add_addon('github', auth=user_auth)
         addon = self.draft_node.get_addon('github')
@@ -279,8 +296,7 @@ class TestNodeFilesList(ApiTestCase):
         addon.external_account = oauth_settings
         addon.save()
         self.draft_node.save()
-        addon.user_settings.oauth_grants[self.draft_node._id] = {
-            oauth_settings._id: []}
+        addon.user_settings.oauth_grants[self.draft_node._id] = {oauth_settings._id: []}
         addon.user_settings.save()
         res = self.app.get(self.private_url, auth=self.user.auth)
         data = res.json['data']
@@ -291,12 +307,12 @@ class TestNodeFilesList(ApiTestCase):
 
     @responses.activate
     def test_vol_node_files_list(self):
-        self._prepare_mock_wb_response(
-            provider='github', files=[{'name': 'NewFile'}])
+        self._prepare_mock_wb_response(provider='github', files=[{'name': 'NewFile'}])
         self.add_github()
         vol = self.view_only_link()
         url = '/{}draft_nodes/{}/files/github/?view_only={}'.format(
-            API_BASE, self.draft_node._id, vol.key)
+            API_BASE, self.draft_node._id, vol.key
+        )
         res = self.app.get(url, auth=self.user_two.auth)
         wb_request = responses.calls[-1].request
         url = furl.furl(wb_request.url)
@@ -312,8 +328,7 @@ class TestNodeFilesList(ApiTestCase):
 
     @responses.activate
     def test_returns_node_files_list(self):
-        self._prepare_mock_wb_response(
-            provider='github', files=[{'name': 'NewFile'}])
+        self._prepare_mock_wb_response(provider='github', files=[{'name': 'NewFile'}])
         self.add_github()
         url = '/{}draft_nodes/{}/files/github/'.format(API_BASE, self.draft_node._id)
 
@@ -329,15 +344,15 @@ class TestNodeFilesList(ApiTestCase):
 
     @responses.activate
     def test_returns_folder_metadata_not_children(self):
-        folder = GithubFolder(
-            name='Folder',
-            target=self.draft_node,
-            path='/Folder/'
-        )
+        folder = GithubFolder(name='Folder', target=self.draft_node, path='/Folder/')
         folder.save()
-        self._prepare_mock_wb_response(provider='github', files=[{'name': 'Folder'}], path='/Folder/')
+        self._prepare_mock_wb_response(
+            provider='github', files=[{'name': 'Folder'}], path='/Folder/'
+        )
         self.add_github()
-        url = '/{}draft_nodes/{}/files/github/Folder/'.format(API_BASE, self.draft_node._id)
+        url = '/{}draft_nodes/{}/files/github/Folder/'.format(
+            API_BASE, self.draft_node._id
+        )
         res = self.app.get(url, params={'info': ''}, auth=self.user.auth)
 
         assert_equal(res.status_code, 200)
@@ -348,14 +363,17 @@ class TestNodeFilesList(ApiTestCase):
     @responses.activate
     def test_returns_node_file(self):
         self._prepare_mock_wb_response(
-            provider='github', files=[{'name': 'NewFile'}],
-            folder=False, path='/file')
+            provider='github', files=[{'name': 'NewFile'}], folder=False, path='/file'
+        )
         self.add_github()
         url = '/{}draft_nodes/{}/files/github/file'.format(
-            API_BASE, self.draft_node._id)
-        res = self.app.get(url, auth=self.user.auth, headers={
-            'COOKIE': 'foo=bar;'  # Webtests doesnt support cookies?
-        })
+            API_BASE, self.draft_node._id
+        )
+        res = self.app.get(
+            url,
+            auth=self.user.auth,
+            headers={'COOKIE': 'foo=bar;'},  # Webtests doesnt support cookies?
+        )
         # test create
         assert_equal(res.status_code, 200)
         assert_equal(res.json['data']['attributes']['name'], 'NewFile')
@@ -369,28 +387,31 @@ class TestNodeFilesList(ApiTestCase):
     @responses.activate
     def test_notfound_node_file_returns_folder(self):
         self._prepare_mock_wb_response(
-            provider='github', files=[{'name': 'NewFile'}],
-            path='/file')
+            provider='github', files=[{'name': 'NewFile'}], path='/file'
+        )
         url = '/{}draft_nodes/{}/files/github/file'.format(
-            API_BASE, self.draft_node._id)
+            API_BASE, self.draft_node._id
+        )
         res = self.app.get(
-            url, auth=self.user.auth,
+            url,
+            auth=self.user.auth,
             expect_errors=True,
-            headers={'COOKIE': 'foo=bar;'}  # Webtests doesnt support cookies?
+            headers={'COOKIE': 'foo=bar;'},  # Webtests doesnt support cookies?
         )
         assert_equal(res.status_code, 404)
 
     @responses.activate
     def test_notfound_node_folder_returns_file(self):
         self._prepare_mock_wb_response(
-            provider='github', files=[{'name': 'NewFile'}],
-            folder=False, path='/')
+            provider='github', files=[{'name': 'NewFile'}], folder=False, path='/'
+        )
 
         url = '/{}draft_nodes/{}/files/github/'.format(API_BASE, self.draft_node._id)
         res = self.app.get(
-            url, auth=self.user.auth,
+            url,
+            auth=self.user.auth,
             expect_errors=True,
-            headers={'COOKIE': 'foo=bar;'}  # Webtests doesnt support cookies?
+            headers={'COOKIE': 'foo=bar;'},  # Webtests doesnt support cookies?
         )
         assert_equal(res.status_code, 404)
 
@@ -400,23 +421,26 @@ class TestNodeFilesList(ApiTestCase):
         self.add_github()
         url = '/{}draft_nodes/{}/files/github/'.format(API_BASE, self.draft_node._id)
         res = self.app.get(
-            url, auth=self.user.auth,
+            url,
+            auth=self.user.auth,
             expect_errors=True,
-            headers={'COOKIE': 'foo=bar;'}  # Webtests doesnt support cookies?
+            headers={'COOKIE': 'foo=bar;'},  # Webtests doesnt support cookies?
         )
         assert_equal(res.status_code, 503)
 
     @responses.activate
     def test_waterbutler_invalid_data_returns_503(self):
-        wb_url = waterbutler_api_url_for(self.draft_node._id, _internal=True, provider='github', path='/', meta=True, base_url=self.draft_node.osfstorage_region.waterbutler_url)
+        wb_url = waterbutler_api_url_for(
+            self.draft_node._id,
+            _internal=True,
+            provider='github',
+            path='/',
+            meta=True,
+            base_url=self.draft_node.osfstorage_region.waterbutler_url,
+        )
         self.add_github()
         responses.add(
-            responses.Response(
-                responses.GET,
-                wb_url,
-                body=json.dumps({}),
-                status=400
-            )
+            responses.Response(responses.GET, wb_url, body=json.dumps({}), status=400)
         )
         url = '/{}draft_nodes/{}/files/github/'.format(API_BASE, self.draft_node._id)
         res = self.app.get(url, auth=self.user.auth, expect_errors=True)
@@ -434,10 +458,10 @@ class TestNodeFilesList(ApiTestCase):
     @responses.activate
     def test_handles_notfound_waterbutler_request(self):
         invalid_provider = 'gilkjadsflhub'
-        self._prepare_mock_wb_response(
-            status_code=404, provider=invalid_provider)
-        url = '/{}draft_nodes/{}/files/{}/'.format(API_BASE,
-                                             self.draft_node._id, invalid_provider)
+        self._prepare_mock_wb_response(status_code=404, provider=invalid_provider)
+        url = '/{}draft_nodes/{}/files/{}/'.format(
+            API_BASE, self.draft_node._id, invalid_provider
+        )
         res = self.app.get(url, auth=self.user.auth, expect_errors=True)
         assert_equal(res.status_code, 404)
         assert_in('detail', res.json['errors'][0])
@@ -445,24 +469,28 @@ class TestNodeFilesList(ApiTestCase):
     def test_handles_request_to_provider_not_configured_on_project(self):
         provider = 'box'
         url = '/{}draft_nodes/{}/files/{}/'.format(
-            API_BASE, self.draft_node._id, provider)
+            API_BASE, self.draft_node._id, provider
+        )
         res = self.app.get(url, auth=self.user.auth, expect_errors=True)
         assert_false(self.draft_node.get_addon(provider))
         assert_equal(res.status_code, 404)
         assert_equal(
             res.json['errors'][0]['detail'],
-            'The {} provider is not configured for this project.'.format(provider))
+            'The {} provider is not configured for this project.'.format(provider),
+        )
 
     @responses.activate
     def test_handles_bad_waterbutler_request(self):
-        wb_url = waterbutler_api_url_for(self.draft_node._id, _internal=True, provider='github', path='/', meta=True, base_url=self.draft_node.osfstorage_region.waterbutler_url)
+        wb_url = waterbutler_api_url_for(
+            self.draft_node._id,
+            _internal=True,
+            provider='github',
+            path='/',
+            meta=True,
+            base_url=self.draft_node.osfstorage_region.waterbutler_url,
+        )
         responses.add(
-            responses.Response(
-                responses.GET,
-                wb_url,
-                json={'bad': 'json'},
-                status=418
-            )
+            responses.Response(responses.GET, wb_url, json={'bad': 'json'}, status=418)
         )
         self.add_github()
         url = '/{}draft_nodes/{}/files/github/'.format(API_BASE, self.draft_node._id)
@@ -477,7 +505,6 @@ class TestNodeFilesList(ApiTestCase):
 
 
 class TestNodeFilesListFiltering(ApiTestCase):
-
     def setUp(self):
         super(TestNodeFilesListFiltering, self).setUp()
         self.user = AuthUserFactory()
@@ -485,11 +512,17 @@ class TestNodeFilesListFiltering(ApiTestCase):
         self.draft_node = self.draft_reg.branched_from
         # Prep HTTP mocks
         prepare_mock_wb_response(
-            node=self.draft_node, provider='github',
+            node=self.draft_node,
+            provider='github',
             files=[
-                {'name': 'abc', 'path': '/abc/', 'materialized': '/abc/', 'kind': 'folder'},
+                {
+                    'name': 'abc',
+                    'path': '/abc/',
+                    'materialized': '/abc/',
+                    'kind': 'folder',
+                },
                 {'name': 'xyz', 'path': '/xyz', 'materialized': '/xyz', 'kind': 'file'},
-            ]
+            ],
         )
 
     def add_github(self):
@@ -507,14 +540,14 @@ class TestNodeFilesListFiltering(ApiTestCase):
         addon.external_account = oauth_settings
         addon.save()
         self.draft_node.save()
-        addon.user_settings.oauth_grants[self.draft_node._id] = {
-            oauth_settings._id: []}
+        addon.user_settings.oauth_grants[self.draft_node._id] = {oauth_settings._id: []}
         addon.user_settings.save()
 
     @responses.activate
     def test_node_files_are_filterable_by_name(self):
         url = '/{}draft_nodes/{}/files/github/?filter[name]=xyz'.format(
-            API_BASE, self.draft_node._id)
+            API_BASE, self.draft_node._id
+        )
         self.add_github()
 
         # test create
@@ -532,7 +565,8 @@ class TestNodeFilesListFiltering(ApiTestCase):
     @responses.activate
     def test_node_files_filter_by_name_case_insensitive(self):
         url = '/{}draft_nodes/{}/files/github/?filter[name]=XYZ'.format(
-            API_BASE, self.draft_node._id)
+            API_BASE, self.draft_node._id
+        )
         self.add_github()
 
         # test create
@@ -552,7 +586,8 @@ class TestNodeFilesListFiltering(ApiTestCase):
     @responses.activate
     def test_node_files_are_filterable_by_path(self):
         url = '/{}draft_nodes/{}/files/github/?filter[path]=abc'.format(
-            API_BASE, self.draft_node._id)
+            API_BASE, self.draft_node._id
+        )
         self.add_github()
 
         # test create
@@ -570,7 +605,8 @@ class TestNodeFilesListFiltering(ApiTestCase):
     @responses.activate
     def test_node_files_are_filterable_by_kind(self):
         url = '/{}draft_nodes/{}/files/github/?filter[kind]=folder'.format(
-            API_BASE, self.draft_node._id)
+            API_BASE, self.draft_node._id
+        )
         self.add_github()
 
         # test create
@@ -590,7 +626,8 @@ class TestNodeFilesListFiltering(ApiTestCase):
         yesterday_stamp = timezone.now() - datetime.timedelta(days=1)
         self.add_github()
         url = '/{}draft_nodes/{}/files/github/?filter[last_touched][gt]={}'.format(
-            API_BASE, self.draft_node._id, yesterday_stamp.isoformat())
+            API_BASE, self.draft_node._id, yesterday_stamp.isoformat()
+        )
         # test create
         res = self.app.get(url, auth=self.user.auth)
         assert_equal(res.status_code, 200)
@@ -606,7 +643,8 @@ class TestNodeFilesListFiltering(ApiTestCase):
         self.file = api_utils.create_test_file(self.draft_node, self.user)
 
         url = '/{}draft_nodes/{}/files/osfstorage/?filter[last_touched][gt]={}'.format(
-            API_BASE, self.draft_node._id, yesterday_stamp.isoformat())
+            API_BASE, self.draft_node._id, yesterday_stamp.isoformat()
+        )
 
         # test create
         res = self.app.get(url, auth=self.user.auth, expect_errors=True)
@@ -641,8 +679,7 @@ class TestNodeFilesListPagination(ApiTestCase):
         addon.external_account = oauth_settings
         addon.save()
         self.draft_node.save()
-        addon.user_settings.oauth_grants[self.draft_node._id] = {
-            oauth_settings._id: []}
+        addon.user_settings.oauth_grants[self.draft_node._id] = {oauth_settings._id: []}
         addon.user_settings.save()
 
     def check_file_order(self, resp):
@@ -655,57 +692,118 @@ class TestNodeFilesListPagination(ApiTestCase):
     @responses.activate
     def test_node_files_are_sorted_correctly(self):
         prepare_mock_wb_response(
-            node=self.draft_node, provider='github',
+            node=self.draft_node,
+            provider='github',
             files=[
-                {'name': '01', 'path': '/01/', 'materialized': '/01/', 'kind': 'folder'},
+                {
+                    'name': '01',
+                    'path': '/01/',
+                    'materialized': '/01/',
+                    'kind': 'folder',
+                },
                 {'name': '02', 'path': '/02', 'materialized': '/02', 'kind': 'file'},
-                {'name': '03', 'path': '/03/', 'materialized': '/03/', 'kind': 'folder'},
+                {
+                    'name': '03',
+                    'path': '/03/',
+                    'materialized': '/03/',
+                    'kind': 'folder',
+                },
                 {'name': '04', 'path': '/04', 'materialized': '/04', 'kind': 'file'},
-                {'name': '05', 'path': '/05/', 'materialized': '/05/', 'kind': 'folder'},
+                {
+                    'name': '05',
+                    'path': '/05/',
+                    'materialized': '/05/',
+                    'kind': 'folder',
+                },
                 {'name': '06', 'path': '/06', 'materialized': '/06', 'kind': 'file'},
-                {'name': '07', 'path': '/07/', 'materialized': '/07/', 'kind': 'folder'},
+                {
+                    'name': '07',
+                    'path': '/07/',
+                    'materialized': '/07/',
+                    'kind': 'folder',
+                },
                 {'name': '08', 'path': '/08', 'materialized': '/08', 'kind': 'file'},
-                {'name': '09', 'path': '/09/', 'materialized': '/09/', 'kind': 'folder'},
+                {
+                    'name': '09',
+                    'path': '/09/',
+                    'materialized': '/09/',
+                    'kind': 'folder',
+                },
                 {'name': '10', 'path': '/10', 'materialized': '/10', 'kind': 'file'},
-                {'name': '11', 'path': '/11/', 'materialized': '/11/', 'kind': 'folder'},
+                {
+                    'name': '11',
+                    'path': '/11/',
+                    'materialized': '/11/',
+                    'kind': 'folder',
+                },
                 {'name': '12', 'path': '/12', 'materialized': '/12', 'kind': 'file'},
-                {'name': '13', 'path': '/13/', 'materialized': '/13/', 'kind': 'folder'},
+                {
+                    'name': '13',
+                    'path': '/13/',
+                    'materialized': '/13/',
+                    'kind': 'folder',
+                },
                 {'name': '14', 'path': '/14', 'materialized': '/14', 'kind': 'file'},
-                {'name': '15', 'path': '/15/', 'materialized': '/15/', 'kind': 'folder'},
+                {
+                    'name': '15',
+                    'path': '/15/',
+                    'materialized': '/15/',
+                    'kind': 'folder',
+                },
                 {'name': '16', 'path': '/16', 'materialized': '/16', 'kind': 'file'},
-                {'name': '17', 'path': '/17/', 'materialized': '/17/', 'kind': 'folder'},
+                {
+                    'name': '17',
+                    'path': '/17/',
+                    'materialized': '/17/',
+                    'kind': 'folder',
+                },
                 {'name': '18', 'path': '/18', 'materialized': '/18', 'kind': 'file'},
-                {'name': '19', 'path': '/19/', 'materialized': '/19/', 'kind': 'folder'},
+                {
+                    'name': '19',
+                    'path': '/19/',
+                    'materialized': '/19/',
+                    'kind': 'folder',
+                },
                 {'name': '20', 'path': '/20', 'materialized': '/20', 'kind': 'file'},
-                {'name': '21', 'path': '/21/', 'materialized': '/21/', 'kind': 'folder'},
+                {
+                    'name': '21',
+                    'path': '/21/',
+                    'materialized': '/21/',
+                    'kind': 'folder',
+                },
                 {'name': '22', 'path': '/22', 'materialized': '/22', 'kind': 'file'},
-                {'name': '23', 'path': '/23/', 'materialized': '/23/', 'kind': 'folder'},
+                {
+                    'name': '23',
+                    'path': '/23/',
+                    'materialized': '/23/',
+                    'kind': 'folder',
+                },
                 {'name': '24', 'path': '/24', 'materialized': '/24', 'kind': 'file'},
-            ]
+            ],
         )
         self.add_github()
         url = '/{}draft_nodes/{}/files/github/?page[size]=100'.format(
-            API_BASE, self.draft_node._id)
+            API_BASE, self.draft_node._id
+        )
         res = self.app.get(url, auth=self.user.auth)
         self.check_file_order(res)
 
 
 class TestDraftNodeStorageProviderDetail(ApiTestCase):
-
     def setUp(self):
         super(TestDraftNodeStorageProviderDetail, self).setUp()
         self.user = AuthUserFactory()
         self.draft_reg = DraftRegistrationFactory(initiator=self.user)
         self.draft_node = self.draft_reg.branched_from
         self.private_url = '/{}draft_nodes/{}/files/providers/osfstorage/'.format(
-            API_BASE, self.draft_node._id)
+            API_BASE, self.draft_node._id
+        )
 
     def test_can_view_if_contributor(self):
         res = self.app.get(self.private_url, auth=self.user.auth)
         assert_equal(res.status_code, 200)
         assert_equal(
-            res.json['data']['id'],
-            '{}:osfstorage'.format(self.draft_node._id)
+            res.json['data']['id'], '{}:osfstorage'.format(self.draft_node._id)
         )
 
     def test_cannot_view_if_private(self):

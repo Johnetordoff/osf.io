@@ -12,8 +12,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='abstractnode',
-            name='users_watching_node',
-        ),
+        migrations.RemoveField(model_name='abstractnode', name='users_watching_node',),
     ]

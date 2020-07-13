@@ -24,6 +24,7 @@ class DeskClient(object):
     and password. The suggested way to do this in the Desk docs for
     a single person is to use Basic Auth.
     """
+
     BASE_URL = 'desk.com/api/v2'
     SITE_NAME = 'openscience'
 
@@ -32,7 +33,7 @@ class DeskClient(object):
             settings.DESK_KEY,
             client_secret=settings.DESK_KEY_SECRET,
             resource_owner_key=user.admin_profile.desk_token,
-            resource_owner_secret=user.admin_profile.desk_token_secret
+            resource_owner_secret=user.admin_profile.desk_token_secret,
         )
 
     def build_url(self, service):
@@ -65,25 +66,23 @@ class DeskClient(object):
         except DeskError:
             raise
         if customer_json['total_entries'] == 0:
-            raise DeskCustomerNotFound('Could not find customer with params: {}'.format(params))
+            raise DeskCustomerNotFound(
+                'Could not find customer with params: {}'.format(params)
+            )
         customer = customer_json['_embedded']['entries'][0]
         customer_data = {
             'id': customer['id'],
-            'name': '{} {}'.format(
-                customer['first_name'], customer['last_name']),
+            'name': '{} {}'.format(customer['first_name'], customer['last_name']),
             'emails': customer['emails'],
             'background': customer['background'],
             'company': customer['company'],
-            'link': customer['_links']['self']
+            'link': customer['_links']['self'],
         }
         return customer_data
 
     def cases(self, params):
         case_list = [None]
-        params.update({
-            'sort_field': 'created_at',
-            'sort_direction': 'desc'
-        })
+        params.update({'sort_field': 'created_at', 'sort_direction': 'desc'})
         try:
             case_list = self.call_get('cases/search', params)
         except DeskError:

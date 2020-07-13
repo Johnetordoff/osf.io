@@ -10,7 +10,6 @@ from api.base.settings.defaults import API_BASE
 
 @pytest.mark.django_db
 class TestBrand:
-
     @pytest.fixture()
     def brand1(self):
         return BrandFactory()
@@ -44,7 +43,7 @@ class TestBrand:
                     'primary_color': '#8806ab',
                     'secondary_color': '#dfd126',
                 },
-                'relationships': {}
+                'relationships': {},
             }
         }
 
@@ -56,7 +55,9 @@ class TestBrand:
         assert len(data) == 2
 
         # Ensures that a Brand cannot be created through the API
-        res = app.post_json_api(url_brand_list, payload, auth=user.auth, expect_errors=True)
+        res = app.post_json_api(
+            url_brand_list, payload, auth=user.auth, expect_errors=True
+        )
         assert res.status_code == 405
 
     def test_brand_detail(self, app, url_brand_detail, user, brand1, payload):
@@ -68,5 +69,7 @@ class TestBrand:
         assert data['attributes']['name'] == brand1.name
 
         # Ensures that a Brand cannot be edited through the API
-        res = app.put_json_api(url_brand_detail, payload, auth=user.auth, expect_errors=True)
+        res = app.put_json_api(
+            url_brand_detail, payload, auth=user.auth, expect_errors=True
+        )
         assert res.status_code == 405

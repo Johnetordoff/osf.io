@@ -42,62 +42,57 @@ def populate_preprint_metrics(preprints, dates, avg_counts, group_counts=False):
                     preprint=preprint,
                     path=preprint.primary_file.path,
                     timestamp=date,
-                    count=preprint_view_count
+                    count=preprint_view_count,
                 )
 
                 PreprintDownload.record_for_preprint(
                     preprint=preprint,
                     path=preprint.primary_file.path,
                     timestamp=date,
-                    count=preprint_download_count
+                    count=preprint_download_count,
                 )
             else:
                 for count in range(preprint_view_count):
                     PreprintView.record_for_preprint(
                         preprint=preprint,
                         path=preprint.primary_file.path,
-                        timestamp=date
+                        timestamp=date,
                     )
 
                 for count in range(preprint_download_count):
                     PreprintDownload.record_for_preprint(
                         preprint=preprint,
                         path=preprint.primary_file.path,
-                        timestamp=date
+                        timestamp=date,
                     )
 
 
 class Command(BaseCommand):
-
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
-        parser.add_argument(
-            '--preprints',
-            nargs='*',
-            help='Specify preprints guids'
-        )
+        parser.add_argument('--preprints', nargs='*', help='Specify preprints guids')
         parser.add_argument(
             '--num_preprints',
             type=int,
             default=3,
-            help='Specify number of preprints to use if not specifying preprints'
+            help='Specify number of preprints to use if not specifying preprints',
         )
         parser.add_argument(
             '--days',
             type=int,
             default=7,
-            help='Specify number of past days to write metrics data for'
+            help='Specify number of past days to write metrics data for',
         )
         parser.add_argument(
             '--group_counts',
             action='store_true',
-            help='Group counts in metric records for fewer ES requests'
+            help='Group counts in metric records for fewer ES requests',
         )
         parser.add_argument(
             '--avg_counts',
             type=int,
             default=25,
-            help='Average number of counts to write per day per preprint'
+            help='Average number of counts to write per day per preprint',
         )
 
     def handle(self, *args, **options):
@@ -112,6 +107,8 @@ class Command(BaseCommand):
             preprints = Preprint.objects.all()[:num_preprints]
 
         today = dt.datetime.today()
-        last_x_days = [(today - dt.timedelta(days=num_days)) for num_days in range(0, days)]
+        last_x_days = [
+            (today - dt.timedelta(days=num_days)) for num_days in range(0, days)
+        ]
 
         populate_preprint_metrics(preprints, last_x_days, avg_counts, group_counts)

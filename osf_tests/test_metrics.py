@@ -6,12 +6,14 @@ from osf.metrics import MetricMixin
 from osf.models import OSFUser
 from osf_tests.factories import UserFactory
 
+
 class DummyMetric(MetricMixin, metrics.Metric):
     count = metrics.Integer(doc_values=True, index=True, required=True)
     user_id = metrics.Keyword(index=True, doc_values=True, required=False)
 
     class Meta:
         app_label = 'osf'
+
 
 @pytest.mark.django_db
 @mock.patch.object(DummyMetric, '_get_id_to_count')

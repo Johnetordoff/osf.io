@@ -16,11 +16,21 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='abstractnode',
             name='provider',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='registrations', to='osf.RegistrationProvider'),
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='registrations',
+                to='osf.RegistrationProvider',
+            ),
         ),
         migrations.AddField(
             model_name='draftregistration',
             name='provider',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='draft_registrations', to='osf.RegistrationProvider'),
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='draft_registrations',
+                to='osf.RegistrationProvider',
+            ),
         ),
     ]

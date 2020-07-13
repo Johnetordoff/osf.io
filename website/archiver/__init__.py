@@ -27,10 +27,12 @@ NO_ARCHIVE_LIMIT = 'high_upload_limit'
 # StatResult and AggregateStatResult are dict subclasses because they are used
 # in celery tasks, and celery serializes to JSON by default
 
+
 class StatResult(dict):
     """
     Helper class to collect metadata about a single file
     """
+
     num_files = 1
 
     def __init__(self, target_id, target_name, disk_usage=0):
@@ -38,34 +40,36 @@ class StatResult(dict):
         self.target_name = target_name
         self.disk_usage = float(disk_usage)
 
-        self.update({
-            'target_id': self.target_id,
-            'target_name': self.target_name,
-            'disk_usage': self.disk_usage,
-            'num_files': self.num_files
-        })
+        self.update(
+            {
+                'target_id': self.target_id,
+                'target_name': self.target_name,
+                'disk_usage': self.disk_usage,
+                'num_files': self.num_files,
+            }
+        )
 
 
 class AggregateStatResult(dict):
     """
     Helper class to collect metadata about arbitrary depth file/addon/node file trees
     """
+
     def __init__(self, target_id, target_name, targets=None):
         self.target_id = target_id
         self.target_name = target_name
         targets = targets or []
         self.targets = [target for target in targets if target]
 
-        self.update({
-            'target_id': self.target_id,
-            'target_name': self.target_name,
-            'targets': [
-                target
-                for target in self.targets
-            ],
-            'num_files': self.num_files,
-            'disk_usage': self.disk_usage,
-        })
+        self.update(
+            {
+                'target_id': self.target_id,
+                'target_name': self.target_name,
+                'targets': [target for target in self.targets],
+                'num_files': self.num_files,
+                'disk_usage': self.disk_usage,
+            }
+        )
 
     @property
     def num_files(self):

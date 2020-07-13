@@ -12,7 +12,6 @@ from osf.models import Node
 
 
 class FrameworkUtilsTestCase(OsfTestCase):
-
     def test_get_or_http_error_by_pk_found(self):
         n = factories.NodeFactory()
         found = get_or_http_error(Node, n._id)
@@ -24,7 +23,9 @@ class FrameworkUtilsTestCase(OsfTestCase):
 
     def test_get_or_http_error_by_query_found(self):
         n = factories.NodeFactory()
-        found = get_or_http_error(Node, Q(title=n.title, guids___id=n._id, guids___id__isnull=False))
+        found = get_or_http_error(
+            Node, Q(title=n.title, guids___id=n._id, guids___id__isnull=False)
+        )
         assert found == n
 
     def test_get_or_http_error_by_query_not_found(self):

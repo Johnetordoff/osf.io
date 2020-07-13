@@ -12,8 +12,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RenameModel(
-            old_name='MetaSchema',
-            new_name='RegistrationSchema',
-        ),
+        migrations.RenameModel(old_name='MetaSchema', new_name='RegistrationSchema',),
     ]

@@ -28,13 +28,13 @@ DATABASES = {
         'HOST': os.environ.get('OSF_DB_HOST', '127.0.0.1'),
         'PORT': os.environ.get('OSF_DB_PORT', '5432'),
         'ATOMIC_REQUESTS': True,
-        'TEST': {
-            'SERIALIZE': False,
-        },
+        'TEST': {'SERIALIZE': False,},
     },
 }
 
-DATABASE_ROUTERS = ['osf.db.router.PostgreSQLFailoverRouter', ]
+DATABASE_ROUTERS = [
+    'osf.db.router.PostgreSQLFailoverRouter',
+]
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
     'django.contrib.auth.hashers.BCryptPasswordHasher',
@@ -80,7 +80,6 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.staticfiles',
     'django.contrib.admin',
-
     # 3rd party
     'django_celery_beat',
     'django_celery_results',
@@ -92,10 +91,8 @@ INSTALLED_APPS = (
     'storages',
     'waffle',
     'elasticsearch_metrics',
-
     # OSF
     'osf',
-
     # Addons
     'addons.osfstorage',
     'addons.bitbucket',
@@ -220,7 +217,6 @@ MIDDLEWARE = (
     # A profiling middleware. ONLY FOR DEV USE
     # Uncomment and add "prof" to url params to recieve a profile for that url
     # 'api.base.middleware.ProfileMiddleware',
-
     # 'django.contrib.sessions.middleware.SessionMiddleware',
     'api.base.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -286,8 +282,24 @@ ENABLE_ESI = osf_settings.ENABLE_ESI
 VARNISH_SERVERS = osf_settings.VARNISH_SERVERS
 ESI_MEDIA_TYPES = osf_settings.ESI_MEDIA_TYPES
 
-ADDONS_FOLDER_CONFIGURABLE = ['box', 'dropbox', 's3', 'googledrive', 'figshare', 'owncloud', 'onedrive']
-ADDONS_OAUTH = ADDONS_FOLDER_CONFIGURABLE + ['dataverse', 'github', 'bitbucket', 'gitlab', 'mendeley', 'zotero', 'forward']
+ADDONS_FOLDER_CONFIGURABLE = [
+    'box',
+    'dropbox',
+    's3',
+    'googledrive',
+    'figshare',
+    'owncloud',
+    'onedrive',
+]
+ADDONS_OAUTH = ADDONS_FOLDER_CONFIGURABLE + [
+    'dataverse',
+    'github',
+    'bitbucket',
+    'gitlab',
+    'mendeley',
+    'zotero',
+    'forward',
+]
 
 BYPASS_THROTTLE_TOKEN = 'test-token'
 
@@ -322,16 +334,12 @@ STORAGE_USAGE_CACHE_NAME = 'storage_usage'
 
 
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-    },
+    'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',},
     STORAGE_USAGE_CACHE_NAME: {
         'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
         'LOCATION': 'osf_cache_table',
     },
-    WAFFLE_CACHE_NAME: {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-    },
+    WAFFLE_CACHE_NAME: {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',},
 }
 
 SLOAN_ID_COOKIE_NAME = 'sloan_id'

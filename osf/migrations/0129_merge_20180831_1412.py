@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0126_update_social_data_format'),
     ]
 
-    operations = [
-    ]
+    operations = []

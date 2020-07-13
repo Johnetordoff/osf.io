@@ -24,7 +24,9 @@ class RequestMixin(object):
     target_lookup_url_kwarg = None
     request_lookup_url_kwarg = None
 
-    def __get_object(self, object_class, lookup_arg, display_name, check_object_permissions=True):
+    def __get_object(
+        self, object_class, lookup_arg, display_name, check_object_permissions=True,
+    ):
         obj = get_object_or_error(
             object_class,
             self.kwargs[lookup_arg],
@@ -39,10 +41,20 @@ class RequestMixin(object):
         return obj
 
     def get_request(self, check_object_permissions=True):
-        return self.__get_object(self.request_class, self.request_lookup_url_kwarg, self.request_display_name, check_object_permissions=check_object_permissions)
+        return self.__get_object(
+            self.request_class,
+            self.request_lookup_url_kwarg,
+            self.request_display_name,
+            check_object_permissions=check_object_permissions,
+        )
 
     def get_target(self, check_object_permissions=True):
-        return self.__get_object(self.target_class, self.target_lookup_url_kwarg, self.target_display_name, check_object_permissions=check_object_permissions)
+        return self.__get_object(
+            self.target_class,
+            self.target_lookup_url_kwarg,
+            self.target_display_name,
+            check_object_permissions=check_object_permissions,
+        )
 
 
 class NodeRequestMixin(RequestMixin):
@@ -71,7 +83,9 @@ class RequestDetail(JSONAPIBaseView, generics.RetrieveAPIView):
         base_permissions.TokenHasScope,
     )
 
-    required_read_scopes = [CoreScopes.ALWAYS_PUBLIC]  # Actual scope checks are done on subview.as_view
+    required_read_scopes = [
+        CoreScopes.ALWAYS_PUBLIC,
+    ]  # Actual scope checks are done on subview.as_view
     required_write_scopes = [CoreScopes.NULL]
     view_category = 'requests'
     view_name = 'request-detail'
@@ -84,6 +98,7 @@ class RequestDetail(JSONAPIBaseView, generics.RetrieveAPIView):
             return PreprintRequestDetail.as_view()(request._request, *args, **kwargs)
         else:
             raise NotFound
+
 
 class NodeRequestDetail(JSONAPIBaseView, generics.RetrieveAPIView, NodeRequestMixin):
     permission_classes = (
@@ -103,7 +118,10 @@ class NodeRequestDetail(JSONAPIBaseView, generics.RetrieveAPIView, NodeRequestMi
     def get_object(self):
         return self.get_request()
 
-class PreprintRequestDetail(JSONAPIBaseView, generics.RetrieveAPIView, PreprintRequestMixin):
+
+class PreprintRequestDetail(
+    JSONAPIBaseView, generics.RetrieveAPIView, PreprintRequestMixin,
+):
     permission_classes = (
         permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -121,6 +139,7 @@ class PreprintRequestDetail(JSONAPIBaseView, generics.RetrieveAPIView, PreprintR
     def get_object(self):
         return self.get_request()
 
+
 class RequestActionList(JSONAPIBaseView, generics.ListAPIView):
     permission_classes = (
         permissions.IsAuthenticatedOrReadOnly,
@@ -136,11 +155,16 @@ class RequestActionList(JSONAPIBaseView, generics.ListAPIView):
     def get(self, request, *args, **kwargs):
         request_id = self.kwargs['request_id']
         if PreprintRequest.objects.filter(_id=request_id).exists():
-            return PreprintRequestActionList.as_view()(request._request, *args, **kwargs)
+            return PreprintRequestActionList.as_view()(
+                request._request, *args, **kwargs
+            )
         else:
             raise NotFound
 
-class PreprintRequestActionList(JSONAPIBaseView, generics.ListAPIView, PreprintRequestMixin, ListFilterMixin):
+
+class PreprintRequestActionList(
+    JSONAPIBaseView, generics.ListAPIView, PreprintRequestMixin, ListFilterMixin,
+):
     permission_classes = (
         permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,

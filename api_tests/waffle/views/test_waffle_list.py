@@ -7,13 +7,13 @@ from osf_tests.factories import (
     AuthUserFactory,
     FlagFactory,
     SampleFactory,
-    SwitchFactory
+    SwitchFactory,
 )
 from api.base.pagination import MaxSizePagination
 
+
 @pytest.mark.django_db
 class TestWaffleList:
-
     @pytest.fixture()
     def user(self):
         return AuthUserFactory()
@@ -45,7 +45,12 @@ class TestWaffleList:
     def test_waffle_flag_no_filter(self, app, user, url, inactive_flag, active_flag):
         res = app.get(url, auth=user.auth)
         assert res.status_code == 200
-        assert len(res.json['data']) == Flag.objects.all().count() + Switch.objects.all().count() + Sample.objects.all().count()
+        assert (
+            len(res.json['data'])
+            == Flag.objects.all().count()
+            + Switch.objects.all().count()
+            + Sample.objects.all().count()
+        )
 
     def test_waffle_flag_filter_active(self, app, user, flag_url, active_flag):
         res = app.get(flag_url, auth=user.auth)
@@ -54,13 +59,20 @@ class TestWaffleList:
         assert res.json['data'][0]['attributes']['name'] == 'active_flag'
         assert res.json['data'][0]['attributes']['active'] is True
 
-    def test_waffle_flag_filter_does_not_exist(self, app, user, url, inactive_flag, active_flag):
+    def test_waffle_flag_filter_does_not_exist(
+        self, app, user, url, inactive_flag, active_flag
+    ):
         res = app.get(url + '?flags=jibberish', auth=user.auth)
         assert res.status_code == 200
         assert len(res.json['data']) == 0
 
-    def test_filter_waffle_samples_flags_and_switches(self, app, user, url, inactive_flag, active_flag, active_sample, inactive_switch):
-        res = app.get(url + '?flags=active_flag&samples=active_sample&switches=inactive_switch', auth=user.auth)
+    def test_filter_waffle_samples_flags_and_switches(
+        self, app, user, url, inactive_flag, active_flag, active_sample, inactive_switch
+    ):
+        res = app.get(
+            url + '?flags=active_flag&samples=active_sample&switches=inactive_switch',
+            auth=user.auth,
+        )
         assert res.status_code == 200
         assert len(res.json['data']) == 3
 

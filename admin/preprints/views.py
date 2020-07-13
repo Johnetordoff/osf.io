@@ -20,7 +20,7 @@ from osf.models.admin_log_entry import (
     CONFIRM_SPAM,
     CONFIRM_HAM,
     APPROVE_WITHDRAWAL,
-    REJECT_WITHDRAWAL
+    REJECT_WITHDRAWAL,
 )
 
 from website.preprints.tasks import update_preprint_share
@@ -30,8 +30,17 @@ from website import search
 from framework.exceptions import PermissionsError
 from admin.base.views import GuidFormView, GuidView
 from admin.nodes.templatetags.node_extras import reverse_preprint
-from admin.nodes.views import NodeDeleteBase, NodeRemoveContributorView, NodeConfirmSpamView, NodeConfirmHamView
-from admin.preprints.serializers import serialize_preprint, serialize_simple_user_and_preprint_permissions, serialize_withdrawal_request
+from admin.nodes.views import (
+    NodeDeleteBase,
+    NodeRemoveContributorView,
+    NodeConfirmSpamView,
+    NodeConfirmHamView,
+)
+from admin.preprints.serializers import (
+    serialize_preprint,
+    serialize_simple_user_and_preprint_permissions,
+    serialize_withdrawal_request,
+)
 from admin.preprints.forms import ChangeProviderForm
 
 
@@ -46,6 +55,7 @@ class PreprintFormView(PreprintMixin, GuidFormView):
     """ Allow authorized admin user to input specific preprint guid.
     Basic form. No admin models.
     """
+
     template_name = 'preprints/search.html'
     object_type = 'preprint'
     permission_required = 'osf.view_preprint'
@@ -60,6 +70,7 @@ class PreprintView(PreprintMixin, UpdateView, GuidView):
     """ Allow authorized admin user to view preprints
     View of OSF database. No admin models.
     """
+
     template_name = 'preprints/preprint.html'
     context_object_name = 'preprint'
     permission_required = 'osf.view_preprint'
@@ -67,12 +78,16 @@ class PreprintView(PreprintMixin, UpdateView, GuidView):
     form_class = ChangeProviderForm
 
     def get_success_url(self):
-        return reverse_lazy('preprints:preprint', kwargs={'guid': self.kwargs.get('guid')})
+        return reverse_lazy(
+            'preprints:preprint', kwargs={'guid': self.kwargs.get('guid')}
+        )
 
     def post(self, request, *args, **kwargs):
         old_provider = self.get_object().provider
         if not request.user.has_perm('osf.change_preprint'):
-            raise PermissionsError("This user does not have permission to update this preprint's provider.")
+            raise PermissionsError(
+                "This user does not have permission to update this preprint's provider."
+            )
         response = super(PreprintView, self).post(request, *args, **kwargs)
         new_provider = self.get_object().provider
         if new_provider and old_provider.id != new_provider.id:
@@ -84,14 +99,21 @@ class PreprintView(PreprintMixin, UpdateView, GuidView):
         # TODO - we shouldn't need this serialized_preprint value -- https://openscience.atlassian.net/browse/OSF-7743
         kwargs['serialized_preprint'] = serialize_preprint(preprint)
         kwargs['change_provider_form'] = ChangeProviderForm(instance=preprint)
-        kwargs.update({'SPAM_STATUS': SpamStatus})  # Pass spam status in to check against
+        kwargs.update(
+            {'SPAM_STATUS': SpamStatus}
+        )  # Pass spam status in to check against
         kwargs.update({'message': kwargs.get('message')})
         return super(PreprintView, self).get_context_data(**kwargs)
 
     def update_subjects_for_provider(self, request, old_provider, new_provider):
-        subject_problems = self.object.map_subjects_between_providers(old_provider, new_provider, auth=None)
+        subject_problems = self.object.map_subjects_between_providers(
+            old_provider, new_provider, auth=None
+        )
         if subject_problems:
-            messages.warning(request, 'Unable to find subjects in new provider for the following subject(s):')
+            messages.warning(
+                request,
+                'Unable to find subjects in new provider for the following subject(s):',
+            )
             for problem in subject_problems:
                 messages.warning(request, problem)
 
@@ -101,19 +123,22 @@ class PreprintSpamList(PermissionRequiredMixin, ListView):
 
     paginate_by = 25
     paginate_orphans = 1
-    ordering = ('created')
+    ordering = 'created'
     context_object_name = 'preprint'
     permission_required = ('osf.view_spam', 'osf.view_preprint')
     raise_exception = True
 
     def get_queryset(self):
-        return Preprint.objects.filter(spam_status=self.SPAM_STATE).order_by(self.ordering)
+        return Preprint.objects.filter(spam_status=self.SPAM_STATE).order_by(
+            self.ordering
+        )
 
     def get_context_data(self, **kwargs):
         query_set = kwargs.pop('object_list', self.object_list)
         page_size = self.get_paginate_by(query_set)
         paginator, page, query_set, is_paginated = self.paginate_queryset(
-            query_set, page_size)
+            query_set, page_size
+        )
         return {
             'preprints': list(map(serialize_preprint, query_set)),
             'page': page,
@@ -142,7 +167,7 @@ class PreprintReindexShare(PreprintMixin, DeleteView):
             object_id=preprint._id,
             object_repr='Preprint',
             message='Preprint Reindexed (SHARE): {}'.format(preprint._id),
-            action_flag=REINDEX_SHARE
+            action_flag=REINDEX_SHARE,
         )
         return redirect(reverse_preprint(self.kwargs.get('guid')))
 
@@ -160,7 +185,7 @@ class PreprintReindexElastic(PreprintMixin, NodeDeleteBase):
             object_id=preprint._id,
             object_repr='Preprint',
             message='Preprint Reindexed (Elastic): {}'.format(preprint._id),
-            action_flag=REINDEX_ELASTIC
+            action_flag=REINDEX_ELASTIC,
         )
         return redirect(reverse_preprint(self.kwargs.get('guid')))
 
@@ -175,6 +200,7 @@ class PreprintRemoveContributorView(NodeRemoveContributorView):
     """ Allow authorized admin user to remove preprint contributor
     Interface with OSF database. No admin models.
     """
+
     context_object_name = 'preprint'
     permission_required = ('osf.view_preprint', 'osf.change_preprint')
 
@@ -182,10 +208,7 @@ class PreprintRemoveContributorView(NodeRemoveContributorView):
         osf_log = PreprintLog(
             action=PreprintLog.CONTRIB_REMOVED,
             user=None,
-            params={
-                'preprint': preprint._id,
-                'contributors': user._id
-            },
+            params={'preprint': preprint._id, 'contributors': user._id},
             should_hide=True,
         )
         return osf_log.save()
@@ -198,20 +221,25 @@ class PreprintRemoveContributorView(NodeRemoveContributorView):
         context = {}
         preprint, user = kwargs.get('object')
         context.setdefault('guid', preprint._id)
-        context.setdefault('user', serialize_simple_user_and_preprint_permissions(preprint, user))
+        context.setdefault(
+            'user', serialize_simple_user_and_preprint_permissions(preprint, user)
+        )
         context.setdefault('resource_type', 'preprint')
         context.setdefault('link', 'preprints:remove_user')
         return super(NodeRemoveContributorView, self).get_context_data(**context)
 
     def get_object(self, queryset=None):
-        return (Preprint.load(self.kwargs.get('guid')),
-                OSFUser.load(self.kwargs.get('user_id')))
+        return (
+            Preprint.load(self.kwargs.get('guid')),
+            OSFUser.load(self.kwargs.get('user_id')),
+        )
 
 
 class PreprintDeleteView(PreprintMixin, NodeDeleteBase):
     """ Allow authorized admin user to remove/hide preprints
     Interface with OSF database. No admin models.
     """
+
     template_name = 'nodes/remove_node.html'
     object = None
     permission_required = ('osf.view_preprint', 'osf.delete_preprint')
@@ -246,16 +274,14 @@ class PreprintDeleteView(PreprintMixin, NodeDeleteBase):
                     object_id=preprint.pk,
                     object_repr='Preprint',
                     message=message,
-                    action_flag=flag
+                    action_flag=flag,
                 )
             if osf_flag is not None:
                 # Log invisibly on the OSF.
                 osf_log = PreprintLog(
                     action=osf_flag,
                     user=None,
-                    params={
-                        'preprint': preprint._id,
-                    },
+                    params={'preprint': preprint._id,},
                     should_hide=True,
                 )
                 osf_log.save()
@@ -264,12 +290,12 @@ class PreprintDeleteView(PreprintMixin, NodeDeleteBase):
                 request,
                 AttributeError(
                     '{} with id "{}" not found.'.format(
-                        self.context_object_name.title(),
-                        kwargs.get('guid')
+                        self.context_object_name.title(), kwargs.get('guid')
                     )
-                )
+                ),
             )
         return redirect(reverse_preprint(self.kwargs.get('guid')))
+
 
 class PreprintRequestDeleteBase(DeleteView):
     template_name = None
@@ -286,7 +312,9 @@ class PreprintRequestDeleteBase(DeleteView):
         return PreprintRequest.objects.filter(
             request_type='withdrawal',
             target__guids___id=self.kwargs.get('guid'),
-            target__provider__reviews_workflow=None).first()
+            target__provider__reviews_workflow=None,
+        ).first()
+
 
 class PreprintWithdrawalRequestList(PermissionRequiredMixin, ListView):
 
@@ -299,16 +327,20 @@ class PreprintWithdrawalRequestList(PermissionRequiredMixin, ListView):
     context_object_name = 'preprintrequest'
 
     def get_queryset(self):
-        return PreprintRequest.objects.filter(
-            request_type='withdrawal',
-            target__provider__reviews_workflow=None).exclude(
-                machine_state='initial').order_by(self.ordering)
+        return (
+            PreprintRequest.objects.filter(
+                request_type='withdrawal', target__provider__reviews_workflow=None
+            )
+            .exclude(machine_state='initial')
+            .order_by(self.ordering)
+        )
 
     def get_context_data(self, **kwargs):
         query_set = kwargs.pop('object_list', self.object_list)
         page_size = self.get_paginate_by(query_set)
         paginator, page, query_set, is_paginated = self.paginate_queryset(
-            query_set, page_size)
+            query_set, page_size
+        )
         return {
             'requests': list(map(serialize_withdrawal_request, query_set)),
             'page': page,
@@ -316,29 +348,44 @@ class PreprintWithdrawalRequestList(PermissionRequiredMixin, ListView):
 
     def post(self, request, *args, **kwargs):
         if not request.user.has_perm('osf.change_preprintrequest'):
-            raise PermissionDenied('You do not have permission to approve or reject withdrawal requests.')
+            raise PermissionDenied(
+                'You do not have permission to approve or reject withdrawal requests.'
+            )
         is_approve_action = 'approveRequest' in request.POST.keys()
         request_ids = [
-            id_ for id_ in request.POST.keys()
+            id_
+            for id_ in request.POST.keys()
             if id_ not in ['csrfmiddlewaretoken', 'approveRequest', 'rejectRequest']
         ]
         for id_ in request_ids:
             withdrawal_request = PreprintRequest.load(id_)
             if is_approve_action:
-                withdrawal_request.run_accept(self.request.user, withdrawal_request.comment)
+                withdrawal_request.run_accept(
+                    self.request.user, withdrawal_request.comment
+                )
             else:
-                withdrawal_request.run_reject(self.request.user, withdrawal_request.comment)
+                withdrawal_request.run_reject(
+                    self.request.user, withdrawal_request.comment
+                )
             update_admin_log(
                 user_id=self.request.user.id,
                 object_id=id_,
                 object_repr='PreprintRequest',
-                message='{} withdrawal request: {} of preprint {}'.format('Approved' if is_approve_action else 'Rejected', id_, withdrawal_request.target._id),
-                action_flag=APPROVE_WITHDRAWAL if is_approve_action else REJECT_WITHDRAWAL
+                message='{} withdrawal request: {} of preprint {}'.format(
+                    'Approved' if is_approve_action else 'Rejected',
+                    id_,
+                    withdrawal_request.target._id,
+                ),
+                action_flag=APPROVE_WITHDRAWAL
+                if is_approve_action
+                else REJECT_WITHDRAWAL,
             )
         return redirect('preprints:withdrawal-requests')
 
 
-class PreprintApproveWithdrawalRequest(PermissionRequiredMixin, PreprintRequestDeleteBase):
+class PreprintApproveWithdrawalRequest(
+    PermissionRequiredMixin, PreprintRequestDeleteBase
+):
     template_name = 'preprints/approve_withdrawal.html'
     permission_required = 'osf.change_preprintrequest'
     raise_exception = True
@@ -355,7 +402,10 @@ class PreprintApproveWithdrawalRequest(PermissionRequiredMixin, PreprintRequestD
         )
         return redirect(reverse_preprint(self.kwargs.get('guid')))
 
-class PreprintRejectWithdrawalRequest(PermissionRequiredMixin, PreprintRequestDeleteBase):
+
+class PreprintRejectWithdrawalRequest(
+    PermissionRequiredMixin, PreprintRequestDeleteBase
+):
     template_name = 'preprints/reject_withdrawal.html'
     permission_required = 'osf.change_preprintrequest'
     raise_exception = True
@@ -372,13 +422,16 @@ class PreprintRejectWithdrawalRequest(PermissionRequiredMixin, PreprintRequestDe
         )
         return redirect(reverse_preprint(self.kwargs.get('guid')))
 
+
 class PreprintFlaggedSpamList(PreprintSpamList, DeleteView):
     SPAM_STATE = SpamStatus.FLAGGED
     template_name = 'preprints/flagged_spam_list.html'
 
     def delete(self, request, *args, **kwargs):
         if not request.user.has_perm('osf.mark_spam'):
-            raise PermissionDenied('You do not have permission to update a preprint flagged as spam.')
+            raise PermissionDenied(
+                'You do not have permission to update a preprint flagged as spam.'
+            )
         preprint_ids = []
         for key in list(request.POST.keys()):
             if key == 'spam_confirm':
@@ -404,7 +457,7 @@ class PreprintFlaggedSpamList(PreprintSpamList, DeleteView):
                 object_id=pid,
                 object_repr='Preprint',
                 message=f'Confirmed {action}: {pid}',
-                action_flag=action_flag
+                action_flag=action_flag,
             )
         return redirect('preprints:flagged-spam')
 

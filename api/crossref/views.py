@@ -18,9 +18,7 @@ class ParseCrossRefConfirmation(APIView):
     view_name = 'parse_crossref_confirmation_email'
     view_category = 'identifiers'
 
-    permission_classes = (
-        RequestComesFromMailgun,
-    )
+    permission_classes = (RequestComesFromMailgun,)
 
     @csrf_exempt
     def dispatch(self, request, *args, **kwargs):
@@ -30,8 +28,12 @@ class ParseCrossRefConfirmation(APIView):
         return None
 
     def post(self, request):
-        crossref_email_content = lxml.etree.fromstring(request.POST['body-plain'].encode())
-        status = crossref_email_content.get('status').lower()  # from element doi_batch_diagnostic
+        crossref_email_content = lxml.etree.fromstring(
+            request.POST['body-plain'].encode(),
+        )
+        status = crossref_email_content.get(
+            'status',
+        ).lower()  # from element doi_batch_diagnostic
         record_count = int(crossref_email_content.find('batch_data/record_count').text)
         records = crossref_email_content.xpath('//record_diagnostic')
         dois_processed = 0
@@ -65,15 +67,27 @@ class ParseCrossRefConfirmation(APIView):
 
                 elif record.get('status').lower() == 'failure':
                     if 'Relation target DOI does not exist' in record.find('msg').text:
-                        logger.warn('Related publication DOI does not exist, sending metadata again without it...')
+                        logger.warn(
+                            'Related publication DOI does not exist, sending metadata again without it...',
+                        )
                         client = preprint.get_doi_client()
-                        client.create_identifier(preprint, category='doi', include_relation=False)
+                        client.create_identifier(
+                            preprint, category='doi', include_relation=False,
+                        )
                     # This error occurs when a single preprint is being updated several times in a row with the same metadata [#PLAT-944]
-                    elif 'less or equal to previously submitted version' in record.find('msg').text and record_count == 2:
+                    elif (
+                        'less or equal to previously submitted version'
+                        in record.find('msg').text
+                        and record_count == 2
+                    ):
                         break
                     else:
                         unexpected_errors = True
-            logger.info('Creation success email received from CrossRef for preprints: {}'.format(guids))
+            logger.info(
+                'Creation success email received from CrossRef for preprints: {}'.format(
+                    guids,
+                ),
+            )
 
         if dois_processed != record_count or status != 'completed':
             if unexpected_errors:
@@ -84,6 +98,10 @@ class ParseCrossRefConfirmation(APIView):
                     batch_id=batch_id,
                     email_content=request.POST['body-plain'],
                 )
-                logger.error('Error submitting metadata for batch_id {} with CrossRef, email sent to help desk'.format(batch_id))
+                logger.error(
+                    'Error submitting metadata for batch_id {} with CrossRef, email sent to help desk'.format(
+                        batch_id,
+                    ),
+                )
 
         return HttpResponse('Mail received', status=200)

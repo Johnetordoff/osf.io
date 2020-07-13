@@ -17,11 +17,7 @@ def add_datacite_schema(state, schema):
     _, created = FileMetadataSchema.objects.get_or_create(
         _id='datacite',
         schema_version=1,
-        defaults={
-            'name': 'datacite',
-            'schema': jsonschema
-        }
-
+        defaults={'name': 'datacite', 'schema': jsonschema},
     )
     if created:
         logger.info('Added datacite schema to the database')
@@ -39,6 +35,4 @@ class Migration(migrations.Migration):
         ('osf', '0135_add_file_metadata_models'),
     ]
 
-    operations = [
-        migrations.RunPython(add_datacite_schema, remove_datacite_schema)
-    ]
+    operations = [migrations.RunPython(add_datacite_schema, remove_datacite_schema)]

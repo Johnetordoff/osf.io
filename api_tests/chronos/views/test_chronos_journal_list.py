@@ -5,10 +5,13 @@ from osf_tests.factories import ChronosJournalFactory
 
 @pytest.mark.django_db
 class TestChronosJournalList:
-
     @pytest.fixture()
     def journals(self):
-        return [ChronosJournalFactory(), ChronosJournalFactory(), ChronosJournalFactory()]
+        return [
+            ChronosJournalFactory(),
+            ChronosJournalFactory(),
+            ChronosJournalFactory(),
+        ]
 
     @pytest.fixture()
     def journal_ids(self, journals):
@@ -33,7 +36,6 @@ class TestChronosJournalList:
 
 @pytest.mark.django_db
 class TestChronosJournalListFilter:
-
     @pytest.fixture()
     def journal_one(self):
         return ChronosJournalFactory()
@@ -50,7 +52,14 @@ class TestChronosJournalListFilter:
     def journal_one_filter_title_url(self, journal_one):
         return '/_/chronos/journals/?filter[title]={}'.format(journal_one.title)
 
-    def test_journal_list_filter(self, app, journal_one, journal_two, journal_one_filter_name_url, journal_one_filter_title_url):
+    def test_journal_list_filter(
+        self,
+        app,
+        journal_one,
+        journal_two,
+        journal_one_filter_name_url,
+        journal_one_filter_title_url,
+    ):
         res = app.get(journal_one_filter_name_url)
         assert len(res.json['data']) == 1
         assert res.json['data'][0]['attributes']['name'] == journal_one.name

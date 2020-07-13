@@ -28,10 +28,10 @@ class TestNodeBibliographicContributors:
         return AuthUserFactory()
 
     @pytest.fixture()
-    def preprint(self, admin_contributor_bib, write_contributor_non_bib, read_contributor_bib):
-        preprint = PreprintFactory(
-            creator=admin_contributor_bib
-        )
+    def preprint(
+        self, admin_contributor_bib, write_contributor_non_bib, read_contributor_bib
+    ):
+        preprint = PreprintFactory(creator=admin_contributor_bib)
         preprint.add_contributor(write_contributor_non_bib, WRITE, visible=False)
         preprint.add_contributor(read_contributor_bib, READ)
         preprint.save()
@@ -39,10 +39,20 @@ class TestNodeBibliographicContributors:
 
     @pytest.fixture()
     def url(self, preprint):
-        return '/{}preprints/{}/bibliographic_contributors/'.format(API_BASE, preprint._id)
+        return '/{}preprints/{}/bibliographic_contributors/'.format(
+            API_BASE, preprint._id
+        )
 
-    def test_list_and_filter_bibliographic_contributors(self, app, url, preprint, admin_contributor_bib,
-            write_contributor_non_bib, read_contributor_bib, non_contributor):
+    def test_list_and_filter_bibliographic_contributors(
+        self,
+        app,
+        url,
+        preprint,
+        admin_contributor_bib,
+        write_contributor_non_bib,
+        read_contributor_bib,
+        non_contributor,
+    ):
 
         # Test GET unauthenticated
         res = app.get(url)
@@ -61,7 +71,9 @@ class TestNodeBibliographicContributors:
         assert res.status_code == 200
 
         # Test POST not allowed
-        res = app.post_json_api(url, auth=write_contributor_non_bib.auth, expect_errors=True)
+        res = app.post_json_api(
+            url, auth=write_contributor_non_bib.auth, expect_errors=True
+        )
         assert res.status_code == 405
 
         # Test GET contributor, only bibliographic contribs included
@@ -85,4 +97,6 @@ class TestNodeBibliographicContributors:
         assert res.status_code == 200
         assert res.content_type == 'application/vnd.api+json'
         assert len(res.json['data']) == 1
-        assert res.json['data'][0]['id'] == '{}-{}'.format(preprint._id, admin_contributor_bib._id)
+        assert res.json['data'][0]['id'] == '{}-{}'.format(
+            preprint._id, admin_contributor_bib._id
+        )

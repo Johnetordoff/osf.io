@@ -68,14 +68,12 @@ def add_poster_by_email(conference, message):
             CONFERENCE_FAILED,
             fullname=message.sender_display,
             can_change_preferences=False,
-            logo=settings.OSF_MEETINGS_LOGO
+            logo=settings.OSF_MEETINGS_LOGO,
         )
 
     with transaction.atomic():
         user, user_created = get_or_create_user(
-            message.sender_display,
-            message.sender_email,
-            is_spam=message.is_spam,
+            message.sender_display, message.sender_email, is_spam=message.is_spam,
         )
         if user_created:
             if utils.is_valid_email(user.fullname):
@@ -97,10 +95,7 @@ def add_poster_by_email(conference, message):
             set_password_url = None
 
         # Always create a new meeting node
-        node = Node.objects.create(
-            title=message.subject,
-            creator=user
-        )
+        node = Node.objects.create(title=message.subject, creator=user)
         node.add_system_tag(CampaignSourceTags.Osf4m.value)
         node.save()
 
@@ -109,6 +104,7 @@ def add_poster_by_email(conference, message):
         utils.record_message(message, node, created_user)
     # Prevent circular import error
     from framework.auth import signals as auth_signals
+
     if user_created:
         auth_signals.user_confirmed.send(user)
 
@@ -128,9 +124,7 @@ def add_poster_by_email(conference, message):
         CONFERENCE_SUBMITTED,
         conf_full_name=conference.name,
         conf_view_url=web_url_for(
-            'conference_results',
-            meeting=message.conference_name,
-            _absolute=True,
+            'conference_results', meeting=message.conference_name, _absolute=True,
         ),
         fullname=message.sender_display,
         user_created=user_created,
@@ -141,10 +135,11 @@ def add_poster_by_email(conference, message):
         presentation_type=message.conference_category.lower(),
         is_spam=message.is_spam,
         can_change_preferences=False,
-        logo=settings.OSF_MEETINGS_LOGO
+        logo=settings.OSF_MEETINGS_LOGO,
     )
     if user_created:
         signals.osf4m_user_created.send(user, conference=conference, node=node)
+
 
 def conference_data(meeting):
     try:
@@ -153,6 +148,7 @@ def conference_data(meeting):
         raise HTTPError(http_status.HTTP_404_NOT_FOUND)
 
     return conference_submissions_sql(conf)
+
 
 def conference_submissions_sql(conf):
     """
@@ -235,7 +231,8 @@ def conference_submissions_sql(conf):
                    AND osf_abstractnode.is_public = TRUE
                    AND AUTHOR_GUID IS NOT NULL)
             ORDER BY osf_abstractnode.created DESC;
-            """, [
+            """,
+            [
                 submission1_name,
                 submission1_name,
                 submission2_name,
@@ -245,10 +242,11 @@ def conference_submissions_sql(conf):
                 osf_user_content_type_id,
                 abstract_node_content_type_id,
                 conf.id,
-            ]
+            ],
         )
         rows = cursor.fetchall()
         return [row[0] for row in rows]
+
 
 def redirect_to_meetings(**kwargs):
     return redirect('/meetings/')
@@ -272,6 +270,7 @@ def serialize_conference(conf):
         'start_date': conf.start_date,
         'talk': conf.talk,
     }
+
 
 @ember_flag_is_active(features.EMBER_MEETING_DETAIL)
 def conference_results(meeting):
@@ -304,22 +303,29 @@ def conference_submissions(**kwargs):
     """
     return {'success': True}
 
+
 @ember_flag_is_active(features.EMBER_MEETINGS)
 def conference_view(**kwargs):
     meetings = []
     for conf in Conference.objects.all():
         if len(conf.valid_submissions) < settings.CONFERENCE_MIN_COUNT:
             continue
-        if (hasattr(conf, 'is_meeting') and (conf.is_meeting is False)):
+        if hasattr(conf, 'is_meeting') and (conf.is_meeting is False):
             continue
-        meetings.append({
-            'name': conf.name,
-            'location': conf.location,
-            'end_date': conf.end_date.strftime('%b %d, %Y') if conf.end_date else None,
-            'start_date': conf.start_date.strftime('%b %d, %Y') if conf.start_date else None,
-            'url': web_url_for('conference_results', meeting=conf.endpoint),
-            'count': conf.valid_submissions.count(),
-        })
+        meetings.append(
+            {
+                'name': conf.name,
+                'location': conf.location,
+                'end_date': conf.end_date.strftime('%b %d, %Y')
+                if conf.end_date
+                else None,
+                'start_date': conf.start_date.strftime('%b %d, %Y')
+                if conf.start_date
+                else None,
+                'url': web_url_for('conference_results', meeting=conf.endpoint),
+                'count': conf.valid_submissions.count(),
+            }
+        )
 
     meetings.sort(key=lambda meeting: meeting['count'], reverse=True)
     return {'meetings': meetings}

@@ -9,6 +9,7 @@ from api.base.serializers import (
 )
 from api.base.versioning import get_kebab_snake_case_field
 
+
 class SchemaSerializer(JSONAPISerializer):
 
     id = IDField(source='_id', read_only=True)
@@ -19,9 +20,7 @@ class SchemaSerializer(JSONAPISerializer):
     schema = ser.DictField(read_only=True)
     active = ser.BooleanField(read_only=True)
 
-    links = LinksField({
-        'self': 'get_absolute_url',
-    })
+    links = LinksField({'self': 'get_absolute_url',})
 
     def get_absolute_url(self, obj):
         return obj.absolute_api_v2_url
@@ -43,9 +42,7 @@ class RegistrationSchemaBlockSerializer(JSONAPISerializer):
     required = ser.BooleanField(read_only=True)
     index = ser.IntegerField(read_only=True, source='_order')
 
-    links = LinksField({
-        'self': 'get_absolute_url',
-    })
+    links = LinksField({'self': 'get_absolute_url',})
 
     schema = RelationshipField(
         related_view='schemas:registration-schema-detail',
@@ -76,7 +73,6 @@ class RegistrationSchemaSerializer(SchemaSerializer):
 
 
 class FileMetadataSchemaSerializer(SchemaSerializer):
-
     class Meta:
         @staticmethod
         def get_type(request):
@@ -84,12 +80,10 @@ class FileMetadataSchemaSerializer(SchemaSerializer):
 
 
 class DeprecatedMetaSchemaSerializer(SchemaSerializer):
-
     class Meta:
         type_ = 'metaschemas'
 
 
 class DeprecatedRegistrationMetaSchemaSerializer(SchemaSerializer):
-
     class Meta:
         type_ = 'registration_metaschemas'

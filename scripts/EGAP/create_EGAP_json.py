@@ -13,10 +13,21 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-a', '--authorsource', help='Specify the source file for the author csv file')
-parser.add_argument('-r', '--registrysource', help='Specify the source file for the registrty csv file')
-parser.add_argument('-t', '--target', help='Specify the target directory of the registry directories')
-parser.add_argument('-d', '--dry', action='store_true', help='Dry run: Have the script delete the target directory after completion')
+parser.add_argument(
+    '-a', '--authorsource', help='Specify the source file for the author csv file'
+)
+parser.add_argument(
+    '-r', '--registrysource', help='Specify the source file for the registrty csv file'
+)
+parser.add_argument(
+    '-t', '--target', help='Specify the target directory of the registry directories'
+)
+parser.add_argument(
+    '-d',
+    '--dry',
+    action='store_true',
+    help='Dry run: Have the script delete the target directory after completion',
+)
 
 schema_to_spreadsheet_mapping = [
     {'q1': 'TITLE'},
@@ -57,7 +68,7 @@ other_mapping = {
     'q22': 'q23',
     'q26': 'q27',
     'q28': 'q29',
-    'q30': 'q31'
+    'q30': 'q31',
 }
 
 
@@ -105,14 +116,15 @@ def create_file_tree_and_json(author_source, registry_source, target):
             project_dict = make_project_dict(row, author_list, normalized_header_row)
             make_json_file(root_directory, project_dict, 'project')
             try:
-                registration_dict = make_registration_dict(row, normalized_header_row, project_id)
+                registration_dict = make_registration_dict(
+                    row, normalized_header_row, project_id
+                )
             except Exception:
                 logger.warning('Error creating directory for {}'.format(project_id))
                 shutil.rmtree(root_directory)
                 continue
             make_json_file(root_directory, registration_dict, 'registration')
             logger.info('Successfully created directory for {}'.format(project_id))
-
 
 
 def create_author_dict(source):
@@ -131,7 +143,10 @@ def create_author_dict(source):
             row = [cell for cell in line]
             logger.info('Adding user: ' + row[name_index])
             if row[email_index] != '':
-                author_dict = {'name': row[name_index].strip(), 'email': row[email_index]}
+                author_dict = {
+                    'name': row[name_index].strip(),
+                    'email': row[email_index],
+                }
             else:
                 author_dict = {'name': row[name_index].strip()}
             authors.append(author_dict)
@@ -157,7 +172,11 @@ def make_project_dict(row, author_list, normalized_header_row):
         author = author.strip()
         if author:
             if author not in author_name_list:
-                logger.warning('Author {} not in Author spreadsheet for project {}.'.format(author,row[id_index]))
+                logger.warning(
+                    'Author {} not in Author spreadsheet for project {}.'.format(
+                        author, row[id_index]
+                    )
+                )
                 project['contributors'].append({'name': author})
             else:
                 author_list_index = author_name_list.index(author)
@@ -185,7 +204,9 @@ def make_registration_dict(row, normalized_header_row, project_id):
                 registration[other_response] = build_nested_response(responses)
                 value['value'] = value['value'][0]
         elif other_response:
-            registration[other_response] = build_nested_response('Other (describe in text box below)')
+            registration[other_response] = build_nested_response(
+                'Other (describe in text box below)'
+            )
         registration[validated_qid] = value
     # q35 and q36 are required questions at the end of the schema, certification and
     # confirmation questions. Just marking as agree -
@@ -229,12 +250,9 @@ def clean_value(value):
         return ''
     return value
 
+
 def build_nested_response(value):
-    return {
-        'comments': [],
-        'extra': [],
-        'value': value
-    }
+    return {'comments': [], 'extra': [], 'value': value}
 
 
 def base_metaschema(metaschema):
@@ -243,8 +261,7 @@ def base_metaschema(metaschema):
         'description': metaschema['description'],
         'title': metaschema['title'],
         'additionalProperties': False,
-        'properties': {
-        }
+        'properties': {},
     }
     return json_schema
 
@@ -270,9 +287,7 @@ COMMENTS_SCHEMA = {
         'type': 'object',
         'additionalProperties': False,
         'properties': {
-            'seenBy': {
-                'type': 'array',
-            },
+            'seenBy': {'type': 'array',},
             'canDelete': {'type': 'boolean'},
             'created': {'type': 'string'},
             'lastModified': {'type': 'string'},
@@ -285,14 +300,14 @@ COMMENTS_SCHEMA = {
                 'additionalProperties': True,
                 'properties': {
                     'fullname': {'type': 'string'},
-                    'id': {'type': 'integer'}
-                }
+                    'id': {'type': 'integer'},
+                },
             },
             'saved': {'type': 'boolean'},
             'canEdit': {'type': 'boolean'},
-            'isDeleted': {'type': 'boolean'}
-        }
-    }
+            'isDeleted': {'type': 'boolean'},
+        },
+    },
 }
 
 
@@ -305,7 +320,9 @@ def get_options_jsonschema(options, required):
             options[item] = option.get('text')
     value = {'enum': options}
 
-    if not required and '' not in value['enum']:  # Non-required fields need to accept empty strings as a value.
+    if (
+        not required and '' not in value['enum']
+    ):  # Non-required fields need to accept empty strings as a value.
         value['enum'].append('')
 
     return value
@@ -318,9 +335,7 @@ def get_object_jsonschema(question, required_fields, is_reviewer, is_required):
     object_jsonschema = {
         'type': 'object',
         'additionalProperties': False,
-        'properties': {
-
-        }
+        'properties': {},
     }
     required = []
     properties = question.get('properties')
@@ -328,11 +343,13 @@ def get_object_jsonschema(question, required_fields, is_reviewer, is_required):
         for property in properties:
             if property.get('required', False) and required_fields:
                 required.append(property['id'])
-            values = extract_question_values(property, required_fields, is_reviewer, is_required)
+            values = extract_question_values(
+                property, required_fields, is_reviewer, is_required
+            )
             object_jsonschema['properties'][property['id']] = {
                 'type': 'object',
                 'additionalProperties': False,
-                'properties': values
+                'properties': values,
             }
             if required_fields:
                 object_jsonschema['properties'][property['id']]['required'] = ['value']
@@ -369,10 +386,10 @@ OSF_UPLOAD_EXTRA_SCHEMA = {
                                 'additionalProperties': False,
                                 'properties': {
                                     'sha256': {'type': 'string'},
-                                    'md5': {'type': 'string'}
-                                }
-                            }
-                        }
+                                    'md5': {'type': 'string'},
+                                },
+                            },
+                        },
                     },
                     'materialized': {'type': 'string'},
                     'modified': {'type': 'string'},
@@ -391,7 +408,7 @@ OSF_UPLOAD_EXTRA_SCHEMA = {
                         'properties': {
                             'acceptedFiles': {'type': 'boolean'},
                             'maxSize': {'type': 'integer'},
-                        }
+                        },
                     },
                     'links': {
                         'type': 'object',
@@ -400,32 +417,32 @@ OSF_UPLOAD_EXTRA_SCHEMA = {
                             'download': {'type': 'string'},
                             'move': {'type': 'string'},
                             'upload': {'type': 'string'},
-                            'delete': {'type': 'string'}
-                        }
+                            'delete': {'type': 'string'},
+                        },
                     },
                     'permissions': {
                         'type': 'object',
                         'additionalProperties': False,
                         'properties': {
                             'edit': {'type': 'boolean'},
-                            'view': {'type': 'boolean'}
-                        }
+                            'view': {'type': 'boolean'},
+                        },
                     },
                     'created_utc': {'type': 'string'},
                     'id': {'type': 'string'},
                     'modified_utc': {'type': 'string'},
                     'size': {'type': 'integer'},
                     'sizeInt': {'type': 'integer'},
-                }
+                },
             },
             'fileId': {'type': ['string', 'object']},
             'descriptionValue': {'type': 'string'},
             'sha256': {'type': 'string'},
             'selectedFileName': {'type': 'string'},
             'nodeId': {'type': 'string'},
-            'viewUrl': {'type': 'string'}
-        }
-    }
+            'viewUrl': {'type': 'string'},
+        },
+    },
 }
 
 
@@ -436,10 +453,12 @@ def extract_question_values(question, required_fields, is_reviewer, is_required)
     response = {
         'value': {'type': 'string'},
         'comments': COMMENTS_SCHEMA,
-        'extra': {'type': 'array'}
+        'extra': {'type': 'array'},
     }
     if question.get('type') == 'object':
-        response['value'] = get_object_jsonschema(question, required_fields, is_reviewer, is_required)
+        response['value'] = get_object_jsonschema(
+            question, required_fields, is_reviewer, is_required
+        )
     elif question.get('type') == 'choose':
         options = question.get('options')
         if options:
@@ -459,7 +478,9 @@ def extract_question_values(question, required_fields, is_reviewer, is_required)
     return response
 
 
-def create_jsonschema_from_metaschema(metaschema, required_fields=False, is_reviewer=False):
+def create_jsonschema_from_metaschema(
+    metaschema, required_fields=False, is_reviewer=False
+):
     """
     Creates jsonschema from registration metaschema for validation.
 
@@ -476,7 +497,9 @@ def create_jsonschema_from_metaschema(metaschema, required_fields=False, is_revi
             json_schema['properties'][question['qid']] = {
                 'type': 'object',
                 'additionalProperties': False,
-                'properties': extract_question_values(question, required_fields, is_reviewer, is_required)
+                'properties': extract_question_values(
+                    question, required_fields, is_reviewer, is_required
+                ),
             }
             if required_fields:
                 json_schema['properties'][question['qid']]['required'] = ['value']
@@ -506,9 +529,9 @@ def validate_response(qid, value):
     temporary_check = {}
     temporary_check[qid] = value
     egap_schema = ensure_schema_structure(from_json('egap-registration-3.json'))
-    schema = create_jsonschema_from_metaschema(egap_schema,
-        required_fields=False,
-        is_reviewer=False)
+    schema = create_jsonschema_from_metaschema(
+        egap_schema, required_fields=False, is_reviewer=False
+    )
 
     try:
         json_schema = jsonschema.validate(temporary_check, schema)
@@ -519,17 +542,18 @@ def validate_response(qid, value):
             raise Exception(exc)
     return qid, None
 
+
 def validate_all_responses(value, project_id):
     egap_schema = ensure_schema_structure(from_json('egap-registration-3.json'))
-    schema = create_jsonschema_from_metaschema(egap_schema,
-        required_fields=True,
-        is_reviewer=False)
+    schema = create_jsonschema_from_metaschema(
+        egap_schema, required_fields=True, is_reviewer=False
+    )
 
     try:
         json_schema = jsonschema.validate(value, schema)
     except ValidationError as exc:
         with open('errors.txt', 'a+') as error_file:
-            error_file.write(', '+project_id)
+            error_file.write(', ' + project_id)
         raise Exception(exc)
 
 
@@ -551,7 +575,9 @@ def main(default_args=False):
         registry_source = 'EGAP_registry_for_OSF.csv'
 
     if not target_directory:
-        target_directory = 'EGAP_data_{}'.format(datetime.datetime.now().strftime('%m-%d-%Y'))
+        target_directory = 'EGAP_data_{}'.format(
+            datetime.datetime.now().strftime('%m-%d-%Y')
+        )
 
     create_file_tree_and_json(author_source, registry_source, target_directory)
 

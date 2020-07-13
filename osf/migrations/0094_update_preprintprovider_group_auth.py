@@ -10,12 +10,11 @@ def noop(*args, **kwargs):
     # which is now handled by the post_migrate signal
     pass
 
+
 class Migration(migrations.Migration):
 
     dependencies = [
         ('osf', '0093_node_subjects'),
     ]
 
-    operations = [
-        migrations.RunPython(noop, noop)
-    ]
+    operations = [migrations.RunPython(noop, noop)]

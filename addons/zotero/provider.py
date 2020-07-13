@@ -5,6 +5,7 @@ from framework.exceptions import HTTPError
 from website.citations.providers import CitationsProvider
 from addons.zotero.serializer import ZoteroSerializer
 
+
 class ZoteroCitationsProvider(CitationsProvider):
     serializer = ZoteroSerializer
     provider_name = 'zotero'
@@ -23,12 +24,19 @@ class ZoteroCitationsProvider(CitationsProvider):
         library_id added specifically for zotero
         """
         ret = super(ZoteroCitationsProvider, self).widget(node_addon)
-        ret.update({
-            'library_id': node_addon.library_id
-        })
+        ret.update({'library_id': node_addon.library_id})
         return ret
 
-    def set_config(self, node_addon, user, external_list_id, external_list_name, auth, external_library_id=None, external_library_name=None):
+    def set_config(
+        self,
+        node_addon,
+        user,
+        external_list_id,
+        external_list_name,
+        auth,
+        external_library_id=None,
+        external_library_name=None,
+    ):
         """ Changes folder associated with addon and logs event"""
         # Ensure request has all required information
         # Tell the user's addon settings that this node is connecting
@@ -39,7 +47,7 @@ class ZoteroCitationsProvider(CitationsProvider):
         node_addon.user_settings.grant_oauth_access(
             node=node_addon.owner,
             external_account=node_addon.external_account,
-            metadata=metadata
+            metadata=metadata,
         )
         node_addon.user_settings.save()
 
@@ -57,7 +65,7 @@ class ZoteroCitationsProvider(CitationsProvider):
                     'project': node_addon.owner.parent_id,
                     'node': node_addon.owner._id,
                     'library_name': external_library_name,
-                    'library_id': external_library_id
+                    'library_id': external_library_id,
                 },
                 auth=auth,
             )
@@ -90,10 +98,11 @@ class ZoteroCitationsProvider(CitationsProvider):
             user_is_owner = False
 
         # verify this list is the attached list or its descendant
-        if not user_is_owner and (list_id != attached_list_id and attached_list_id is not None):
+        if not user_is_owner and (
+            list_id != attached_list_id and attached_list_id is not None
+        ):
             folders = {
-                (each['provider_list_id'] or 'ROOT'): each
-                for each in account_folders
+                (each['provider_list_id'] or 'ROOT'): each for each in account_folders
             }
             if list_id is None:
                 ancestor_id = 'ROOT'
@@ -113,8 +122,7 @@ class ZoteroCitationsProvider(CitationsProvider):
             if show in ('all', 'folders'):
                 contents += [
                     self.serializer(
-                        node_settings=node_addon,
-                        user_settings=user_settings,
+                        node_settings=node_addon, user_settings=user_settings,
                     ).serialize_folder(each)
                     for each in account_folders
                     if each.get('parent_list_id') == list_id
@@ -123,12 +131,11 @@ class ZoteroCitationsProvider(CitationsProvider):
             if show in ('all', 'citations'):
                 contents += [
                     self.serializer(
-                        node_settings=node_addon,
-                        user_settings=user_settings,
+                        node_settings=node_addon, user_settings=user_settings,
                     ).serialize_citation(each)
-                    for each in node_addon.api.get_list(list_id=list_id, library_id=attached_library_id)
+                    for each in node_addon.api.get_list(
+                        list_id=list_id, library_id=attached_library_id
+                    )
                 ]
 
-        return {
-            'contents': contents
-        }
+        return {'contents': contents}

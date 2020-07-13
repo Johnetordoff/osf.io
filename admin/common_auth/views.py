@@ -29,14 +29,13 @@ class LoginView(FormView):
     def form_valid(self, form):
         user = authenticate(
             username=form.cleaned_data.get('email').strip(),
-            password=form.cleaned_data.get('password').strip()
+            password=form.cleaned_data.get('password').strip(),
         )
         if user is not None:
             login(self.request, user)
         else:
             messages.error(
-                self.request,
-                'Email and/or Password incorrect. Please try again.'
+                self.request, 'Email and/or Password incorrect. Please try again.'
             )
             return redirect('auth:login')
         return super(LoginView, self).form_valid(form)
@@ -64,7 +63,9 @@ class RegisterUser(PermissionRequiredMixin, FormView):
         osf_user = OSFUser.load(osf_id)
 
         if not osf_user:
-            raise Http404('OSF user with id "{}" not found. Please double check.'.format(osf_id))
+            raise Http404(
+                'OSF user with id "{}" not found. Please double check.'.format(osf_id)
+            )
 
         osf_user.is_staff = True
         osf_user.save()
@@ -79,14 +80,24 @@ class RegisterUser(PermissionRequiredMixin, FormView):
             if group_type == 'reviews':
                 provider_id = split[2]
                 provider = AbstractProvider.objects.get(id=provider_id)
-                provider.notification_subscriptions.get(event_name='new_pending_submissions').add_user_to_subscription(osf_user, 'email_transactional')
+                provider.notification_subscriptions.get(
+                    event_name='new_pending_submissions'
+                ).add_user_to_subscription(osf_user, 'email_transactional')
 
         osf_user.save()
 
         if created:
-            messages.success(self.request, 'Registration successful for OSF User {}!'.format(osf_user.username))
+            messages.success(
+                self.request,
+                'Registration successful for OSF User {}!'.format(osf_user.username),
+            )
         else:
-            messages.success(self.request, 'Permissions update successful for OSF User {}!'.format(osf_user.username))
+            messages.success(
+                self.request,
+                'Permissions update successful for OSF User {}!'.format(
+                    osf_user.username
+                ),
+            )
         return super(RegisterUser, self).form_valid(form)
 
     def get_success_url(self):
@@ -96,6 +107,7 @@ class RegisterUser(PermissionRequiredMixin, FormView):
         initial = super(RegisterUser, self).get_initial()
         initial['osf_id'] = self.request.GET.get('id')
         return initial
+
 
 class DeskUserCreateFormView(PermissionRequiredMixin, CreateView):
     form_class = DeskUserForm

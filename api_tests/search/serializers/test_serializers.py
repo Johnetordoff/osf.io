@@ -16,7 +16,6 @@ SCHEMA_VERSION = 2
 @pytest.mark.django_db
 @pytest.mark.enable_quickfiles_creation
 class TestSearchSerializer:
-
     def test_search_serializer_mixed_model(self):
 
         user = AuthUserFactory()
@@ -26,7 +25,8 @@ class TestSearchSerializer:
         context = {'request': make_drf_request_with_version(version='2.0')}
         schema = RegistrationSchema.objects.filter(
             name='Replication Recipe (Brandt et al., 2013): Post-Completion',
-            schema_version=SCHEMA_VERSION).first()
+            schema_version=SCHEMA_VERSION,
+        ).first()
 
         # test_search_serializer_mixed_model_project
         result = SearchSerializer(project, context=context).data
@@ -37,7 +37,9 @@ class TestSearchSerializer:
         assert result['data']['type'] == 'nodes'
 
         # test_search_serializer_mixed_model_registration
-        with mock_archive(project, autocomplete=True, autoapprove=True, schema=schema) as registration:
+        with mock_archive(
+            project, autocomplete=True, autoapprove=True, schema=schema
+        ) as registration:
             result = SearchSerializer(registration, context=context).data
             assert result['data']['type'] == 'registrations'
 

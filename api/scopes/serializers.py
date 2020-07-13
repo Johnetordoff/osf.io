@@ -9,6 +9,7 @@ from api.base.serializers import (
 # serialized as relationship.
 SCOPES_RELATIONSHIP_VERSION = '2.17'
 
+
 class ScopeSerializer(JSONAPISerializer):
 
     filterable_fields = frozenset(['id'])

@@ -3,7 +3,10 @@ import pytest
 from django.utils.timezone import now
 
 from api.base.settings.defaults import API_BASE
-from api_tests.nodes.filters.test_filters import NodesListFilteringMixin, NodesListDateFilteringMixin
+from api_tests.nodes.filters.test_filters import (
+    NodesListFilteringMixin,
+    NodesListDateFilteringMixin,
+)
 from osf_tests.factories import (
     AuthUserFactory,
     CollectionFactory,
@@ -20,7 +23,6 @@ from osf.utils.workflows import DefaultStates
 
 @pytest.mark.django_db
 class TestUserNodes:
-
     @pytest.fixture()
     def user_one(self):
         user_one = AuthUserFactory()
@@ -35,30 +37,26 @@ class TestUserNodes:
     @pytest.fixture()
     def public_project_user_one(self, user_one):
         return ProjectFactory(
-            title='Public Project User One',
-            is_public=True,
-            creator=user_one)
+            title='Public Project User One', is_public=True, creator=user_one
+        )
 
     @pytest.fixture()
     def private_project_user_one(self, user_one):
         return ProjectFactory(
-            title='Private Project User One',
-            is_public=False,
-            creator=user_one)
+            title='Private Project User One', is_public=False, creator=user_one
+        )
 
     @pytest.fixture()
     def public_project_user_two(self, user_two):
         return ProjectFactory(
-            title='Public Project User Two',
-            is_public=True,
-            creator=user_two)
+            title='Public Project User Two', is_public=True, creator=user_two
+        )
 
     @pytest.fixture()
     def private_project_user_two(self, user_two):
         return ProjectFactory(
-            title='Private Project User Two',
-            is_public=False,
-            creator=user_two)
+            title='Private Project User Two', is_public=False, creator=user_two
+        )
 
     @pytest.fixture()
     def deleted_project_user_one(self, user_one):
@@ -66,7 +64,8 @@ class TestUserNodes:
             title='Deleted Project User One',
             is_public=False,
             creator=user_one,
-            deleted=now())
+            deleted=now(),
+        )
 
     @pytest.fixture()
     def folder(self):
@@ -78,7 +77,8 @@ class TestUserNodes:
             title='Deleted Folder User One',
             is_public=False,
             creator=user_one,
-            deleted=now())
+            deleted=now(),
+        )
 
     @pytest.fixture()
     def bookmark_collection(self, user_one):
@@ -87,18 +87,23 @@ class TestUserNodes:
     @pytest.fixture()
     def registration(self, user_one, public_project_user_one):
         return RegistrationFactory(
-            project=public_project_user_one,
-            creator=user_one,
-            is_public=True)
+            project=public_project_user_one, creator=user_one, is_public=True
+        )
 
     def test_user_nodes(
-            self, app, user_one, user_two,
-            public_project_user_one,
-            public_project_user_two,
-            private_project_user_one,
-            private_project_user_two,
-            deleted_project_user_one,
-            folder, deleted_folder, registration):
+        self,
+        app,
+        user_one,
+        user_two,
+        public_project_user_one,
+        public_project_user_two,
+        private_project_user_one,
+        private_project_user_two,
+        deleted_project_user_one,
+        folder,
+        deleted_folder,
+        registration,
+    ):
 
         #   test_authorized_in_gets_200
         url = '/{}users/{}/nodes/'.format(API_BASE, user_one._id)
@@ -106,13 +111,13 @@ class TestUserNodes:
         assert res.status_code == 200
         assert res.content_type == 'application/vnd.api+json'
 
-    #   test_anonymous_gets_200
+        #   test_anonymous_gets_200
         url = '/{}users/{}/nodes/'.format(API_BASE, user_one._id)
         res = app.get(url)
         assert res.status_code == 200
         assert res.content_type == 'application/vnd.api+json'
 
-    #   test_get_projects_logged_in
+        #   test_get_projects_logged_in
         url = '/{}users/{}/nodes/'.format(API_BASE, user_one._id)
         res = app.get(url, auth=user_one.auth)
         node_json = res.json['data']
@@ -127,7 +132,7 @@ class TestUserNodes:
         assert deleted_project_user_one._id not in ids
         assert registration._id not in ids
 
-    #   test_get_projects_not_logged_in
+        #   test_get_projects_not_logged_in
         url = '/{}users/{}/nodes/'.format(API_BASE, user_one._id)
         res = app.get(url)
         node_json = res.json['data']
@@ -141,7 +146,7 @@ class TestUserNodes:
         assert deleted_project_user_one._id not in ids
         assert registration._id not in ids
 
-    #   test_get_projects_logged_in_as_different_user
+        #   test_get_projects_logged_in_as_different_user
         url = '/{}users/{}/nodes/'.format(API_BASE, user_two._id)
         res = app.get(url, auth=user_one.auth)
         node_json = res.json['data']
@@ -175,7 +180,7 @@ class TestUserNodes:
         assert public_project_user_one._id == ids[1]
         assert private_project_user_one._id == ids[0]
 
-    # test_osf_group_member_node_shows_up_in_user_nodes
+        # test_osf_group_member_node_shows_up_in_user_nodes
         group_mem = AuthUserFactory()
         url = '/{}users/{}/nodes/'.format(API_BASE, group_mem._id)
         res = app.get(url, auth=group_mem.auth)
@@ -196,7 +201,6 @@ class TestUserNodes:
 
 @pytest.mark.django_db
 class TestUserNodesPreprintsFiltering:
-
     @pytest.fixture()
     def user(self):
         return AuthUserFactory()
@@ -219,8 +223,7 @@ class TestUserNodesPreprintsFiltering:
 
     @pytest.fixture()
     def abandoned_preprint(self, abandoned_preprint_node):
-        preprint = PreprintFactory(project=abandoned_preprint_node,
-            is_published=False)
+        preprint = PreprintFactory(project=abandoned_preprint_node, is_published=False)
         preprint.machine_state = DefaultStates.INITIAL.value
         return preprint
 
@@ -229,19 +232,32 @@ class TestUserNodesPreprintsFiltering:
         return '/{}users/me/nodes/?filter[preprint]='.format(API_BASE)
 
     def test_filter_false(
-            self, app, user, abandoned_preprint_node, abandoned_preprint, valid_preprint, valid_preprint_node,
-            no_preprints_node, url_base):
-        expected_ids = [
-            abandoned_preprint_node._id,
-            no_preprints_node._id]
+        self,
+        app,
+        user,
+        abandoned_preprint_node,
+        abandoned_preprint,
+        valid_preprint,
+        valid_preprint_node,
+        no_preprints_node,
+        url_base,
+    ):
+        expected_ids = [abandoned_preprint_node._id, no_preprints_node._id]
         res = app.get('{}false'.format(url_base), auth=user.auth)
         actual_ids = [n['id'] for n in res.json['data']]
 
         assert set(expected_ids) == set(actual_ids)
 
     def test_filter_true(
-            self, app, user, valid_preprint_node, abandoned_preprint_node, abandoned_preprint,
-            valid_preprint, url_base):
+        self,
+        app,
+        user,
+        valid_preprint_node,
+        abandoned_preprint_node,
+        abandoned_preprint,
+        valid_preprint,
+        url_base,
+    ):
         expected_ids = [valid_preprint_node._id]
         res = app.get('{}true'.format(url_base), auth=user.auth)
         actual_ids = [n['id'] for n in res.json['data']]
@@ -251,21 +267,20 @@ class TestUserNodesPreprintsFiltering:
 
 @pytest.mark.django_db
 class TestNodeListFiltering(NodesListFilteringMixin):
-
     @pytest.fixture()
     def url(self):
         return '/{}users/me/nodes/?'.format(API_BASE)
+
 
 @pytest.mark.django_db
 class TestNodeListDateFiltering(NodesListDateFilteringMixin):
-
     @pytest.fixture()
     def url(self):
         return '/{}users/me/nodes/?'.format(API_BASE)
 
+
 @pytest.mark.django_db
 class TestNodeListPermissionFiltering:
-
     @pytest.fixture()
     def creator(self):
         return UserFactory()
@@ -300,16 +315,22 @@ class TestNodeListPermissionFiltering:
     def url(self):
         return '/{}users/me/nodes/?filter[current_user_permissions]='.format(API_BASE)
 
-    def test_current_user_permissions_filter(self, app, url, contrib, no_perm_node, read_node, write_node, admin_node):
+    def test_current_user_permissions_filter(
+        self, app, url, contrib, no_perm_node, read_node, write_node, admin_node
+    ):
         # test filter read
         res = app.get('{}read'.format(url), auth=contrib.auth)
         assert len(res.json['data']) == 3
-        assert set([read_node._id, write_node._id, admin_node._id]) == set([node['id'] for node in res.json['data']])
+        assert set([read_node._id, write_node._id, admin_node._id]) == set(
+            [node['id'] for node in res.json['data']]
+        )
 
         # test filter write
         res = app.get('{}write'.format(url), auth=contrib.auth)
         assert len(res.json['data']) == 2
-        assert set([admin_node._id, write_node._id]) == set([node['id'] for node in res.json['data']])
+        assert set([admin_node._id, write_node._id]) == set(
+            [node['id'] for node in res.json['data']]
+        )
 
         # test filter admin
         res = app.get('{}admin'.format(url), auth=contrib.auth)
@@ -329,20 +350,28 @@ class TestNodeListPermissionFiltering:
         # test filter group member read
         res = app.get('{}read'.format(url), auth=user2.auth)
         assert len(res.json['data']) == 3
-        assert set([read_node._id, write_node._id, admin_node._id]) == set([node['id'] for node in res.json['data']])
+        assert set([read_node._id, write_node._id, admin_node._id]) == set(
+            [node['id'] for node in res.json['data']]
+        )
 
         # test filter group member write
         res = app.get('{}write'.format(url), auth=user2.auth)
         assert len(res.json['data']) == 2
-        assert set([admin_node._id, write_node._id]) == set([node['id'] for node in res.json['data']])
+        assert set([admin_node._id, write_node._id]) == set(
+            [node['id'] for node in res.json['data']]
+        )
 
         # test filter group member admin
         res = app.get('{}admin'.format(url), auth=user2.auth)
         assert len(res.json['data']) == 1
         assert [admin_node._id] == [node['id'] for node in res.json['data']]
 
-    def test_filter_my_current_user_permissions_to_other_users_nodes(self, app, contrib, no_perm_node, read_node, write_node, admin_node):
-        url = '/{}users/{}/nodes/?filter[current_user_permissions]='.format(API_BASE, contrib._id)
+    def test_filter_my_current_user_permissions_to_other_users_nodes(
+        self, app, contrib, no_perm_node, read_node, write_node, admin_node
+    ):
+        url = '/{}users/{}/nodes/?filter[current_user_permissions]='.format(
+            API_BASE, contrib._id
+        )
 
         me = AuthUserFactory()
 
@@ -377,7 +406,9 @@ class TestNodeListPermissionFiltering:
         assert set([admin_node._id]) == set([node['id'] for node in res.json['data']])
         res = app.get('{}read'.format(url), auth=me.auth)
         assert len(res.json['data']) == 3
-        assert set([read_node._id, write_node._id, admin_node._id]) == set([node['id'] for node in res.json['data']])
+        assert set([read_node._id, write_node._id, admin_node._id]) == set(
+            [node['id'] for node in res.json['data']]
+        )
 
         # test filter nonauthenticated_user v2.11
         read_node.is_public = True

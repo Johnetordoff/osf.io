@@ -2,17 +2,14 @@ import pytest
 
 from api.base.settings.defaults import API_BASE
 from osf.models.metaschema import RegistrationSchema
-from osf_tests.factories import (
-    AuthUserFactory,
-
-)
+from osf_tests.factories import AuthUserFactory
 from osf import features
 from django.contrib.auth.models import Group
 from waffle.models import Flag
 
+
 @pytest.mark.django_db
 class TestSchemaList:
-
     @pytest.fixture
     def user(self):
         return AuthUserFactory()
@@ -30,7 +27,9 @@ class TestSchemaList:
         user = AuthUserFactory()
         user.save()
         flag = Flag.objects.get(name=features.EGAP_ADMINS)
-        group = Group.objects.create(name=features.EGAP_ADMINS)  # Just using the same name for convenience
+        group = Group.objects.create(
+            name=features.EGAP_ADMINS
+        )  # Just using the same name for convenience
         flag.groups.add(group)
         group.user_set.add(user)
         group.save()
@@ -43,7 +42,10 @@ class TestSchemaList:
 
         res = app.get(url, auth=user.auth)
         assert res.status_code == 200
-        assert res.json['meta']['total'] == RegistrationSchema.objects.get_latest_versions(factory_request).count()
+        assert (
+            res.json['meta']['total']
+            == RegistrationSchema.objects.get_latest_versions(factory_request).count()
+        )
 
         # test_cannot_update_metaschemas
         res = app.put_json_api(url, auth=user.auth, expect_errors=True)
@@ -58,11 +60,15 @@ class TestSchemaList:
         assert res.status_code == 200
 
         # test_filter_on_active
-        url = '/{}schemas/registrations/?version=2.11&filter[active]=True'.format(API_BASE)
+        url = '/{}schemas/registrations/?version=2.11&filter[active]=True'.format(
+            API_BASE
+        )
         res = app.get(url)
 
         assert res.status_code == 200
-        active_schemas = RegistrationSchema.objects.get_latest_versions(factory_request).filter(active=True)
+        active_schemas = RegistrationSchema.objects.get_latest_versions(
+            factory_request
+        ).filter(active=True)
         assert res.json['meta']['total'] == active_schemas.count()
 
         url = '/{}schemas/registrations/'.format(API_BASE)
@@ -70,8 +76,16 @@ class TestSchemaList:
 
         res = app.get(url, auth=user.auth)
         assert res.status_code == 200
-        assert not [data for data in res.json['data'] if data['attributes']['name'] == 'EGAP Registration']
+        assert not [
+            data
+            for data in res.json['data']
+            if data['attributes']['name'] == 'EGAP Registration'
+        ]
 
         res = app.get(url, auth=egap_admin.auth)
         assert res.status_code == 200
-        assert [data for data in res.json['data'] if data['attributes']['name'] == 'EGAP Registration']
+        assert [
+            data
+            for data in res.json['data']
+            if data['attributes']['name'] == 'EGAP Registration'
+        ]

@@ -6,13 +6,16 @@ import unittest
 from tests.base import get_default_metaschema
 from framework.auth.decorators import Auth
 
-from addons.base.tests.models import (OAuthAddonNodeSettingsTestSuiteMixin,
-                                      OAuthAddonUserSettingTestSuiteMixin)
+from addons.base.tests.models import (
+    OAuthAddonNodeSettingsTestSuiteMixin,
+    OAuthAddonUserSettingTestSuiteMixin,
+)
 
 from addons.dataverse.models import NodeSettings
 from addons.dataverse.tests.factories import (
-    DataverseAccountFactory, DataverseNodeSettingsFactory,
-    DataverseUserSettingsFactory
+    DataverseAccountFactory,
+    DataverseNodeSettingsFactory,
+    DataverseUserSettingsFactory,
 )
 from addons.dataverse.tests import utils
 from osf_tests.factories import DraftRegistrationFactory
@@ -20,7 +23,11 @@ from osf_tests.factories import DraftRegistrationFactory
 pytestmark = pytest.mark.django_db
 
 
-class TestNodeSettings(OAuthAddonNodeSettingsTestSuiteMixin, utils.DataverseAddonTestCase, unittest.TestCase):
+class TestNodeSettings(
+    OAuthAddonNodeSettingsTestSuiteMixin,
+    utils.DataverseAddonTestCase,
+    unittest.TestCase,
+):
 
     short_name = 'dataverse'
     full_name = 'Dataverse'
@@ -35,7 +42,7 @@ class TestNodeSettings(OAuthAddonNodeSettingsTestSuiteMixin, utils.DataverseAddo
             'user_settings': self.user_settings,
             '_dataset_id': '1234567890',
             'dataset_doi': '10.123/DAVATERSE',
-            'owner': self.node
+            'owner': self.node,
         }
 
     @mock.patch('website.archiver.tasks.archive')
@@ -61,13 +68,9 @@ class TestNodeSettings(OAuthAddonNodeSettingsTestSuiteMixin, utils.DataverseAddo
         self.node.reload()
         assert_equal(self.node.logs.count(), nlog + 1)
         assert_equal(
-            self.node.logs.latest().action,
-            '{0}_{1}'.format(self.short_name, action),
+            self.node.logs.latest().action, '{0}_{1}'.format(self.short_name, action),
         )
-        assert_equal(
-            self.node.logs.latest().params['filename'],
-            filename
-        )
+        assert_equal(self.node.logs.latest().params['filename'], filename)
 
     def test_set_folder(self):
         dataverse = utils.create_mock_dataverse()

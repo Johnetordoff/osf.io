@@ -13,10 +13,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RemoveField(
-            model_name='abstractnode',
-            name='alternative_citations',
+            model_name='abstractnode', name='alternative_citations',
         ),
-        migrations.DeleteModel(
-            name='AlternativeCitation',
-        ),
+        migrations.DeleteModel(name='AlternativeCitation',),
     ]

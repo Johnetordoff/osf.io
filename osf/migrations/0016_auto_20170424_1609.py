@@ -12,24 +12,9 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='abstractnode',
-            name='guid_string',
-        ),
-        migrations.RemoveField(
-            model_name='basefilenode',
-            name='guid_string',
-        ),
-        migrations.RemoveField(
-            model_name='comment',
-            name='guid_string',
-        ),
-        migrations.RemoveField(
-            model_name='osfuser',
-            name='guid_string',
-        ),
-        migrations.RemoveField(
-            model_name='preprintservice',
-            name='guid_string',
-        ),
+        migrations.RemoveField(model_name='abstractnode', name='guid_string',),
+        migrations.RemoveField(model_name='basefilenode', name='guid_string',),
+        migrations.RemoveField(model_name='comment', name='guid_string',),
+        migrations.RemoveField(model_name='osfuser', name='guid_string',),
+        migrations.RemoveField(model_name='preprintservice', name='guid_string',),
     ]

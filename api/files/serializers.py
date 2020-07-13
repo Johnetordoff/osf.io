@@ -37,9 +37,12 @@ from api.base.exceptions import Conflict, InvalidModelValueError
 from api.base.schemas.utils import from_json
 from api.base.versioning import get_kebab_snake_case_field
 
+
 class CheckoutField(ser.HyperlinkedRelatedField):
 
-    default_error_messages = {'invalid_data': 'Checkout must be either the current user or null'}
+    default_error_messages = {
+        'invalid_data': 'Checkout must be either the current user or null',
+    }
     json_api_link = True  # serializes to a links object
 
     def __init__(self, **kwargs):
@@ -84,23 +87,20 @@ class CheckoutField(ser.HyperlinkedRelatedField):
         if cutoff is not None:
             queryset = queryset[:cutoff]
 
-        return OrderedDict([
-            (
-                item.pk,
-                self.display_value(item),
-            )
-            for item in queryset
-        ])
+        return OrderedDict([(item.pk, self.display_value(item),) for item in queryset])
 
     def get_queryset(self):
-        return OSFUser.objects.filter(guids___id=self.context['request'].user._id, guids___id__isnull=False)
+        return OSFUser.objects.filter(
+            guids___id=self.context['request'].user._id, guids___id__isnull=False,
+        )
 
     def get_url(self, obj, view_name, request, format):
         if obj is None:
             return {}
         lookup_value = getattr(obj, self.lookup_field)
         return absolute_reverse(
-            self.view_name, kwargs={
+            self.view_name,
+            kwargs={
                 self.lookup_url_kwarg: lookup_value,
                 'version': self.context['request'].parser_context['kwargs']['version'],
             },
@@ -110,11 +110,7 @@ class CheckoutField(ser.HyperlinkedRelatedField):
         if data is None:
             return None
         try:
-            return next(
-                user for user in
-                self.get_queryset()
-                if user._id == data
-            )
+            return next(user for user in self.get_queryset() if user._id == data)
         except StopIteration:
             self.fail('invalid_data')
 
@@ -148,17 +144,19 @@ class FileNodeRelationshipField(RelationshipField):
 
 
 class BaseFileSerializer(JSONAPISerializer):
-    filterable_fields = frozenset([
-        'id',
-        'name',
-        'kind',
-        'path',
-        'materialized_path',
-        'size',
-        'provider',
-        'last_touched',
-        'tags',
-    ])
+    filterable_fields = frozenset(
+        [
+            'id',
+            'name',
+            'kind',
+            'path',
+            'materialized_path',
+            'size',
+            'provider',
+            'last_touched',
+            'tags',
+        ],
+    )
     id = IDField(source='_id', read_only=True)
     type = TypeField()
     guid = ser.SerializerMethodField(
@@ -167,21 +165,45 @@ class BaseFileSerializer(JSONAPISerializer):
         help_text='OSF GUID for this file (if one has been assigned)',
     )
     checkout = CheckoutField()
-    name = ser.CharField(read_only=True, help_text='Display name used in the general user interface')
-    kind = ser.CharField(read_only=True, help_text='Either folder or file')
-    path = ser.CharField(read_only=True, help_text='The unique path used to reference this object')
-    size = ser.SerializerMethodField(read_only=True, help_text='The size of this file at this version')
-    provider = ser.CharField(read_only=True, help_text='The Add-on service this file originates from')
-    materialized_path = ser.CharField(
-        read_only=True, help_text='The Unix-style path of this object relative to the provider root',
+    name = ser.CharField(
+        read_only=True, help_text='Display name used in the general user interface',
     )
-    last_touched = VersionedDateTimeField(read_only=True, help_text='The last time this file had information fetched about it via the OSF')
-    date_modified = ser.SerializerMethodField(read_only=True, help_text='Timestamp when the file was last modified')
-    date_created = ser.SerializerMethodField(read_only=True, help_text='Timestamp when the file was created')
-    extra = ser.SerializerMethodField(read_only=True, help_text='Additional metadata about this file')
+    kind = ser.CharField(read_only=True, help_text='Either folder or file')
+    path = ser.CharField(
+        read_only=True, help_text='The unique path used to reference this object',
+    )
+    size = ser.SerializerMethodField(
+        read_only=True, help_text='The size of this file at this version',
+    )
+    provider = ser.CharField(
+        read_only=True, help_text='The Add-on service this file originates from',
+    )
+    materialized_path = ser.CharField(
+        read_only=True,
+        help_text='The Unix-style path of this object relative to the provider root',
+    )
+    last_touched = VersionedDateTimeField(
+        read_only=True,
+        help_text='The last time this file had information fetched about it via the OSF',
+    )
+    date_modified = ser.SerializerMethodField(
+        read_only=True, help_text='Timestamp when the file was last modified',
+    )
+    date_created = ser.SerializerMethodField(
+        read_only=True, help_text='Timestamp when the file was created',
+    )
+    extra = ser.SerializerMethodField(
+        read_only=True, help_text='Additional metadata about this file',
+    )
     tags = JSONAPIListField(child=FileTagField(), required=False)
-    current_user_can_comment = ser.SerializerMethodField(help_text='Whether the current user is allowed to post comments')
-    current_version = ser.IntegerField(help_text='Latest file version', read_only=True, source='current_version_number')
+    current_user_can_comment = ser.SerializerMethodField(
+        help_text='Whether the current user is allowed to post comments',
+    )
+    current_version = ser.IntegerField(
+        help_text='Latest file version',
+        read_only=True,
+        source='current_version_number',
+    )
     delete_allowed = ser.BooleanField(read_only=True, required=False)
 
     parent_folder = RelationshipField(
@@ -191,7 +213,11 @@ class BaseFileSerializer(JSONAPISerializer):
     )
     files = NodeFileHyperLinkField(
         related_view='nodes:node-files',
-        related_view_kwargs={'node_id': '<target._id>', 'path': '<path>', 'provider': '<provider>'},
+        related_view_kwargs={
+            'node_id': '<target._id>',
+            'path': '<path>',
+            'provider': '<provider>',
+        },
         kind='folder',
     )
     versions = NodeFileHyperLinkField(
@@ -199,37 +225,46 @@ class BaseFileSerializer(JSONAPISerializer):
         related_view_kwargs={'file_id': '<_id>'},
         kind='file',
     )
-    comments = HideIfPreprint(FileRelationshipField(
-        related_view='nodes:node-comments',
-        related_view_kwargs={'node_id': '<target._id>'},
-        related_meta={'unread': 'get_unread_comments_count'},
-        filter={'target': 'get_file_guid'},
-    ))
+    comments = HideIfPreprint(
+        FileRelationshipField(
+            related_view='nodes:node-comments',
+            related_view_kwargs={'node_id': '<target._id>'},
+            related_meta={'unread': 'get_unread_comments_count'},
+            filter={'target': 'get_file_guid'},
+        ),
+    )
     metadata_records = FileRelationshipField(
-        related_view='files:metadata-records',
-        related_view_kwargs={'file_id': '<_id>'},
+        related_view='files:metadata-records', related_view_kwargs={'file_id': '<_id>'},
     )
 
-    links = LinksField({
-        'info': Link('files:file-detail', kwargs={'file_id': '<_id>'}),
-        'move': WaterbutlerLink(),
-        'upload': WaterbutlerLink(),
-        'delete': WaterbutlerLink(),
-        'download': 'get_download_link',
-        'render': 'get_render_link',
-        'html': 'absolute_url',
-        'new_folder': WaterbutlerLink(must_be_folder=True, kind='folder'),
-    })
+    links = LinksField(
+        {
+            'info': Link('files:file-detail', kwargs={'file_id': '<_id>'}),
+            'move': WaterbutlerLink(),
+            'upload': WaterbutlerLink(),
+            'delete': WaterbutlerLink(),
+            'download': 'get_download_link',
+            'render': 'get_render_link',
+            'html': 'absolute_url',
+            'new_folder': WaterbutlerLink(must_be_folder=True, kind='folder'),
+        },
+    )
 
     def absolute_url(self, obj):
         if obj.is_file:
-            return furl.furl(settings.DOMAIN).set(
-                path=(obj.target._id, 'files', obj.provider, obj.path.lstrip('/')),
-            ).url
+            return (
+                furl.furl(settings.DOMAIN)
+                .set(
+                    path=(obj.target._id, 'files', obj.provider, obj.path.lstrip('/')),
+                )
+                .url
+            )
 
     def get_download_link(self, obj):
         if obj.is_file:
-            return get_file_download_link(obj, view_only=self.context['request'].query_params.get('view_only'))
+            return get_file_download_link(
+                obj, view_only=self.context['request'].query_params.get('view_only'),
+            )
 
     def get_render_link(self, obj):
         if obj.is_file:
@@ -303,7 +338,9 @@ class BaseFileSerializer(JSONAPISerializer):
         user = self.context['request'].user
         if user.is_anonymous:
             return 0
-        return Comment.find_n_unread(user=user, node=obj.target, page='files', root_id=obj.get_guid()._id)
+        return Comment.find_n_unread(
+            user=user, node=obj.target, page='files', root_id=obj.get_guid()._id,
+        )
 
     def user_id(self, obj):
         # NOTE: obj is the user here, the meta field for
@@ -315,7 +352,11 @@ class BaseFileSerializer(JSONAPISerializer):
     def update(self, instance, validated_data):
         assert isinstance(instance, BaseFileNode), 'Instance must be a BaseFileNode'
         if instance.provider != 'osfstorage' and 'tags' in validated_data:
-            raise Conflict('File service provider {} does not support tags on the OSF.'.format(instance.provider))
+            raise Conflict(
+                'File service provider {} does not support tags on the OSF.'.format(
+                    instance.provider,
+                ),
+            )
         auth = get_user_auth(self.context['request'])
         old_tags = set(instance.tags.values_list('name', flat=True))
         if 'tags' in validated_data:
@@ -323,9 +364,9 @@ class BaseFileSerializer(JSONAPISerializer):
         else:
             current_tags = set(old_tags)
 
-        for new_tag in (current_tags - old_tags):
+        for new_tag in current_tags - old_tags:
             instance.add_tag(new_tag, auth=auth)
-        for deleted_tag in (old_tags - current_tags):
+        for deleted_tag in old_tags - current_tags:
             instance.remove_tag(deleted_tag, auth=auth)
 
         for attr, value in validated_data.items():
@@ -358,7 +399,8 @@ class FileSerializer(BaseFileSerializer):
             related_view_kwargs={'node_id': '<target._id>'},
             help_text='The project that this file belongs to',
         ),
-        min_version='2.0', max_version='2.7',
+        min_version='2.0',
+        max_version='2.7',
     )
     target = TargetField(link_type='related', meta={'type': 'get_target_type'})
 
@@ -372,15 +414,10 @@ class FileSerializer(BaseFileSerializer):
 class OsfStorageFileSerializer(FileSerializer):
     """ Overrides `filterable_fields` to make `last_touched` non-filterable
     """
-    filterable_fields = frozenset([
-        'id',
-        'name',
-        'kind',
-        'path',
-        'size',
-        'provider',
-        'tags',
-    ])
+
+    filterable_fields = frozenset(
+        ['id', 'name', 'kind', 'path', 'size', 'provider', 'tags',],
+    )
 
     def create(self, validated_data):
         return super(OsfStorageFileSerializer, self).create(validated_data)
@@ -390,6 +427,7 @@ class FileDetailSerializer(FileSerializer):
     """
     Overrides FileSerializer to make id required.
     """
+
     id = IDField(source='_id', required=True)
 
 
@@ -406,23 +444,28 @@ class QuickFilesDetailSerializer(QuickFilesSerializer):
 
 
 class FileVersionSerializer(JSONAPISerializer):
-    filterable_fields = frozenset([
-        'id',
-        'size',
-        'identifier',
-        'content_type',
-    ])
+    filterable_fields = frozenset(['id', 'size', 'identifier', 'content_type',])
     id = ser.CharField(read_only=True, source='identifier')
-    size = ser.IntegerField(read_only=True, help_text='The size of this file at this version')
-    content_type = ser.CharField(read_only=True, help_text='The mime type of this file at this verison')
-    date_created = VersionedDateTimeField(source='created', read_only=True, help_text='The date that this version was created')
+    size = ser.IntegerField(
+        read_only=True, help_text='The size of this file at this version',
+    )
+    content_type = ser.CharField(
+        read_only=True, help_text='The mime type of this file at this verison',
+    )
+    date_created = VersionedDateTimeField(
+        source='created',
+        read_only=True,
+        help_text='The date that this version was created',
+    )
     name = ser.SerializerMethodField()
-    links = LinksField({
-        'self': 'self_url',
-        'html': 'absolute_url',
-        'download': 'get_download_link',
-        'render': 'get_render_link',
-    })
+    links = LinksField(
+        {
+            'self': 'self_url',
+            'html': 'absolute_url',
+            'download': 'get_download_link',
+            'render': 'get_render_link',
+        },
+    )
 
     def get_name(self, obj):
         file = self.context['file']
@@ -435,7 +478,8 @@ class FileVersionSerializer(JSONAPISerializer):
 
     def self_url(self, obj):
         return absolute_reverse(
-            'files:version-detail', kwargs={
+            'files:version-detail',
+            kwargs={
                 'version_id': obj.identifier,
                 'file_id': self.context['view'].kwargs['file_id'],
                 'version': self.context['request'].parser_context['kwargs']['version'],
@@ -444,17 +488,24 @@ class FileVersionSerializer(JSONAPISerializer):
 
     def absolute_url(self, obj):
         fobj = self.context['file']
-        return furl.furl(settings.DOMAIN).set(
-            path=(fobj.target._id, 'files', fobj.provider, fobj.path.lstrip('/')),
-            query={fobj.version_identifier: obj.identifier},  # TODO this can probably just be changed to revision or version
-        ).url
+        return (
+            furl.furl(settings.DOMAIN)
+            .set(
+                path=(fobj.target._id, 'files', fobj.provider, fobj.path.lstrip('/')),
+                query={
+                    fobj.version_identifier: obj.identifier,
+                },  # TODO this can probably just be changed to revision or version
+            )
+            .url
+        )
 
     def get_absolute_url(self, obj):
         return self.self_url(obj)
 
     def get_download_link(self, obj):
         return get_file_download_link(
-            self.context['file'], version=obj.identifier,
+            self.context['file'],
+            version=obj.identifier,
             view_only=self.context['request'].query_params.get('view_only'),
         )
 
@@ -465,6 +516,7 @@ class FileVersionSerializer(JSONAPISerializer):
 
         return get_file_render_link(mfr_url, download_url, version=obj.identifier)
 
+
 class FileMetadataRecordSerializer(JSONAPISerializer):
 
     id = IDField(source='_id', required=True)
@@ -473,8 +525,7 @@ class FileMetadataRecordSerializer(JSONAPISerializer):
     metadata = ser.DictField()
 
     file = RelationshipField(
-        related_view='files:file-detail',
-        related_view_kwargs={'file_id': '<file._id>'},
+        related_view='files:file-detail', related_view_kwargs={'file_id': '<file._id>'},
     )
 
     schema = RelationshipField(
@@ -482,10 +533,7 @@ class FileMetadataRecordSerializer(JSONAPISerializer):
         related_view_kwargs={'schema_id': '<schema._id>'},
     )
 
-    links = LinksField({
-        'download': 'get_download_link',
-        'self': 'get_absolute_url',
-    })
+    links = LinksField({'download': 'get_download_link', 'self': 'get_absolute_url',})
 
     def validate_metadata(self, value):
         schema = from_json(self.instance.serializer.osf_schema)
@@ -496,10 +544,11 @@ class FileMetadataRecordSerializer(JSONAPISerializer):
                 error_message = e.message
             else:
                 error_message = 'Your response of {} for the field {} was invalid.'.format(
-                    e.instance,
-                    e.absolute_path[0],
+                    e.instance, e.absolute_path[0],
                 )
-            raise InvalidModelValueError(detail=error_message, meta={'metadata_schema': schema})
+            raise InvalidModelValueError(
+                detail=error_message, meta={'metadata_schema': schema},
+            )
         return value
 
     def update(self, record, validated_data):
@@ -511,7 +560,8 @@ class FileMetadataRecordSerializer(JSONAPISerializer):
 
     def get_download_link(self, obj):
         return absolute_reverse(
-            'files:metadata-record-download', kwargs={
+            'files:metadata-record-download',
+            kwargs={
                 'file_id': obj.file._id,
                 'record_id': obj._id,
                 'version': self.context['request'].parser_context['kwargs']['version'],
@@ -553,10 +603,6 @@ def get_file_render_link(mfr_url, download_url, version=None):
 
     render_url = furl.furl(mfr_url).set(
         path=['render'],
-        args={
-            'url': furl.furl(download_url).set(
-                args=download_url_args,
-            ),
-        },
+        args={'url': furl.furl(download_url).set(args=download_url_args,),},
     )
     return render_url.url

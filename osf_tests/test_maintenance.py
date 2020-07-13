@@ -12,7 +12,6 @@ pytestmark = pytest.mark.django_db
 
 
 class TestMaintenance(unittest.TestCase):
-
     def tearDown(self):
         MaintenanceState.objects.all().delete()
 
@@ -40,7 +39,7 @@ class TestMaintenance(unittest.TestCase):
         assert current_state.end == end
 
     def test_set_maintenance_in_future(self):
-        start = (timezone.now() + timedelta(1))
+        start = timezone.now() + timedelta(1)
         maintenance.set_maintenance(message='', start=start.isoformat())
         current_state = MaintenanceState.objects.all().first()
 

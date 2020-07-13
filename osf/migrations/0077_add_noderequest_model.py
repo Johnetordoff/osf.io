@@ -20,35 +20,158 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='NodeRequest',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('_id', models.CharField(db_index=True, default=osf.models.base.generate_object_id, max_length=24, unique=True)),
-                ('machine_state', models.CharField(choices=[('accepted', 'Accepted'), ('initial', 'Initial'), ('pending', 'Pending'), ('rejected', 'Rejected')], db_index=True, default='initial', max_length=15)),
-                ('date_last_transitioned', models.DateTimeField(blank=True, db_index=True, null=True)),
-                ('request_type', models.CharField(choices=[('access', 'Access')], max_length=31)),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    '_id',
+                    models.CharField(
+                        db_index=True,
+                        default=osf.models.base.generate_object_id,
+                        max_length=24,
+                        unique=True,
+                    ),
+                ),
+                (
+                    'machine_state',
+                    models.CharField(
+                        choices=[
+                            ('accepted', 'Accepted'),
+                            ('initial', 'Initial'),
+                            ('pending', 'Pending'),
+                            ('rejected', 'Rejected'),
+                        ],
+                        db_index=True,
+                        default='initial',
+                        max_length=15,
+                    ),
+                ),
+                (
+                    'date_last_transitioned',
+                    models.DateTimeField(blank=True, db_index=True, null=True),
+                ),
+                (
+                    'request_type',
+                    models.CharField(choices=[('access', 'Access')], max_length=31),
+                ),
                 ('comment', models.TextField(blank=True, null=True)),
-                ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
-                ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
-                ('creator', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='submitted_requests', to=settings.AUTH_USER_MODEL)),
+                (
+                    'created',
+                    django_extensions.db.fields.CreationDateTimeField(
+                        auto_now_add=True, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    django_extensions.db.fields.ModificationDateTimeField(
+                        auto_now=True, verbose_name='modified'
+                    ),
+                ),
+                (
+                    'creator',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='submitted_requests',
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
             name='NodeRequestAction',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('_id', models.CharField(db_index=True, default=osf.models.base.generate_object_id, max_length=24, unique=True)),
-                ('trigger', models.CharField(choices=[('accept', 'Accept'), ('edit_comment', 'Edit_Comment'), ('reject', 'Reject'), ('submit', 'Submit')], max_length=31)),
-                ('from_state', models.CharField(choices=[('accepted', 'Accepted'), ('initial', 'Initial'), ('pending', 'Pending'), ('rejected', 'Rejected')], max_length=31)),
-                ('to_state', models.CharField(choices=[('accepted', 'Accepted'), ('initial', 'Initial'), ('pending', 'Pending'), ('rejected', 'Rejected')], max_length=31)),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    '_id',
+                    models.CharField(
+                        db_index=True,
+                        default=osf.models.base.generate_object_id,
+                        max_length=24,
+                        unique=True,
+                    ),
+                ),
+                (
+                    'trigger',
+                    models.CharField(
+                        choices=[
+                            ('accept', 'Accept'),
+                            ('edit_comment', 'Edit_Comment'),
+                            ('reject', 'Reject'),
+                            ('submit', 'Submit'),
+                        ],
+                        max_length=31,
+                    ),
+                ),
+                (
+                    'from_state',
+                    models.CharField(
+                        choices=[
+                            ('accepted', 'Accepted'),
+                            ('initial', 'Initial'),
+                            ('pending', 'Pending'),
+                            ('rejected', 'Rejected'),
+                        ],
+                        max_length=31,
+                    ),
+                ),
+                (
+                    'to_state',
+                    models.CharField(
+                        choices=[
+                            ('accepted', 'Accepted'),
+                            ('initial', 'Initial'),
+                            ('pending', 'Pending'),
+                            ('rejected', 'Rejected'),
+                        ],
+                        max_length=31,
+                    ),
+                ),
                 ('comment', models.TextField(blank=True)),
                 ('is_deleted', models.BooleanField(default=False)),
-                ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
-                ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
-                ('creator', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to=settings.AUTH_USER_MODEL)),
-                ('target', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='actions', to='osf.NodeRequest')),
+                (
+                    'created',
+                    django_extensions.db.fields.CreationDateTimeField(
+                        auto_now_add=True, verbose_name='created'
+                    ),
+                ),
+                (
+                    'modified',
+                    django_extensions.db.fields.ModificationDateTimeField(
+                        auto_now=True, verbose_name='modified'
+                    ),
+                ),
+                (
+                    'creator',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='+',
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    'target',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='actions',
+                        to='osf.NodeRequest',
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={'abstract': False,},
         ),
         # We add the access_requests_enabled field in two steps
         #    1. Add the field
@@ -76,10 +199,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='noderequest',
             name='target',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='requests', to='osf.AbstractNode'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='requests',
+                to='osf.AbstractNode',
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='noderequest',
-            unique_together=set([('target', 'creator')]),
+            name='noderequest', unique_together=set([('target', 'creator')]),
         ),
     ]

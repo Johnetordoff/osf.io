@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0126_update_review_group_names'),
     ]
 
-    operations = [
-    ]
+    operations = []

@@ -13,14 +13,14 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='basefilenode',
-            name='node',
-        ),
+        migrations.RemoveField(model_name='basefilenode', name='node',),
         migrations.AlterField(
             model_name='basefilenode',
             name='target_content_type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='contenttypes.ContentType'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to='contenttypes.ContentType',
+            ),
         ),
         migrations.AlterField(
             model_name='basefilenode',

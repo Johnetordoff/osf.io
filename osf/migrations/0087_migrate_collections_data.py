@@ -33,7 +33,8 @@ class Migration(migrations.Migration):
                         WHERE app_label = 'osf' AND model = 'collection'
                     ) CT ON TRUE
                     WHERE type = 'osf.collection';
-                """, """
+                """,
+                """
                 -- Copy collected refs into thru-table
                 INSERT INTO osf_collectedguidmetadata (id, created, modified, collected_type, status, creator_id, guid_id, collection_id, _order)
                     SELECT nextval('osf_collectedguidmetadata_id_seq'), created, modified, '', '', C.creator_id, G.id, C.id, _order
@@ -50,7 +51,8 @@ class Migration(migrations.Migration):
                             AND object_id = NR.child_id
                     ) G ON TRUE
                     WHERE parent_id IN (SELECT id FROM osf_collection);
-                """, """
+                """,
+                """
                 -- Populate thru-table for collection.collected_types. Until now, only nodes could be collected, so only populate with that type
                 INSERT INTO osf_collection_collected_types (id, collection_id, contenttype_id)
                     SELECT nextval('osf_collection_collected_types_id_seq'), C.id, CT.id
@@ -71,7 +73,8 @@ class Migration(migrations.Migration):
                         WHERE app_label = 'osf'
                             AND model = 'collection'
                     ) CT ON TRUE;
-                """, """
+                """,
+                """
                 -- Point old collection GUIDs to new object
                 UPDATE osf_guid
                     SET content_type_id = (SELECT id FROM django_content_type WHERE app_label = 'osf' AND model = 'collection')
@@ -81,11 +84,13 @@ class Migration(migrations.Migration):
                         WHERE content_type_id = (SELECT id FROM django_content_type WHERE app_label = 'osf' and model = 'abstractnode')
                             AND object_id IN (SELECT id FROM osf_collection)
                     );
-                """, """
+                """,
+                """
                 -- Make a system tag for old collections
                 INSERT INTO osf_tag (id, name, system, created, modified)
                     SELECT nextval('osf_tag_id_seq'), 'old_node_collection', TRUE, current_timestamp, current_timestamp;
-                """, """
+                """,
+                """
                 -- And tag all old collections with it
                 INSERT INTO osf_abstractnode_tags (id, abstractnode_id, tag_id)
                     SELECT nextval('osf_abstractnode_tags_id_seq'), N.id, ONT.id
@@ -97,18 +102,21 @@ class Migration(migrations.Migration):
                             AND name = 'old_node_collection'
                     ) ONT ON TRUE
                     WHERE N.type = 'osf.collection';
-                """, """
+                """,
+                """
                 -- "Delete" old collection nodes
                 UPDATE osf_abstractnode
                     SET type='osf.node',
                         is_deleted = TRUE,
                         deleted_date = current_timestamp
                     WHERE type='osf.collection';
-               """, """
+               """,
+                """
                 -- Update the collection id seq to avoid conflicts when more are made
                 SELECT setval('osf_collection_id_seq', max(id)) FROM osf_collection;
-                """
-            ], [
+                """,
+            ],
+            [
                 """
                 -- Undelete nodes
                 UPDATE osf_abstractnode N
@@ -123,7 +131,8 @@ class Migration(migrations.Migration):
                             AND name = 'old_node_collection'
                     ) T ON TRUE
                     WHERE ANT.tag_id = T.id AND ANT.abstractnode_id = N.id
-                """, """
+                """,
+                """
                 -- Repoint GUIDs
                 UPDATE osf_guid
                     SET content_type_id = (SELECT id FROM django_content_type WHERE app_label = 'osf' AND model = 'abstractnode')
@@ -133,7 +142,8 @@ class Migration(migrations.Migration):
                         WHERE content_type_id = (SELECT id FROM django_content_type WHERE app_label = 'osf' and model = 'collection')
                             AND object_id IN (SELECT id FROM osf_collection)
                     );
-                """, """
+                """,
+                """
                 -- Delete everything inserted in the forward
                 DELETE FROM osf_collection;
                 DELETE FROM osf_collection_collected_types;
@@ -146,10 +156,11 @@ class Migration(migrations.Migration):
                 DELETE FROM osf_tag
                     WHERE system = TRUE
                         AND name = 'old_node_collection';
-                """, """
+                """,
+                """
                 -- Reset collection id sequence
                 SELECT setval('osf_collection_id_seq', 1);
-                """
-            ]
+                """,
+            ],
         ),
     ]

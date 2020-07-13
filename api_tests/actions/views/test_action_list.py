@@ -14,18 +14,11 @@ from osf.utils import permissions as osf_permissions
 class TestReviewActionCreateRoot(object):
     def create_payload(self, reviewable_id=None, **attrs):
         payload = {
-            'data': {
-                'attributes': attrs,
-                'relationships': {},
-                'type': 'actions'
-            }
+            'data': {'attributes': attrs, 'relationships': {}, 'type': 'actions'}
         }
         if reviewable_id:
             payload['data']['relationships']['target'] = {
-                'data': {
-                    'type': 'preprints',
-                    'id': reviewable_id
-                }
+                'data': {'type': 'preprints', 'id': reviewable_id}
             }
         return payload
 
@@ -43,13 +36,8 @@ class TestReviewActionCreateRoot(object):
 
     @pytest.fixture()
     def preprint(self, node_admin, provider):
-        preprint = PreprintFactory(
-            provider=provider,
-            is_published=False
-        )
-        preprint.add_contributor(
-            node_admin, permissions=osf_permissions.ADMIN
-        )
+        preprint = PreprintFactory(provider=provider, is_published=False)
+        preprint.add_contributor(node_admin, permissions=osf_permissions.ADMIN)
         return preprint
 
     @pytest.fixture()
@@ -58,9 +46,7 @@ class TestReviewActionCreateRoot(object):
         moderator.groups.add(provider.get_group('moderator'))
         return moderator
 
-    def test_create_permissions(
-            self, app, url, preprint, node_admin, moderator
-    ):
+    def test_create_permissions(self, app, url, preprint, node_admin, moderator):
         assert preprint.machine_state == 'initial'
 
         submit_payload = self.create_payload(preprint._id, trigger='submit')
@@ -72,9 +58,7 @@ class TestReviewActionCreateRoot(object):
         # A random user can't submit
         some_rando = AuthUserFactory()
         res = app.post_json_api(
-            url, submit_payload,
-            auth=some_rando.auth,
-            expect_errors=True
+            url, submit_payload, auth=some_rando.auth, expect_errors=True
         )
         assert res.status_code == 403
 
@@ -95,29 +79,21 @@ class TestReviewActionCreateRoot(object):
 
         # A random user can't accept
         res = app.post_json_api(
-            url, accept_payload,
-            auth=some_rando.auth,
-            expect_errors=True
+            url, accept_payload, auth=some_rando.auth, expect_errors=True
         )
         assert res.status_code == 403
 
         # Moderator from another provider can't accept
         another_moderator = AuthUserFactory()
-        another_moderator.groups.add(
-            PreprintProviderFactory().get_group('moderator')
-        )
+        another_moderator.groups.add(PreprintProviderFactory().get_group('moderator'))
         res = app.post_json_api(
-            url, accept_payload,
-            auth=another_moderator.auth,
-            expect_errors=True
+            url, accept_payload, auth=another_moderator.auth, expect_errors=True
         )
         assert res.status_code == 403
 
         # Node admin can't accept
         res = app.post_json_api(
-            url, accept_payload,
-            auth=node_admin.auth,
-            expect_errors=True
+            url, accept_payload, auth=node_admin.auth, expect_errors=True
         )
         assert res.status_code == 403
 
@@ -134,15 +110,13 @@ class TestReviewActionCreateRoot(object):
         assert preprint.is_published
 
     def test_cannot_create_actions_for_unmoderated_provider(
-            self, app, url, preprint, provider, node_admin
+        self, app, url, preprint, provider, node_admin
     ):
         provider.reviews_workflow = None
         provider.save()
         submit_payload = self.create_payload(preprint._id, trigger='submit')
         res = app.post_json_api(
-            url, submit_payload,
-            auth=node_admin.auth,
-            expect_errors=True
+            url, submit_payload, auth=node_admin.auth, expect_errors=True
         )
         assert res.status_code == 409
 
@@ -179,7 +153,7 @@ class TestReviewActionCreateRoot(object):
                 ('withdrawn', 'reject'),
                 ('withdrawn', 'edit_comment'),
                 ('withdrawn', 'withdraw'),
-            ]
+            ],
         }
         for workflow, transitions in invalid_transitions.items():
             provider.reviews_workflow = workflow
@@ -187,38 +161,27 @@ class TestReviewActionCreateRoot(object):
             for state, trigger in transitions:
                 preprint.machine_state = state
                 preprint.save()
-                bad_payload = self.create_payload(
-                    preprint._id, trigger=trigger
-                )
+                bad_payload = self.create_payload(preprint._id, trigger=trigger)
                 res = app.post_json_api(
-                    url, bad_payload,
-                    auth=moderator.auth, expect_errors=True
+                    url, bad_payload, auth=moderator.auth, expect_errors=True
                 )
                 assert res.status_code == 409
 
         # test invalid trigger
-        bad_payload = self.create_payload(
-            preprint._id, trigger='badtriggerbad'
-        )
+        bad_payload = self.create_payload(preprint._id, trigger='badtriggerbad')
         res = app.post_json_api(
-            url, bad_payload,
-            auth=moderator.auth,
-            expect_errors=True
+            url, bad_payload, auth=moderator.auth, expect_errors=True
         )
         assert res.status_code == 400
 
         # test target is required
         bad_payload = self.create_payload(trigger='accept')
         res = app.post_json_api(
-            url, bad_payload,
-            auth=moderator.auth,
-            expect_errors=True
+            url, bad_payload, auth=moderator.auth, expect_errors=True
         )
         assert res.status_code == 400
 
-    def test_valid_transitions(
-            self, app, url, preprint, provider, moderator
-    ):
+    def test_valid_transitions(self, app, url, preprint, provider, moderator):
         valid_transitions = {
             'post-moderation': [
                 ('accepted', 'edit_comment', 'accepted'),

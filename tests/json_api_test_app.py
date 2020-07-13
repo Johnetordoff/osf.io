@@ -5,19 +5,23 @@ from django.test.signals import template_rendered
 from django.core import signals
 from django.test.client import store_rendered_templates
 from django.utils.functional import curry
+
 try:
     from django.db import close_old_connections
 except ImportError:
     from django.db import close_connection
+
     close_old_connections = None
 
 from webtest.utils import NoDefault
 from webtest_plus import TestApp
 
+
 class JSONAPIWrapper(object):
     """
     Creates wrapper with stated content_type.
     """
+
     def make_wrapper(self, url, method, content_type, params=NoDefault, **kw):
         """
         Helper method for generating wrapper method.
@@ -26,9 +30,7 @@ class JSONAPIWrapper(object):
         if params is not NoDefault:
             params = dumps(params, cls=self.JSONEncoder)
         kw.update(
-            params=params,
-            content_type=content_type,
-            upload_files=None,
+            params=params, content_type=content_type, upload_files=None,
         )
         wrapper = self._gen_request(method, url, **kw)
 
@@ -85,8 +87,9 @@ class JSONAPITestApp(TestApp, JSONAPIWrapper):
             on_template_render = curry(store_rendered_templates, data)
             template_rendered.connect(on_template_render)
 
-            response = super(JSONAPITestApp, self).do_request(req, status,
-                                                             expect_errors)
+            response = super(JSONAPITestApp, self).do_request(
+                req, status, expect_errors
+            )
 
             # Add any rendered template detail to the response.
             # If there was only one template rendered (the most likely case),
@@ -117,12 +120,14 @@ class JSONAPITestApp(TestApp, JSONAPIWrapper):
                 signals.request_finished.connect(close_connection)
 
     def json_api_method(method):
-
         def wrapper(self, url, params=NoDefault, bulk=False, **kw):
             content_type = 'application/vnd.api+json'
             if bulk:
                 content_type = 'application/vnd.api+json; ext=bulk'
-            return JSONAPIWrapper.make_wrapper(self, url, method, content_type, params, **kw)
+            return JSONAPIWrapper.make_wrapper(
+                self, url, method, content_type, params, **kw
+            )
+
         return wrapper
 
     post_json_api = json_api_method('POST')

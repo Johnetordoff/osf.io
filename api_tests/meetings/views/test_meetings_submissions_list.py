@@ -9,7 +9,6 @@ from osf_tests.factories import ConferenceFactory, ProjectFactory, AuthUserFacto
 
 @pytest.mark.django_db
 class TestMeetingSubmissionsList:
-
     @pytest.fixture()
     def meeting(self):
         return ConferenceFactory(name='OSF 2019', endpoint='osf2019')
@@ -41,14 +40,18 @@ class TestMeetingSubmissionsList:
 
     @pytest.fixture()
     def meeting_one_submission(self, meeting, user):
-        submission = ProjectFactory(title='Submission One', is_public=True, creator=user)
+        submission = ProjectFactory(
+            title='Submission One', is_public=True, creator=user
+        )
         meeting.submissions.add(submission)
         submission.add_tag('poster', Auth(user))
         return submission
 
     @pytest.fixture()
     def meeting_one_private_submission(self, meeting, user):
-        submission = ProjectFactory(title='Submission One', is_public=False, creator=user)
+        submission = ProjectFactory(
+            title='Submission One', is_public=False, creator=user
+        )
         meeting.submissions.add(submission)
         submission.add_tag('poster', Auth(user))
         return submission
@@ -69,26 +72,34 @@ class TestMeetingSubmissionsList:
 
     @pytest.fixture()
     def meeting_two_third_submission(self, meeting_two, user_three):
-        submission = ProjectFactory(title='Cantaloupe', is_public=True, creator=user_three)
+        submission = ProjectFactory(
+            title='Cantaloupe', is_public=True, creator=user_three
+        )
         meeting_two.submissions.add(submission)
         submission.add_tag('poster', Auth(user_three))
         return submission
 
     @pytest.fixture()
     def file(self, user, meeting_two_submission):
-        file = api_utils.create_test_file(meeting_two_submission, user, create_guid=False)
+        file = api_utils.create_test_file(
+            meeting_two_submission, user, create_guid=False
+        )
         self.mock_download(meeting_two_submission, file, 2)
         return file
 
     @pytest.fixture()
     def file_two(self, user, meeting_two_second_submission):
-        file = api_utils.create_test_file(meeting_two_second_submission, user, create_guid=False)
+        file = api_utils.create_test_file(
+            meeting_two_second_submission, user, create_guid=False
+        )
         self.mock_download(meeting_two_second_submission, file, 1)
         return file
 
     @pytest.fixture()
     def file_three(self, user, meeting_two_third_submission):
-        file = api_utils.create_test_file(meeting_two_third_submission, user, create_guid=False)
+        file = api_utils.create_test_file(
+            meeting_two_third_submission, user, create_guid=False
+        )
         return file
 
     def mock_download(self, project, file, download_count):
@@ -96,13 +107,21 @@ class TestMeetingSubmissionsList:
             _id='download:{}:{}'.format(project._id, file._id),
             resource=project.guids.first(),
             action='download',
-            file=file
+            file=file,
         )
         pc.total = download_count
         pc.save()
         return pc
 
-    def test_meeting_submissions_list(self, app, user, meeting, url, meeting_one_submission, meeting_one_private_submission):
+    def test_meeting_submissions_list(
+        self,
+        app,
+        user,
+        meeting,
+        url,
+        meeting_one_submission,
+        meeting_one_private_submission,
+    ):
         api_utils.create_test_file(meeting_one_submission, user, create_guid=False)
         res = app.get(url)
         data = res.json['data']
@@ -114,8 +133,18 @@ class TestMeetingSubmissionsList:
         assert 'download' in data[0]['links']
         assert 'author' in data[0]['relationships']
 
-    def test_meeting_submissions_list_sorting_and_filtering(self, app, url_meeting_two, meeting_two,
-            meeting_two_submission, file, meeting_two_second_submission, file_two, meeting_two_third_submission, file_three):
+    def test_meeting_submissions_list_sorting_and_filtering(
+        self,
+        app,
+        url_meeting_two,
+        meeting_two,
+        meeting_two_submission,
+        file,
+        meeting_two_second_submission,
+        file_two,
+        meeting_two_third_submission,
+        file_three,
+    ):
         first = meeting_two_submission._id
         second = meeting_two_second_submission._id
         third = meeting_two_third_submission._id
@@ -142,25 +171,35 @@ class TestMeetingSubmissionsList:
         assert len(data) == 2
         assert res.json['data'][0]['attributes']['meeting_category'] == 'poster'
         assert res.json['data'][1]['attributes']['meeting_category'] == 'poster'
-        assert set([submission['id'] for submission in res.json['data']]) == set([second, third])
+        assert set([submission['id'] for submission in res.json['data']]) == set(
+            [second, third]
+        )
 
         # test search title, author, meeting_category combined (OR)
-        res = app.get(url_meeting_two + '?filter[title,author_name,meeting_category]=cantaloupe')
+        res = app.get(
+            url_meeting_two + '?filter[title,author_name,meeting_category]=cantaloupe'
+        )
         assert len(res.json['data']) == 1
         assert res.json['data'][0]['attributes']['title'] == 'Cantaloupe'
         assert res.json['data'][0]['id'] == third
 
-        res = app.get(url_meeting_two + '?filter[title,author_name,meeting_category]=mcgee')
+        res = app.get(
+            url_meeting_two + '?filter[title,author_name,meeting_category]=mcgee'
+        )
         assert len(res.json['data']) == 1
         assert res.json['data'][0]['attributes']['author_name'] == 'McGee'
         assert res.json['data'][0]['id'] == first
 
-        res = app.get(url_meeting_two + '?filter[title,author_name,meeting_category]=talk')
+        res = app.get(
+            url_meeting_two + '?filter[title,author_name,meeting_category]=talk'
+        )
         assert len(res.json['data']) == 1
         assert res.json['data'][0]['attributes']['meeting_category'] == 'talk'
         assert res.json['data'][0]['id'] == first
 
-        res = app.get(url_meeting_two + '?filter[title,author_name,meeting_category]=juice')
+        res = app.get(
+            url_meeting_two + '?filter[title,author_name,meeting_category]=juice'
+        )
         assert len(res.json['data']) == 2
         # Results include an author match and a title match
         assert set([first, second]) == set([sub['id'] for sub in res.json['data']])
@@ -194,7 +233,9 @@ class TestMeetingSubmissionsList:
         data = res.json['data']
         assert len(data) == 3
         assert [third, second, first] == [meeting['id'] for meeting in data]
-        assert ['Cantaloupe', 'Bananas', 'Apple Juice'] == [meeting['attributes']['title'] for meeting in data]
+        assert ['Cantaloupe', 'Bananas', 'Apple Juice'] == [
+            meeting['attributes']['title'] for meeting in data
+        ]
 
         # test sort author
         res = app.get(url_meeting_two + '?sort=author_name')
@@ -202,7 +243,9 @@ class TestMeetingSubmissionsList:
         data = res.json['data']
         assert len(data) == 3
         assert [second, third, first] == [meeting['id'] for meeting in data]
-        assert ['Juice', 'Lemonade', 'McGee'] == [meeting['attributes']['author_name'] for meeting in data]
+        assert ['Juice', 'Lemonade', 'McGee'] == [
+            meeting['attributes']['author_name'] for meeting in data
+        ]
 
         # test reverse sort author
         res = app.get(url_meeting_two + '?sort=-author_name')
@@ -210,7 +253,9 @@ class TestMeetingSubmissionsList:
         data = res.json['data']
         assert len(data) == 3
         assert [first, third, second] == [meeting['id'] for meeting in data]
-        assert ['McGee', 'Lemonade', 'Juice'] == [meeting['attributes']['author_name'] for meeting in data]
+        assert ['McGee', 'Lemonade', 'Juice'] == [
+            meeting['attributes']['author_name'] for meeting in data
+        ]
 
         # test sort meeting_category
         res = app.get(url_meeting_two + '?sort=meeting_category')
@@ -218,14 +263,18 @@ class TestMeetingSubmissionsList:
         data = res.json['data']
         assert len(data) == 3
         assert [second, third, first] == [meeting['id'] for meeting in data]
-        assert ['poster', 'poster', 'talk'] == [meeting['attributes']['meeting_category'] for meeting in data]
+        assert ['poster', 'poster', 'talk'] == [
+            meeting['attributes']['meeting_category'] for meeting in data
+        ]
 
         # test reverse sort meeting_category
         res = app.get(url_meeting_two + '?sort=-meeting_category')
         assert res.status_code == 200
         data = res.json['data']
         assert len(data) == 3
-        assert ['talk', 'poster', 'poster'] == [meeting['attributes']['meeting_category'] for meeting in data]
+        assert ['talk', 'poster', 'poster'] == [
+            meeting['attributes']['meeting_category'] for meeting in data
+        ]
 
         # test sort created
         res = app.get(url_meeting_two + '?sort=created')
@@ -234,7 +283,9 @@ class TestMeetingSubmissionsList:
         assert len(data) == 3
         assert [first, second, third] == [meeting['id'] for meeting in data]
         assert meeting_two_submission.created < meeting_two_second_submission.created
-        assert meeting_two_second_submission.created < meeting_two_third_submission.created
+        assert (
+            meeting_two_second_submission.created < meeting_two_third_submission.created
+        )
 
         # test sort reverse created
         res = app.get(url_meeting_two + '?sort=-created')
@@ -249,7 +300,9 @@ class TestMeetingSubmissionsList:
         data = res.json['data']
         assert len(data) == 3
         assert [third, second, first] == [meeting['id'] for meeting in data]
-        assert [0, 1, 2] == [meeting['attributes']['download_count'] for meeting in data]
+        assert [0, 1, 2] == [
+            meeting['attributes']['download_count'] for meeting in data
+        ]
 
         # test reverse sort download count
         res = app.get(url_meeting_two + '?sort=-download_count')
@@ -257,4 +310,6 @@ class TestMeetingSubmissionsList:
         data = res.json['data']
         assert len(data) == 3
         assert [first, second, third] == [meeting['id'] for meeting in data]
-        assert [2, 1, 0] == [meeting['attributes']['download_count'] for meeting in data]
+        assert [2, 1, 0] == [
+            meeting['attributes']['download_count'] for meeting in data
+        ]

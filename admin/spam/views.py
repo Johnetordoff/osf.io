@@ -36,6 +36,7 @@ class SpamList(PermissionRequiredMixin, ListView):
 
     Interface with OSF database. No admin models.
     """
+
     template_name = 'spam/spam_list.html'
     paginate_by = 10
     paginate_orphans = 1
@@ -45,15 +46,18 @@ class SpamList(PermissionRequiredMixin, ListView):
     raise_exception = True
 
     def get_queryset(self):
-        return Comment.objects.filter(
-            spam_status=int(self.request.GET.get('status', '1'))
-        ).exclude(reports={}).exclude(reports=None)
+        return (
+            Comment.objects.filter(spam_status=int(self.request.GET.get('status', '1')))
+            .exclude(reports={})
+            .exclude(reports=None)
+        )
 
     def get_context_data(self, **kwargs):
         queryset = kwargs.pop('object_list', self.object_list)
         page_size = self.get_paginate_by(queryset)
         paginator, page, queryset, is_paginated = self.paginate_queryset(
-            queryset, page_size)
+            queryset, page_size
+        )
         kwargs.setdefault('spam', list(map(serialize_comment, queryset)))
         kwargs.setdefault('page', page)
         kwargs.setdefault('status', self.request.GET.get('status', '1'))
@@ -67,15 +71,20 @@ class UserSpamList(SpamList):
 
     Interface with OSF database. No admin models.
     """
+
     template_name = 'spam/user.html'
 
     def get_queryset(self):
         user = OSFUser.load(self.kwargs.get('user_id', None))
 
-        return Comment.objects.filter(
-            spam_status=int(self.request.GET.get('status', '1')),
-            user=user
-        ).exclude(reports={}).exclude(reports=None).order_by(self.ordering)
+        return (
+            Comment.objects.filter(
+                spam_status=int(self.request.GET.get('status', '1')), user=user
+            )
+            .exclude(reports={})
+            .exclude(reports=None)
+            .order_by(self.ordering)
+        )
 
     def get_context_data(self, **kwargs):
         kwargs.setdefault('user_id', self.kwargs.get('user_id', None))
@@ -87,6 +96,7 @@ class SpamDetail(PermissionRequiredMixin, FormView):
 
     Interface with OSF database. Logs action (confirming spam) on admin db.
     """
+
     form_class = ConfirmForm
     template_name = 'spam/detail.html'
     permission_required = 'osf.view_spam'
@@ -96,8 +106,7 @@ class SpamDetail(PermissionRequiredMixin, FormView):
         spam_id = self.kwargs.get('spam_id')
         kwargs = super(SpamDetail, self).get_context_data(**kwargs)
         try:
-            kwargs.setdefault('comment',
-                              serialize_comment(Comment.load(spam_id)))
+            kwargs.setdefault('comment', serialize_comment(Comment.load(spam_id)))
         except AttributeError:
             raise Http404('Spam with id "{}" not found.'.format(spam_id))
         kwargs.setdefault('page_number', self.request.GET.get('page', '1'))
@@ -118,7 +127,7 @@ class SpamDetail(PermissionRequiredMixin, FormView):
                 object_id=self.kwargs.get('spam_id'),
                 object_repr='Comment',
                 message=f'Confirmed SPAM: {self.kwargs.get("spam_id")}',
-                action_flag=CONFIRM_SPAM
+                action_flag=CONFIRM_SPAM,
             )
         else:
             item.confirm_ham()
@@ -127,7 +136,7 @@ class SpamDetail(PermissionRequiredMixin, FormView):
                 object_id=self.kwargs.get('spam_id'),
                 object_repr='Comment',
                 message=f'Confirmed HAM: {self.kwargs.get("spam_id")}',
-                action_flag=CONFIRM_HAM
+                action_flag=CONFIRM_HAM,
             )
 
         return super().form_valid(form)
@@ -137,5 +146,5 @@ class SpamDetail(PermissionRequiredMixin, FormView):
         return reverse_spam_detail(
             self.kwargs.get('spam_id'),
             page=self.request.GET.get('page', '1'),
-            status=self.request.GET.get('status', '1')
+            status=self.request.GET.get('status', '1'),
         )

@@ -24,7 +24,9 @@ class SubmissionOnPreprintPublishedOrAdmin(permissions.BasePermission):
 class SubmissionAcceptedOrPublishedOrPreprintAdmin(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if isinstance(obj, ChronosSubmission):
-            submission = ChronosSubmission.objects.get(publication_id=view.kwargs.get('submission_id', None))
+            submission = ChronosSubmission.objects.get(
+                publication_id=view.kwargs.get('submission_id', None),
+            )
             auth = get_user_auth(request)
 
             is_submission_accepted = submission.status == 3
@@ -36,14 +38,20 @@ class SubmissionAcceptedOrPublishedOrPreprintAdmin(permissions.BasePermission):
             if request.method == 'GET':
                 # Preprints don't have group membership - hence "is_contributor" usage
                 is_preprint_contributor = obj.preprint.is_contributor(auth.user)
-                user_has_perm = is_preprint_contributor or is_submission_published or is_submission_accepted
+                user_has_perm = (
+                    is_preprint_contributor
+                    or is_submission_published
+                    or is_submission_accepted
+                )
                 if not user_has_perm:
                     raise exceptions.NotFound
 
             # However if the request is a PATCH or PUT, check whether the user is an ADMIN of this preprint
             # Because only preprint admins can update a submission
             if request.method in ['PATCH', 'PUT']:
-                is_preprint_admin = obj.preprint.has_permission(auth.user, osf_permissions.ADMIN)
+                is_preprint_admin = obj.preprint.has_permission(
+                    auth.user, osf_permissions.ADMIN,
+                )
                 user_has_perm = is_preprint_admin
                 if not user_has_perm:
                     raise exceptions.PermissionDenied

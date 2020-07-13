@@ -4,8 +4,11 @@ import os
 from future.moves.urllib.parse import urljoin
 
 import markupsafe
-from addons.base.models import (BaseOAuthNodeSettings, BaseOAuthUserSettings,
-                                BaseStorageAddon)
+from addons.base.models import (
+    BaseOAuthNodeSettings,
+    BaseOAuthUserSettings,
+    BaseStorageAddon,
+)
 from django.db import models
 from framework.auth import Auth
 from github3 import GitHubError
@@ -20,6 +23,7 @@ from addons.github.api import GitHubClient
 from addons.github.exceptions import ApiError, NotFoundError
 from addons.github.serializer import GitHubSerializer
 from website.util import web_url_for
+
 hook_domain = github_settings.HOOK_DOMAIN or settings.DOMAIN
 
 
@@ -61,22 +65,21 @@ class GitHubProvider(ExternalProvider):
         """View called when the OAuth flow is completed. Adds a new GitHubUserSettings
         record to the user and saves the account info.
         """
-        client = GitHubClient(
-            access_token=response['access_token']
-        )
+        client = GitHubClient(access_token=response['access_token'])
 
         user_info = client.user()
 
         return {
             'provider_id': str(user_info.id),
             'profile_url': user_info.html_url,
-            'display_name': user_info.login
+            'display_name': user_info.login,
         }
 
 
 class UserSettings(BaseOAuthUserSettings):
     """Stores user-specific github information
     """
+
     oauth_provider = GitHubProvider
     serializer = GitHubSerializer
 
@@ -95,7 +98,9 @@ class UserSettings(BaseOAuthUserSettings):
     # Assumes oldest connected account is primary.
     @property
     def public_id(self):
-        gh_accounts = self.owner.external_accounts.filter(provider=self.oauth_provider.short_name)
+        gh_accounts = self.owner.external_accounts.filter(
+            provider=self.oauth_provider.short_name
+        )
         if gh_accounts:
             return gh_accounts[0].display_name
         return None
@@ -110,7 +115,9 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
     hook_id = models.TextField(blank=True, null=True)
     hook_secret = models.TextField(blank=True, null=True)
     registration_data = DateTimeAwareJSONField(default=dict, blank=True, null=True)
-    user_settings = models.ForeignKey(UserSettings, null=True, blank=True, on_delete=models.CASCADE)
+    user_settings = models.ForeignKey(
+        UserSettings, null=True, blank=True, on_delete=models.CASCADE
+    )
 
     @property
     def folder_id(self):
@@ -134,10 +141,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
         self.user_settings = user_settings
         self.owner.add_log(
             action='github_node_authorized',
-            params={
-                'project': self.owner.parent_id,
-                'node': self.owner._id,
-            },
+            params={'project': self.owner.parent_id, 'node': self.owner._id,},
             auth=Auth(user_settings.owner),
         )
         if save:
@@ -156,10 +160,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
         if log:
             self.owner.add_log(
                 action='github_node_deauthorized',
-                params={
-                    'project': self.owner.parent_id,
-                    'node': self.owner._id,
-                },
+                params={'project': self.owner.parent_id, 'node': self.owner._id,},
                 auth=auth,
             )
 
@@ -174,9 +175,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
     @property
     def repo_url(self):
         if self.user and self.repo:
-            return 'https://github.com/{0}/{1}/'.format(
-                self.user, self.repo
-            )
+            return 'https://github.com/{0}/{1}/'.format(self.user, self.repo)
 
     @property
     def short_url(self):
@@ -206,9 +205,10 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
                         'kind': 'repo',
                         'id': repo.id,
                         'name': repo.name,
-                        'path': os.path.join(repo.owner.login, repo.name)
+                        'path': os.path.join(repo.owner.login, repo.name),
                     }
-                    for repo in connection.repos()]
+                    for repo in connection.repos()
+                ]
             except GitHubError:
                 repo_data = []
             return repo_data
@@ -217,31 +217,39 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
     def to_json(self, user):
         ret = super(NodeSettings, self).to_json(user)
         user_settings = user.get_addon('github')
-        ret.update({
-            'user_has_auth': user_settings and user_settings.has_auth,
-            'is_registration': self.owner.is_registration,
-        })
+        ret.update(
+            {
+                'user_has_auth': user_settings and user_settings.has_auth,
+                'is_registration': self.owner.is_registration,
+            }
+        )
         if self.has_auth:
             owner = self.user_settings.owner
 
             if owner == user:
                 ret.update({'repo_names': self.get_folders()})
 
-            ret.update({
-                'node_has_auth': True,
-                'github_user': self.user or '',
-                'github_repo': self.repo or '',
-                'github_repo_full_name': '{0}/{1}'.format(self.user, self.repo) if (self.user and self.repo) else '',
-                'auth_osf_name': owner.fullname,
-                'auth_osf_url': owner.url,
-                'auth_osf_id': owner._id,
-                'github_user_name': self.external_account.display_name,
-                'github_user_url': self.external_account.profile_url,
-                'is_owner': owner == user,
-                'valid_credentials': GitHubClient(external_account=self.external_account).check_authorization(),
-                'addons_url': web_url_for('user_addons'),
-                'files_url': self.owner.web_url_for('collect_file_trees')
-            })
+            ret.update(
+                {
+                    'node_has_auth': True,
+                    'github_user': self.user or '',
+                    'github_repo': self.repo or '',
+                    'github_repo_full_name': '{0}/{1}'.format(self.user, self.repo)
+                    if (self.user and self.repo)
+                    else '',
+                    'auth_osf_name': owner.fullname,
+                    'auth_osf_url': owner.url,
+                    'auth_osf_id': owner._id,
+                    'github_user_name': self.external_account.display_name,
+                    'github_user_url': self.external_account.profile_url,
+                    'is_owner': owner == user,
+                    'valid_credentials': GitHubClient(
+                        external_account=self.external_account
+                    ).check_authorization(),
+                    'addons_url': web_url_for('user_addons'),
+                    'files_url': self.owner.web_url_for('collect_file_trees'),
+                }
+            )
         return ret
 
     def serialize_waterbutler_credentials(self):
@@ -260,14 +268,16 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
     def create_waterbutler_log(self, auth, action, metadata):
         path = metadata['path']
 
-        url = self.owner.web_url_for('addon_view_or_download_file', path=path, provider='github')
+        url = self.owner.web_url_for(
+            'addon_view_or_download_file', path=path, provider='github'
+        )
 
         sha, urls = None, {}
         try:
             sha = metadata['extra']['commit']['sha']
             urls = {
                 'view': '{0}?ref={1}'.format(url, sha),
-                'download': '{0}?action=download&ref={1}'.format(url, sha)
+                'download': '{0}?action=download&ref={1}'.format(url, sha),
             }
         except KeyError:
             pass
@@ -280,11 +290,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
                 'node': self.owner._id,
                 'path': path,
                 'urls': urls,
-                'github': {
-                    'user': self.user,
-                    'repo': self.repo,
-                    'sha': sha,
-                },
+                'github': {'user': self.user, 'repo': self.repo, 'sha': sha,},
             },
         )
 
@@ -342,10 +348,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
                 message += (
                     ' The files in this GitHub repo can be viewed on GitHub '
                     '<u><a href="https://github.com/{user}/{repo}/">here</a></u>.'
-                ).format(
-                    user=self.user,
-                    repo=self.repo,
-                )
+                ).format(user=self.user, repo=self.repo,)
             messages.append(message)
             return messages
 
@@ -358,11 +361,11 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
 
         """
         try:
-            message = (super(NodeSettings, self).before_remove_contributor_message(node, removed) +
-            'You can download the contents of this repository before removing '
-            'this contributor <u><a href="{url}">here</a></u>.'.format(
+            message = super(NodeSettings, self).before_remove_contributor_message(
+                node, removed
+            ) + 'You can download the contents of this repository before removing ' 'this contributor <u><a href="{url}">here</a></u>.'.format(
                 url=node.api_url + 'github/tarball/'
-            ))
+            )
         except TypeError:
             # super call returned None due to lack of user auth
             return None
@@ -386,7 +389,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
             ).format(
                 category=markupsafe.escape(node.category_display),
                 title=markupsafe.escape(node.title),
-                user=markupsafe.escape(removed.fullname)
+                user=markupsafe.escape(removed.fullname),
             )
 
             if not auth or auth.user != removed:
@@ -405,9 +408,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
         :param bool save: Save settings after callback
         :return the cloned settings
         """
-        clone = super(NodeSettings, self).after_fork(
-            node, fork, user, save=False
-        )
+        clone = super(NodeSettings, self).after_fork(node, fork, user, save=False)
 
         # Copy authentication if authenticated by forking user
         if self.user_settings and self.user_settings.owner == user:
@@ -428,9 +429,7 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
                 'This {cat} is connected to a private GitHub repository. Users '
                 '(other than contributors) will not be able to see the '
                 'contents of this repo unless it is made public on GitHub.'
-            ).format(
-                cat=node.project_or_component,
-            )
+            ).format(cat=node.project_or_component,)
 
     def after_delete(self, user):
         self.deauthorize(Auth(user=user), log=True)
@@ -447,14 +446,12 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
             connect = GitHubClient(external_account=self.external_account)
             secret = utils.make_hook_secret()
             hook = connect.add_hook(
-                self.user, self.repo,
+                self.user,
+                self.repo,
                 'web',
                 {
                     'url': urljoin(
-                        hook_domain,
-                        os.path.join(
-                            self.owner.api_url, 'github', 'hook/'
-                        )
+                        hook_domain, os.path.join(self.owner.api_url, 'github', 'hook/')
                     ),
                     'content_type': github_settings.HOOK_CONTENT_TYPE,
                     'secret': secret,

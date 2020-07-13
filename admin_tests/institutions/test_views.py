@@ -7,11 +7,7 @@ from django.core.exceptions import PermissionDenied
 
 
 from tests.base import AdminTestCase
-from osf_tests.factories import (
-    AuthUserFactory,
-    InstitutionFactory,
-    ProjectFactory
-)
+from osf_tests.factories import AuthUserFactory, InstitutionFactory, ProjectFactory
 from osf.models import Institution, Node
 
 from admin_tests.utilities import setup_form_view, setup_user_view
@@ -108,7 +104,9 @@ class TestInstitutionDelete(AdminTestCase):
         node.affiliated_institutions.add(self.institution)
 
         redirect = self.view.delete(self.request)
-        nt.assert_equal(redirect.url, '/institutions/{}/cannot_delete/'.format(self.institution.id))
+        nt.assert_equal(
+            redirect.url, '/institutions/{}/cannot_delete/'.format(self.institution.id)
+        )
         nt.assert_equal(redirect.status_code, 302)
 
 
@@ -137,7 +135,7 @@ class TestInstitutionChangeForm(AdminTestCase):
             'name': 'New Name',
             'logo_name': 'awesome_logo.png',
             'domains': 'http://kris.biz/, http://www.little.biz/',
-            '_id': 'newawesomeprov'
+            '_id': 'newawesomeprov',
         }
         form = InstitutionForm(data=new_data)
         nt.assert_true(form.is_valid())
@@ -178,7 +176,9 @@ class TestCreateInstitution(AdminTestCase):
         self.request = RequestFactory().get('/fake_path')
         self.request.user = self.user
         self.base_view = views.CreateInstitution
-        self.view = setup_form_view(self.base_view(), self.request, form=InstitutionForm())
+        self.view = setup_form_view(
+            self.base_view(), self.request, form=InstitutionForm()
+        )
 
         self.view.kwargs = {'institution_id': self.institution.id}
 
@@ -221,7 +221,9 @@ class TestAffiliatedNodeList(AdminTestCase):
         self.request = RequestFactory().get('/fake_path')
         self.request.user = self.user
         self.base_view = views.InstitutionNodeList
-        self.view = setup_form_view(self.base_view(), self.request, form=InstitutionForm())
+        self.view = setup_form_view(
+            self.base_view(), self.request, form=InstitutionForm()
+        )
 
         self.view.kwargs = {'institution_id': self.institution.id}
 

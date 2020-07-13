@@ -9,7 +9,6 @@ from osf_tests.factories import SubjectFactory
 
 @pytest.mark.django_db
 class TestTaxonomy:
-
     @pytest.fixture(autouse=True)
     def subject(self):
         return SubjectFactory(text='A')
@@ -32,11 +31,17 @@ class TestTaxonomy:
 
     @pytest.fixture()
     def subjects(self):
-        return Subject.objects.all().annotate(is_other=Case(
-            When(text__istartswith='other', then=True),
-            default=False,
-            output_field=BooleanField()
-        )).order_by('is_other', 'text')
+        return (
+            Subject.objects.all()
+            .annotate(
+                is_other=Case(
+                    When(text__istartswith='other', then=True),
+                    default=False,
+                    output_field=BooleanField(),
+                )
+            )
+            .order_by('is_other', 'text')
+        )
 
     @pytest.fixture()
     def url_subject_list(self):
@@ -54,8 +59,8 @@ class TestTaxonomy:
         assert data_subject_list[-1]['id'] == subject_other._id
 
     def test_taxonomy_success(
-            self, subject, subject_child_one, subject_child_two,
-            subjects, res_subject_list):
+        self, subject, subject_child_one, subject_child_two, subjects, res_subject_list
+    ):
         # make sure there are subjects to filter through
         assert len(subjects) > 0
         assert res_subject_list.status_code == 200
@@ -78,8 +83,8 @@ class TestTaxonomy:
                 assert subject.parent._id in parents_ids
 
     def test_taxonomy_filter_top_level(
-            self, app, subject, subject_child_one,
-            subject_child_two, url_subject_list):
+        self, app, subject, subject_child_one, subject_child_two, url_subject_list
+    ):
         top_level_subjects = Subject.objects.filter(parent__isnull=True)
         top_level_url = '{}?filter[parents]=null'.format(url_subject_list)
 
@@ -94,8 +99,7 @@ class TestTaxonomy:
 
     def test_taxonomy_filter_by_parent(self, app, url_subject_list, subject):
         children_subjects = Subject.objects.filter(parent__id=subject.id)
-        children_url = '{}?filter[parents]={}'.format(
-            url_subject_list, subject._id)
+        children_url = '{}?filter[parents]={}'.format(url_subject_list, subject._id)
 
         res = app.get(children_url)
         assert res.status_code == 200
@@ -110,9 +114,7 @@ class TestTaxonomy:
             assert subject._id in parents_ids
 
     def test_is_deprecated(self, app, url_subject_list):
-        res = app.get(
-            '{}?version=2.6'.format(url_subject_list),
-            expect_errors=True)
+        res = app.get('{}?version=2.6'.format(url_subject_list), expect_errors=True)
         assert res.status_code == 404
 
     def test_taxonomy_path(self, data_subject_list):
@@ -120,6 +122,5 @@ class TestTaxonomy:
             subj = Subject.objects.get(_id=item['id'])
             path_parts = item['attributes']['path'].split('|')
             assert path_parts[0] == subj.provider.share_title
-            for index, text in enumerate(
-                    [s.text for s in subj.object_hierarchy]):
+            for index, text in enumerate([s.text for s in subj.object_hierarchy]):
                 assert path_parts[index + 1] == text

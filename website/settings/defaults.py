@@ -16,8 +16,9 @@ os_env = os.environ
 
 
 def parent_dir(path):
-    '''Return the parent of a directory.'''
+    """Return the parent of a directory."""
     return os.path.abspath(os.path.join(path, os.pardir))
+
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 BASE_PATH = parent_dir(HERE)  # website/ directory
@@ -36,12 +37,14 @@ with open(os.path.join(APP_PATH, 'package.json'), 'r') as fobj:
 
 # Expiration time for verification key
 EXPIRATION_TIME_DICT = {
-    'password': 24 * 60,    # 24 hours in minutes for forgot and reset password
-    'confirm': 24 * 60,     # 24 hours in minutes for confirm account and email
-    'claim': 30 * 24 * 60   # 30 days in minutes for claim contributor-ship
+    'password': 24 * 60,  # 24 hours in minutes for forgot and reset password
+    'confirm': 24 * 60,  # 24 hours in minutes for confirm account and email
+    'claim': 30 * 24 * 60,  # 30 days in minutes for claim contributor-ship
 }
 
-CITATION_STYLES_PATH = os.path.join(BASE_PATH, 'static', 'vendor', 'bower_components', 'styles')
+CITATION_STYLES_PATH = os.path.join(
+    BASE_PATH, 'static', 'vendor', 'bower_components', 'styles'
+)
 
 # Minimum seconds between forgot password email attempts
 SEND_EMAIL_THROTTLE = 30
@@ -83,11 +86,7 @@ DOMAIN = PROTOCOL + 'localhost:5000/'
 INTERNAL_DOMAIN = DOMAIN
 API_DOMAIN = PROTOCOL + 'localhost:8000/'
 
-PREPRINT_PROVIDER_DOMAINS = {
-    'enabled': False,
-    'prefix': PROTOCOL,
-    'suffix': '/'
-}
+PREPRINT_PROVIDER_DOMAINS = {'enabled': False, 'prefix': PROTOCOL, 'suffix': '/'}
 # External Ember App Local Development
 USE_EXTERNAL_EMBER = False
 PROXY_EMBER_APPS = False
@@ -166,7 +165,7 @@ MAILCHIMP_WEBHOOK_SECRET_KEY = 'CHANGEME'  # OSF secret key to ensure webhook is
 ENABLE_EMAIL_SUBSCRIPTIONS = True
 MAILCHIMP_GENERAL_LIST = 'Open Science Framework General'
 
-#Triggered emails
+# Triggered emails
 OSF_HELP_LIST = 'Open Science Framework Help'
 PREREG_AGE_LIMIT = timedelta(weeks=12)
 PREREG_WAIT_TIME = timedelta(weeks=2)
@@ -206,45 +205,119 @@ CONFERENCE_MIN_COUNT = 5
 
 WIKI_WHITELIST = {
     'tags': [
-        'a', 'abbr', 'acronym', 'b', 'bdo', 'big', 'blockquote', 'br',
-        'center', 'cite', 'code',
-        'dd', 'del', 'dfn', 'div', 'dl', 'dt', 'em', 'embed', 'font',
-        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'i', 'img', 'ins',
-        'kbd', 'li', 'object', 'ol', 'param', 'pre', 'p', 'q',
-        's', 'samp', 'small', 'span', 'strike', 'strong', 'sub', 'sup',
-        'table', 'tbody', 'td', 'th', 'thead', 'tr', 'tt', 'ul', 'u',
-        'var', 'wbr',
+        'a',
+        'abbr',
+        'acronym',
+        'b',
+        'bdo',
+        'big',
+        'blockquote',
+        'br',
+        'center',
+        'cite',
+        'code',
+        'dd',
+        'del',
+        'dfn',
+        'div',
+        'dl',
+        'dt',
+        'em',
+        'embed',
+        'font',
+        'h1',
+        'h2',
+        'h3',
+        'h4',
+        'h5',
+        'h6',
+        'hr',
+        'i',
+        'img',
+        'ins',
+        'kbd',
+        'li',
+        'object',
+        'ol',
+        'param',
+        'pre',
+        'p',
+        'q',
+        's',
+        'samp',
+        'small',
+        'span',
+        'strike',
+        'strong',
+        'sub',
+        'sup',
+        'table',
+        'tbody',
+        'td',
+        'th',
+        'thead',
+        'tr',
+        'tt',
+        'ul',
+        'u',
+        'var',
+        'wbr',
     ],
     'attributes': [
-        'align', 'alt', 'border', 'cite', 'class', 'dir',
-        'height', 'href', 'id', 'src', 'style', 'title', 'type', 'width',
-        'face', 'size',  # font tags
-        'salign', 'align', 'wmode', 'target',
+        'align',
+        'alt',
+        'border',
+        'cite',
+        'class',
+        'dir',
+        'height',
+        'href',
+        'id',
+        'src',
+        'style',
+        'title',
+        'type',
+        'width',
+        'face',
+        'size',  # font tags
+        'salign',
+        'align',
+        'wmode',
+        'target',
     ],
     # Styles currently used in Reproducibility Project wiki pages
     'styles': [
-        'top', 'left', 'width', 'height', 'position',
-        'background', 'font-size', 'text-align', 'z-index',
+        'top',
+        'left',
+        'width',
+        'height',
+        'position',
+        'background',
+        'font-size',
+        'text-align',
+        'z-index',
         'list-style',
-    ]
+    ],
 }
 
 # Maps category identifier => Human-readable representation for use in
 # titles, menus, etc.
 # Use an OrderedDict so that menu items show in the correct order
-NODE_CATEGORY_MAP = OrderedDict([
-    ('analysis', 'Analysis'),
-    ('communication', 'Communication'),
-    ('data', 'Data'),
-    ('hypothesis', 'Hypothesis'),
-    ('instrumentation', 'Instrumentation'),
-    ('methods and measures', 'Methods and Measures'),
-    ('procedure', 'Procedure'),
-    ('project', 'Project'),
-    ('software', 'Software'),
-    ('other', 'Other'),
-    ('', 'Uncategorized')
-])
+NODE_CATEGORY_MAP = OrderedDict(
+    [
+        ('analysis', 'Analysis'),
+        ('communication', 'Communication'),
+        ('data', 'Data'),
+        ('hypothesis', 'Hypothesis'),
+        ('instrumentation', 'Instrumentation'),
+        ('methods and measures', 'Methods and Measures'),
+        ('procedure', 'Procedure'),
+        ('project', 'Project'),
+        ('software', 'Software'),
+        ('other', 'Other'),
+        ('', 'Uncategorized'),
+    ]
+)
 
 # Add-ons
 # Load addons from addons.json
@@ -269,11 +342,7 @@ KEEN = {
         'write_key': '',
         'read_key': '',
     },
-    'private': {
-        'project_id': '',
-        'write_key': '',
-        'read_key': '',
-    },
+    'private': {'project_id': '', 'write_key': '', 'read_key': '',},
 }
 
 SENTRY_DSN = None
@@ -288,7 +357,9 @@ NEW_AND_NOTEWORTHY_LINKS_NODE = None  # TODO Override in local.py in production.
 
 MAX_POPULAR_PROJECTS = 10
 
-NEW_AND_NOTEWORTHY_CONTRIBUTOR_BLACKLIST = []  # TODO Override in local.py in production.
+NEW_AND_NOTEWORTHY_CONTRIBUTOR_BLACKLIST = (
+    []
+)  # TODO Override in local.py in production.
 
 # FOR EMERGENCIES ONLY: Setting this to True will disable forks, registrations,
 # and uploads in order to save disk space.
@@ -379,11 +450,13 @@ RABBITMQ_VHOST = os.environ.get('RABBITMQ_VHOST', '/')
 # Seconds, not an actual celery setting
 CELERY_RETRY_BACKOFF_BASE = 5
 
+
 class CeleryConfig:
     """
     Celery Configuration
     http://docs.celeryproject.org/en/latest/userguide/configuration.html
     """
+
     timezone = 'UTC'
 
     task_default_queue = 'celery'
@@ -410,7 +483,7 @@ class CeleryConfig:
         'osf.management.commands.migrate_deleted_date',
         'osf.management.commands.addon_deleted_date',
         'osf.management.commands.migrate_registration_responses',
-        'osf.management.commands.update_institution_project_counts'
+        'osf.management.commands.update_institution_project_counts',
     }
 
     med_pri_modules = {
@@ -433,7 +506,7 @@ class CeleryConfig:
         'scripts.refresh_addon_tokens',
         'scripts.retract_registrations',
         'website.archiver.tasks',
-        'scripts.add_missing_identifiers_to_preprints'
+        'scripts.add_missing_identifiers_to_preprints',
     }
 
     try:
@@ -442,22 +515,47 @@ class CeleryConfig:
         pass
     else:
         task_queues = (
-            Queue(task_low_queue, Exchange(task_low_queue), routing_key=task_low_queue,
-                consumer_arguments={'x-priority': -1}),
-            Queue(task_default_queue, Exchange(task_default_queue), routing_key=task_default_queue,
-                consumer_arguments={'x-priority': 0}),
-            Queue(task_med_queue, Exchange(task_med_queue), routing_key=task_med_queue,
-                consumer_arguments={'x-priority': 1}),
-            Queue(task_high_queue, Exchange(task_high_queue), routing_key=task_high_queue,
-                consumer_arguments={'x-priority': 10}),
+            Queue(
+                task_low_queue,
+                Exchange(task_low_queue),
+                routing_key=task_low_queue,
+                consumer_arguments={'x-priority': -1},
+            ),
+            Queue(
+                task_default_queue,
+                Exchange(task_default_queue),
+                routing_key=task_default_queue,
+                consumer_arguments={'x-priority': 0},
+            ),
+            Queue(
+                task_med_queue,
+                Exchange(task_med_queue),
+                routing_key=task_med_queue,
+                consumer_arguments={'x-priority': 1},
+            ),
+            Queue(
+                task_high_queue,
+                Exchange(task_high_queue),
+                routing_key=task_high_queue,
+                consumer_arguments={'x-priority': 10},
+            ),
         )
 
         task_default_exchange_type = 'direct'
-        task_routes = ('framework.celery_tasks.routers.CeleryRouter', )
+        task_routes = ('framework.celery_tasks.routers.CeleryRouter',)
         task_ignore_result = True
         task_store_errors_even_if_ignored = True
 
-    broker_url = os.environ.get('BROKER_URL', 'amqp://{}:{}@{}:{}/{}'.format(RABBITMQ_USERNAME, RABBITMQ_PASSWORD, RABBITMQ_HOST, RABBITMQ_PORT, RABBITMQ_VHOST))
+    broker_url = os.environ.get(
+        'BROKER_URL',
+        'amqp://{}:{}@{}:{}/{}'.format(
+            RABBITMQ_USERNAME,
+            RABBITMQ_PASSWORD,
+            RABBITMQ_HOST,
+            RABBITMQ_PORT,
+            RABBITMQ_VHOST,
+        ),
+    )
     broker_use_ssl = False
 
     # Default RabbitMQ backend
@@ -528,11 +626,14 @@ class CeleryConfig:
             'refresh_addons': {
                 'task': 'scripts.refresh_addon_tokens',
                 'schedule': crontab(minute=0, hour=7),  # Daily 2:00 a.m
-                'kwargs': {'dry_run': False, 'addons': {
-                    'box': 60,          # https://docs.box.com/docs/oauth-20#section-6-using-the-access-and-refresh-tokens
-                    'googledrive': 14,  # https://developers.google.com/identity/protocols/OAuth2#expiration
-                    'mendeley': 14      # http://dev.mendeley.com/reference/topics/authorization_overview.html
-                }},
+                'kwargs': {
+                    'dry_run': False,
+                    'addons': {
+                        'box': 60,  # https://docs.box.com/docs/oauth-20#section-6-using-the-access-and-refresh-tokens
+                        'googledrive': 14,  # https://developers.google.com/identity/protocols/OAuth2#expiration
+                        'mendeley': 14,  # http://dev.mendeley.com/reference/topics/authorization_overview.html
+                    },
+                },
             },
             'retract_registrations': {
                 'task': 'scripts.retract_registrations',
@@ -576,23 +677,27 @@ class CeleryConfig:
             },
             'new-and-noteworthy': {
                 'task': 'scripts.populate_new_and_noteworthy_projects',
-                'schedule': crontab(minute=0, hour=7, day_of_week=6),  # Saturday 2:00 a.m.
-                'kwargs': {'dry_run': False}
+                'schedule': crontab(
+                    minute=0, hour=7, day_of_week=6
+                ),  # Saturday 2:00 a.m.
+                'kwargs': {'dry_run': False},
             },
             'update_popular_nodes': {
                 'task': 'scripts.populate_popular_projects_and_registrations',
                 'schedule': crontab(minute=0, hour=7),  # Daily 2:00 a.m.
-                'kwargs': {'dry_run': False}
+                'kwargs': {'dry_run': False},
             },
             'registration_schema_metrics': {
                 'task': 'management.commands.registration_schema_metrics',
-                'schedule': crontab(minute=45, hour=7, day_of_month=3),  # Third day of month 2:45 a.m.
-                'kwargs': {'dry_run': False}
+                'schedule': crontab(
+                    minute=45, hour=7, day_of_month=3
+                ),  # Third day of month 2:45 a.m.
+                'kwargs': {'dry_run': False},
             },
             'run_keen_summaries': {
                 'task': 'scripts.analytics.run_keen_summaries',
                 'schedule': crontab(minute=0, hour=6),  # Daily 1:00 a.m.
-                'kwargs': {'yesterday': True}
+                'kwargs': {'yesterday': True},
             },
             # 'run_keen_snapshots': {
             #     'task': 'scripts.analytics.run_keen_snapshots',
@@ -601,7 +706,7 @@ class CeleryConfig:
             'run_keen_events': {
                 'task': 'scripts.analytics.run_keen_events',
                 'schedule': crontab(minute=0, hour=9),  # Daily 4:00 a.m.
-                'kwargs': {'yesterday': True}
+                'kwargs': {'yesterday': True},
             },
             # 'data_storage_usage': {
             #   'task': 'management.commands.data_storage_usage',
@@ -635,7 +740,7 @@ class CeleryConfig:
             },
             'update_institution_project_counts': {
                 'task': 'management.commands.update_institution_project_counts',
-                'schedule': crontab(minute=0, hour=9), # Daily 05:00 a.m. EDT
+                'schedule': crontab(minute=0, hour=9),  # Daily 05:00 a.m. EDT
             },
         }
 
@@ -665,7 +770,9 @@ SENSITIVE_DATA_SALT = 'yusaltydough'
 SENSITIVE_DATA_SECRET = 'TrainglesAre5Squares'
 
 DRAFT_REGISTRATION_APPROVAL_PERIOD = datetime.timedelta(days=10)
-assert (DRAFT_REGISTRATION_APPROVAL_PERIOD > EMBARGO_END_DATE_MIN), 'The draft registration approval period should be more than the minimum embargo end date.'
+assert (
+    DRAFT_REGISTRATION_APPROVAL_PERIOD > EMBARGO_END_DATE_MIN
+), 'The draft registration approval period should be more than the minimum embargo end date.'
 
 # TODO: Remove references to this flag
 ENABLE_INSTITUTIONS = True
@@ -1896,16 +2003,25 @@ SITEMAP_STATIC_URLS = [
     OrderedDict([('loc', 'meetings'), ('changefreq', 'yearly'), ('priority', '0.5')]),
     OrderedDict([('loc', 'registries'), ('changefreq', 'yearly'), ('priority', '0.5')]),
     OrderedDict([('loc', 'reviews'), ('changefreq', 'yearly'), ('priority', '0.5')]),
-    OrderedDict([('loc', 'explore/activity'), ('changefreq', 'weekly'), ('priority', '0.5')]),
+    OrderedDict(
+        [('loc', 'explore/activity'), ('changefreq', 'weekly'), ('priority', '0.5')]
+    ),
     OrderedDict([('loc', 'support'), ('changefreq', 'yearly'), ('priority', '0.5')]),
     OrderedDict([('loc', 'faq'), ('changefreq', 'yearly'), ('priority', '0.5')]),
-
 ]
 
-SITEMAP_USER_CONFIG = OrderedDict([('loc', ''), ('changefreq', 'yearly'), ('priority', '0.5')])
-SITEMAP_NODE_CONFIG = OrderedDict([('loc', ''), ('lastmod', ''), ('changefreq', 'monthly'), ('priority', '0.5')])
-SITEMAP_PREPRINT_CONFIG = OrderedDict([('loc', ''), ('lastmod', ''), ('changefreq', 'yearly'), ('priority', '0.5')])
-SITEMAP_PREPRINT_FILE_CONFIG = OrderedDict([('loc', ''), ('lastmod', ''), ('changefreq', 'yearly'), ('priority', '0.5')])
+SITEMAP_USER_CONFIG = OrderedDict(
+    [('loc', ''), ('changefreq', 'yearly'), ('priority', '0.5')]
+)
+SITEMAP_NODE_CONFIG = OrderedDict(
+    [('loc', ''), ('lastmod', ''), ('changefreq', 'monthly'), ('priority', '0.5')]
+)
+SITEMAP_PREPRINT_CONFIG = OrderedDict(
+    [('loc', ''), ('lastmod', ''), ('changefreq', 'yearly'), ('priority', '0.5')]
+)
+SITEMAP_PREPRINT_FILE_CONFIG = OrderedDict(
+    [('loc', ''), ('lastmod', ''), ('changefreq', 'yearly'), ('priority', '0.5')]
+)
 
 # For preventing indexing of QA nodes by Elastic and SHARE
 DO_NOT_INDEX_LIST = {
@@ -1916,16 +2032,22 @@ DO_NOT_INDEX_LIST = {
 CUSTOM_CITATIONS = {
     'bluebook-law-review': 'bluebook',
     'bluebook2': 'bluebook',
-    'bluebook-inline': 'bluebook'
+    'bluebook-inline': 'bluebook',
 }
 
-#Email templates logo
+# Email templates logo
 OSF_LOGO = 'osf_logo'
 OSF_PREPRINTS_LOGO = 'osf_preprints'
 OSF_MEETINGS_LOGO = 'osf_meetings'
 OSF_PREREG_LOGO = 'osf_prereg'
 OSF_REGISTRIES_LOGO = 'osf_registries'
-OSF_LOGO_LIST = [OSF_LOGO, OSF_PREPRINTS_LOGO, OSF_MEETINGS_LOGO, OSF_PREREG_LOGO, OSF_REGISTRIES_LOGO]
+OSF_LOGO_LIST = [
+    OSF_LOGO,
+    OSF_PREPRINTS_LOGO,
+    OSF_MEETINGS_LOGO,
+    OSF_PREREG_LOGO,
+    OSF_REGISTRIES_LOGO,
+]
 
 FOOTER_LINKS = {
     'terms': 'https://github.com/CenterForOpenScience/centerforopenscience.org/blob/master/TERMS_OF_USE.md',

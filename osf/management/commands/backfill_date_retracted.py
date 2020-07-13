@@ -8,6 +8,7 @@ from datetime import timedelta
 import logging
 
 import django
+
 django.setup()
 
 from django.core.management.base import BaseCommand
@@ -18,9 +19,12 @@ from scripts import utils as script_utils
 
 logger = logging.getLogger(__name__)
 
+
 def set_date_retracted(*args):
     registrations = (
-        Registration.objects.filter(retraction__state=Sanction.APPROVED, retraction__date_retracted=None)
+        Registration.objects.filter(
+            retraction__state=Sanction.APPROVED, retraction__date_retracted=None
+        )
         .select_related('retraction')
         .include('registered_from__logs')
         .include('registered_from__guids')
@@ -32,14 +36,23 @@ def set_date_retracted(*args):
         if not registration.registered_from:
             logger.warn('Skipping failed registration {}'.format(registration._id))
             continue
-        retraction_logs = registration.registered_from.logs.filter(action='retraction_approved', params__retraction_id=registration.retraction._id)
-        if retraction_logs.count() != 1 and retraction_logs.first().date - retraction_logs.last().date > timedelta(seconds=5):
+        retraction_logs = registration.registered_from.logs.filter(
+            action='retraction_approved',
+            params__retraction_id=registration.retraction._id,
+        )
+        if retraction_logs.count() != 1 and retraction_logs.first().date - retraction_logs.last().date > timedelta(
+            seconds=5
+        ):
             msg = (
                 'There should be a retraction_approved log for retraction {} on node {}. No retraction_approved log found.'
                 if retraction_logs.count() == 0
                 else 'There should only be one retraction_approved log for retraction {} on node {}. Multiple logs found.'
             )
-            raise Exception(msg.format(registration.retraction._id, registration.registered_from._id))
+            raise Exception(
+                msg.format(
+                    registration.retraction._id, registration.registered_from._id
+                )
+            )
         date_retracted = retraction_logs[0].date
         logger.info(
             'Setting date_retracted for retraction {} to be {}, from retraction_approved node log {}.'.format(
@@ -49,8 +62,11 @@ def set_date_retracted(*args):
         registration.retraction.date_retracted = date_retracted
         registration.retraction.save()
 
+
 def unset_date_retracted(*args):
-    retractions = Retraction.objects.filter(state=Sanction.APPROVED).exclude(date_retracted=None)
+    retractions = Retraction.objects.filter(state=Sanction.APPROVED).exclude(
+        date_retracted=None
+    )
     logger.info('Migrating {} retractions.'.format(retractions.count()))
 
     for retraction in retractions:
@@ -62,6 +78,7 @@ class Command(BaseCommand):
     """
     Backfill Retraction.date_retracted with `RETRACTION_APPROVED` log date.
     """
+
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
         parser.add_argument(
@@ -74,7 +91,7 @@ class Command(BaseCommand):
             '--reverse',
             action='store_true',
             dest='reverse',
-            help='Unsets date_retraction'
+            help='Unsets date_retraction',
         )
 
     def handle(self, *args, **options):

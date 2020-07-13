@@ -1,12 +1,16 @@
 import pytest
 
 from api.base.settings.defaults import API_BASE
-from osf_tests.factories import AuthUserFactory, PreprintProviderFactory, ProjectFactory, NotificationSubscriptionFactory
+from osf_tests.factories import (
+    AuthUserFactory,
+    PreprintProviderFactory,
+    ProjectFactory,
+    NotificationSubscriptionFactory,
+)
 
 
 @pytest.mark.django_db
 class TestSubscriptionList:
-
     @pytest.fixture()
     def user(self):
         return AuthUserFactory()
@@ -23,7 +27,9 @@ class TestSubscriptionList:
 
     @pytest.fixture()
     def global_user_notification(self, user):
-        notification = NotificationSubscriptionFactory(_id='{}_global'.format(user._id), user=user, event_name='global')
+        notification = NotificationSubscriptionFactory(
+            _id='{}_global'.format(user._id), user=user, event_name='global'
+        )
         notification.add_user_to_subscription(user, 'email_transactional')
         return notification
 
@@ -31,7 +37,9 @@ class TestSubscriptionList:
     def url(self, user, node):
         return '/{}subscriptions/'.format(API_BASE)
 
-    def test_list_complete(self, app, user, provider, node, global_user_notification, url):
+    def test_list_complete(
+        self, app, user, provider, node, global_user_notification, url
+    ):
         res = app.get(url, auth=user.auth)
         notification_ids = [item['id'] for item in res.json['data']]
         # There should only be 4 notifications: users' global, node's comments, node's file updates and provider's preprint added.

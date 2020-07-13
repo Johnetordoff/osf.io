@@ -11,7 +11,6 @@ from osf import features
 
 
 class Command(BaseCommand):
-
     def handle(self, *args, **options):
         CHECKS = [
             ['checkmigrations'],

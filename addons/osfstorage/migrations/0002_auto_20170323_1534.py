@@ -19,11 +19,22 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='nodesettings',
             name='owner',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='addons_osfstorage_node_settings', to='osf.AbstractNode'),
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='addons_osfstorage_node_settings',
+                to='osf.AbstractNode',
+            ),
         ),
         migrations.AddField(
             model_name='nodesettings',
             name='root_node',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='osf.OsfStorageFolder'),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to='osf.OsfStorageFolder',
+            ),
         ),
     ]

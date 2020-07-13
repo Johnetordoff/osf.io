@@ -15,27 +15,29 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='noderequestaction',
             name='permissions',
-            field=models.CharField(choices=[('admin', 'Admin'), ('read', 'Read'), ('write', 'Write')], default='read', max_length=5),
+            field=models.CharField(
+                choices=[('admin', 'Admin'), ('read', 'Read'), ('write', 'Write')],
+                default='read',
+                max_length=5,
+            ),
         ),
         migrations.AddField(
             model_name='noderequestaction',
             name='visible',
             field=models.BooleanField(default=True),
         ),
-        migrations.AlterUniqueTogether(
-            name='noderequest',
-            unique_together=set([]),
-        ),
+        migrations.AlterUniqueTogether(name='noderequest', unique_together=set([]),),
         migrations.RunSQL(
             [
                 """
                 CREATE UNIQUE INDEX osf_noderequest_target_creator_non_accepted ON osf_noderequest (target_id, creator_id)
                 WHERE machine_state != 'accepted';
                 """
-            ], [
+            ],
+            [
                 """
                 DROP INDEX IF EXISTS osf_noderequest_target_creator_non_accepted RESTRICT;
                 """
-            ]
+            ],
         ),
     ]

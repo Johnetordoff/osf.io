@@ -9,63 +9,90 @@ import osf.utils.fields
 from website import settings
 
 PREMIGRATED = '1-minute-incremental-migrations' in settings.CeleryConfig.beat_schedule
-OPERATIONS = [
-    migrations.AlterField(
-        model_name='abstractnode',
-        name='created',
-        field=django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created'),
-    ),
-    migrations.AlterField(
-        model_name='abstractnode',
-        name='last_logged',
-        field=osf.utils.fields.NonNaiveDateTimeField(blank=True, db_index=True, default=django.utils.timezone.now, null=True),
-    ),
-    migrations.AlterField(
-        model_name='apioauth2application',
-        name='created',
-        field=django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created'),
-    ),
-    migrations.AlterField(
-        model_name='comment',
-        name='created',
-        field=django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created'),
-    ),
-    migrations.AlterField(
-        model_name='comment',
-        name='modified',
-        field=django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified'),
-    ),
-    migrations.AlterField(
-        model_name='fileversion',
-        name='created',
-        field=django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created'),
-    ),
-    migrations.AlterField(
-        model_name='preprintservice',
-        name='created',
-        field=django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created'),
-    ),
-    migrations.AlterField(
-        model_name='preprintservice',
-        name='modified',
-        field=django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified'),
-    ),
-    migrations.AlterField(
-        model_name='privatelink',
-        name='created',
-        field=django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created'),
-    ),
-    migrations.AlterField(
-        model_name='session',
-        name='created',
-        field=django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created'),
-    ),
-    migrations.AlterField(
-        model_name='session',
-        name='modified',
-        field=django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified'),
-    ),
-] if not PREMIGRATED else []
+OPERATIONS = (
+    [
+        migrations.AlterField(
+            model_name='abstractnode',
+            name='created',
+            field=django_extensions.db.fields.CreationDateTimeField(
+                auto_now_add=True, verbose_name='created'
+            ),
+        ),
+        migrations.AlterField(
+            model_name='abstractnode',
+            name='last_logged',
+            field=osf.utils.fields.NonNaiveDateTimeField(
+                blank=True, db_index=True, default=django.utils.timezone.now, null=True
+            ),
+        ),
+        migrations.AlterField(
+            model_name='apioauth2application',
+            name='created',
+            field=django_extensions.db.fields.CreationDateTimeField(
+                auto_now_add=True, verbose_name='created'
+            ),
+        ),
+        migrations.AlterField(
+            model_name='comment',
+            name='created',
+            field=django_extensions.db.fields.CreationDateTimeField(
+                auto_now_add=True, verbose_name='created'
+            ),
+        ),
+        migrations.AlterField(
+            model_name='comment',
+            name='modified',
+            field=django_extensions.db.fields.ModificationDateTimeField(
+                auto_now=True, verbose_name='modified'
+            ),
+        ),
+        migrations.AlterField(
+            model_name='fileversion',
+            name='created',
+            field=django_extensions.db.fields.CreationDateTimeField(
+                auto_now_add=True, verbose_name='created'
+            ),
+        ),
+        migrations.AlterField(
+            model_name='preprintservice',
+            name='created',
+            field=django_extensions.db.fields.CreationDateTimeField(
+                auto_now_add=True, verbose_name='created'
+            ),
+        ),
+        migrations.AlterField(
+            model_name='preprintservice',
+            name='modified',
+            field=django_extensions.db.fields.ModificationDateTimeField(
+                auto_now=True, verbose_name='modified'
+            ),
+        ),
+        migrations.AlterField(
+            model_name='privatelink',
+            name='created',
+            field=django_extensions.db.fields.CreationDateTimeField(
+                auto_now_add=True, verbose_name='created'
+            ),
+        ),
+        migrations.AlterField(
+            model_name='session',
+            name='created',
+            field=django_extensions.db.fields.CreationDateTimeField(
+                auto_now_add=True, verbose_name='created'
+            ),
+        ),
+        migrations.AlterField(
+            model_name='session',
+            name='modified',
+            field=django_extensions.db.fields.ModificationDateTimeField(
+                auto_now=True, verbose_name='modified'
+            ),
+        ),
+    ]
+    if not PREMIGRATED
+    else []
+)
+
 
 class Migration(migrations.Migration):
 

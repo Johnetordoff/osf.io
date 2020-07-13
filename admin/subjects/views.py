@@ -22,8 +22,11 @@ class SubjectListView(PermissionRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super(SubjectListView, self).get_context_data(**kwargs)
-        context['filterable_provider_ids'] = dict({'': '---'}, **dict(PreprintProvider.objects.values_list('_id', 'name')))
+        context['filterable_provider_ids'] = dict(
+            {'': '---'}, **dict(PreprintProvider.objects.values_list('_id', 'name'))
+        )
         return context
+
 
 class SubjectUpdateView(PermissionRequiredMixin, UpdateView):
     form_class = SubjectForm

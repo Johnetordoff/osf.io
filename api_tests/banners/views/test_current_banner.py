@@ -5,9 +5,9 @@ from django.utils import timezone
 
 from osf_tests.factories import ScheduledBannerFactory
 
+
 @pytest.mark.django_db
 class TestPreprintDetail:
-
     @pytest.fixture
     def date(self):
         return timezone.now()
@@ -18,15 +18,11 @@ class TestPreprintDetail:
 
     @pytest.fixture()
     def tomorrow_banner(self, date):
-        return ScheduledBannerFactory(
-            start_date=date + timedelta(days=1)
-        )
+        return ScheduledBannerFactory(start_date=date + timedelta(days=1))
 
     @pytest.fixture()
     def yesterday_banner(self, date):
-        return ScheduledBannerFactory(
-            start_date=date - timedelta(days=1)
-        )
+        return ScheduledBannerFactory(start_date=date - timedelta(days=1))
 
     @pytest.fixture()
     def url(self):

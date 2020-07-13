@@ -10,13 +10,18 @@ EMBER_WAFFLE_PAGES = [
     'home',
 ]
 
+
 def format_ember_waffle_flag_name(page):
     return 'ember_{}_page'.format(page)
 
+
 def add_ember_waffle_flags(state, schema):
     for page in EMBER_WAFFLE_PAGES:
-        Flag.objects.get_or_create(name=format_ember_waffle_flag_name(page), everyone=False)
+        Flag.objects.get_or_create(
+            name=format_ember_waffle_flag_name(page), everyone=False
+        )
     return
+
 
 def remove_waffle_flags(state, schema):
     pages = [format_ember_waffle_flag_name(page) for page in EMBER_WAFFLE_PAGES]
@@ -30,6 +35,4 @@ class Migration(migrations.Migration):
         ('osf', '0120_merge_20180716_1457'),
     ]
 
-    operations = [
-        migrations.RunPython(remove_waffle_flags, add_ember_waffle_flags)
-    ]
+    operations = [migrations.RunPython(remove_waffle_flags, add_ember_waffle_flags)]

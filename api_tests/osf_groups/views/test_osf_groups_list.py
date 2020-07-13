@@ -9,17 +9,21 @@ from osf_tests.factories import (
 )
 from osf.features import OSF_GROUPS
 
+
 @pytest.fixture()
 def user():
     return AuthUserFactory()
+
 
 @pytest.fixture()
 def manager():
     return AuthUserFactory()
 
+
 @pytest.fixture()
 def member():
     return AuthUserFactory()
+
 
 @pytest.fixture()
 def osf_group(manager, member):
@@ -27,9 +31,9 @@ def osf_group(manager, member):
     group.make_member(member)
     return group
 
+
 @pytest.mark.django_db
 class TestGroupList:
-
     @pytest.fixture()
     def url(self):
         return '/{}groups/'.format(API_BASE)
@@ -81,7 +85,9 @@ class TestGroupList:
             assert len(data) == 1
             assert data[0]['id'] == second_group._id
 
-            res = app.get(url + '?filter[bad_field]=Apple', auth=manager.auth, expect_errors=True)
+            res = app.get(
+                url + '?filter[bad_field]=Apple', auth=manager.auth, expect_errors=True
+            )
             assert res.status_code == 400
 
             res = app.get(url + '?filter[name]=Platform')
@@ -103,14 +109,7 @@ class TestOSFGroupCreate:
 
     @pytest.fixture()
     def simple_payload(self):
-        return {
-            'data': {
-                'type': 'groups',
-                'attributes': {
-                    'name': 'My New Lab'
-                },
-            }
-        }
+        return {'data': {'type': 'groups', 'attributes': {'name': 'My New Lab'},}}
 
     def test_create_osf_group(self, app, url, manager, simple_payload):
         # Nonauthenticated
@@ -128,24 +127,26 @@ class TestOSFGroupCreate:
             assert group.has_permission(manager, 'manage') is True
             assert group.has_permission(manager, 'member') is True
 
-    def test_create_osf_group_validation_errors(self, app, url, manager, simple_payload):
+    def test_create_osf_group_validation_errors(
+        self, app, url, manager, simple_payload
+    ):
         # Need data key
         with override_flag(OSF_GROUPS, active=True):
-            res = app.post_json_api(url, simple_payload['data'], auth=manager.auth, expect_errors=True)
+            res = app.post_json_api(
+                url, simple_payload['data'], auth=manager.auth, expect_errors=True
+            )
             assert res.status_code == 400
             assert res.json['errors'][0]['detail'] == 'Request must include /data.'
 
             # Incorrect type
             simple_payload['data']['type'] = 'incorrect_type'
-            res = app.post_json_api(url, simple_payload, auth=manager.auth, expect_errors=True)
+            res = app.post_json_api(
+                url, simple_payload, auth=manager.auth, expect_errors=True
+            )
             assert res.status_code == 409
 
             # Required name field
-            payload = {
-                'data': {
-                    'type': 'groups'
-                }
-            }
+            payload = {'data': {'type': 'groups'}}
             res = app.post_json_api(url, payload, auth=manager.auth, expect_errors=True)
             assert res.status_code == 400
             assert res.json['errors'][0]['detail'] == 'This field is required.'

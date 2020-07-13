@@ -6,7 +6,7 @@ from osf_tests.factories import DraftRegistrationFactory, RegistrationFactory
 
 from osf.management.commands.migrate_registration_responses import (
     migrate_draft_registrations,
-    migrate_registrations
+    migrate_registrations,
 )
 from website import settings
 
@@ -41,28 +41,30 @@ prereg_registration_responses = {
             'file_name': 'Screen Shot 2019-08-30 at 9.04.01 AM.png',
             'file_id': '5d6d22264d476c088fb8e01f',
             'file_urls': {
-                'html': urljoin(settings.DOMAIN, '/project/57zbh/files/osfstorage/5d6d22264d476c088fb8e01f'),
+                'html': urljoin(
+                    settings.DOMAIN,
+                    '/project/57zbh/files/osfstorage/5d6d22264d476c088fb8e01f',
+                ),
             },
-            'file_hashes': {
-                'sha256': 'sdf',
-            },
+            'file_hashes': {'sha256': 'sdf',},
         },
         {
             'file_name': 'Alphabet.txt',
             'file_id': '5d6d22274d476c088fb8e021',
             'file_urls': {
-                'html': urljoin(settings.DOMAIN, '/project/57zbh/files/osfstorage/5d6d22274d476c088fb8e021'),
+                'html': urljoin(
+                    settings.DOMAIN,
+                    '/project/57zbh/files/osfstorage/5d6d22274d476c088fb8e021',
+                ),
             },
-            'file_hashes': {
-                'sha256': 'dsdfds',
-            },
-        }
+            'file_hashes': {'sha256': 'dsdfds',},
+        },
     ],
     'q16.question': 'this is my study design',
     'q15': [
         'No blinding is involved in this study.',
         'For studies that involve human subjects, they will not know the treatment group to which they have been assigned.',
-        'Research personnel who interact directly with the study subjects (either human or non-human subjects) will not be aware of the assigned treatments.'
+        'Research personnel who interact directly with the study subjects (either human or non-human subjects) will not be aware of the assigned treatments.',
     ],
     'q14': '',
     'q17': 'this is my explanation of randomization',
@@ -76,83 +78,48 @@ prereg_registration_responses = {
             'file_name': 'Alphabet.txt',
             'file_id': '5d6d22274d476c088fb8e021',
             'file_urls': {
-                'html': urljoin(settings.DOMAIN, '/project/57zbh/files/osfstorage/5d6d22274d476c088fb8e021'),
+                'html': urljoin(
+                    settings.DOMAIN,
+                    '/project/57zbh/files/osfstorage/5d6d22274d476c088fb8e021',
+                ),
             },
-            'file_hashes': {
-                'sha256': 'dsdfds',
-            },
+            'file_hashes': {'sha256': 'dsdfds',},
         }
-    ]
+    ],
 }
 
 prereg_registration_metadata = {
-    'q20': {
-        'comments': [],
-        'value': 'transforming and recoding',
-        'extra': []
-    },
-    'q21': {
-        'comments': [],
-        'value': 'research plan follow up',
-        'extra': []
-    },
-    'q22': {
-        'comments': [],
-        'value': 'criteria',
-        'extra': []
-    },
+    'q20': {'comments': [], 'value': 'transforming and recoding', 'extra': []},
+    'q21': {'comments': [], 'value': 'research plan follow up', 'extra': []},
+    'q22': {'comments': [], 'value': 'criteria', 'extra': []},
     'q23': {
         'comments': [],
         'value': 'this is how outliers will be handled',
-        'extra': []
+        'extra': [],
     },
     'q24': {
         'comments': [],
         'value': 'this is how I will deal with incomplete data.',
-        'extra': []
+        'extra': [],
     },
-    'q25': {
-        'comments': [],
-        'value': 'this is my exploratory analysis',
-        'extra': []
-    },
-    'q26': {
-        'comments': [],
-        'value': '',
-        'extra': []
-    },
-    'q27': {
-        'comments': [],
-        'value': 'No additional comments',
-        'extra': []
-    },
-    'q1': {
-        'comments': [],
-        'value': 'This is my title',
-        'extra': []
-    },
-    'q3': {
-        'comments': [],
-        'value': 'research questions',
-        'extra': []
-    },
+    'q25': {'comments': [], 'value': 'this is my exploratory analysis', 'extra': []},
+    'q26': {'comments': [], 'value': '', 'extra': []},
+    'q27': {'comments': [], 'value': 'No additional comments', 'extra': []},
+    'q1': {'comments': [], 'value': 'This is my title', 'extra': []},
+    'q3': {'comments': [], 'value': 'research questions', 'extra': []},
     'q5': {
         'comments': [],
         'value': 'Registration prior to creation of data',
-        'extra': []
+        'extra': [],
     },
-    'q4': {
-        'comments': [],
-        'value': 'this is my hypothesis',
-        'extra': []
-    },
+    'q4': {'comments': [], 'value': 'this is my hypothesis', 'extra': []},
     'q7': {
         'comments': [],
         'value': {
             'question': {
                 'comments': [],
                 'value': 'data collection procedures',
-                'extra': []
+                'extra': [],
             },
             'uploader': {
                 'comments': [],
@@ -174,12 +141,9 @@ prereg_registration_metadata = {
                                 'downloads': 0,
                                 'latestVersionSeen': '',
                                 'version': 1,
-                                'hashes': {
-                                    'sha256': 'dsdfds',
-                                    'md5': 'sdfsef'
-                                },
+                                'hashes': {'sha256': 'dsdfds', 'md5': 'sdfsef'},
                                 'guid': '',
-                                'checkout': ''
+                                'checkout': '',
                             },
                             'materialized': '/Alphabet.txt',
                             'created_utc': '',
@@ -189,48 +153,36 @@ prereg_registration_metadata = {
                             'provider': 'osfstorage',
                             'path': '/5d6d215b4d476c088fb8e000',
                             'modified_utc': '2019-09-02T14:04:14+00:00',
-                            'size': 3169
+                            'size': 3169,
                         },
-                        'fileId': '7ry42'
+                        'fileId': '7ry42',
                     }
-                ]
-            }
+                ],
+            },
         },
-        'extra': []
+        'extra': [],
     },
-    'q6': {
-        'comments': [],
-        'value': 'Explanation of existing data',
-        'extra': []
-    },
+    'q6': {'comments': [], 'value': 'Explanation of existing data', 'extra': []},
     'q9': {
         'comments': [],
         'value': 'this is the rationale for my sample size',
-        'extra': []
+        'extra': [],
     },
-    'q8': {
-        'comments': [],
-        'value': 'this is my sample size',
-        'extra': []
-    },
+    'q8': {'comments': [], 'value': 'this is my sample size', 'extra': []},
     'q15': {
         'comments': [],
         'value': [
             'No blinding is involved in this study.',
             'For studies that involve human subjects, they will not know the treatment group to which they have been assigned.',
-            'Research personnel who interact directly with the study subjects (either human or non-human subjects) will not be aware of the assigned treatments.'
+            'Research personnel who interact directly with the study subjects (either human or non-human subjects) will not be aware of the assigned treatments.',
         ],
-        'extra': []
+        'extra': [],
     },
-    'q14': {
-        'comments': [],
-        'value': '',
-        'extra': []
-    },
+    'q14': {'comments': [], 'value': '', 'extra': []},
     'q17': {
         'comments': [],
         'value': 'this is my explanation of randomization',
-        'extra': []
+        'extra': [],
     },
     'q16': {
         'comments': [],
@@ -238,15 +190,11 @@ prereg_registration_metadata = {
             'question': {
                 'comments': [],
                 'value': 'this is my study design',
-                'extra': []
+                'extra': [],
             },
-            'uploader': {
-                'comments': [],
-                'value': '',
-                'extra': []
-            }
+            'uploader': {'comments': [], 'value': '', 'extra': []},
         },
-        'extra': []
+        'extra': [],
     },
     'q11': {
         'comments': [],
@@ -254,7 +202,7 @@ prereg_registration_metadata = {
             'question': {
                 'comments': [],
                 'value': 'these are my maniuplated variables',
-                'extra': []
+                'extra': [],
             },
             'uploader': {
                 'comments': [],
@@ -276,12 +224,9 @@ prereg_registration_metadata = {
                                 'downloads': 0,
                                 'latestVersionSeen': '',
                                 'version': 1,
-                                'hashes': {
-                                    'sha256': 'sdf',
-                                    'md5': 'asdf'
-                                },
+                                'hashes': {'sha256': 'sdf', 'md5': 'asdf'},
                                 'guid': '',
-                                'checkout': ''
+                                'checkout': '',
                             },
                             'materialized': '/Screen Shot 2019-08-30 at 9.04.01 AM.png',
                             'created_utc': '',
@@ -291,9 +236,9 @@ prereg_registration_metadata = {
                             'provider': 'osfstorage',
                             'path': '/5d6d217f4d476c088fb8e00d',
                             'modified_utc': '2019-09-02T14:04:47+00:00',
-                            'size': 78257
+                            'size': 78257,
                         },
-                        'fileId': 'nc8qy'
+                        'fileId': 'nc8qy',
                     },
                     {
                         'descriptionValue': '',
@@ -306,23 +251,17 @@ prereg_registration_metadata = {
                                 'download': 'http://localhost:7777/v1/resources/9bknu/providers/osfstorage/5d6d215b4d476c088fb8e000',
                                 'move': 'http://localhost:7777/v1/resources/9bknu/providers/osfstorage/5d6d215b4d476c088fb8e000',
                                 'upload': 'http://localhost:7777/v1/resources/9bknu/providers/osfstorage/5d6d215b4d476c088fb8e000?kind=file',
-                                'delete': 'http://localhost:7777/v1/resources/9bknu/providers/osfstorage/5d6d215b4d476c088fb8e000'
+                                'delete': 'http://localhost:7777/v1/resources/9bknu/providers/osfstorage/5d6d215b4d476c088fb8e000',
                             },
                             'extra': {
                                 'downloads': 0,
                                 'latestVersionSeen': '',
                                 'version': 1,
-                                'hashes': {
-                                    'sha256': 'asdf',
-                                    'md5': 'sdfs'
-                                },
+                                'hashes': {'sha256': 'asdf', 'md5': 'sdfs'},
                                 'guid': '',
-                                'checkout': ''
+                                'checkout': '',
                             },
-                            'accept': {
-                                'acceptedFiles': 'True',
-                                'maxSize': 5120
-                            },
+                            'accept': {'acceptedFiles': 'True', 'maxSize': 5120},
                             'id': 'osfstorage/5d6d215b4d476c088fb8e000',
                             'size': 3169,
                             'nodeApiUrl': '/api/v1/project/9bknu/',
@@ -334,10 +273,7 @@ prereg_registration_metadata = {
                             'sizeInt': 3169,
                             'contentType': '',
                             'path': '/5d6d215b4d476c088fb8e000',
-                            'permissions': {
-                                'edit': 'True',
-                                'view': 'True'
-                            },
+                            'permissions': {'edit': 'True', 'view': 'True'},
                             'waterbutlerURL': 'http://localhost:7777',
                             'kind': 'file',
                             'resource': '9bknu',
@@ -345,35 +281,23 @@ prereg_registration_metadata = {
                             'materialized': '/Alphabet.txt',
                             'created_utc': '2019-09-02T14:04:14.776301+00:00',
                             'modified': '2019-09-02T14:04:14.776301+00:00',
-                            'modified_utc': '2019-09-02T14:04:14.776301+00:00'
+                            'modified_utc': '2019-09-02T14:04:14.776301+00:00',
                         },
-                        'fileId': '7ry42'
-                    }
-                ]
-            }
+                        'fileId': '7ry42',
+                    },
+                ],
+            },
         },
-        'extra': []
+        'extra': [],
     },
-    'q10': {
-        'comments': [],
-        'value': 'this is my stopping rule',
-        'extra': []
-    },
+    'q10': {'comments': [], 'value': 'this is my stopping rule', 'extra': []},
     'q13': {
         'comments': [],
         'value': {
-            'question': {
-                'comments': [],
-                'value': 'these are my indices',
-                'extra': []
-            },
-            'uploader': {
-                'comments': [],
-                'value': '',
-                'extra': []
-            }
+            'question': {'comments': [], 'value': 'these are my indices', 'extra': []},
+            'uploader': {'comments': [], 'value': '', 'extra': []},
         },
-        'extra': []
+        'extra': [],
     },
     'q12': {
         'comments': [],
@@ -381,101 +305,53 @@ prereg_registration_metadata = {
             'question': {
                 'comments': [],
                 'value': 'these are my measured variables',
-                'extra': []
+                'extra': [],
             },
-            'uploader': {
-                'comments': [],
-                'value': '',
-                'extra': []
-            }
+            'uploader': {'comments': [], 'value': '', 'extra': []},
         },
-        'extra': []
+        'extra': [],
     },
     'q19': {
         'comments': [],
         'value': {
-            'question': {
-                'comments': [],
-                'value': 'ANOVA',
-                'extra': []
-            },
-            'uploader': {
-                'comments': [],
-                'value': '',
-                'extra': []
-            }
+            'question': {'comments': [], 'value': 'ANOVA', 'extra': []},
+            'uploader': {'comments': [], 'value': '', 'extra': []},
         },
-        'extra': []
-    }
+        'extra': [],
+    },
 }
 
 prereg_registration_metadata_built = {
-    'q20': {
-        'comments': [],
-        'value': 'transforming and recoding',
-        'extra': []
-    },
-    'q21': {
-        'comments': [],
-        'value': 'research plan follow up',
-        'extra': []
-    },
-    'q22': {
-        'comments': [],
-        'value': 'criteria',
-        'extra': []
-    },
+    'q20': {'comments': [], 'value': 'transforming and recoding', 'extra': []},
+    'q21': {'comments': [], 'value': 'research plan follow up', 'extra': []},
+    'q22': {'comments': [], 'value': 'criteria', 'extra': []},
     'q23': {
         'comments': [],
         'value': 'this is how outliers will be handled',
-        'extra': []
+        'extra': [],
     },
     'q24': {
         'comments': [],
         'value': 'this is how I will deal with incomplete data.',
-        'extra': []
+        'extra': [],
     },
-    'q25': {
-        'comments': [],
-        'value': 'this is my exploratory analysis',
-        'extra': []
-    },
-    'q26': {
-        'comments': [],
-        'value': '',
-        'extra': []
-    },
-    'q27': {
-        'comments': [],
-        'value': 'No additional comments',
-        'extra': []
-    },
-    'q1': {
-        'comments': [],
-        'value': 'This is my title',
-        'extra': []
-    },
-    'q3': {
-        'comments': [],
-        'value': 'research questions',
-        'extra': []
-    },
+    'q25': {'comments': [], 'value': 'this is my exploratory analysis', 'extra': []},
+    'q26': {'comments': [], 'value': '', 'extra': []},
+    'q27': {'comments': [], 'value': 'No additional comments', 'extra': []},
+    'q1': {'comments': [], 'value': 'This is my title', 'extra': []},
+    'q3': {'comments': [], 'value': 'research questions', 'extra': []},
     'q5': {
         'comments': [],
         'value': 'Registration prior to creation of data',
-        'extra': []
+        'extra': [],
     },
-    'q4': {
-        'comments': [],
-        'value': 'this is my hypothesis',
-        'extra': []
-    },
+    'q4': {'comments': [], 'value': 'this is my hypothesis', 'extra': []},
     'q7': {
         'value': {
             'question': {
                 'comments': [],
                 'value': 'data collection procedures',
-                'extra': []
+                'extra': [],
             },
             'uploader': {
                 'comments': [],
@@ -486,60 +362,42 @@ prereg_registration_metadata_built = {
                         'selectedFileName': 'Alphabet.txt',
                         'nodeId': '57zbh',
                         'sha256': 'dsdfds',
-                        'data': {
-                            'name': 'Alphabet.txt'
-                        }
+                        'data': {'name': 'Alphabet.txt'},
                     }
-                ]
-            }
+                ],
+            },
         },
     },
-    'q6': {
-        'comments': [],
-        'value': 'Explanation of existing data',
-        'extra': []
-    },
+    'q6': {'comments': [], 'value': 'Explanation of existing data', 'extra': []},
     'q9': {
         'comments': [],
         'value': 'this is the rationale for my sample size',
-        'extra': []
+        'extra': [],
     },
-    'q8': {
-        'comments': [],
-        'value': 'this is my sample size',
-        'extra': []
-    },
+    'q8': {'comments': [], 'value': 'this is my sample size', 'extra': []},
     'q15': {
         'comments': [],
         'value': [
             'No blinding is involved in this study.',
             'For studies that involve human subjects, they will not know the treatment group to which they have been assigned.',
-            'Research personnel who interact directly with the study subjects (either human or non-human subjects) will not be aware of the assigned treatments.'
+            'Research personnel who interact directly with the study subjects (either human or non-human subjects) will not be aware of the assigned treatments.',
         ],
-        'extra': []
+        'extra': [],
     },
-    'q14': {
-        'comments': [],
-        'value': '',
-        'extra': []
-    },
+    'q14': {'comments': [], 'value': '', 'extra': []},
     'q17': {
         'comments': [],
         'value': 'this is my explanation of randomization',
-        'extra': []
+        'extra': [],
     },
     'q16': {
         'value': {
             'question': {
                 'comments': [],
                 'value': 'this is my study design',
-                'extra': []
+                'extra': [],
             },
-            'uploader': {
-                'comments': [],
-                'value': '',
-                'extra': []
-            }
+            'uploader': {'comments': [], 'value': '', 'extra': []},
         },
     },
     'q11': {
@@ -547,7 +405,7 @@ prereg_registration_metadata_built = {
             'question': {
                 'comments': [],
                 'value': 'these are my maniuplated variables',
-                'extra': []
+                'extra': [],
             },
             'uploader': {
                 'comments': [],
@@ -558,40 +416,24 @@ prereg_registration_metadata_built = {
                         'viewUrl': '/project/57zbh/files/osfstorage/5d6d22264d476c088fb8e01f',
                         'nodeId': '57zbh',
                         'sha256': 'sdf',
-                        'data': {
-                            'name': 'Screen Shot 2019-08-30 at 9.04.01 AM.png'
-                        }
+                        'data': {'name': 'Screen Shot 2019-08-30 at 9.04.01 AM.png'},
                     },
                     {
                         'selectedFileName': 'Alphabet.txt',
                         'viewUrl': '/project/57zbh/files/osfstorage/5d6d22274d476c088fb8e021',
                         'nodeId': '57zbh',
                         'sha256': 'dsdfds',
-                        'data': {
-                            'name': 'Alphabet.txt'
-                        }
-                    }
-                ]
-            }
+                        'data': {'name': 'Alphabet.txt'},
+                    },
+                ],
+            },
         },
     },
-    'q10': {
-        'comments': [],
-        'value': 'this is my stopping rule',
-        'extra': []
-    },
+    'q10': {'comments': [], 'value': 'this is my stopping rule', 'extra': []},
     'q13': {
         'value': {
-            'question': {
-                'comments': [],
-                'value': 'these are my indices',
-                'extra': []
-            },
-            'uploader': {
-                'comments': [],
-                'value': '',
-                'extra': []
-            }
+            'question': {'comments': [], 'value': 'these are my indices', 'extra': []},
+            'uploader': {'comments': [], 'value': '', 'extra': []},
         },
     },
     'q12': {
@@ -599,37 +441,21 @@ prereg_registration_metadata_built = {
             'question': {
                 'comments': [],
                 'value': 'these are my measured variables',
-                'extra': []
+                'extra': [],
             },
-            'uploader': {
-                'comments': [],
-                'value': '',
-                'extra': []
-            }
+            'uploader': {'comments': [], 'value': '', 'extra': []},
         },
     },
     'q19': {
         'value': {
-            'question': {
-                'comments': [],
-                'value': 'ANOVA',
-                'extra': []
-            },
-            'uploader': {
-                'comments': [],
-                'value': '',
-                'extra': []
-            }
+            'question': {'comments': [], 'value': 'ANOVA', 'extra': []},
+            'uploader': {'comments': [], 'value': '', 'extra': []},
         },
-    }
+    },
 }
 
 veer_registration_metadata = {
-    'dataCollectionDates': {
-        'comments': [],
-        'value': '2020 - 2030',
-        'extra': []
-    },
+    'dataCollectionDates': {'comments': [], 'value': '2020 - 2030', 'extra': []},
     'description-methods': {
         'comments': [],
         'value': {
@@ -639,10 +465,10 @@ veer_registration_metadata = {
                     'question8b': {
                         'comments': [],
                         'value': 'these are failing check-tests',
-                        'extra': []
+                        'extra': [],
                     }
                 },
-                'extra': []
+                'extra': [],
             },
             'design': {
                 'comments': [],
@@ -650,20 +476,20 @@ veer_registration_metadata = {
                     'question2a': {
                         'comments': [],
                         'value': 'a. whether they are between participants',
-                        'extra': []
+                        'extra': [],
                     },
                     'question2b': {
                         'comments': [],
                         'value': 'these are my dependent variables',
-                        'extra': []
+                        'extra': [],
                     },
                     'question3b': {
                         'comments': [],
                         'value': 'These variables are acting as covariates.',
-                        'extra': []
-                    }
+                        'extra': [],
+                    },
                 },
-                'extra': []
+                'extra': [],
             },
             'procedure': {
                 'comments': [],
@@ -671,10 +497,10 @@ veer_registration_metadata = {
                     'question10b': {
                         'comments': [],
                         'value': 'describe all manipulations',
-                        'extra': []
+                        'extra': [],
                     }
                 },
-                'extra': []
+                'extra': [],
             },
             'planned-sample': {
                 'comments': [],
@@ -682,33 +508,29 @@ veer_registration_metadata = {
                     'question4b': {
                         'comments': [],
                         'value': 'these are the preselection rults',
-                        'extra': []
+                        'extra': [],
                     },
                     'question7b': {
                         'comments': [],
                         'value': 'here is my data collection termination rule',
-                        'extra': []
+                        'extra': [],
                     },
                     'question5b': {
                         'comments': [],
                         'value': 'here is how the data will be collected',
-                        'extra': []
+                        'extra': [],
                     },
-                    'question6b-upload': {
-                        'comments': [],
-                        'value': '',
-                        'extra': []
-                    },
+                    'question6b-upload': {'comments': [], 'value': '', 'extra': []},
                     'question6b': {
                         'comments': [],
                         'value': 'this is my planned sample size',
-                        'extra': []
-                    }
+                        'extra': [],
+                    },
                 },
-                'extra': []
-            }
+                'extra': [],
+            },
         },
-        'extra': []
+        'extra': [],
     },
     'recommended-analysis': {
         'comments': [],
@@ -719,38 +541,34 @@ veer_registration_metadata = {
                     'question6c': {
                         'comments': [],
                         'value': 'I used a method of correction for multiple tests',
-                        'extra': []
+                        'extra': [],
                     },
                     'question8c': {
                         'comments': [],
                         'value': 'reliability criteria',
-                        'extra': []
+                        'extra': [],
                     },
                     'question9c': {
                         'comments': [],
                         'value': 'these are the anticipated data transformations',
-                        'extra': []
+                        'extra': [],
                     },
                     'question7c': {
                         'comments': [],
                         'value': 'method of missing data handling',
-                        'extra': []
+                        'extra': [],
                     },
-                    'question11c': {
-                        'comments': [],
-                        'value': '',
-                        'extra': []
-                    },
+                    'question11c': {'comments': [], 'value': '', 'extra': []},
                     'question10c': {
                         'comments': [],
                         'value': 'assumptions of analysses',
-                        'extra': []
-                    }
+                        'extra': [],
+                    },
                 },
-                'extra': []
+                'extra': [],
             }
         },
-        'extra': []
+        'extra': [],
     },
     'description-hypothesis': {
         'comments': [],
@@ -758,20 +576,20 @@ veer_registration_metadata = {
             'question2a': {
                 'comments': [],
                 'value': 'expected interaction shape',
-                'extra': []
+                'extra': [],
             },
             'question1a': {
                 'comments': [],
                 'value': 'These are the essential elements',
-                'extra': []
+                'extra': [],
             },
             'question3a': {
                 'comments': [],
                 'value': 'predictions for successful checks',
-                'extra': []
-            }
+                'extra': [],
+            },
         },
-        'extra': []
+        'extra': [],
     },
     'confirmatory-analyses-first': {
         'comments': [],
@@ -782,33 +600,33 @@ veer_registration_metadata = {
                     'question4c': {
                         'comments': [],
                         'value': 'this the covariate rationale',
-                        'extra': []
+                        'extra': [],
                     },
                     'question5c': {
                         'comments': [],
                         'value': 'these are techniques for null hypo testing',
-                        'extra': []
+                        'extra': [],
                     },
                     'question2c': {
                         'comments': [],
                         'value': 'this is the statistical technicque',
-                        'extra': []
+                        'extra': [],
                     },
                     'question3c': {
                         'comments': [],
                         'value': 'this is each variable role',
-                        'extra': []
+                        'extra': [],
                     },
                     'question1c': {
                         'comments': [],
                         'value': 'these are the relevant variables',
-                        'extra': []
-                    }
+                        'extra': [],
+                    },
                 },
-                'extra': []
+                'extra': [],
             }
         },
-        'extra': []
+        'extra': [],
     },
     'confirmatory-analyses-third': {
         'comments': [],
@@ -819,80 +637,52 @@ veer_registration_metadata = {
                     'question4c': {
                         'comments': [],
                         'value': 'here was the rationale',
-                        'extra': []
+                        'extra': [],
                     },
                     'question5c': {
                         'comments': [],
                         'value': 'I used BAYESIAN STATISTICS',
-                        'extra': []
+                        'extra': [],
                     },
-                    'question2c': {
-                        'comments': [],
-                        'value': 't-test',
-                        'extra': []
-                    },
+                    'question2c': {'comments': [], 'value': 't-test', 'extra': []},
                     'question3c': {
                         'comments': [],
                         'value': 't-test informed covariate',
-                        'extra': []
+                        'extra': [],
                     },
                     'question1c': {
                         'comments': [],
                         'value': '3rd prediction',
-                        'extra': []
-                    }
+                        'extra': [],
+                    },
                 },
-                'extra': []
+                'extra': [],
             }
         },
-        'extra': []
+        'extra': [],
     },
     'datacompletion': {
         'comments': [],
         'value': 'No, data collection has not begun',
-        'extra': []
+        'extra': [],
     },
-    'looked': {
-        'comments': [],
-        'value': 'Yes',
-        'extra': []
-    },
+    'looked': {'comments': [], 'value': 'Yes', 'extra': []},
     'confirmatory-analyses-fourth': {
         'comments': [],
         'value': {
             'fourth': {
                 'comments': [],
                 'value': {
-                    'question4c': {
-                        'comments': [],
-                        'value': '',
-                        'extra': []
-                    },
-                    'question5c': {
-                        'comments': [],
-                        'value': '',
-                        'extra': []
-                    },
-                    'question2c': {
-                        'comments': [],
-                        'value': '',
-                        'extra': []
-                    },
-                    'question3c': {
-                        'comments': [],
-                        'value': '',
-                        'extra': []
-                    },
-                    'question1c': {
-                        'comments': [],
-                        'value': '',
-                        'extra': []
-                    }
+                    'question4c': {'comments': [], 'value': '', 'extra': []},
+                    'question5c': {'comments': [], 'value': '', 'extra': []},
+                    'question2c': {'comments': [], 'value': '', 'extra': []},
+                    'question3c': {'comments': [], 'value': '', 'extra': []},
+                    'question1c': {'comments': [], 'value': '', 'extra': []},
                 },
-                'extra': []
+                'extra': [],
             }
         },
-        'extra': []
+        'extra': [],
     },
     'confirmatory-analyses-further': {
         'comments': [],
@@ -903,33 +693,33 @@ veer_registration_metadata = {
                     'question4c': {
                         'comments': [],
                         'value': 'this was the rationale',
-                        'extra': []
+                        'extra': [],
                     },
                     'question5c': {
                         'comments': [],
                         'value': 'also Bayesian',
-                        'extra': []
+                        'extra': [],
                     },
                     'question2c': {
                         'comments': [],
                         'value': 'i used a common statistical technique',
-                        'extra': []
+                        'extra': [],
                     },
                     'question3c': {
                         'comments': [],
                         'value': 'this was the independent variable',
-                        'extra': []
+                        'extra': [],
                     },
                     'question1c': {
                         'comments': [],
                         'value': 'FURTHER PREdictions:',
-                        'extra': []
-                    }
+                        'extra': [],
+                    },
                 },
-                'extra': []
+                'extra': [],
             }
         },
-        'extra': []
+        'extra': [],
     },
     'recommended-hypothesis': {
         'comments': [],
@@ -937,7 +727,7 @@ veer_registration_metadata = {
             'question5a': {
                 'comments': [],
                 'value': 'This is the hypotheses that was tested.',
-                'extra': []
+                'extra': [],
             },
             'question4a': {
                 'comments': [],
@@ -954,23 +744,17 @@ veer_registration_metadata = {
                                 'download': 'http://localhost:7777/v1/resources/9bknu/providers/osfstorage/5d6d215b4d476c088fb8e000',
                                 'move': 'http://localhost:7777/v1/resources/9bknu/providers/osfstorage/5d6d215b4d476c088fb8e000',
                                 'upload': 'http://localhost:7777/v1/resources/9bknu/providers/osfstorage/5d6d215b4d476c088fb8e000?kind=file',
-                                'delete': 'http://localhost:7777/v1/resources/9bknu/providers/osfstorage/5d6d215b4d476c088fb8e000'
+                                'delete': 'http://localhost:7777/v1/resources/9bknu/providers/osfstorage/5d6d215b4d476c088fb8e000',
                             },
                             'extra': {
                                 'downloads': 0,
                                 'latestVersionSeen': '',
                                 'version': 1,
-                                'hashes': {
-                                    'sha256': 'asdf',
-                                    'md5': 'asd'
-                                },
+                                'hashes': {'sha256': 'asdf', 'md5': 'asd'},
                                 'guid': '',
-                                'checkout': ''
+                                'checkout': '',
                             },
-                            'accept': {
-                                'acceptedFiles': 'True',
-                                'maxSize': 5120
-                            },
+                            'accept': {'acceptedFiles': 'True', 'maxSize': 5120},
                             'id': 'osfstorage/5d6d215b4d476c088fb8e000',
                             'size': 3169,
                             'nodeApiUrl': '/api/v1/project/9bknu/',
@@ -982,10 +766,7 @@ veer_registration_metadata = {
                             'sizeInt': 3169,
                             'contentType': '',
                             'path': '/5d6d215b4d476c088fb8e000',
-                            'permissions': {
-                                'edit': 'True',
-                                'view': 'True'
-                            },
+                            'permissions': {'edit': 'True', 'view': 'True'},
                             'waterbutlerURL': 'http://localhost:7777',
                             'kind': 'file',
                             'resource': '9bknu',
@@ -993,9 +774,9 @@ veer_registration_metadata = {
                             'materialized': '/Alphabet.txt',
                             'created_utc': '2019-09-02T14:04:14.776301+00:00',
                             'modified': '2019-09-02T14:04:14.776301+00:00',
-                            'modified_utc': '2019-09-02T14:04:14.776301+00:00'
+                            'modified_utc': '2019-09-02T14:04:14.776301+00:00',
                         },
-                        'fileId': '7ry42'
+                        'fileId': '7ry42',
                     },
                     {
                         'descriptionValue': '',
@@ -1008,23 +789,17 @@ veer_registration_metadata = {
                                 'download': 'http://localhost:7777/v1/resources/9bknu/providers/osfstorage/5d6d217f4d476c088fb8e00d',
                                 'move': 'http://localhost:7777/v1/resources/9bknu/providers/osfstorage/5d6d217f4d476c088fb8e00d',
                                 'upload': 'http://localhost:7777/v1/resources/9bknu/providers/osfstorage/5d6d217f4d476c088fb8e00d?kind=file',
-                                'delete': 'http://localhost:7777/v1/resources/9bknu/providers/osfstorage/5d6d217f4d476c088fb8e00d'
+                                'delete': 'http://localhost:7777/v1/resources/9bknu/providers/osfstorage/5d6d217f4d476c088fb8e00d',
                             },
                             'extra': {
                                 'downloads': 0,
                                 'latestVersionSeen': '',
                                 'version': 1,
-                                'hashes': {
-                                    'sha256': 'asdf',
-                                    'md5': 'asd'
-                                },
+                                'hashes': {'sha256': 'asdf', 'md5': 'asd'},
                                 'guid': '',
-                                'checkout': ''
+                                'checkout': '',
                             },
-                            'accept': {
-                                'acceptedFiles': 'True',
-                                'maxSize': 5120
-                            },
+                            'accept': {'acceptedFiles': 'True', 'maxSize': 5120},
                             'id': 'osfstorage/5d6d217f4d476c088fb8e00d',
                             'size': 78257,
                             'nodeApiUrl': '/api/v1/project/9bknu/',
@@ -1036,10 +811,7 @@ veer_registration_metadata = {
                             'sizeInt': 78257,
                             'contentType': '',
                             'path': '/5d6d217f4d476c088fb8e00d',
-                            'permissions': {
-                                'edit': 'True',
-                                'view': 'True'
-                            },
+                            'permissions': {'edit': 'True', 'view': 'True'},
                             'waterbutlerURL': 'http://localhost:7777',
                             'kind': 'file',
                             'resource': '9bknu',
@@ -1047,24 +819,24 @@ veer_registration_metadata = {
                             'materialized': '/Screen Shot 2019-08-30 at 9.04.01 AM.png',
                             'created_utc': '2019-09-02T14:04:47.793337+00:00',
                             'modified': '2019-09-02T14:04:47.793337+00:00',
-                            'modified_utc': '2019-09-02T14:04:47.793337+00:00'
+                            'modified_utc': '2019-09-02T14:04:47.793337+00:00',
                         },
-                        'fileId': 'nc8qy'
-                    }
-                ]
+                        'fileId': 'nc8qy',
+                    },
+                ],
             },
             'question6a': {
                 'comments': [],
                 'value': 'this is the outcome that would be predicted by each theory',
-                'extra': []
-            }
+                'extra': [],
+            },
         },
-        'extra': []
+        'extra': [],
     },
     'additionalComments': {
         'comments': [],
         'value': 'no additional comments',
-        'extra': []
+        'extra': [],
     },
     'confirmatory-analyses-second': {
         'comments': [],
@@ -1075,33 +847,25 @@ veer_registration_metadata = {
                     'question4c': {
                         'comments': [],
                         'value': 'here is the rationale',
-                        'extra': []
+                        'extra': [],
                     },
-                    'question5c': {
-                        'comments': [],
-                        'value': '',
-                        'extra': []
-                    },
-                    'question2c': {
-                        'comments': [],
-                        'value': 'ANOVA test',
-                        'extra': []
-                    },
+                    'question5c': {'comments': [], 'value': '', 'extra': []},
+                    'question2c': {'comments': [], 'value': 'ANOVA test', 'extra': []},
                     'question3c': {
                         'comments': [],
                         'value': 'it was the covariate',
-                        'extra': []
+                        'extra': [],
                     },
                     'question1c': {
                         'comments': [],
                         'value': 'how 2nd prediction calculated',
-                        'extra': []
-                    }
+                        'extra': [],
+                    },
                 },
-                'extra': []
+                'extra': [],
             }
         },
-        'extra': []
+        'extra': [],
     },
     'recommended-methods': {
         'comments': [],
@@ -1109,30 +873,22 @@ veer_registration_metadata = {
             'procedure': {
                 'comments': [],
                 'value': {
-                    'question9b-file': {
-                        'comments': [],
-                        'value': '',
-                        'extra': []
-                    },
+                    'question9b-file': {'comments': [], 'value': '', 'extra': []},
                     'question9b': {
                         'comments': [],
                         'value': 'set fail-safe levels of exclusions',
-                        'extra': []
-                    }
+                        'extra': [],
+                    },
                 },
-                'extra': []
+                'extra': [],
             }
         },
-        'extra': []
-    }
+        'extra': [],
+    },
 }
 
 veer_condensed = {
-    'dataCollectionDates': {
-        'comments': [],
-        'value': '2020 - 2030',
-        'extra': []
-    },
+    'dataCollectionDates': {'comments': [], 'value': '2020 - 2030', 'extra': []},
     'description-methods': {
         'value': {
             'exclusion-criteria': {
@@ -1140,7 +896,7 @@ veer_condensed = {
                     'question8b': {
                         'comments': [],
                         'value': 'these are failing check-tests',
-                        'extra': []
+                        'extra': [],
                     }
                 },
             },
@@ -1149,18 +905,18 @@ veer_condensed = {
                     'question2a': {
                         'comments': [],
                         'value': 'a. whether they are between participants',
-                        'extra': []
+                        'extra': [],
                     },
                     'question2b': {
                         'comments': [],
                         'value': 'these are my dependent variables',
-                        'extra': []
+                        'extra': [],
                     },
                     'question3b': {
                         'comments': [],
                         'value': 'These variables are acting as covariates.',
-                        'extra': []
-                    }
+                        'extra': [],
+                    },
                 },
             },
             'procedure': {
@@ -1168,7 +924,7 @@ veer_condensed = {
                     'question10b': {
                         'comments': [],
                         'value': 'describe all manipulations',
-                        'extra': []
+                        'extra': [],
                     }
                 },
             },
@@ -1177,30 +933,26 @@ veer_condensed = {
                     'question4b': {
                         'comments': [],
                         'value': 'these are the preselection rults',
-                        'extra': []
+                        'extra': [],
                     },
                     'question7b': {
                         'comments': [],
                         'value': 'here is my data collection termination rule',
-                        'extra': []
+                        'extra': [],
                     },
                     'question5b': {
                         'comments': [],
                         'value': 'here is how the data will be collected',
-                        'extra': []
+                        'extra': [],
                     },
-                    'question6b-upload': {
-                        'comments': [],
-                        'value': '',
-                        'extra': []
-                    },
+                    'question6b-upload': {'comments': [], 'value': '', 'extra': []},
                     'question6b': {
                         'comments': [],
                         'value': 'this is my planned sample size',
-                        'extra': []
-                    }
+                        'extra': [],
+                    },
                 },
-            }
+            },
         },
     },
     'recommended-analysis': {
@@ -1210,33 +962,29 @@ veer_condensed = {
                     'question6c': {
                         'comments': [],
                         'value': 'I used a method of correction for multiple tests',
-                        'extra': []
+                        'extra': [],
                     },
                     'question8c': {
                         'comments': [],
                         'value': 'reliability criteria',
-                        'extra': []
+                        'extra': [],
                     },
                     'question9c': {
                         'comments': [],
                         'value': 'these are the anticipated data transformations',
-                        'extra': []
+                        'extra': [],
                     },
                     'question7c': {
                         'comments': [],
                         'value': 'method of missing data handling',
-                        'extra': []
+                        'extra': [],
                     },
-                    'question11c': {
-                        'comments': [],
-                        'value': '',
-                        'extra': []
-                    },
+                    'question11c': {'comments': [], 'value': '', 'extra': []},
                     'question10c': {
                         'comments': [],
                         'value': 'assumptions of analysses',
-                        'extra': []
-                    }
+                        'extra': [],
+                    },
                 },
             }
         },
@@ -1246,18 +994,18 @@ veer_condensed = {
             'question2a': {
                 'comments': [],
                 'value': 'expected interaction shape',
-                'extra': []
+                'extra': [],
             },
             'question1a': {
                 'comments': [],
                 'value': 'These are the essential elements',
-                'extra': []
+                'extra': [],
             },
             'question3a': {
                 'comments': [],
                 'value': 'predictions for successful checks',
-                'extra': []
-            }
+                'extra': [],
+            },
         },
     },
     'confirmatory-analyses-first': {
@@ -1267,28 +1015,28 @@ veer_condensed = {
                     'question4c': {
                         'comments': [],
                         'value': 'this the covariate rationale',
-                        'extra': []
+                        'extra': [],
                     },
                     'question5c': {
                         'comments': [],
                         'value': 'these are techniques for null hypo testing',
-                        'extra': []
+                        'extra': [],
                     },
                     'question2c': {
                         'comments': [],
                         'value': 'this is the statistical technicque',
-                        'extra': []
+                        'extra': [],
                     },
                     'question3c': {
                         'comments': [],
                         'value': 'this is each variable role',
-                        'extra': []
+                        'extra': [],
                     },
                     'question1c': {
                         'comments': [],
                         'value': 'these are the relevant variables',
-                        'extra': []
-                    }
+                        'extra': [],
+                    },
                 },
             }
         },
@@ -1300,28 +1048,24 @@ veer_condensed = {
                     'question4c': {
                         'comments': [],
                         'value': 'here was the rationale',
-                        'extra': []
+                        'extra': [],
                     },
                     'question5c': {
                         'comments': [],
                         'value': 'I used BAYESIAN STATISTICS',
-                        'extra': []
+                        'extra': [],
                     },
-                    'question2c': {
-                        'comments': [],
-                        'value': 't-test',
-                        'extra': []
-                    },
+                    'question2c': {'comments': [], 'value': 't-test', 'extra': []},
                     'question3c': {
                         'comments': [],
                         'value': 't-test informed covariate',
-                        'extra': []
+                        'extra': [],
                     },
                     'question1c': {
                         'comments': [],
                         'value': '3rd prediction',
-                        'extra': []
-                    }
+                        'extra': [],
+                    },
                 },
             }
         },
@@ -1329,42 +1073,18 @@ veer_condensed = {
     'datacompletion': {
         'comments': [],
         'value': 'No, data collection has not begun',
-        'extra': []
+        'extra': [],
     },
-    'looked': {
-        'comments': [],
-        'value': 'Yes',
-        'extra': []
-    },
+    'looked': {'comments': [], 'value': 'Yes', 'extra': []},
     'confirmatory-analyses-fourth': {
         'value': {
             'fourth': {
                 'value': {
-                    'question4c': {
-                        'comments': [],
-                        'value': '',
-                        'extra': []
-                    },
-                    'question5c': {
-                        'comments': [],
-                        'value': '',
-                        'extra': []
-                    },
-                    'question2c': {
-                        'comments': [],
-                        'value': '',
-                        'extra': []
-                    },
-                    'question3c': {
-                        'comments': [],
-                        'value': '',
-                        'extra': []
-                    },
-                    'question1c': {
-                        'comments': [],
-                        'value': '',
-                        'extra': []
-                    }
+                    'question4c': {'comments': [], 'value': '', 'extra': []},
+                    'question5c': {'comments': [], 'value': '', 'extra': []},
+                    'question2c': {'comments': [], 'value': '', 'extra': []},
+                    'question3c': {'comments': [], 'value': '', 'extra': []},
+                    'question1c': {'comments': [], 'value': '', 'extra': []},
                 },
             }
         },
@@ -1376,28 +1096,28 @@ veer_condensed = {
                     'question4c': {
                         'comments': [],
                         'value': 'this was the rationale',
-                        'extra': []
+                        'extra': [],
                     },
                     'question5c': {
                         'comments': [],
                         'value': 'also Bayesian',
-                        'extra': []
+                        'extra': [],
                     },
                     'question2c': {
                         'comments': [],
                         'value': 'i used a common statistical technique',
-                        'extra': []
+                        'extra': [],
                     },
                     'question3c': {
                         'comments': [],
                         'value': 'this was the independent variable',
-                        'extra': []
+                        'extra': [],
                     },
                     'question1c': {
                         'comments': [],
                         'value': 'FURTHER PREdictions:',
-                        'extra': []
-                    }
+                        'extra': [],
+                    },
                 },
             }
         },
@@ -1407,7 +1127,7 @@ veer_condensed = {
             'question5a': {
                 'comments': [],
                 'value': 'This is the hypotheses that was tested.',
-                'extra': []
+                'extra': [],
             },
             'question4a': {
                 'comments': [],
@@ -1418,32 +1138,28 @@ veer_condensed = {
                         'viewUrl': '/project/85qku/files/osfstorage/5d6d25024d476c088fb8e03b',
                         'sha256': 'asdf',
                         'nodeId': '85qku',
-                        'data': {
-                            'name': 'Alphabet.txt',
-                        },
+                        'data': {'name': 'Alphabet.txt',},
                     },
                     {
                         'selectedFileName': 'Screen Shot 2019-08-30 at 9.04.01 AM.png',
                         'viewUrl': '/project/85qku/files/osfstorage/5d6d25014d476c088fb8e038',
                         'sha256': 'asdf',
                         'nodeId': '85qku',
-                        'data': {
-                            'name': 'Screen Shot 2019-08-30 at 9.04.01 AM.png'
-                        }
-                    }
-                ]
+                        'data': {'name': 'Screen Shot 2019-08-30 at 9.04.01 AM.png'},
+                    },
+                ],
             },
             'question6a': {
                 'comments': [],
                 'value': 'this is the outcome that would be predicted by each theory',
-                'extra': []
-            }
+                'extra': [],
+            },
         },
     },
     'additionalComments': {
         'comments': [],
         'value': 'no additional comments',
-        'extra': []
+        'extra': [],
     },
     'confirmatory-analyses-second': {
         'value': {
@@ -1452,28 +1168,20 @@ veer_condensed = {
                     'question4c': {
                         'comments': [],
                         'value': 'here is the rationale',
-                        'extra': []
+                        'extra': [],
                     },
-                    'question5c': {
-                        'comments': [],
-                        'value': '',
-                        'extra': []
-                    },
-                    'question2c': {
-                        'comments': [],
-                        'value': 'ANOVA test',
-                        'extra': []
-                    },
+                    'question5c': {'comments': [], 'value': '', 'extra': []},
+                    'question2c': {'comments': [], 'value': 'ANOVA test', 'extra': []},
                     'question3c': {
                         'comments': [],
                         'value': 'it was the covariate',
-                        'extra': []
+                        'extra': [],
                     },
                     'question1c': {
                         'comments': [],
                         'value': 'how 2nd prediction calculated',
-                        'extra': []
-                    }
+                        'extra': [],
+                    },
                 },
             }
         },
@@ -1482,20 +1190,16 @@ veer_condensed = {
         'value': {
             'procedure': {
                 'value': {
-                    'question9b-file': {
-                        'comments': [],
-                        'value': '',
-                        'extra': []
-                    },
+                    'question9b-file': {'comments': [], 'value': '', 'extra': []},
                     'question9b': {
                         'comments': [],
                         'value': 'set fail-safe levels of exclusions',
-                        'extra': []
-                    }
+                        'extra': [],
+                    },
                 },
             }
         },
-    }
+    },
 }
 
 veer_registration_responses = {
@@ -1531,22 +1235,24 @@ veer_registration_responses = {
             'file_name': 'Alphabet.txt',
             'file_id': '5d6d25024d476c088fb8e03b',
             'file_urls': {
-                'html': urljoin(settings.DOMAIN, '/project/85qku/files/osfstorage/5d6d25024d476c088fb8e03b'),
+                'html': urljoin(
+                    settings.DOMAIN,
+                    '/project/85qku/files/osfstorage/5d6d25024d476c088fb8e03b',
+                ),
             },
-            'file_hashes': {
-                'sha256': 'asdf',
-            },
+            'file_hashes': {'sha256': 'asdf',},
         },
         {
             'file_name': 'Screen Shot 2019-08-30 at 9.04.01 AM.png',
             'file_id': '5d6d25014d476c088fb8e038',
             'file_urls': {
-                'html': urljoin(settings.DOMAIN, '/project/85qku/files/osfstorage/5d6d25014d476c088fb8e038'),
+                'html': urljoin(
+                    settings.DOMAIN,
+                    '/project/85qku/files/osfstorage/5d6d25014d476c088fb8e038',
+                ),
             },
-            'file_hashes': {
-                'sha256': 'asdf',
-            },
-        }
+            'file_hashes': {'sha256': 'asdf',},
+        },
     ],
     'confirmatory-analyses-third.third.question5c': 'I used BAYESIAN STATISTICS',
     'description-methods.design.question2b': 'these are my dependent variables',
@@ -1572,56 +1278,44 @@ veer_registration_responses = {
     'confirmatory-analyses-third.third.question2c': 't-test',
     'confirmatory-analyses-fourth.fourth.question3c': '',
     'recommended-analysis.specify.question8c': 'reliability criteria',
-    'description-methods.planned-sample.question6b-upload': []
+    'description-methods.planned-sample.question6b-upload': [],
 }
 
 
 @pytest.fixture()
 def osf_standard_schema():
     return RegistrationSchema.objects.get(
-        name='OSF-Standard Pre-Data Collection Registration',
-        schema_version=2
+        name='OSF-Standard Pre-Data Collection Registration', schema_version=2
     )
+
 
 @pytest.fixture()
 def prereg_schema():
-    return RegistrationSchema.objects.get(
-        name='Prereg Challenge',
-        schema_version=2
-    )
+    return RegistrationSchema.objects.get(name='Prereg Challenge', schema_version=2)
+
 
 @pytest.fixture()
 def veer_schema():
     return RegistrationSchema.objects.get(
-        name__icontains='Pre-Registration in Social Psychology',
-        schema_version=2
+        name__icontains='Pre-Registration in Social Psychology', schema_version=2
     )
 
 
 @pytest.mark.django_db
 class TestMigrateDraftRegistrationRegistrationResponses:
-
     @pytest.fixture()
     def draft_osf_standard(self, osf_standard_schema):
         draft = DraftRegistrationFactory(
             registration_schema=osf_standard_schema,
             registration_metadata={
-                'looked': {
-                    'comments': [],
-                    'value': 'Yes',
-                    'extra': []
-                },
+                'looked': {'comments': [], 'value': 'Yes', 'extra': []},
                 'datacompletion': {
                     'comments': [],
                     'value': 'No, data collection has not begun',
-                    'extra': []
+                    'extra': [],
                 },
-                'comments': {
-                    'comments': [],
-                    'value': 'more comments',
-                    'extra': []
-                }
-            }
+                'comments': {'comments': [], 'value': 'more comments', 'extra': []},
+            },
         )
         draft.registration_responses = {}
         draft.save()
@@ -1630,8 +1324,7 @@ class TestMigrateDraftRegistrationRegistrationResponses:
     @pytest.fixture()
     def empty_draft_osf_standard(self, osf_standard_schema):
         draft = DraftRegistrationFactory(
-            registration_schema=osf_standard_schema,
-            registration_metadata={}
+            registration_schema=osf_standard_schema, registration_metadata={}
         )
         draft.registration_responses = {}
         draft.registration_responses_migrated = False
@@ -1642,7 +1335,7 @@ class TestMigrateDraftRegistrationRegistrationResponses:
     def draft_prereg(self, prereg_schema):
         draft = DraftRegistrationFactory(
             registration_schema=prereg_schema,
-            registration_metadata=prereg_registration_metadata
+            registration_metadata=prereg_registration_metadata,
         )
         draft.registration_responses = {}
         draft.registration_responses_migrated = False
@@ -1653,7 +1346,7 @@ class TestMigrateDraftRegistrationRegistrationResponses:
     def draft_veer(self, veer_schema):
         draft = DraftRegistrationFactory(
             registration_schema=veer_schema,
-            registration_metadata=veer_registration_metadata
+            registration_metadata=veer_registration_metadata,
         )
         draft.registration_responses = {}
         draft.registration_responses_migrated = False
@@ -1673,12 +1366,10 @@ class TestMigrateDraftRegistrationRegistrationResponses:
         assert responses['datacompletion'] == ''
         assert responses['comments'] == ''
 
-    def test_migrate_draft_registrations(self, app, draft_osf_standard, draft_prereg, draft_veer):
-        drafts = [
-            draft_osf_standard,
-            draft_prereg,
-            draft_veer
-        ]
+    def test_migrate_draft_registrations(
+        self, app, draft_osf_standard, draft_prereg, draft_veer
+    ):
+        drafts = [draft_osf_standard, draft_prereg, draft_veer]
 
         for draft in drafts:
             assert draft.registration_responses == {}
@@ -1723,30 +1414,36 @@ class TestMigrateDraftRegistrationRegistrationResponses:
                 'file_name': 'Screen Shot 2019-08-30 at 9.04.01 AM.png',
                 'file_id': '5d6d22264d476c088fb8e01f',
                 'file_urls': {
-                    'html': urljoin(settings.DOMAIN, '/project/57zbh/files/osfstorage/5d6d22264d476c088fb8e01f'),
-                    'download': urljoin(settings.DOMAIN, '/download/5d6d22264d476c088fb8e01f'),
+                    'html': urljoin(
+                        settings.DOMAIN,
+                        '/project/57zbh/files/osfstorage/5d6d22264d476c088fb8e01f',
+                    ),
+                    'download': urljoin(
+                        settings.DOMAIN, '/download/5d6d22264d476c088fb8e01f'
+                    ),
                 },
-                'file_hashes': {
-                    'sha256': 'sdf',
-                },
+                'file_hashes': {'sha256': 'sdf',},
             },
             {
                 'file_name': 'Alphabet.txt',
                 'file_id': '5d6d22274d476c088fb8e021',
                 'file_urls': {
-                    'html': urljoin(settings.DOMAIN, '/project/57zbh/files/osfstorage/5d6d22274d476c088fb8e021'),
-                    'download': urljoin(settings.DOMAIN, '/download/5d6d22274d476c088fb8e021'),
+                    'html': urljoin(
+                        settings.DOMAIN,
+                        '/project/57zbh/files/osfstorage/5d6d22274d476c088fb8e021',
+                    ),
+                    'download': urljoin(
+                        settings.DOMAIN, '/download/5d6d22274d476c088fb8e021'
+                    ),
                 },
-                'file_hashes': {
-                    'sha256': 'asdf',
-                },
-            }
+                'file_hashes': {'sha256': 'asdf',},
+            },
         ]
         assert responses['q16.question'] == 'this is my study design'
         assert responses['q15'] == [
             'No blinding is involved in this study.',
             'For studies that involve human subjects, they will not know the treatment group to which they have been assigned.',
-            'Research personnel who interact directly with the study subjects (either human or non-human subjects) will not be aware of the assigned treatments.'
+            'Research personnel who interact directly with the study subjects (either human or non-human subjects) will not be aware of the assigned treatments.',
         ]
         assert responses['q14'] == ''
         assert responses['q17'] == 'this is my explanation of randomization'
@@ -1760,12 +1457,15 @@ class TestMigrateDraftRegistrationRegistrationResponses:
                 'file_name': 'Alphabet.txt',
                 'file_id': '5d6d22274d476c088fb8e021',
                 'file_urls': {
-                    'html': urljoin(settings.DOMAIN, '/project/57zbh/files/osfstorage/5d6d22274d476c088fb8e021'),
-                    'download': urljoin(settings.DOMAIN, '/download/5d6d22274d476c088fb8e021'),
+                    'html': urljoin(
+                        settings.DOMAIN,
+                        '/project/57zbh/files/osfstorage/5d6d22274d476c088fb8e021',
+                    ),
+                    'download': urljoin(
+                        settings.DOMAIN, '/download/5d6d22274d476c088fb8e021'
+                    ),
                 },
-                'file_hashes': {
-                    'sha256': 'dsdfds'
-                },
+                'file_hashes': {'sha256': 'dsdfds'},
             }
         ]
 
@@ -1773,125 +1473,233 @@ class TestMigrateDraftRegistrationRegistrationResponses:
         draft_veer.reload()
         assert draft_veer.registration_responses_migrated is True
         responses = draft_veer.registration_responses
-        assert responses['confirmatory-analyses-third.third.question4c'] == 'here was the rationale'
-        assert responses['recommended-hypothesis.question5a'] == 'This is the hypotheses that was tested.'
-        assert responses['confirmatory-analyses-further.further.question4c'] == 'this was the rationale'
+        assert (
+            responses['confirmatory-analyses-third.third.question4c']
+            == 'here was the rationale'
+        )
+        assert (
+            responses['recommended-hypothesis.question5a']
+            == 'This is the hypotheses that was tested.'
+        )
+        assert (
+            responses['confirmatory-analyses-further.further.question4c']
+            == 'this was the rationale'
+        )
         assert responses['confirmatory-analyses-fourth.fourth.question5c'] == ''
-        assert responses['description-methods.design.question3b'] == 'These variables are acting as covariates.'
-        assert responses['confirmatory-analyses-second.second.question1c'] == 'how 2nd prediction calculated'
-        assert responses['description-methods.exclusion-criteria.question8b'] == 'these are failing check-tests'
-        assert responses['description-methods.planned-sample.question4b'] == 'these are the preselection rults'
-        assert responses['confirmatory-analyses-second.second.question3c'] == 'it was the covariate'
-        assert responses['recommended-analysis.specify.question6c'] == 'I used a method of correction for multiple tests'
-        assert responses['confirmatory-analyses-first.first.question2c'] == 'this is the statistical technicque'
-        assert responses['description-methods.procedure.question10b'] == 'describe all manipulations'
+        assert (
+            responses['description-methods.design.question3b']
+            == 'These variables are acting as covariates.'
+        )
+        assert (
+            responses['confirmatory-analyses-second.second.question1c']
+            == 'how 2nd prediction calculated'
+        )
+        assert (
+            responses['description-methods.exclusion-criteria.question8b']
+            == 'these are failing check-tests'
+        )
+        assert (
+            responses['description-methods.planned-sample.question4b']
+            == 'these are the preselection rults'
+        )
+        assert (
+            responses['confirmatory-analyses-second.second.question3c']
+            == 'it was the covariate'
+        )
+        assert (
+            responses['recommended-analysis.specify.question6c']
+            == 'I used a method of correction for multiple tests'
+        )
+        assert (
+            responses['confirmatory-analyses-first.first.question2c']
+            == 'this is the statistical technicque'
+        )
+        assert (
+            responses['description-methods.procedure.question10b']
+            == 'describe all manipulations'
+        )
         assert responses['recommended-analysis.specify.question11c'] == []
-        assert responses['recommended-methods.procedure.question9b'] == 'set fail-safe levels of exclusions'
-        assert responses['description-hypothesis.question2a'] == 'expected interaction shape'
+        assert (
+            responses['recommended-methods.procedure.question9b']
+            == 'set fail-safe levels of exclusions'
+        )
+        assert (
+            responses['description-hypothesis.question2a']
+            == 'expected interaction shape'
+        )
         assert responses['confirmatory-analyses-second.second.question5c'] == ''
-        assert responses['confirmatory-analyses-first.first.question4c'] == 'this the covariate rationale'
-        assert responses['description-methods.planned-sample.question6b'] == 'this is my planned sample size'
-        assert responses['confirmatory-analyses-third.third.question1c'] == '3rd prediction'
-        assert responses['recommended-analysis.specify.question9c'] == 'these are the anticipated data transformations'
+        assert (
+            responses['confirmatory-analyses-first.first.question4c']
+            == 'this the covariate rationale'
+        )
+        assert (
+            responses['description-methods.planned-sample.question6b']
+            == 'this is my planned sample size'
+        )
+        assert (
+            responses['confirmatory-analyses-third.third.question1c']
+            == '3rd prediction'
+        )
+        assert (
+            responses['recommended-analysis.specify.question9c']
+            == 'these are the anticipated data transformations'
+        )
         assert responses['confirmatory-analyses-fourth.fourth.question2c'] == ''
-        assert responses['confirmatory-analyses-third.third.question3c'] == 't-test informed covariate'
-        assert responses['recommended-hypothesis.question6a'] == 'this is the outcome that would be predicted by each theory'
+        assert (
+            responses['confirmatory-analyses-third.third.question3c']
+            == 't-test informed covariate'
+        )
+        assert (
+            responses['recommended-hypothesis.question6a']
+            == 'this is the outcome that would be predicted by each theory'
+        )
         assert responses['confirmatory-analyses-fourth.fourth.question4c'] == ''
-        assert responses['confirmatory-analyses-second.second.question4c'] == 'here is the rationale'
+        assert (
+            responses['confirmatory-analyses-second.second.question4c']
+            == 'here is the rationale'
+        )
         assert responses['recommended-hypothesis.question4a'] == [
             {
                 'file_name': 'Alphabet.txt',
                 'file_id': '5d6d25024d476c088fb8e03b',
                 'file_urls': {
-                    'html': urljoin(settings.DOMAIN, '/project/85qku/files/osfstorage/5d6d25024d476c088fb8e03b'),
-                    'download': urljoin(settings.DOMAIN, '/download/5d6d25024d476c088fb8e03b'),
+                    'html': urljoin(
+                        settings.DOMAIN,
+                        '/project/85qku/files/osfstorage/5d6d25024d476c088fb8e03b',
+                    ),
+                    'download': urljoin(
+                        settings.DOMAIN, '/download/5d6d25024d476c088fb8e03b'
+                    ),
                 },
-                'file_hashes': {
-                    'sha256': 'asdf',
-                },
+                'file_hashes': {'sha256': 'asdf',},
             },
             {
                 'file_name': 'Screen Shot 2019-08-30 at 9.04.01 AM.png',
                 'file_id': '5d6d25014d476c088fb8e038',
                 'file_urls': {
-                    'html': urljoin(settings.DOMAIN, '/project/85qku/files/osfstorage/5d6d25014d476c088fb8e038'),
-                    'download': urljoin(settings.DOMAIN, '/download/5d6d25014d476c088fb8e038'),
+                    'html': urljoin(
+                        settings.DOMAIN,
+                        '/project/85qku/files/osfstorage/5d6d25014d476c088fb8e038',
+                    ),
+                    'download': urljoin(
+                        settings.DOMAIN, '/download/5d6d25014d476c088fb8e038'
+                    ),
                 },
-                'file_hashes': {
-                    'sha256': 'asdf',
-                },
-            }
+                'file_hashes': {'sha256': 'asdf',},
+            },
         ]
-        assert responses['confirmatory-analyses-third.third.question5c'] == 'I used BAYESIAN STATISTICS'
-        assert responses['description-methods.design.question2b'] == 'these are my dependent variables'
-        assert responses['description-methods.design.question2a'] == 'a. whether they are between participants'
+        assert (
+            responses['confirmatory-analyses-third.third.question5c']
+            == 'I used BAYESIAN STATISTICS'
+        )
+        assert (
+            responses['description-methods.design.question2b']
+            == 'these are my dependent variables'
+        )
+        assert (
+            responses['description-methods.design.question2a']
+            == 'a. whether they are between participants'
+        )
         assert responses['datacompletion'] == 'No, data collection has not begun'
-        assert responses['description-methods.planned-sample.question5b'] == 'here is how the data will be collected'
-        assert responses['confirmatory-analyses-further.further.question3c'] == 'this was the independent variable'
-        assert responses['confirmatory-analyses-further.further.question1c'] == 'FURTHER PREdictions:'
-        assert responses['confirmatory-analyses-second.second.question2c'] == 'ANOVA test'
+        assert (
+            responses['description-methods.planned-sample.question5b']
+            == 'here is how the data will be collected'
+        )
+        assert (
+            responses['confirmatory-analyses-further.further.question3c']
+            == 'this was the independent variable'
+        )
+        assert (
+            responses['confirmatory-analyses-further.further.question1c']
+            == 'FURTHER PREdictions:'
+        )
+        assert (
+            responses['confirmatory-analyses-second.second.question2c'] == 'ANOVA test'
+        )
         assert responses['additionalComments'] == 'no additional comments'
         assert responses['looked'] == 'Yes'
-        assert responses['confirmatory-analyses-first.first.question1c'] == 'these are the relevant variables'
-        assert responses['recommended-analysis.specify.question7c'] == 'method of missing data handling'
-        assert responses['confirmatory-analyses-first.first.question3c'] == 'this is each variable role'
-        assert responses['description-hypothesis.question3a'] == 'predictions for successful checks'
-        assert responses['confirmatory-analyses-further.further.question2c'] == 'i used a common statistical technique'
-        assert responses['confirmatory-analyses-further.further.question5c'] == 'also Bayesian'
-        assert responses['recommended-analysis.specify.question10c'] == 'assumptions of analysses'
+        assert (
+            responses['confirmatory-analyses-first.first.question1c']
+            == 'these are the relevant variables'
+        )
+        assert (
+            responses['recommended-analysis.specify.question7c']
+            == 'method of missing data handling'
+        )
+        assert (
+            responses['confirmatory-analyses-first.first.question3c']
+            == 'this is each variable role'
+        )
+        assert (
+            responses['description-hypothesis.question3a']
+            == 'predictions for successful checks'
+        )
+        assert (
+            responses['confirmatory-analyses-further.further.question2c']
+            == 'i used a common statistical technique'
+        )
+        assert (
+            responses['confirmatory-analyses-further.further.question5c']
+            == 'also Bayesian'
+        )
+        assert (
+            responses['recommended-analysis.specify.question10c']
+            == 'assumptions of analysses'
+        )
         assert responses['recommended-methods.procedure.question9b-file'] == []
-        assert responses['description-hypothesis.question1a'] == 'These are the essential elements'
-        assert responses['description-methods.planned-sample.question7b'] == 'here is my data collection termination rule'
-        assert responses['confirmatory-analyses-first.first.question5c'] == 'these are techniques for null hypo testing'
+        assert (
+            responses['description-hypothesis.question1a']
+            == 'These are the essential elements'
+        )
+        assert (
+            responses['description-methods.planned-sample.question7b']
+            == 'here is my data collection termination rule'
+        )
+        assert (
+            responses['confirmatory-analyses-first.first.question5c']
+            == 'these are techniques for null hypo testing'
+        )
         assert responses['dataCollectionDates'] == '2020 - 2030'
         assert responses['confirmatory-analyses-fourth.fourth.question1c'] == ''
         assert responses['confirmatory-analyses-third.third.question2c'] == 't-test'
         assert responses['confirmatory-analyses-fourth.fourth.question3c'] == ''
-        assert responses['recommended-analysis.specify.question8c'] == 'reliability criteria'
+        assert (
+            responses['recommended-analysis.specify.question8c']
+            == 'reliability criteria'
+        )
         assert responses['description-methods.planned-sample.question6b-upload'] == []
 
 
 @pytest.mark.django_db
 class TestMigrateRegistrationRegistrationResponses:
-
     @pytest.fixture()
     def reg_osf_standard(self, osf_standard_schema):
         draft = DraftRegistrationFactory(
             registration_schema=osf_standard_schema,
             registration_metadata={
-                'looked': {
-                    'comments': [],
-                    'value': 'Yes',
-                    'extra': []
-                },
+                'looked': {'comments': [], 'value': 'Yes', 'extra': []},
                 'datacompletion': {
                     'comments': [],
                     'value': 'No, data collection has not begun',
-                    'extra': []
+                    'extra': [],
                 },
-                'comments': {
-                    'comments': [],
-                    'value': 'more comments',
-                    'extra': []
-                }
-            }
+                'comments': {'comments': [], 'value': 'more comments', 'extra': []},
+            },
         )
         return RegistrationFactory(
             schema=osf_standard_schema,
             draft_registration=draft,
-            project=draft.branched_from
+            project=draft.branched_from,
         )
 
     @pytest.fixture()
     def reg_prereg(self, prereg_schema):
         draft = DraftRegistrationFactory(
             registration_schema=prereg_schema,
-            registration_metadata=prereg_registration_metadata
+            registration_metadata=prereg_registration_metadata,
         )
         return RegistrationFactory(
-            schema=prereg_schema,
-            draft_registration=draft,
-            project=draft.branched_from
+            schema=prereg_schema, draft_registration=draft, project=draft.branched_from
         )
 
     @pytest.fixture()
@@ -1901,17 +1709,11 @@ class TestMigrateRegistrationRegistrationResponses:
             registration_schema=veer_schema,
         )
         return RegistrationFactory(
-            schema=veer_schema,
-            draft_registration=draft,
-            project=draft.branched_from
+            schema=veer_schema, draft_registration=draft, project=draft.branched_from
         )
 
     def test_migrate_registrations(self, app, reg_osf_standard, reg_prereg, reg_veer):
-        regs = [
-            reg_osf_standard,
-            reg_prereg,
-            reg_veer
-        ]
+        regs = [reg_osf_standard, reg_prereg, reg_veer]
 
         for reg in regs:
             reg.registration_responses = {}
@@ -1956,30 +1758,36 @@ class TestMigrateRegistrationRegistrationResponses:
                 'file_name': 'Screen Shot 2019-08-30 at 9.04.01 AM.png',
                 'file_id': '5d6d22264d476c088fb8e01f',
                 'file_urls': {
-                    'html': urljoin(settings.DOMAIN, '/project/57zbh/files/osfstorage/5d6d22264d476c088fb8e01f'),
-                    'download': urljoin(settings.DOMAIN, '/download/5d6d22264d476c088fb8e01f'),
+                    'html': urljoin(
+                        settings.DOMAIN,
+                        '/project/57zbh/files/osfstorage/5d6d22264d476c088fb8e01f',
+                    ),
+                    'download': urljoin(
+                        settings.DOMAIN, '/download/5d6d22264d476c088fb8e01f'
+                    ),
                 },
-                'file_hashes': {
-                    'sha256': 'sdf',
-                },
+                'file_hashes': {'sha256': 'sdf',},
             },
             {
                 'file_name': 'Alphabet.txt',
                 'file_id': '5d6d22274d476c088fb8e021',
                 'file_urls': {
-                    'html': urljoin(settings.DOMAIN, '/project/57zbh/files/osfstorage/5d6d22274d476c088fb8e021'),
-                    'download': urljoin(settings.DOMAIN, '/download/5d6d22274d476c088fb8e021'),
+                    'html': urljoin(
+                        settings.DOMAIN,
+                        '/project/57zbh/files/osfstorage/5d6d22274d476c088fb8e021',
+                    ),
+                    'download': urljoin(
+                        settings.DOMAIN, '/download/5d6d22274d476c088fb8e021'
+                    ),
                 },
-                'file_hashes': {
-                    'sha256': 'asdf',
-                },
-            }
+                'file_hashes': {'sha256': 'asdf',},
+            },
         ]
         assert responses['q16.question'] == 'this is my study design'
         assert responses['q15'] == [
             'No blinding is involved in this study.',
             'For studies that involve human subjects, they will not know the treatment group to which they have been assigned.',
-            'Research personnel who interact directly with the study subjects (either human or non-human subjects) will not be aware of the assigned treatments.'
+            'Research personnel who interact directly with the study subjects (either human or non-human subjects) will not be aware of the assigned treatments.',
         ]
         assert responses['q14'] == ''
         assert responses['q17'] == 'this is my explanation of randomization'
@@ -1993,12 +1801,15 @@ class TestMigrateRegistrationRegistrationResponses:
                 'file_name': 'Alphabet.txt',
                 'file_id': '5d6d22274d476c088fb8e021',
                 'file_urls': {
-                    'html': urljoin(settings.DOMAIN, '/project/57zbh/files/osfstorage/5d6d22274d476c088fb8e021'),
-                    'download': urljoin(settings.DOMAIN, '/download/5d6d22274d476c088fb8e021'),
+                    'html': urljoin(
+                        settings.DOMAIN,
+                        '/project/57zbh/files/osfstorage/5d6d22274d476c088fb8e021',
+                    ),
+                    'download': urljoin(
+                        settings.DOMAIN, '/download/5d6d22274d476c088fb8e021'
+                    ),
                 },
-                'file_hashes': {
-                    'sha256': 'dsdfds',
-                },
+                'file_hashes': {'sha256': 'dsdfds',},
             }
         ]
 
@@ -2006,79 +1817,198 @@ class TestMigrateRegistrationRegistrationResponses:
         reg_veer.reload()
         assert reg_veer.registration_responses_migrated is True
         responses = reg_veer.registration_responses
-        assert responses['confirmatory-analyses-third.third.question4c'] == 'here was the rationale'
-        assert responses['recommended-hypothesis.question5a'] == 'This is the hypotheses that was tested.'
-        assert responses['confirmatory-analyses-further.further.question4c'] == 'this was the rationale'
+        assert (
+            responses['confirmatory-analyses-third.third.question4c']
+            == 'here was the rationale'
+        )
+        assert (
+            responses['recommended-hypothesis.question5a']
+            == 'This is the hypotheses that was tested.'
+        )
+        assert (
+            responses['confirmatory-analyses-further.further.question4c']
+            == 'this was the rationale'
+        )
         assert responses['confirmatory-analyses-fourth.fourth.question5c'] == ''
-        assert responses['description-methods.design.question3b'] == 'These variables are acting as covariates.'
-        assert responses['confirmatory-analyses-second.second.question1c'] == 'how 2nd prediction calculated'
-        assert responses['description-methods.exclusion-criteria.question8b'] == 'these are failing check-tests'
-        assert responses['description-methods.planned-sample.question4b'] == 'these are the preselection rults'
-        assert responses['confirmatory-analyses-second.second.question3c'] == 'it was the covariate'
-        assert responses['recommended-analysis.specify.question6c'] == 'I used a method of correction for multiple tests'
-        assert responses['confirmatory-analyses-first.first.question2c'] == 'this is the statistical technicque'
-        assert responses['description-methods.procedure.question10b'] == 'describe all manipulations'
+        assert (
+            responses['description-methods.design.question3b']
+            == 'These variables are acting as covariates.'
+        )
+        assert (
+            responses['confirmatory-analyses-second.second.question1c']
+            == 'how 2nd prediction calculated'
+        )
+        assert (
+            responses['description-methods.exclusion-criteria.question8b']
+            == 'these are failing check-tests'
+        )
+        assert (
+            responses['description-methods.planned-sample.question4b']
+            == 'these are the preselection rults'
+        )
+        assert (
+            responses['confirmatory-analyses-second.second.question3c']
+            == 'it was the covariate'
+        )
+        assert (
+            responses['recommended-analysis.specify.question6c']
+            == 'I used a method of correction for multiple tests'
+        )
+        assert (
+            responses['confirmatory-analyses-first.first.question2c']
+            == 'this is the statistical technicque'
+        )
+        assert (
+            responses['description-methods.procedure.question10b']
+            == 'describe all manipulations'
+        )
         assert responses['recommended-analysis.specify.question11c'] == []
-        assert responses['recommended-methods.procedure.question9b'] == 'set fail-safe levels of exclusions'
-        assert responses['description-hypothesis.question2a'] == 'expected interaction shape'
+        assert (
+            responses['recommended-methods.procedure.question9b']
+            == 'set fail-safe levels of exclusions'
+        )
+        assert (
+            responses['description-hypothesis.question2a']
+            == 'expected interaction shape'
+        )
         assert responses['confirmatory-analyses-second.second.question5c'] == ''
-        assert responses['confirmatory-analyses-first.first.question4c'] == 'this the covariate rationale'
-        assert responses['description-methods.planned-sample.question6b'] == 'this is my planned sample size'
-        assert responses['confirmatory-analyses-third.third.question1c'] == '3rd prediction'
-        assert responses['recommended-analysis.specify.question9c'] == 'these are the anticipated data transformations'
+        assert (
+            responses['confirmatory-analyses-first.first.question4c']
+            == 'this the covariate rationale'
+        )
+        assert (
+            responses['description-methods.planned-sample.question6b']
+            == 'this is my planned sample size'
+        )
+        assert (
+            responses['confirmatory-analyses-third.third.question1c']
+            == '3rd prediction'
+        )
+        assert (
+            responses['recommended-analysis.specify.question9c']
+            == 'these are the anticipated data transformations'
+        )
         assert responses['confirmatory-analyses-fourth.fourth.question2c'] == ''
-        assert responses['confirmatory-analyses-third.third.question3c'] == 't-test informed covariate'
-        assert responses['recommended-hypothesis.question6a'] == 'this is the outcome that would be predicted by each theory'
+        assert (
+            responses['confirmatory-analyses-third.third.question3c']
+            == 't-test informed covariate'
+        )
+        assert (
+            responses['recommended-hypothesis.question6a']
+            == 'this is the outcome that would be predicted by each theory'
+        )
         assert responses['confirmatory-analyses-fourth.fourth.question4c'] == ''
-        assert responses['confirmatory-analyses-second.second.question4c'] == 'here is the rationale'
+        assert (
+            responses['confirmatory-analyses-second.second.question4c']
+            == 'here is the rationale'
+        )
         assert responses['recommended-hypothesis.question4a'] == [
             {
                 'file_name': 'Alphabet.txt',
                 'file_id': '5d6d25024d476c088fb8e03b',
                 'file_urls': {
-                    'html': urljoin(settings.DOMAIN, '/project/85qku/files/osfstorage/5d6d25024d476c088fb8e03b'),
-                    'download': urljoin(settings.DOMAIN, '/download/5d6d25024d476c088fb8e03b'),
+                    'html': urljoin(
+                        settings.DOMAIN,
+                        '/project/85qku/files/osfstorage/5d6d25024d476c088fb8e03b',
+                    ),
+                    'download': urljoin(
+                        settings.DOMAIN, '/download/5d6d25024d476c088fb8e03b'
+                    ),
                 },
-                'file_hashes': {
-                    'sha256': 'asdf',
-                },
+                'file_hashes': {'sha256': 'asdf',},
             },
             {
                 'file_name': 'Screen Shot 2019-08-30 at 9.04.01 AM.png',
                 'file_id': '5d6d25014d476c088fb8e038',
                 'file_urls': {
-                    'html': urljoin(settings.DOMAIN, '/project/85qku/files/osfstorage/5d6d25014d476c088fb8e038'),
-                    'download': urljoin(settings.DOMAIN, '/download/5d6d25014d476c088fb8e038'),
+                    'html': urljoin(
+                        settings.DOMAIN,
+                        '/project/85qku/files/osfstorage/5d6d25014d476c088fb8e038',
+                    ),
+                    'download': urljoin(
+                        settings.DOMAIN, '/download/5d6d25014d476c088fb8e038'
+                    ),
                 },
-                'file_hashes': {
-                    'sha256': 'asdf',
-                },
-            }
+                'file_hashes': {'sha256': 'asdf',},
+            },
         ]
-        assert responses['confirmatory-analyses-third.third.question5c'] == 'I used BAYESIAN STATISTICS'
-        assert responses['description-methods.design.question2b'] == 'these are my dependent variables'
-        assert responses['description-methods.design.question2a'] == 'a. whether they are between participants'
+        assert (
+            responses['confirmatory-analyses-third.third.question5c']
+            == 'I used BAYESIAN STATISTICS'
+        )
+        assert (
+            responses['description-methods.design.question2b']
+            == 'these are my dependent variables'
+        )
+        assert (
+            responses['description-methods.design.question2a']
+            == 'a. whether they are between participants'
+        )
         assert responses['datacompletion'] == 'No, data collection has not begun'
-        assert responses['description-methods.planned-sample.question5b'] == 'here is how the data will be collected'
-        assert responses['confirmatory-analyses-further.further.question3c'] == 'this was the independent variable'
-        assert responses['confirmatory-analyses-further.further.question1c'] == 'FURTHER PREdictions:'
-        assert responses['confirmatory-analyses-second.second.question2c'] == 'ANOVA test'
+        assert (
+            responses['description-methods.planned-sample.question5b']
+            == 'here is how the data will be collected'
+        )
+        assert (
+            responses['confirmatory-analyses-further.further.question3c']
+            == 'this was the independent variable'
+        )
+        assert (
+            responses['confirmatory-analyses-further.further.question1c']
+            == 'FURTHER PREdictions:'
+        )
+        assert (
+            responses['confirmatory-analyses-second.second.question2c'] == 'ANOVA test'
+        )
         assert responses['additionalComments'] == 'no additional comments'
         assert responses['looked'] == 'Yes'
-        assert responses['confirmatory-analyses-first.first.question1c'] == 'these are the relevant variables'
-        assert responses['recommended-analysis.specify.question7c'] == 'method of missing data handling'
-        assert responses['confirmatory-analyses-first.first.question3c'] == 'this is each variable role'
-        assert responses['description-hypothesis.question3a'] == 'predictions for successful checks'
-        assert responses['confirmatory-analyses-further.further.question2c'] == 'i used a common statistical technique'
-        assert responses['confirmatory-analyses-further.further.question5c'] == 'also Bayesian'
-        assert responses['recommended-analysis.specify.question10c'] == 'assumptions of analysses'
+        assert (
+            responses['confirmatory-analyses-first.first.question1c']
+            == 'these are the relevant variables'
+        )
+        assert (
+            responses['recommended-analysis.specify.question7c']
+            == 'method of missing data handling'
+        )
+        assert (
+            responses['confirmatory-analyses-first.first.question3c']
+            == 'this is each variable role'
+        )
+        assert (
+            responses['description-hypothesis.question3a']
+            == 'predictions for successful checks'
+        )
+        assert (
+            responses['confirmatory-analyses-further.further.question2c']
+            == 'i used a common statistical technique'
+        )
+        assert (
+            responses['confirmatory-analyses-further.further.question5c']
+            == 'also Bayesian'
+        )
+        assert (
+            responses['recommended-analysis.specify.question10c']
+            == 'assumptions of analysses'
+        )
         assert responses['recommended-methods.procedure.question9b-file'] == []
-        assert responses['description-hypothesis.question1a'] == 'These are the essential elements'
-        assert responses['description-methods.planned-sample.question7b'] == 'here is my data collection termination rule'
-        assert responses['confirmatory-analyses-first.first.question5c'] == 'these are techniques for null hypo testing'
+        assert (
+            responses['description-hypothesis.question1a']
+            == 'These are the essential elements'
+        )
+        assert (
+            responses['description-methods.planned-sample.question7b']
+            == 'here is my data collection termination rule'
+        )
+        assert (
+            responses['confirmatory-analyses-first.first.question5c']
+            == 'these are techniques for null hypo testing'
+        )
         assert responses['dataCollectionDates'] == '2020 - 2030'
         assert responses['confirmatory-analyses-fourth.fourth.question1c'] == ''
         assert responses['confirmatory-analyses-third.third.question2c'] == 't-test'
         assert responses['confirmatory-analyses-fourth.fourth.question3c'] == ''
-        assert responses['recommended-analysis.specify.question8c'] == 'reliability criteria'
+        assert (
+            responses['recommended-analysis.specify.question8c']
+            == 'reliability criteria'
+        )
         assert responses['description-methods.planned-sample.question6b-upload'] == []

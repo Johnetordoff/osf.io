@@ -34,12 +34,15 @@ def on_node_updated(node_id, user_id, first_save, saved_fields, request_headers=
         update_node_share(node)
         update_collecting_metadata(node, saved_fields)
 
-    if node.get_identifier_value('doi') and bool(node.IDENTIFIER_UPDATE_FIELDS.intersection(saved_fields)):
+    if node.get_identifier_value('doi') and bool(
+        node.IDENTIFIER_UPDATE_FIELDS.intersection(saved_fields)
+    ):
         node.request_identifier_update(category='doi')
 
 
 def update_collecting_metadata(node, saved_fields):
     from website.search.search import update_collected_metadata
+
     if node.is_collected:
         if node.is_public:
             update_collected_metadata(node._id)
@@ -50,7 +53,9 @@ def update_collecting_metadata(node, saved_fields):
 def update_node_share(node):
     # Any modifications to this function may need to change _async_update_node_share
     if not settings.SHARE_URL or not settings.SHARE_API_TOKEN:
-        logger.warning(f'SHARE_API_TOKEN not set. Could not send "{node._id}" to SHARE.')
+        logger.warning(
+            f'SHARE_API_TOKEN not set. Could not send "{node._id}" to SHARE.'
+        )
         return
 
     resp = send_share_node_data(node)
@@ -65,7 +70,9 @@ def update_node_share(node):
 
 
 def calculate_backoff_time_celery(retries):
-    return (random.random() + 1) * min(60 + settings.CELERY_RETRY_BACKOFF_BASE ** retries, 60 * 10)
+    return (random.random() + 1) * min(
+        60 + settings.CELERY_RETRY_BACKOFF_BASE ** retries, 60 * 10
+    )
 
 
 @celery_app.task(bind=True, max_retries=4, acks_late=True)
@@ -85,8 +92,7 @@ def _async_update_node_share(self, node_id):
             if self.request.retries == self.max_retries:
                 send_desk_share_error(node, resp, request.retries)
             raise self.retry(
-                exc=e,
-                countdown=calculate_backoff_time_celery(request.retries)
+                exc=e, countdown=calculate_backoff_time_celery(request.retries)
             )
         else:
             send_desk_share_error(node, resp, self.request.retries)
@@ -110,8 +116,8 @@ def send_share_node_data(node):
         json=data,
         headers={
             'Authorization': f'Bearer {token}',
-            'Content-Type': 'application/vnd.api+json'
-        }
+            'Content-Type': 'application/vnd.api+json',
+        },
     )
 
     logger.debug(resp.content)
@@ -125,8 +131,12 @@ def serialize_share_node_data(node):
             'attributes': {
                 'tasks': [],
                 'raw': None,
-                'data': {'@graph': format_registration(node) if node.is_registration else format_node(node)}
-            }
+                'data': {
+                    '@graph': format_registration(node)
+                    if node.is_registration
+                    else format_node(node)
+                },
+            },
         }
     }
 
@@ -139,47 +149,85 @@ def format_node(node):
             '@type': 'workidentifier',
             'creative_work': {'@id': '_:789', '@type': 'project'},
             'uri': '{}{}/'.format(settings.DOMAIN, node._id),
-        }, {
+        },
+        {
             '@id': '_:789',
             '@type': 'project',
-            'is_deleted': not node.is_public or node.is_deleted or node.is_spammy or is_qa_node
-        }
+            'is_deleted': not node.is_public
+            or node.is_deleted
+            or node.is_spammy
+            or is_qa_node,
+        },
     ]
 
 
 def format_registration(node):
     is_qa_node = check_if_qa_node(node)
 
-    registration_graph = GraphNode('registration', **{
-        'title': node.title,
-        'description': node.description or '',
-        'is_deleted': not node.is_public or node.is_deleted or is_qa_node,
-        'date_published': node.registered_date.isoformat() if node.registered_date else None,
-        'registration_type': node.registered_schema.first().name if node.registered_schema else None,
-        'withdrawn': node.is_retracted,
-        'justification': node.retraction.justification if node.retraction else None,
-    })
+    registration_graph = GraphNode(
+        'registration',
+        **{
+            'title': node.title,
+            'description': node.description or '',
+            'is_deleted': not node.is_public or node.is_deleted or is_qa_node,
+            'date_published': node.registered_date.isoformat()
+            if node.registered_date
+            else None,
+            'registration_type': node.registered_schema.first().name
+            if node.registered_schema
+            else None,
+            'withdrawn': node.is_retracted,
+            'justification': node.retraction.justification if node.retraction else None,
+        },
+    )
 
     to_visit = [
         registration_graph,
-        GraphNode('workidentifier', creative_work=registration_graph, uri=urljoin(settings.DOMAIN, node.url))
+        GraphNode(
+            'workidentifier',
+            creative_work=registration_graph,
+            uri=urljoin(settings.DOMAIN, node.url),
+        ),
     ]
 
     registration_graph.attrs['tags'] = [
-        GraphNode('throughtags', creative_work=registration_graph, tag=GraphNode('tag', name=tag._id))
-        for tag in node.tags.all() or [] if tag._id
+        GraphNode(
+            'throughtags',
+            creative_work=registration_graph,
+            tag=GraphNode('tag', name=tag._id),
+        )
+        for tag in node.tags.all() or []
+        if tag._id
     ]
 
-    to_visit.extend(format_contributor(registration_graph, user, bool(user._id in node.visible_contributor_ids), i) for i, user in enumerate(node.contributors))
-    to_visit.extend(GraphNode('AgentWorkRelation', creative_work=registration_graph, agent=GraphNode('institution', name=institution.name)) for institution in node.affiliated_institutions.all())
+    to_visit.extend(
+        format_contributor(
+            registration_graph, user, bool(user._id in node.visible_contributor_ids), i
+        )
+        for i, user in enumerate(node.contributors)
+    )
+    to_visit.extend(
+        GraphNode(
+            'AgentWorkRelation',
+            creative_work=registration_graph,
+            agent=GraphNode('institution', name=institution.name),
+        )
+        for institution in node.affiliated_institutions.all()
+    )
 
     if node.parent_node:
         parent = GraphNode('registration')
-        to_visit.extend([
-            parent,
-            GraphNode('workidentifier', creative_work=parent, uri=urljoin(settings.DOMAIN, node.parent_node.url)),
-            GraphNode('ispartof', subject=registration_graph, related=parent),
-        ])
+        to_visit.extend(
+            [
+                parent,
+                GraphNode(
+                    'workidentifier',
+                    creative_work=parent,
+                    uri=urljoin(settings.DOMAIN, node.parent_node.url),
+                ),
+                GraphNode('ispartof', subject=registration_graph, related=parent),
+            ]
+        )
 
     visited = set()
     to_visit.extend(registration_graph.get_related())
@@ -218,6 +266,8 @@ def check_if_qa_node(node) -> bool:
     don_not_index_tags = set(settings.DO_NOT_INDEX_LIST['tags'])
     has_forbid_index_tags = bool(don_not_index_tags.intersection(node_tags))
 
-    has_forbid_index_title = any(substring in node.title for substring in settings.DO_NOT_INDEX_LIST['titles'])
+    has_forbid_index_title = any(
+        substring in node.title for substring in settings.DO_NOT_INDEX_LIST['titles']
+    )
 
     return has_forbid_index_tags or has_forbid_index_title

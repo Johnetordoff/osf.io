@@ -5,7 +5,6 @@ from website import settings
 
 
 class TestCSRF(OsfTestCase):
-
     def test_csrf_cookie_gets_set_on_authd_request(self):
         user = UserFactory()
         # use session auth

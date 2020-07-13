@@ -2,6 +2,7 @@ from addons.base.apps import BaseAddonAppConfig, generic_root_folder
 
 onedrive_root_folder = generic_root_folder('onedrive')
 
+
 class OneDriveAddonAppConfig(BaseAddonAppConfig):
 
     name = 'addons.onedrive'
@@ -26,11 +27,21 @@ class OneDriveAddonAppConfig(BaseAddonAppConfig):
     NODE_DEAUTHORIZED = 'onedrive_node_deauthorized'
     NODE_DEAUTHORIZED_NO_USER = 'onedrive_node_deauthorized_no_user'
 
-    actions = (FILE_ADDED, FILE_REMOVED, FILE_UPDATED, FOLDER_CREATED, FOLDER_SELECTED, NODE_AUTHORIZED, NODE_DEAUTHORIZED, NODE_DEAUTHORIZED_NO_USER)
+    actions = (
+        FILE_ADDED,
+        FILE_REMOVED,
+        FILE_UPDATED,
+        FOLDER_CREATED,
+        FOLDER_SELECTED,
+        NODE_AUTHORIZED,
+        NODE_DEAUTHORIZED,
+        NODE_DEAUTHORIZED_NO_USER,
+    )
 
     @property
     def routes(self):
         from . import routes
+
         return [routes.api_routes]
 
     @property

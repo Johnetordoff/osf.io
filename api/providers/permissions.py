@@ -14,6 +14,7 @@ class CanSetUpProvider(drf_permissions.BasePermission):
         auth = get_user_auth(request)
         return auth.user.has_perm('set_up_moderation', obj)
 
+
 class CanAddModerator(drf_permissions.BasePermission):
     def has_permission(self, request, view):
         if request.method != 'POST':
@@ -21,13 +22,17 @@ class CanAddModerator(drf_permissions.BasePermission):
         auth = get_user_auth(request)
         return auth.user.has_perm('add_moderator', view.get_provider())
 
+
 class CanDeleteModerator(drf_permissions.BasePermission):
     def has_permission(self, request, view):
         if request.method != 'DELETE':
             return True
         auth = get_user_auth(request)
         provider = view.get_provider()
-        return auth.user.has_perm('remove_moderator', provider) or auth.user._id == view.kwargs.get('moderator_id', '')
+        return auth.user.has_perm(
+            'remove_moderator', provider,
+        ) or auth.user._id == view.kwargs.get('moderator_id', '')
+
 
 class CanUpdateModerator(drf_permissions.BasePermission):
     def has_permission(self, request, view):
@@ -35,6 +40,7 @@ class CanUpdateModerator(drf_permissions.BasePermission):
             return True
         auth = get_user_auth(request)
         return auth.user.has_perm('update_moderator', view.get_provider())
+
 
 class MustBeModerator(drf_permissions.BasePermission):
     def has_permission(self, request, view):

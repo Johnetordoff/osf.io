@@ -3,6 +3,7 @@ import argparse
 import json
 import logging
 import django
+
 django.setup()
 
 from osf.models import AbstractNode
@@ -13,6 +14,7 @@ from website.project.tasks import update_node_share
 
 
 logger = logging.getLogger(__name__)
+
 
 def migrate(registrations):
     assert settings.SHARE_URL, 'SHARE_URL must be set to migrate.'
@@ -46,6 +48,7 @@ def main():
     script_utils.add_file_logger(logger, __file__)
     setup_django()
     migrate(json.loads(pargs.targets))
+
 
 if __name__ == '__main__':
     main()

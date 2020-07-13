@@ -6,6 +6,7 @@ from osf.models.banner import ScheduledBanner, validate_banner_dates
 
 ACCEPTABLE_FILE_TYPES = ('svg',)
 
+
 class BannerForm(forms.ModelForm):
     class Meta:
         model = ScheduledBanner
@@ -14,12 +15,16 @@ class BannerForm(forms.ModelForm):
             'color': TextInput(attrs={'class': 'colorpicker'}),
             'start_date': DateInput(attrs={'class': 'datepicker'}),
             'end_date': DateInput(attrs={'class': 'datepicker'}),
-            'default_alt_text': TextInput(attrs={'placeholder': 'Alt text for accessibility'}),
-            'mobile_alt_text': TextInput(attrs={'placeholder': 'Alt text for accessibility'}),
+            'default_alt_text': TextInput(
+                attrs={'placeholder': 'Alt text for accessibility'}
+            ),
+            'mobile_alt_text': TextInput(
+                attrs={'placeholder': 'Alt text for accessibility'}
+            ),
         }
         labels = {
             'default_alt_text': 'Default photo alt text',
-            'mobile_alt_text': 'Mobile photo alt text'
+            'mobile_alt_text': 'Mobile photo alt text',
         }
 
     def __init__(self, *args, **kwargs):
@@ -35,7 +40,9 @@ class BannerForm(forms.ModelForm):
 
     def check_photo_type(self, photo):
         if not photo.name.lower().endswith(ACCEPTABLE_FILE_TYPES):
-            raise forms.ValidationError('Photos must be of type {}.'.format(ACCEPTABLE_FILE_TYPES))
+            raise forms.ValidationError(
+                'Photos must be of type {}.'.format(ACCEPTABLE_FILE_TYPES)
+            )
         return photo
 
     def clean(self):

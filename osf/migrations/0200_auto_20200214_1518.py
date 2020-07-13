@@ -16,7 +16,24 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='draftregistration',
             name='category',
-            field=models.CharField(blank=True, choices=[('analysis', 'Analysis'), ('communication', 'Communication'), ('data', 'Data'), ('hypothesis', 'Hypothesis'), ('instrumentation', 'Instrumentation'), ('methods and measures', 'Methods and Measures'), ('procedure', 'Procedure'), ('project', 'Project'), ('software', 'Software'), ('other', 'Other'), ('', 'Uncategorized')], default='', max_length=255),
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ('analysis', 'Analysis'),
+                    ('communication', 'Communication'),
+                    ('data', 'Data'),
+                    ('hypothesis', 'Hypothesis'),
+                    ('instrumentation', 'Instrumentation'),
+                    ('methods and measures', 'Methods and Measures'),
+                    ('procedure', 'Procedure'),
+                    ('project', 'Project'),
+                    ('software', 'Software'),
+                    ('other', 'Other'),
+                    ('', 'Uncategorized'),
+                ],
+                default='',
+                max_length=255,
+            ),
         ),
         migrations.AlterField(
             model_name='draftregistration',
@@ -26,6 +43,10 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='draftregistration',
             name='title',
-            field=models.TextField(blank=True, default='', validators=[osf.models.validators.validate_title]),
+            field=models.TextField(
+                blank=True,
+                default='',
+                validators=[osf.models.validators.validate_title],
+            ),
         ),
     ]

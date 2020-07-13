@@ -1,10 +1,9 @@
 from framework import utils
 
+
 def serialize_initiator(initiator):
-    return {
-        'fullname': initiator.fullname,
-        'id': initiator._id
-    }
+    return {'fullname': initiator.fullname, 'id': initiator._id}
+
 
 def serialize_meta_schema(meta_schema):
     if not meta_schema:
@@ -17,11 +16,13 @@ def serialize_meta_schema(meta_schema):
         'fulfills': meta_schema.fulfills,
         'requires_approval': meta_schema.requires_approval,
         'requires_consent': meta_schema.requires_consent,
-        'messages': meta_schema.messages
+        'messages': meta_schema.messages,
     }
+
 
 def serialize_meta_schemas(meta_schemas):
     return [serialize_meta_schema(schema) for schema in (meta_schemas or [])]
+
 
 def serialize_draft_registration(draft, auth=None):
     from website.project.utils import serialize_node  # noqa
@@ -39,18 +40,28 @@ def serialize_draft_registration(draft, auth=None):
         'updated': utils.iso8601format(draft.datetime_updated),
         'flags': draft.flags,
         'urls': {
-            'edit': node.web_url_for('edit_draft_registration_page', draft_id=draft._id, _guid=True),
+            'edit': node.web_url_for(
+                'edit_draft_registration_page', draft_id=draft._id, _guid=True
+            ),
             'before_register': node.api_url_for('project_before_register'),
-            'register': absolute_reverse('nodes:node-registrations', kwargs={'node_id': node._id, 'version': 'v2'}),
-            'register_page': node.web_url_for('draft_before_register_page', draft_id=draft._id, _guid=True),
-            'registrations': node.web_url_for('node_registrations', _guid=True)
+            'register': absolute_reverse(
+                'nodes:node-registrations',
+                kwargs={'node_id': node._id, 'version': 'v2'},
+            ),
+            'register_page': node.web_url_for(
+                'draft_before_register_page', draft_id=draft._id, _guid=True
+            ),
+            'registrations': node.web_url_for('node_registrations', _guid=True),
         },
         'requires_approval': draft.requires_approval,
         'is_pending_approval': draft.is_pending_review,
         'is_approved': draft.is_approved,
     }
 
-def create_jsonschema_from_metaschema(metaschema, required_fields=False, is_reviewer=False):
+
+def create_jsonschema_from_metaschema(
+    metaschema, required_fields=False, is_reviewer=False
+):
     """
     Creates jsonschema from registration metaschema for validation.
 
@@ -67,7 +78,9 @@ def create_jsonschema_from_metaschema(metaschema, required_fields=False, is_revi
             json_schema['properties'][question['qid']] = {
                 'type': 'object',
                 'additionalProperties': False,
-                'properties': extract_question_values(question, required_fields, is_reviewer, is_required)
+                'properties': extract_question_values(
+                    question, required_fields, is_reviewer, is_required
+                ),
             }
             if required_fields:
                 json_schema['properties'][question['qid']]['required'] = ['value']
@@ -77,6 +90,7 @@ def create_jsonschema_from_metaschema(metaschema, required_fields=False, is_revi
 
     return json_schema
 
+
 def get_object_jsonschema(question, required_fields, is_reviewer, is_required):
     """
     Returns jsonschema for nested objects within schema
@@ -84,9 +98,7 @@ def get_object_jsonschema(question, required_fields, is_reviewer, is_required):
     object_jsonschema = {
         'type': 'object',
         'additionalProperties': False,
-        'properties': {
-
-        }
+        'properties': {},
     }
     required = []
     properties = question.get('properties')
@@ -94,11 +106,13 @@ def get_object_jsonschema(question, required_fields, is_reviewer, is_required):
         for property in properties:
             if property.get('required', False) and required_fields:
                 required.append(property['id'])
-            values = extract_question_values(property, required_fields, is_reviewer, is_required)
+            values = extract_question_values(
+                property, required_fields, is_reviewer, is_required
+            )
             object_jsonschema['properties'][property['id']] = {
                 'type': 'object',
                 'additionalProperties': False,
-                'properties': values
+                'properties': values,
             }
             if required_fields:
                 object_jsonschema['properties'][property['id']]['required'] = ['value']
@@ -107,6 +121,7 @@ def get_object_jsonschema(question, required_fields, is_reviewer, is_required):
 
     return object_jsonschema
 
+
 def extract_question_values(question, required_fields, is_reviewer, is_required):
     """
     Pulls structure for 'value', 'comments', and 'extra' items
@@ -114,10 +129,12 @@ def extract_question_values(question, required_fields, is_reviewer, is_required)
     response = {
         'value': {'type': 'string'},
         'comments': COMMENTS_SCHEMA,
-        'extra': {'type': 'array'}
+        'extra': {'type': 'array'},
     }
     if question.get('type') == 'object':
-        response['value'] = get_object_jsonschema(question, required_fields, is_reviewer, is_required)
+        response['value'] = get_object_jsonschema(
+            question, required_fields, is_reviewer, is_required
+        )
     elif question.get('type') == 'choose':
         options = question.get('options')
         if options:
@@ -136,6 +153,7 @@ def extract_question_values(question, required_fields, is_reviewer, is_required)
 
     return response
 
+
 def get_required(question):
     """
     Returns True if metaschema question is required.
@@ -150,6 +168,7 @@ def get_required(question):
                     break
     return required
 
+
 def get_options_jsonschema(options, required):
     """
     Returns multiple choice options for schema questions
@@ -159,10 +178,13 @@ def get_options_jsonschema(options, required):
             options[item] = option.get('text')
     value = {'enum': options}
 
-    if not required and '' not in value['enum']:  # Non-required fields need to accept empty strings as a value.
+    if (
+        not required and '' not in value['enum']
+    ):  # Non-required fields need to accept empty strings as a value.
         value['enum'].append('')
 
     return value
+
 
 OSF_UPLOAD_EXTRA_SCHEMA = {
     'type': 'array',
@@ -191,10 +213,10 @@ OSF_UPLOAD_EXTRA_SCHEMA = {
                                 'additionalProperties': False,
                                 'properties': {
                                     'sha256': {'type': 'string'},
-                                    'md5': {'type': 'string'}
-                                }
-                            }
-                        }
+                                    'md5': {'type': 'string'},
+                                },
+                            },
+                        },
                     },
                     'materialized': {'type': 'string'},
                     'modified': {'type': 'string'},
@@ -213,7 +235,7 @@ OSF_UPLOAD_EXTRA_SCHEMA = {
                         'properties': {
                             'acceptedFiles': {'type': 'boolean'},
                             'maxSize': {'type': 'integer'},
-                        }
+                        },
                     },
                     'links': {
                         'type': 'object',
@@ -222,32 +244,32 @@ OSF_UPLOAD_EXTRA_SCHEMA = {
                             'download': {'type': 'string'},
                             'move': {'type': 'string'},
                             'upload': {'type': 'string'},
-                            'delete': {'type': 'string'}
-                        }
+                            'delete': {'type': 'string'},
+                        },
                     },
                     'permissions': {
                         'type': 'object',
                         'additionalProperties': False,
                         'properties': {
                             'edit': {'type': 'boolean'},
-                            'view': {'type': 'boolean'}
-                        }
+                            'view': {'type': 'boolean'},
+                        },
                     },
                     'created_utc': {'type': 'string'},
                     'id': {'type': 'string'},
                     'modified_utc': {'type': 'string'},
                     'size': {'type': 'integer'},
                     'sizeInt': {'type': 'integer'},
-                }
+                },
             },
             'fileId': {'type': ['string', 'object']},
             'descriptionValue': {'type': 'string'},
             'sha256': {'type': 'string'},
             'selectedFileName': {'type': 'string'},
             'nodeId': {'type': 'string'},
-            'viewUrl': {'type': 'string'}
-        }
-    }
+            'viewUrl': {'type': 'string'},
+        },
+    },
 }
 
 
@@ -257,9 +279,7 @@ COMMENTS_SCHEMA = {
         'type': 'object',
         'additionalProperties': False,
         'properties': {
-            'seenBy': {
-                'type': 'array',
-            },
+            'seenBy': {'type': 'array',},
             'canDelete': {'type': 'boolean'},
             'created': {'type': 'string'},
             'lastModified': {'type': 'string'},
@@ -272,15 +292,16 @@ COMMENTS_SCHEMA = {
                 'additionalProperties': True,
                 'properties': {
                     'fullname': {'type': 'string'},
-                    'id': {'type': 'integer'}
-                }
+                    'id': {'type': 'integer'},
+                },
             },
             'saved': {'type': 'boolean'},
             'canEdit': {'type': 'boolean'},
-            'isDeleted': {'type': 'boolean'}
-        }
-    }
+            'isDeleted': {'type': 'boolean'},
+        },
+    },
 }
+
 
 def base_metaschema(metaschema):
     json_schema = {
@@ -288,7 +309,6 @@ def base_metaschema(metaschema):
         'description': metaschema['description'],
         'title': metaschema['title'],
         'additionalProperties': False,
-        'properties': {
-        }
+        'properties': {},
     }
     return json_schema

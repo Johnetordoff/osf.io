@@ -10,6 +10,6 @@ class PreprintMetricSerializer(BaseAPISerializer):
         type_ = 'preprint_metrics'
 
 
-class RawMetricsSerializer():
+class RawMetricsSerializer:
 
     query = ser.DictField()

@@ -1,4 +1,5 @@
 import django
+
 django.setup()
 
 import pytz
@@ -20,7 +21,6 @@ logging.basicConfig(level=logging.INFO)
 
 
 class InstitutionSummary(SummaryAnalytics):
-
     @property
     def collection_name(self):
         return 'institution_summary'
@@ -32,7 +32,9 @@ class InstitutionSummary(SummaryAnalytics):
         counts = []
 
         # Convert to a datetime at midnight for queries and the timestamp
-        timestamp_datetime = datetime(date.year, date.month, date.day).replace(tzinfo=pytz.UTC)
+        timestamp_datetime = datetime(date.year, date.month, date.day).replace(
+            tzinfo=pytz.UTC
+        )
         query_datetime = timestamp_datetime + timedelta(days=1)
         daily_query = Q(created__gte=timestamp_datetime)
         public_query = Q(is_public=True)
@@ -43,62 +45,92 @@ class InstitutionSummary(SummaryAnalytics):
         embargo_v2_query = Q(root__embargo__end_date__gt=query_datetime)
 
         for institution in institutions:
-            node_qs = institution.nodes.filter(is_deleted=False, created__lt=query_datetime).exclude(type='osf.registration')
-            registration_qs = institution.nodes.filter(is_deleted=False, created__lt=query_datetime, type='osf.registration')
+            node_qs = institution.nodes.filter(
+                is_deleted=False, created__lt=query_datetime
+            ).exclude(type='osf.registration')
+            registration_qs = institution.nodes.filter(
+                is_deleted=False, created__lt=query_datetime, type='osf.registration'
+            )
 
             count = {
-                'institution': {
-                    'id': institution._id,
-                    'name': institution.name,
-                },
+                'institution': {'id': institution._id, 'name': institution.name,},
                 'users': {
                     'total': institution.osfuser_set.filter(is_active=True).count(),
-                    'total_daily': institution.osfuser_set.filter(date_confirmed__gte=timestamp_datetime, date_confirmed__lt=query_datetime).count(),
+                    'total_daily': institution.osfuser_set.filter(
+                        date_confirmed__gte=timestamp_datetime,
+                        date_confirmed__lt=query_datetime,
+                    ).count(),
                 },
                 'nodes': {
                     'total': node_qs.count(),
                     'public': node_qs.filter(public_query).count(),
                     'private': node_qs.filter(private_query).count(),
-
                     'total_daily': node_qs.filter(daily_query).count(),
                     'public_daily': node_qs.filter(public_query & daily_query).count(),
-                    'private_daily': node_qs.filter(private_query & daily_query).count(),
+                    'private_daily': node_qs.filter(
+                        private_query & daily_query
+                    ).count(),
                 },
                 # Projects use get_roots to remove children
                 'projects': {
                     'total': node_qs.get_roots().count(),
                     'public': node_qs.filter(public_query).get_roots().count(),
                     'private': node_qs.filter(private_query).get_roots().count(),
-
                     'total_daily': node_qs.filter(daily_query).get_roots().count(),
-                    'public_daily': node_qs.filter(public_query & daily_query).get_roots().count(),
-                    'private_daily': node_qs.filter(private_query & daily_query).get_roots().count(),
+                    'public_daily': node_qs.filter(public_query & daily_query)
+                    .get_roots()
+                    .count(),
+                    'private_daily': node_qs.filter(private_query & daily_query)
+                    .get_roots()
+                    .count(),
                 },
                 'registered_nodes': {
                     'total': registration_qs.count(),
                     'public': registration_qs.filter(public_query).count(),
                     'embargoed': registration_qs.filter(private_query).count(),
-                    'embargoed_v2': registration_qs.filter(private_query & embargo_v2_query).count(),
-
+                    'embargoed_v2': registration_qs.filter(
+                        private_query & embargo_v2_query
+                    ).count(),
                     'total_daily': registration_qs.filter(daily_query).count(),
-                    'public_daily': registration_qs.filter(public_query & daily_query).count(),
-                    'embargoed_daily': registration_qs.filter(private_query & daily_query).count(),
-                    'embargoed_v2_daily': registration_qs.filter(private_query & daily_query & embargo_v2_query).count(),
+                    'public_daily': registration_qs.filter(
+                        public_query & daily_query
+                    ).count(),
+                    'embargoed_daily': registration_qs.filter(
+                        private_query & daily_query
+                    ).count(),
+                    'embargoed_v2_daily': registration_qs.filter(
+                        private_query & daily_query & embargo_v2_query
+                    ).count(),
                 },
                 'registered_projects': {
                     'total': registration_qs.get_roots().count(),
                     'public': registration_qs.filter(public_query).get_roots().count(),
-                    'embargoed': registration_qs.filter(private_query).get_roots().count(),
-                    'embargoed_v2': registration_qs.filter(private_query & embargo_v2_query).get_roots().count(),
-
-                    'total_daily': registration_qs.filter(daily_query).get_roots().count(),
-                    'public_daily': registration_qs.filter(public_query & daily_query).get_roots().count(),
-                    'embargoed_daily': registration_qs.filter(private_query & daily_query).get_roots().count(),
-                    'embargoed_v2_daily': registration_qs.filter(private_query & daily_query & embargo_v2_query).get_roots().count(),
+                    'embargoed': registration_qs.filter(private_query)
+                    .get_roots()
+                    .count(),
+                    'embargoed_v2': registration_qs.filter(
+                        private_query & embargo_v2_query
+                    )
+                    .get_roots()
+                    .count(),
+                    'total_daily': registration_qs.filter(daily_query)
+                    .get_roots()
+                    .count(),
+                    'public_daily': registration_qs.filter(public_query & daily_query)
+                    .get_roots()
+                    .count(),
+                    'embargoed_daily': registration_qs.filter(
+                        private_query & daily_query
+                    )
+                    .get_roots()
+                    .count(),
+                    'embargoed_v2_daily': registration_qs.filter(
+                        private_query & daily_query & embargo_v2_query
+                    )
+                    .get_roots()
+                    .count(),
                 },
-                'keen': {
-                    'timestamp': timestamp_datetime.isoformat()
-                }
+                'keen': {'timestamp': timestamp_datetime.isoformat()},
             }
 
             logger.info(
@@ -107,7 +139,7 @@ class InstitutionSummary(SummaryAnalytics):
                     count['nodes']['total'],
                     count['projects']['total'],
                     count['registered_nodes']['total'],
-                    count['registered_projects']['total']
+                    count['registered_projects']['total'],
                 )
             )
 

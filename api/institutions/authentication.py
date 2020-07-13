@@ -77,7 +77,9 @@ class InstitutionAuthentication(BaseAuthentication):
         provider = data['provider']
         institution = Institution.load(provider['id'])
         if not institution:
-            raise AuthenticationFailed('Invalid institution id: "{}"'.format(provider['id']))
+            raise AuthenticationFailed(
+                'Invalid institution id: "{}"'.format(provider['id']),
+            )
         username = provider['user'].get('username')
         fullname = provider['user'].get('fullname')
         given_name = provider['user'].get('givenName')
@@ -92,8 +94,10 @@ class InstitutionAuthentication(BaseAuthentication):
 
         # Non-empty full name is required. Fail the auth and inform sentry if not provided.
         if not fullname:
-            message = 'Institution login failed: fullname required for ' \
-                      'user "{}" from institution "{}"'.format(username, provider['id'])
+            message = (
+                'Institution login failed: fullname required for '
+                'user "{}" from institution "{}"'.format(username, provider['id'])
+            )
             sentry.log_message(message)
             raise AuthenticationFailed(message)
 
@@ -117,7 +121,9 @@ class InstitutionAuthentication(BaseAuthentication):
                 # Unclaimed users have an unusable password when being added as an unregistered
                 # contributor. Thus a random usable password must be assigned during activation.
                 new_password_required = True
-                logger.info('Institution SSO: unclaimed contributor "{}"'.format(username))
+                logger.info(
+                    'Institution SSO: unclaimed contributor "{}"'.format(username),
+                )
             except exceptions.UnconfirmedAccountError:
                 if user.has_usable_password():
                     # Unconfirmed user from default username / password signup
@@ -127,26 +133,36 @@ class InstitutionAuthentication(BaseAuthentication):
                     # sign-up. However, it must be overwritten by a new random one so the creator
                     # (if he is not the real person) can not access the account after activation.
                     new_password_required = True
-                    logger.info('Institution SSO: unconfirmed user "{}"'.format(username))
+                    logger.info(
+                        'Institution SSO: unconfirmed user "{}"'.format(username),
+                    )
                 else:
                     # Login take-over has not been implemented for unconfirmed user created via
                     # external IdP login (ORCiD).
-                    message = 'Institution SSO is not eligible for an unconfirmed account ' \
-                              'created via external IdP login: username = "{}"'.format(username)
+                    message = (
+                        'Institution SSO is not eligible for an unconfirmed account '
+                        'created via external IdP login: username = "{}"'.format(
+                            username,
+                        )
+                    )
                     sentry.log_message(message)
                     logger.error(message)
                     return None, None
             except exceptions.DeactivatedAccountError:
                 # Deactivated user: login is not allowed for deactivated users
-                message = 'Institution SSO is not eligible for a deactivated account: ' \
-                          'username = "{}"'.format(username)
+                message = (
+                    'Institution SSO is not eligible for a deactivated account: '
+                    'username = "{}"'.format(username)
+                )
                 sentry.log_message(message)
                 logger.error(message)
                 return None, None
             except exceptions.MergedAccountError:
                 # Merged user: this shouldn't happen since merged users do not have an email
-                message = 'Institution SSO is not eligible for a merged account: ' \
-                          'username = "{}"'.format(username)
+                message = (
+                    'Institution SSO is not eligible for a merged account: '
+                    'username = "{}"'.format(username)
+                )
                 sentry.log_message(message)
                 logger.error(message)
                 return None, None
@@ -154,8 +170,10 @@ class InstitutionAuthentication(BaseAuthentication):
                 # Other invalid status: this shouldn't happen unless the user happens to be in a
                 # temporary state. Such state requires more updates before the user can be saved
                 # to the database. (e.g. `get_or_create_user()` creates a temporary-state user.)
-                message = 'Institution SSO is not eligible for an inactive account with ' \
-                          'an unknown or invalid status: username = "{}"'.format(username)
+                message = (
+                    'Institution SSO is not eligible for an inactive account with '
+                    'an unknown or invalid status: username = "{}"'.format(username)
+                )
                 sentry.log_message(message)
                 logger.error(message)
                 return None, None
@@ -201,7 +219,9 @@ class InstitutionAuthentication(BaseAuthentication):
                 user=user,
                 domain=DOMAIN,
                 osf_support_email=OSF_SUPPORT_EMAIL,
-                storage_flag_is_active=waffle.flag_is_active(request, features.STORAGE_I18N),
+                storage_flag_is_active=waffle.flag_is_active(
+                    request, features.STORAGE_I18N,
+                ),
             )
 
         # Affiliate the user if not previously affiliated

@@ -3,6 +3,7 @@ import mock
 from datetime import datetime
 
 from website.app import setup_django
+
 setup_django()
 
 from django.utils import timezone
@@ -20,7 +21,6 @@ pytestmark = pytest.mark.django_db
 
 @pytest.mark.django_db
 class TestPreprintMetrics:
-
     @pytest.fixture(autouse=True)
     def enable_elasticsearch_metrics(self):
         with override_switch(features.ELASTICSEARCH_METRICS, active=True):
@@ -93,7 +93,7 @@ class TestPreprintMetrics:
                         preprint=preprint_to_add,
                         user=user_to_use,
                         path=preprint_to_add.primary_file.path,
-                        timestamp=datetime.strptime(date + time, '%Y-%m-%dT%H:%M')
+                        timestamp=datetime.strptime(date + time, '%Y-%m-%dT%H:%M'),
                     )
 
     @pytest.fixture
@@ -107,9 +107,7 @@ class TestPreprintMetrics:
         post_data = {
             'data': {
                 'type': 'preprint_metric',
-                'attributes': {
-                    'query': {'not_a_field': 'Yay!'}
-                }
+                'attributes': {'query': {'not_a_field': 'Yay!'}},
             }
         }
         res = app.post_json_api(post_url, post_data, auth=user.auth, expect_errors=True)
@@ -129,19 +127,21 @@ class TestPreprintMetrics:
                         'aggs': {
                             'preprints_by_year': {
                                 'composite': {
-                                    'sources': [{
-                                        'date': {
-                                            'date_histogram': {
-                                                'field': 'timestamp',
-                                                'interval': 'year'
+                                    'sources': [
+                                        {
+                                            'date': {
+                                                'date_histogram': {
+                                                    'field': 'timestamp',
+                                                    'interval': 'year',
+                                                }
                                             }
                                         }
-                                    }]
+                                    ]
                                 }
                             }
                         }
                     }
-                }
+                },
             }
         }
         resp = app.post_json_api(post_url, payload, auth=user.auth)
@@ -149,27 +149,37 @@ class TestPreprintMetrics:
 
     @mock.patch('api.metrics.views.PreprintDownloadMetrics.format_response')
     @mock.patch('api.metrics.views.PreprintDownloadMetrics.execute_search')
-    def test_post_custom_metric(self, mock_execute, mock_format, app, user, base_url, preprint, other_user):
+    def test_post_custom_metric(
+        self, mock_execute, mock_format, app, user, base_url, preprint, other_user
+    ):
         mock_return = {'good': 'job'}
         mock_execute.return_value.to_dict.return_value = mock_return
         mock_format.return_value = mock_return
         post_url = '{}downloads/'.format(base_url)
         post_data = {
-            'data': {
-                'type': 'preprint_metrics',
-                'attributes': {
-                    'query': mock_return
-                }
-            }
+            'data': {'type': 'preprint_metrics', 'attributes': {'query': mock_return}}
         }
         res = app.post_json_api(post_url, post_data, auth=user.auth)
         assert res.json == mock_return
 
     @pytest.mark.parametrize('metric_name', ['downloads', 'views'])
     @mock.patch('api.metrics.utils.timezone.now')
-    def test_preprint_list_with_metrics_fails(self, mock_timezone, app, user, base_url, preprint, preprint_two,
-                                              preprint_three, metric_name, other_user, project, project_two,
-                                              other_admin_user, other_non_admin_user):
+    def test_preprint_list_with_metrics_fails(
+        self,
+        mock_timezone,
+        app,
+        user,
+        base_url,
+        preprint,
+        preprint_two,
+        preprint_three,
+        metric_name,
+        other_user,
+        project,
+        project_two,
+        other_admin_user,
+        other_non_admin_user,
+    ):
         mock_timezone.return_value = datetime(2019, 1, 4, tzinfo=timezone.utc)
         url = '{}{}/'.format(base_url, metric_name)
 
@@ -187,12 +197,26 @@ class TestPreprintMetrics:
         assert res.status_code == 403
 
         # test logged in, metrics, non-admin user cannot access
-        res = app.get(one_preprint_url, auth=other_non_admin_user.auth, expect_errors=True)
+        res = app.get(
+            one_preprint_url, auth=other_non_admin_user.auth, expect_errors=True
+        )
         assert res.status_code == 403
 
-    @pytest.mark.skip('Return results will be entirely mocked so does not make a lot of sense to run on travis.')
+    @pytest.mark.skip(
+        'Return results will be entirely mocked so does not make a lot of sense to run on travis.'
+    )
     @mock.patch('api.metrics.utils.timezone.now')
-    def test_preprint_with_metrics_succeeds(self, mock_timezone, app, user, base_url, preprint, other_user, preprint_no_results, metric_dates):
+    def test_preprint_with_metrics_succeeds(
+        self,
+        mock_timezone,
+        app,
+        user,
+        base_url,
+        preprint,
+        other_user,
+        preprint_no_results,
+        metric_dates,
+    ):
         mock_timezone.return_value = datetime(2019, 1, 4, tzinfo=timezone.utc)
         self.add_views_and_downloads(preprint, other_user, metric_dates)
         metric_name = 'downloads'
@@ -214,7 +238,9 @@ class TestPreprintMetrics:
         assert '2019-01-01T00:05:00.000Z' not in datetimes
 
         # filter between two specific datetimes
-        two_times_url = '{}&start_datetime=2019-01-02T00:00&end_datetime=2019-01-02T02:00'.format(one_preprint_url)
+        two_times_url = '{}&start_datetime=2019-01-02T00:00&end_datetime=2019-01-02T02:00'.format(
+            one_preprint_url
+        )
         res = app.get(two_times_url, auth=user.auth)
         assert len(res.json['data']) == 1
         datetimes = [result.keys()[0] for result in res.json['data']]
@@ -222,7 +248,9 @@ class TestPreprintMetrics:
         assert '2019-01-01T03:05:00.000Z' not in datetimes
 
         # test two specific datetimes with minute interval
-        two_min_interval = '{}&start_datetime=2019-01-02T00:00&end_datetime=2019-01-02T02:00&interval=1m'.format(one_preprint_url)
+        two_min_interval = '{}&start_datetime=2019-01-02T00:00&end_datetime=2019-01-02T02:00&interval=1m'.format(
+            one_preprint_url
+        )
         res = app.get(two_min_interval, auth=user.auth)
         assert len(res.json['data']) == 61
         first = res.json['data'][0]

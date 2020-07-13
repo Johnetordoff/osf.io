@@ -12,6 +12,7 @@ from addons.box.serializer import BoxSerializer
 mock_client = MockBox()
 pytestmark = pytest.mark.django_db
 
+
 class TestBoxSerializer(StorageAddonSerializerTestSuiteMixin, OsfTestCase):
 
     addon_short_name = 'box'
@@ -22,9 +23,7 @@ class TestBoxSerializer(StorageAddonSerializerTestSuiteMixin, OsfTestCase):
 
     def setUp(self):
         self.mock_valid = mock.patch.object(
-            BoxSerializer,
-            'credentials_are_valid',
-            return_value=True
+            BoxSerializer, 'credentials_are_valid', return_value=True
         )
         self.mock_valid.start()
         super(TestBoxSerializer, self).setUp()

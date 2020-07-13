@@ -20,6 +20,7 @@ def clean_up_common_errors(cit):
     cit = re.sub(r' +', ' ', cit)
     return cit
 
+
 def process_name(node, user):
     # If the user has a family and given name, use those
     if user.family_name and user.given_name:
@@ -48,12 +49,18 @@ def render_citation(node, style='apa'):
     """Given a node, return a citation"""
     reformat_styles = ['apa', 'chicago-author-date', 'modern-language-association']
     csl = node.csl
-    data = [csl, ]
+    data = [
+        csl,
+    ]
 
     bib_source = CiteProcJSON(data)
 
     custom = CUSTOM_CITATIONS.get(style, False)
-    path = os.path.join(BASE_PATH, 'static', custom) if custom else os.path.join(CITATION_STYLES_PATH, style)
+    path = (
+        os.path.join(BASE_PATH, 'static', custom)
+        if custom
+        else os.path.join(CITATION_STYLES_PATH, style)
+    )
 
     try:
         bib_style = CitationStylesStyle(path, validate=False)
@@ -64,7 +71,11 @@ def render_citation(node, style='apa'):
             parent_path = os.path.join(CITATION_STYLES_PATH, parent_style)
             bib_style = CitationStylesStyle(parent_path, validate=False)
         else:
-            raise ValueError('Unable to find a dependent or independent parent style related to {}.csl'.format(style))
+            raise ValueError(
+                'Unable to find a dependent or independent parent style related to {}.csl'.format(
+                    style,
+                ),
+            )
 
     bibliography = CitationStylesBibliography(bib_style, bib_source, formatter.plain)
 
@@ -80,8 +91,8 @@ def render_citation(node, style='apa'):
     if cit.count(title) == 1:
         i = cit.index(title)
         prefix = clean_up_common_errors(cit[0:i])
-        suffix = clean_up_common_errors(cit[i + len(title):])
-        if (style in reformat_styles):
+        suffix = clean_up_common_errors(cit[i + len(title) :])
+        if style in reformat_styles:
             if suffix[0:1] == '.':
                 suffix = suffix[1:]
             if title[-1] != '.':
@@ -89,7 +100,7 @@ def render_citation(node, style='apa'):
         cit = prefix + title + suffix
     elif cit.count(title) == 0:
         cit = clean_up_common_errors(cit)
-        if (style in reformat_styles):
+        if style in reformat_styles:
             cit = add_period_to_title(cit)
 
     if style == 'apa':
@@ -101,11 +112,15 @@ def render_citation(node, style='apa'):
 
     return cit
 
+
 def add_period_to_title(cit):
     title_split = cit.split('”')  # quote is ” (\xe2\x80\x9d) not normal "
     if len(title_split) == 2 and title_split[0][-1] != '.':
-        cit = (title_split[0] + '.' + '”' + title_split[1])  # quote is ” (\xe2\x80\x9d) not normal "
+        cit = (
+            title_split[0] + '.' + '”' + title_split[1]
+        )  # quote is ” (\xe2\x80\x9d) not normal "
     return cit
+
 
 def apa_reformat(node, cit):
     new_csl = cit.split('(')
@@ -128,7 +143,11 @@ def apa_reformat(node, cit):
     # handle 8 or more contributors
     else:
         name_list = [apa_name(process_name(node, x)) for x in contributors_list[:6]]
-        new_apa = ' '.join(name_list) + ' … ' + apa_name(process_name(node, contributors_list[-1]))
+        new_apa = (
+            ' '.join(name_list)
+            + ' … '
+            + apa_name(process_name(node, contributors_list[-1]))
+        )
 
     cit = new_apa.rstrip(', ')
     if cit[-1] != '.':
@@ -156,7 +175,9 @@ def mla_reformat(node, cit):
     contributors_list = list(node.visible_contributors)
     contributors_list_length = len(contributors_list)
     cit = remove_extra_period_after_right_quotation(cit)
-    cit_minus_authors = ('“' + cit.split('“')[1])   # watch out these double quotes are “ \xe2\x80\x9c not normal "s
+    cit_minus_authors = (
+        '“' + cit.split('“')[1]
+    )  # watch out these double quotes are “ \xe2\x80\x9c not normal "s
 
     # throw error if there is no visible contributor
     if contributors_list_length == 0:
@@ -178,8 +199,12 @@ def mla_reformat(node, cit):
         new_mla = new_mla + '.'
     return new_mla + ' ' + cit_minus_authors
 
+
 def remove_extra_period_after_right_quotation(cit):
-    return cit.replace('”.', '”')  # watch out these double quotes are “ \xe2\x80\x9c not normal "s
+    return cit.replace(
+        '”.', '”',
+    )  # watch out these double quotes are “ \xe2\x80\x9c not normal "s
+
 
 def chicago_reformat(node, cit):
     cit = remove_extra_period_after_right_quotation(cit)
@@ -197,7 +222,9 @@ def chicago_reformat(node, cit):
         new_chi = new_chi.rstrip(',')
     # handle more than one contributor but less than 8 contributors
     elif contributors_list_length in range(1, 8):
-        first_one = mla_name(process_name(node, contributors_list[0]), initial=True).rstrip(',')
+        first_one = mla_name(
+            process_name(node, contributors_list[0]), initial=True,
+        ).rstrip(',')
         rest_ones = [mla_name(process_name(node, x)) for x in contributors_list[1:-1]]
         last_one = mla_name(process_name(node, contributors_list[-1]))
         if rest_ones:
@@ -207,7 +234,9 @@ def chicago_reformat(node, cit):
             new_chi = first_one + ', and ' + last_one
     # handle 8 or more contributors
     else:
-        new_chi = mla_name(process_name(node, contributors_list[0]), initial=True).rstrip(', ')
+        new_chi = mla_name(
+            process_name(node, contributors_list[0]), initial=True,
+        ).rstrip(', ')
         name_list = [mla_name(process_name(node, x)) for x in contributors_list[1:7]]
         rest = ', '.join(name_list)
         rest = rest.rstrip(',') + ', et al.'
@@ -219,6 +248,7 @@ def chicago_reformat(node, cit):
         year = str(issued['date-parts'][0][0]) if issued else 'n.d.'
         cit += ' ' + year + x
     return cit
+
 
 def mla_name(name, initial=False):
     if initial:
@@ -243,6 +273,7 @@ def mla_name(name, initial=False):
         if name['suffix']:
             mla += ', ' + name['suffix']
     return mla
+
 
 def middle_name_splitter(middle_names):
     initials = ''

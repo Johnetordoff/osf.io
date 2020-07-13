@@ -35,7 +35,7 @@ class TestApiOAuth2Application(OsfTestCase):
         assert self.api_app.is_active is True
 
     # https://docs.djangoproject.com/en/1.9/ref/models/fields/#editable
-    @pytest.mark.skip('Django\'s editable=False does not prevent edits')
+    @pytest.mark.skip("Django's editable=False does not prevent edits")
     def test_cant_edit_creation_date(self):
         with pytest.raises(AttributeError):
             self.api_app.created = timezone.now()
@@ -47,7 +47,9 @@ class TestApiOAuth2Application(OsfTestCase):
 
     def test_invalid_callback_url_raises_exception(self):
         with pytest.raises(ValidationError):
-            api_app = ApiOAuth2ApplicationFactory(callback_url='itms://itunes.apple.com/us/app/apple-store/id375380948?mt=8')
+            api_app = ApiOAuth2ApplicationFactory(
+                callback_url='itms://itunes.apple.com/us/app/apple-store/id375380948?mt=8'
+            )
             api_app.save()
 
     def test_name_cannot_be_blank(self):
@@ -76,7 +78,9 @@ class TestApiOAuth2Application(OsfTestCase):
 
     @mock.patch('framework.auth.cas.CasClient.revoke_application_tokens')
     def test_active_remains_true_when_cas_token_deletion_fails(self, mock_method):
-        mock_method.side_effect = cas.CasHTTPError("CAS can't revoke tokens", 400, 'blank', 'blank')
+        mock_method.side_effect = cas.CasHTTPError(
+            "CAS can't revoke tokens", 400, 'blank', 'blank'
+        )
         with pytest.raises(cas.CasHTTPError):
             self.api_app.deactivate(save=True)
         self.api_app.reload()

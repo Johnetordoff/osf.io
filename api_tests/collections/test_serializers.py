@@ -18,22 +18,28 @@ class TestNodeSerializer:
             created_format = '%Y-%m-%dT%H:%M:%S.%fZ'
             modified_format = '%Y-%m-%dT%H:%M:%S.%fZ'
         else:
-            created_format = '%Y-%m-%dT%H:%M:%S.%f' if collection.created.microsecond else '%Y-%m-%dT%H:%M:%S'
-            modified_format = '%Y-%m-%dT%H:%M:%S.%f' if collection.modified.microsecond else '%Y-%m-%dT%H:%M:%S'
+            created_format = (
+                '%Y-%m-%dT%H:%M:%S.%f'
+                if collection.created.microsecond
+                else '%Y-%m-%dT%H:%M:%S'
+            )
+            modified_format = (
+                '%Y-%m-%dT%H:%M:%S.%f'
+                if collection.modified.microsecond
+                else '%Y-%m-%dT%H:%M:%S'
+            )
 
-        result = CollectionSerializer(
-            collection, context={'request': req}
-        ).data
+        result = CollectionSerializer(collection, context={'request': req}).data
         data = result['data']
         assert data['id'] == collection._id
         assert data['type'] == 'collections'
         # Attributes
         attributes = data['attributes']
         assert attributes['title'] == collection.title
-        assert attributes['date_created'] == collection.created.strftime(
-            created_format)
+        assert attributes['date_created'] == collection.created.strftime(created_format)
         assert attributes['date_modified'] == collection.modified.strftime(
-            modified_format)
+            modified_format
+        )
         assert attributes['bookmarks'] == collection.is_bookmark_collection
 
         # Relationships

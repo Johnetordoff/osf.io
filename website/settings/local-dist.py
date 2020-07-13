@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-'''Example settings/local.py file.
+"""Example settings/local.py file.
 These settings override what's in website/settings/defaults.py
 
 NOTE: local.py will not be added to source control.
-'''
+"""
 import logging
 from os import environ
 
@@ -21,36 +21,31 @@ DOMAIN = PROTOCOL + 'localhost:5000/'
 INTERNAL_DOMAIN = DOMAIN
 API_DOMAIN = PROTOCOL + 'localhost:8000/'
 
-#WATERBUTLER_URL = 'http://localhost:7777'
-#WATERBUTLER_INTERNAL_URL = WATERBUTLER_URL
+# WATERBUTLER_URL = 'http://localhost:7777'
+# WATERBUTLER_INTERNAL_URL = WATERBUTLER_URL
 
 PREPRINT_PROVIDER_DOMAINS = {
     'enabled': False,
     'prefix': 'http://local.',
-    'suffix': ':4201/'
+    'suffix': ':4201/',
 }
 USE_EXTERNAL_EMBER = True
 PROXY_EMBER_APPS = True
 EMBER_DOMAIN = environ.get('EMBER_DOMAIN', 'localhost')
-LIVE_RELOAD_DOMAIN = 'http://{}:4200'.format(EMBER_DOMAIN)  # Change port for the current app
+LIVE_RELOAD_DOMAIN = 'http://{}:4200'.format(
+    EMBER_DOMAIN
+)  # Change port for the current app
 EXTERNAL_EMBER_APPS = {
     'ember_osf_web': {
         'server': 'http://{}:4200/'.format(EMBER_DOMAIN),
         'path': '/ember_osf_web/',
-        'routes': [
-            'collections',
-            'registries',
-            'handbook',
-        ],
+        'routes': ['collections', 'registries', 'handbook',],
     },
     'preprints': {
         'server': 'http://{}:4201/'.format(EMBER_DOMAIN),
-        'path': '/preprints/'
+        'path': '/preprints/',
     },
-    'reviews': {
-        'server': 'http://{}:4203/'.format(EMBER_DOMAIN),
-        'path': '/reviews/'
-    },
+    'reviews': {'server': 'http://{}:4203/'.format(EMBER_DOMAIN), 'path': '/reviews/'},
 }
 
 SEARCH_ENGINE = 'elastic'
@@ -74,10 +69,12 @@ SESSION_COOKIE_SAMESITE = 'None'
 OSF_SERVER_KEY = None
 OSF_SERVER_CERT = None
 
+
 class CeleryConfig(defaults.CeleryConfig):
     """
     Celery configuration
     """
+
     ##### Celery #####
     ## Default RabbitMQ broker
     # broker_url = 'amqp://'
@@ -111,7 +108,7 @@ OSF_SUPPORT_EMAIL = 'fake-support@osf.io'
 # contact email
 OSF_CONTACT_EMAIL = 'fake-contact@osf.io'
 
-#Email templates logo
+# Email templates logo
 OSF_LOGO = 'osf_logo'
 OSF_PREPRINTS_LOGO = 'osf_preprints'
 OSF_MEETINGS_LOGO = 'osf_meetings'

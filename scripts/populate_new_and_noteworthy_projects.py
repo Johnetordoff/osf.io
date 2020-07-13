@@ -18,9 +18,11 @@ from framework.auth.core import Auth
 from scripts import utils as script_utils
 from framework.celery_tasks import app as celery_app
 from framework.encryption import ensure_bytes
-from website.settings import \
-    POPULAR_LINKS_NODE, NEW_AND_NOTEWORTHY_LINKS_NODE,\
-    NEW_AND_NOTEWORTHY_CONTRIBUTOR_BLACKLIST
+from website.settings import (
+    POPULAR_LINKS_NODE,
+    NEW_AND_NOTEWORTHY_LINKS_NODE,
+    NEW_AND_NOTEWORTHY_CONTRIBUTOR_BLACKLIST,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +35,7 @@ def unique_contributors(nodes, node):
             return False
     return True
 
+
 def acceptable_title(node):
     """ Omit projects that have certain words in the title """
 
@@ -41,12 +44,14 @@ def acceptable_title(node):
         return False
     return True
 
+
 def filter_nodes(node_list):
     final_node_list = []
     for node in node_list:
         if unique_contributors(final_node_list, node) and acceptable_title(node):
             final_node_list.append(node)
     return final_node_list
+
 
 def get_new_and_noteworthy_nodes(noteworthy_links_node):
     """ Fetches new and noteworthy nodes
@@ -55,11 +60,18 @@ def get_new_and_noteworthy_nodes(noteworthy_links_node):
 
     """
     today = timezone.now()
-    last_month = (today - dateutil.relativedelta.relativedelta(months=1))
-    data = Node.objects.filter(Q(created__gte=last_month) & Q(is_public=True) & Q(is_deleted=False)).get_roots()
+    last_month = today - dateutil.relativedelta.relativedelta(months=1)
+    data = Node.objects.filter(
+        Q(created__gte=last_month) & Q(is_public=True) & Q(is_deleted=False)
+    ).get_roots()
     nodes = []
     for node in data:
-        unique_actions = NodeLog.objects.filter(node=node.pk).order_by('action').distinct('action').count()
+        unique_actions = (
+            NodeLog.objects.filter(node=node.pk)
+            .order_by('action')
+            .distinct('action')
+            .count()
+        )
         n = {}
         n['unique_actions'] = unique_actions
         n['contributors'] = [c._id for c in node.contributors]
@@ -67,10 +79,13 @@ def get_new_and_noteworthy_nodes(noteworthy_links_node):
         n['title'] = node.title
         nodes.append(n)
 
-    noteworthy_nodes = sorted(nodes, key=lambda node: node.get('unique_actions'), reverse=True)[:25]
+    noteworthy_nodes = sorted(
+        nodes, key=lambda node: node.get('unique_actions'), reverse=True
+    )[:25]
     filtered_new_and_noteworthy = filter_nodes(noteworthy_nodes)
 
     return [each['_id'] for each in filtered_new_and_noteworthy]
+
 
 def is_eligible_node(node):
     """
@@ -82,14 +97,21 @@ def is_eligible_node(node):
 
     for contrib in node.contributors:
         if contrib._id in NEW_AND_NOTEWORTHY_CONTRIBUTOR_BLACKLIST:
-            logger.info('Node {} skipped because a contributor, {}, is blacklisted.'.format(node._id, contrib._id))
+            logger.info(
+                'Node {} skipped because a contributor, {}, is blacklisted.'.format(
+                    node._id, contrib._id
+                )
+            )
             return False
 
     return True
 
+
 def update_node_links(designated_node, target_node_ids, description):
     """ Takes designated node, removes current node links and replaces them with node links to target nodes """
-    logger.info('Repopulating {} with latest {} nodes.'.format(designated_node._id, description))
+    logger.info(
+        'Repopulating {} with latest {} nodes.'.format(designated_node._id, description)
+    )
     user = designated_node.creator
     auth = Auth(user)
 
@@ -102,17 +124,24 @@ def update_node_links(designated_node, target_node_ids, description):
             designated_node.add_pointer(n, auth, save=True)
             logger.info('Added node link {} to {}'.format(n, designated_node))
 
+
 def main(dry_run=True):
     init_app(routes=False)
 
     new_and_noteworthy_links_node = Node.load(NEW_AND_NOTEWORTHY_LINKS_NODE)
-    new_and_noteworthy_node_ids = get_new_and_noteworthy_nodes(new_and_noteworthy_links_node)
+    new_and_noteworthy_node_ids = get_new_and_noteworthy_nodes(
+        new_and_noteworthy_links_node
+    )
 
-    update_node_links(new_and_noteworthy_links_node, new_and_noteworthy_node_ids, 'new and noteworthy')
+    update_node_links(
+        new_and_noteworthy_links_node, new_and_noteworthy_node_ids, 'new and noteworthy'
+    )
 
     try:
         new_and_noteworthy_links_node.save()
-        logger.info('Node links on {} updated.'.format(new_and_noteworthy_links_node._id))
+        logger.info(
+            'Node links on {} updated.'.format(new_and_noteworthy_links_node._id)
+        )
     except (KeyError, RuntimeError) as error:
         logger.error('Could not migrate new and noteworthy nodes due to error')
         logger.exception(error)
@@ -127,6 +156,7 @@ def run_main(dry_run=True):
         script_utils.add_file_logger(logger, __file__)
     with transaction.atomic():
         main(dry_run=dry_run)
+
 
 if __name__ == '__main__':
     dry_run = '--dry' in sys.argv

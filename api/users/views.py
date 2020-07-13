@@ -25,7 +25,12 @@ from api.base.utils import (
     is_truthy,
 )
 from api.base.views import JSONAPIBaseView, WaterButlerMixin
-from api.base.throttling import SendEmailThrottle, SendEmailDeactivationThrottle, NonCookieAuthThrottle, BurstRateThrottle
+from api.base.throttling import (
+    SendEmailThrottle,
+    SendEmailDeactivationThrottle,
+    NonCookieAuthThrottle,
+    BurstRateThrottle,
+)
 from api.institutions.serializers import InstitutionSerializer
 from api.nodes.filters import NodesFilterMixin, UserNodesFilterMixin
 from api.nodes.serializers import DraftRegistrationLegacySerializer
@@ -35,7 +40,8 @@ from api.preprints.serializers import PreprintSerializer
 from api.registrations.serializers import RegistrationSerializer
 
 from api.users.permissions import (
-    CurrentUser, ReadOnlyOrCurrentUser,
+    CurrentUser,
+    ReadOnlyOrCurrentUser,
     ReadOnlyOrCurrentUserRelationship,
     ClaimUserPermission,
 )
@@ -70,7 +76,12 @@ from rest_framework import permissions as drf_permissions
 from rest_framework import generics
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.exceptions import NotAuthenticated, NotFound, ValidationError, Throttled
+from rest_framework.exceptions import (
+    NotAuthenticated,
+    NotFound,
+    ValidationError,
+    Throttled,
+)
 from osf.models import (
     Contributor,
     ExternalAccount,
@@ -85,7 +96,11 @@ from osf.models import (
     Email,
 )
 from website import mails, settings
-from website.project.views.contributor import send_claim_email, send_claim_registered_email
+from website.project.views.contributor import (
+    send_claim_email,
+    send_claim_registered_email,
+)
+
 
 class UserMixin(object):
     """Mixin with convenience methods for retrieving the current user based on the
@@ -101,7 +116,10 @@ class UserMixin(object):
         # then this view is getting called due to an embedded request (contributor embedding user)
         # We prefer to access the user from the contributor object and take advantage
         # of the query cache
-        if hasattr(self.request, 'parents') and len(self.request.parents.get(Contributor, {})) == 1:
+        if (
+            hasattr(self.request, 'parents')
+            and len(self.request.parents.get(Contributor, {})) == 1
+        ):
             # We expect one parent contributor view, so index into the first item
             contrib_id, contrib = list(self.request.parents[Contributor].items())[0]
             user = contrib.user
@@ -112,7 +130,13 @@ class UserMixin(object):
                 if check_permissions:
                     self.check_object_permissions(self.request, user)
                 return get_object_or_error(
-                    OSFUser.objects.filter(id=user.id).annotate(default_region=F('addons_osfstorage_user_settings__default_region___id')).exclude(default_region=None),
+                    OSFUser.objects.filter(id=user.id)
+                    .annotate(
+                        default_region=F(
+                            'addons_osfstorage_user_settings__default_region___id',
+                        ),
+                    )
+                    .exclude(default_region=None),
                     request=self.request,
                     display_name='user',
                 )
@@ -129,7 +153,13 @@ class UserMixin(object):
 
         elif key == 'me' or key == current_user._id:
             return get_object_or_error(
-                OSFUser.objects.filter(id=current_user.id).annotate(default_region=F('addons_osfstorage_user_settings__default_region___id')).exclude(default_region=None),
+                OSFUser.objects.filter(id=current_user.id)
+                .annotate(
+                    default_region=F(
+                        'addons_osfstorage_user_settings__default_region___id',
+                    ),
+                )
+                .exclude(default_region=None),
                 request=self.request,
                 display_name='user',
             )
@@ -145,6 +175,7 @@ class UserMixin(object):
 class UserList(JSONAPIBaseView, generics.ListAPIView, ListFilterMixin):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/users_list).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.RequiresScopedRequestOrReadOnly,
@@ -157,13 +188,15 @@ class UserList(JSONAPIBaseView, generics.ListAPIView, ListFilterMixin):
 
     serializer_class = UserSerializer
 
-    ordering = ('-date_registered')
+    ordering = '-date_registered'
     view_category = 'users'
     view_name = 'user-list'
 
     def get_default_queryset(self):
         if self.request.version >= '2.3':
-            return OSFUser.objects.filter(is_registered=True, date_disabled__isnull=True, merged_by__isnull=True)
+            return OSFUser.objects.filter(
+                is_registered=True, date_disabled__isnull=True, merged_by__isnull=True,
+            )
         return OSFUser.objects.filter(is_registered=True, date_disabled__isnull=True)
 
     # overrides ListCreateAPIView
@@ -174,6 +207,7 @@ class UserList(JSONAPIBaseView, generics.ListAPIView, ListFilterMixin):
 class UserDetail(JSONAPIBaseView, generics.RetrieveUpdateAPIView, UserMixin):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/users_read).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         ReadOnlyOrCurrentUser,
@@ -186,12 +220,18 @@ class UserDetail(JSONAPIBaseView, generics.RetrieveUpdateAPIView, UserMixin):
     view_name = 'user-detail'
 
     serializer_class = UserDetailSerializer
-    parser_classes = (JSONAPIMultipleRelationshipsParser, JSONAPIMultipleRelationshipsParserForRegularJSON,)
+    parser_classes = (
+        JSONAPIMultipleRelationshipsParser,
+        JSONAPIMultipleRelationshipsParserForRegularJSON,
+    )
 
     def get_serializer_class(self):
         if self.request.auth:
             scopes = self.request.auth.attributes['accessTokenScope']
-            if (CoreScopes.USER_EMAIL_READ in normalize_scopes(scopes) and self.request.user == self.get_user()):
+            if (
+                CoreScopes.USER_EMAIL_READ in normalize_scopes(scopes)
+                and self.request.user == self.get_user()
+            ):
                 return ReadEmailUserDetailSerializer
         return UserDetailSerializer
 
@@ -210,6 +250,7 @@ class UserDetail(JSONAPIBaseView, generics.RetrieveUpdateAPIView, UserMixin):
 class UserAddonList(JSONAPIBaseView, generics.ListAPIView, ListFilterMixin, UserMixin):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/users_addons_list).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -226,14 +267,21 @@ class UserAddonList(JSONAPIBaseView, generics.ListAPIView, ListFilterMixin, User
     ordering = ('-id',)
 
     def get_queryset(self):
-        qs = [addon for addon in self.get_user().get_addons() if 'accounts' in addon.config.configs]
+        qs = [
+            addon
+            for addon in self.get_user().get_addons()
+            if 'accounts' in addon.config.configs
+        ]
         sorted(qs, key=lambda addon: addon.id, reverse=True)
         return qs
 
 
-class UserAddonDetail(JSONAPIBaseView, generics.RetrieveAPIView, UserMixin, AddonSettingsMixin):
+class UserAddonDetail(
+    JSONAPIBaseView, generics.RetrieveAPIView, UserMixin, AddonSettingsMixin,
+):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/users_addons_read).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -251,9 +299,12 @@ class UserAddonDetail(JSONAPIBaseView, generics.RetrieveAPIView, UserMixin, Addo
         return self.get_addon_settings(check_object_permissions=False)
 
 
-class UserAddonAccountList(JSONAPIBaseView, generics.ListAPIView, UserMixin, AddonSettingsMixin):
+class UserAddonAccountList(
+    JSONAPIBaseView, generics.ListAPIView, UserMixin, AddonSettingsMixin,
+):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/Users_addon_accounts_list).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -272,9 +323,13 @@ class UserAddonAccountList(JSONAPIBaseView, generics.ListAPIView, UserMixin, Add
     def get_queryset(self):
         return self.get_addon_settings(check_object_permissions=False).external_accounts
 
-class UserAddonAccountDetail(JSONAPIBaseView, generics.RetrieveAPIView, UserMixin, AddonSettingsMixin):
+
+class UserAddonAccountDetail(
+    JSONAPIBaseView, generics.RetrieveAPIView, UserMixin, AddonSettingsMixin,
+):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/Users_addon_accounts_read).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -293,14 +348,23 @@ class UserAddonAccountDetail(JSONAPIBaseView, generics.RetrieveAPIView, UserMixi
         account_id = self.kwargs['account_id']
 
         account = ExternalAccount.load(account_id)
-        if not (account and user_settings.external_accounts.filter(id=account.id).exists()):
+        if not (
+            account and user_settings.external_accounts.filter(id=account.id).exists()
+        ):
             raise NotFound('Requested addon unavailable')
         return account
 
 
-class UserNodes(JSONAPIBaseView, generics.ListAPIView, UserMixin, UserNodesFilterMixin, NodeOptimizationMixin):
+class UserNodes(
+    JSONAPIBaseView,
+    generics.ListAPIView,
+    UserMixin,
+    UserNodesFilterMixin,
+    NodeOptimizationMixin,
+):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/users_nodes_list).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -325,7 +389,9 @@ class UserNodes(JSONAPIBaseView, generics.ListAPIView, UserMixin, UserNodesFilte
         default_queryset = user.nodes_contributor_or_group_member_to
         if user != self.request.user:
             # Further restrict UserNodes to nodes the *requesting* user can view
-            return Node.objects.get_nodes_for_user(self.request.user, base_queryset=default_queryset, include_public=True)
+            return Node.objects.get_nodes_for_user(
+                self.request.user, base_queryset=default_queryset, include_public=True,
+            )
         return self.optimize_node_queryset(default_queryset)
 
     # overrides ListAPIView
@@ -349,7 +415,7 @@ class UserGroups(JSONAPIBaseView, generics.ListAPIView, UserMixin, ListFilterMix
     serializer_class = GroupSerializer
     view_category = 'users'
     view_name = 'user-groups'
-    ordering = ('-modified', )
+    ordering = ('-modified',)
 
     @require_flag(OSF_GROUPS)
     def get_default_queryset(self):
@@ -357,21 +423,25 @@ class UserGroups(JSONAPIBaseView, generics.ListAPIView, UserMixin, ListFilterMix
         current_user = self.request.user
         if current_user.is_anonymous:
             return OSFGroup.objects.none()
-        return requested_user.osf_groups.filter(id__in=current_user.osf_groups.values_list('id', flat=True))
+        return requested_user.osf_groups.filter(
+            id__in=current_user.osf_groups.values_list('id', flat=True),
+        )
 
     # overrides ListAPIView
     def get_queryset(self):
         return self.get_queryset_from_request()
 
 
-class UserQuickFiles(JSONAPIBaseView, generics.ListAPIView, WaterButlerMixin, UserMixin, ListFilterMixin):
+class UserQuickFiles(
+    JSONAPIBaseView, generics.ListAPIView, WaterButlerMixin, UserMixin, ListFilterMixin,
+):
 
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
     )
 
-    ordering = ('-last_touched')
+    ordering = '-last_touched'
 
     required_read_scopes = [CoreScopes.USERS_READ]
     required_write_scopes = [CoreScopes.USERS_WRITE]
@@ -381,7 +451,9 @@ class UserQuickFiles(JSONAPIBaseView, generics.ListAPIView, WaterButlerMixin, Us
     view_name = 'user-quickfiles'
 
     def get_node(self, check_object_permissions):
-        return QuickFilesNode.objects.get_for_user(self.get_user(check_permissions=False))
+        return QuickFilesNode.objects.get_for_user(
+            self.get_user(check_permissions=False),
+        )
 
     def get_default_queryset(self):
         self.kwargs[self.path_lookup_url_kwarg] = '/'
@@ -395,7 +467,9 @@ class UserQuickFiles(JSONAPIBaseView, generics.ListAPIView, WaterButlerMixin, Us
         return self.get_queryset_from_request()
 
 
-class UserPreprints(JSONAPIBaseView, generics.ListAPIView, UserMixin, PreprintFilterMixin):
+class UserPreprints(
+    JSONAPIBaseView, generics.ListAPIView, UserMixin, PreprintFilterMixin,
+):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/users_preprints_list).
     """
 
@@ -404,7 +478,7 @@ class UserPreprints(JSONAPIBaseView, generics.ListAPIView, UserMixin, PreprintFi
         base_permissions.TokenHasScope,
     )
 
-    ordering = ('-created')
+    ordering = '-created'
     model_class = AbstractNode
 
     required_read_scopes = [CoreScopes.USERS_READ, CoreScopes.NODE_PREPRINTS_READ]
@@ -423,7 +497,9 @@ class UserPreprints(JSONAPIBaseView, generics.ListAPIView, UserMixin, PreprintFi
         target_user = self.get_user(check_permissions=False)
 
         # Permissions on the list objects are handled by the query
-        default_qs = Preprint.objects.filter(_contributors__guids___id=target_user._id).exclude(machine_state='initial')
+        default_qs = Preprint.objects.filter(
+            _contributors__guids___id=target_user._id,
+        ).exclude(machine_state='initial')
         return self.preprints_queryset(default_qs, auth_user, allow_contribs=False)
 
     def get_queryset(self):
@@ -433,6 +509,7 @@ class UserPreprints(JSONAPIBaseView, generics.ListAPIView, UserMixin, PreprintFi
 class UserInstitutions(JSONAPIBaseView, generics.ListAPIView, UserMixin):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/users_institutions_list).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -445,7 +522,7 @@ class UserInstitutions(JSONAPIBaseView, generics.ListAPIView, UserMixin):
     view_category = 'users'
     view_name = 'user-institutions'
 
-    ordering = ('-pk', )
+    ordering = ('-pk',)
 
     def get_default_odm_query(self):
         return None
@@ -455,9 +532,12 @@ class UserInstitutions(JSONAPIBaseView, generics.ListAPIView, UserMixin):
         return user.affiliated_institutions.all()
 
 
-class UserRegistrations(JSONAPIBaseView, generics.ListAPIView, UserMixin, NodesFilterMixin):
+class UserRegistrations(
+    JSONAPIBaseView, generics.ListAPIView, UserMixin, NodesFilterMixin,
+):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/users_registrations_list).
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -466,7 +546,10 @@ class UserRegistrations(JSONAPIBaseView, generics.ListAPIView, UserMixin, NodesF
     model_class = Registration
 
     required_read_scopes = [CoreScopes.USERS_READ, CoreScopes.NODE_REGISTRATIONS_READ]
-    required_write_scopes = [CoreScopes.USERS_WRITE, CoreScopes.NODE_REGISTRATIONS_WRITE]
+    required_write_scopes = [
+        CoreScopes.USERS_WRITE,
+        CoreScopes.NODE_REGISTRATIONS_WRITE,
+    ]
 
     serializer_class = RegistrationSerializer
     view_category = 'users'
@@ -478,13 +561,20 @@ class UserRegistrations(JSONAPIBaseView, generics.ListAPIView, UserMixin, NodesF
     def get_default_queryset(self):
         user = self.get_user()
         current_user = self.request.user
-        qs = default_node_list_permission_queryset(user=current_user, model_cls=Registration)
+        qs = default_node_list_permission_queryset(
+            user=current_user, model_cls=Registration,
+        )
         # OSF group members not copied to registration.  Only registration contributors need to be checked here.
         return qs.filter(contributor__user__id=user.id)
 
     # overrides ListAPIView
     def get_queryset(self):
-        return self.get_queryset_from_request().select_related('node_license').include('contributor__user__guids', 'root__guids', limit_includes=10)
+        return (
+            self.get_queryset_from_request()
+            .select_related('node_license')
+            .include('contributor__user__guids', 'root__guids', limit_includes=10)
+        )
+
 
 class UserDraftRegistrations(JSONAPIBaseView, generics.ListAPIView, UserMixin):
     permission_classes = (
@@ -493,8 +583,14 @@ class UserDraftRegistrations(JSONAPIBaseView, generics.ListAPIView, UserMixin):
         CurrentUser,
     )
 
-    required_read_scopes = [CoreScopes.USERS_READ, CoreScopes.NODE_DRAFT_REGISTRATIONS_READ]
-    required_write_scopes = [CoreScopes.USERS_WRITE, CoreScopes.NODE_DRAFT_REGISTRATIONS_WRITE]
+    required_read_scopes = [
+        CoreScopes.USERS_READ,
+        CoreScopes.NODE_DRAFT_REGISTRATIONS_READ,
+    ]
+    required_write_scopes = [
+        CoreScopes.USERS_WRITE,
+        CoreScopes.NODE_DRAFT_REGISTRATIONS_WRITE,
+    ]
 
     serializer_class = DraftRegistrationLegacySerializer
     view_category = 'users'
@@ -506,10 +602,14 @@ class UserDraftRegistrations(JSONAPIBaseView, generics.ListAPIView, UserMixin):
         user = self.get_user()
         # Returns DraftRegistrations for which the user is a contributor, and the user can view
         drafts = user.draft_registrations_active
-        return get_objects_for_user(user, 'read_draft_registration', drafts, with_superuser=False)
+        return get_objects_for_user(
+            user, 'read_draft_registration', drafts, with_superuser=False,
+        )
 
 
-class UserInstitutionsRelationship(JSONAPIBaseView, generics.RetrieveDestroyAPIView, UserMixin):
+class UserInstitutionsRelationship(
+    JSONAPIBaseView, generics.RetrieveDestroyAPIView, UserMixin,
+):
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -520,7 +620,10 @@ class UserInstitutionsRelationship(JSONAPIBaseView, generics.RetrieveDestroyAPIV
     required_write_scopes = [CoreScopes.USERS_WRITE]
 
     serializer_class = UserInstitutionsRelationshipSerializer
-    parser_classes = (JSONAPIRelationshipParser, JSONAPIRelationshipParserForRegularJSON, )
+    parser_classes = (
+        JSONAPIRelationshipParser,
+        JSONAPIRelationshipParserForRegularJSON,
+    )
 
     view_category = 'users'
     view_name = 'user-institutions-relationship'
@@ -537,7 +640,9 @@ class UserInstitutionsRelationship(JSONAPIBaseView, generics.RetrieveDestroyAPIV
     def perform_destroy(self, instance):
         data = self.request.data['data']
         user = self.request.user
-        current_institutions = set(user.affiliated_institutions.values_list('_id', flat=True))
+        current_institutions = set(
+            user.affiliated_institutions.values_list('_id', flat=True),
+        )
 
         # DELETEs normally dont get type checked
         # not the best way to do it, should be enforced everywhere, maybe write a test for it
@@ -554,6 +659,7 @@ class UserIdentitiesList(JSONAPIBaseView, generics.ListAPIView, UserMixin):
     """
     The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/external_identities_list).
     """
+
     permission_classes = (
         base_permissions.TokenHasScope,
         drf_permissions.IsAuthenticatedOrReadOnly,
@@ -573,7 +679,13 @@ class UserIdentitiesList(JSONAPIBaseView, generics.ListAPIView, UserMixin):
         user = self.get_user()
         identities = []
         for key, value in user.external_identity.items():
-            identities.append({'_id': key, 'external_id': list(value.keys())[0], 'status': list(value.values())[0]})
+            identities.append(
+                {
+                    '_id': key,
+                    'external_id': list(value.keys())[0],
+                    'status': list(value.values())[0],
+                },
+            )
 
         return identities
 
@@ -582,6 +694,7 @@ class UserIdentitiesDetail(JSONAPIBaseView, generics.RetrieveDestroyAPIView, Use
     """
     The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/external_identities_detail).
     """
+
     permission_classes = (
         base_permissions.TokenHasScope,
         drf_permissions.IsAuthenticatedOrReadOnly,
@@ -604,7 +717,11 @@ class UserIdentitiesDetail(JSONAPIBaseView, generics.RetrieveDestroyAPIView, Use
         except KeyError:
             raise NotFound('Requested external identity could not be found.')
 
-        return {'_id': identity_id, 'external_id': list(identity.keys())[0], 'status': list(identity.values())[0]}
+        return {
+            '_id': identity_id,
+            'external_id': list(identity.keys())[0],
+            'status': list(identity.values())[0],
+        }
 
     def perform_destroy(self, instance):
         user = self.get_user()
@@ -631,7 +748,12 @@ class UserAccountExport(JSONAPIBaseView, generics.CreateAPIView, UserMixin):
     view_name = 'user-account-export'
 
     serializer_class = UserAccountExportSerializer
-    throttle_classes = [UserRateThrottle, NonCookieAuthThrottle, BurstRateThrottle, SendEmailThrottle]
+    throttle_classes = [
+        UserRateThrottle,
+        NonCookieAuthThrottle,
+        BurstRateThrottle,
+        SendEmailThrottle,
+    ]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -671,14 +793,24 @@ class UserChangePassword(JSONAPIBaseView, generics.CreateAPIView, UserMixin):
         new_password = request.data['new_password']
 
         # It has been more than 1 hour since last invalid attempt to change password. Reset the counter for invalid attempts.
-        if throttle_period_expired(user.change_password_last_attempt, settings.TIME_RESET_CHANGE_PASSWORD_ATTEMPTS):
+        if throttle_period_expired(
+            user.change_password_last_attempt,
+            settings.TIME_RESET_CHANGE_PASSWORD_ATTEMPTS,
+        ):
             user.reset_old_password_invalid_attempts()
 
         # There have been more than 3 failed attempts and throttle hasn't expired.
-        if user.old_password_invalid_attempts >= settings.INCORRECT_PASSWORD_ATTEMPTS_ALLOWED and not throttle_period_expired(
-            user.change_password_last_attempt, settings.CHANGE_PASSWORD_THROTTLE,
+        if (
+            user.old_password_invalid_attempts
+            >= settings.INCORRECT_PASSWORD_ATTEMPTS_ALLOWED
+            and not throttle_period_expired(
+                user.change_password_last_attempt, settings.CHANGE_PASSWORD_THROTTLE,
+            )
         ):
-            time_since_throttle = (timezone.now() - user.change_password_last_attempt.replace(tzinfo=pytz.utc)).total_seconds()
+            time_since_throttle = (
+                timezone.now()
+                - user.change_password_last_attempt.replace(tzinfo=pytz.utc)
+            ).total_seconds()
             wait_time = settings.CHANGE_PASSWORD_THROTTLE - time_since_throttle
             raise Throttled(wait=wait_time)
 
@@ -709,7 +841,7 @@ class UserSettings(JSONAPIBaseView, generics.RetrieveUpdateAPIView, UserMixin):
 
     required_read_scopes = [CoreScopes.USER_SETTINGS_READ]
     required_write_scopes = [CoreScopes.USER_SETTINGS_WRITE]
-    throttle_classes = (SendEmailDeactivationThrottle, )
+    throttle_classes = (SendEmailDeactivationThrottle,)
 
     view_category = 'users'
     view_name = 'user_settings'
@@ -734,7 +866,9 @@ class ClaimUser(JSONAPIBaseView, generics.CreateAPIView, UserMixin):
     )
 
     required_read_scopes = [CoreScopes.NULL]  # Tokens should not be able to access this
-    required_write_scopes = [CoreScopes.NULL]  # Tokens should not be able to access this
+    required_write_scopes = [
+        CoreScopes.NULL,
+    ]  # Tokens should not be able to access this
 
     view_category = 'users'
     view_name = 'claim-user'
@@ -750,6 +884,7 @@ class ClaimUser(JSONAPIBaseView, generics.CreateAPIView, UserMixin):
         """
         from website.app import app
         from website.routes import make_url_map
+
         try:
             make_url_map(app)
         except AssertionError:
@@ -780,7 +915,11 @@ class ClaimUser(JSONAPIBaseView, generics.CreateAPIView, UserMixin):
         try:
             unclaimed_record = claimed_user.unclaimed_records[record_referent._id]
         except KeyError:
-            if isinstance(record_referent, Preprint) and record_referent.node and record_referent.node._id in claimed_user.unclaimed_records:
+            if (
+                isinstance(record_referent, Preprint)
+                and record_referent.node
+                and record_referent.node._id in claimed_user.unclaimed_records
+            ):
                 record_referent = record_referent.node
                 unclaimed_record = claimed_user.unclaimed_records[record_referent._id]
             else:
@@ -790,16 +929,26 @@ class ClaimUser(JSONAPIBaseView, generics.CreateAPIView, UserMixin):
             claimer = get_user(email=email)
             try:
                 if claimer and claimer.is_registered:
-                    self._send_claim_email(claimer, claimed_user, record_referent, registered=True)
+                    self._send_claim_email(
+                        claimer, claimed_user, record_referent, registered=True,
+                    )
                 else:
-                    self._send_claim_email(email, claimed_user, record_referent, notify=True, registered=False)
+                    self._send_claim_email(
+                        email,
+                        claimed_user,
+                        record_referent,
+                        notify=True,
+                        registered=False,
+                    )
             except HTTPError as e:
                 raise ValidationError(e.data['message_long'])
         elif isinstance(claimer, OSFUser):
             if unclaimed_record.get('referrer_id', '') == claimer._id:
                 raise ValidationError('Referrer cannot claim user.')
             try:
-                self._send_claim_email(claimer, claimed_user, record_referent, registered=True)
+                self._send_claim_email(
+                    claimer, claimed_user, record_referent, registered=True,
+                )
             except HTTPError as e:
                 raise ValidationError(e.data['message_long'])
 
@@ -808,7 +957,13 @@ class ClaimUser(JSONAPIBaseView, generics.CreateAPIView, UserMixin):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class UserEmailsList(JSONAPIBaseView, generics.ListAPIView, generics.CreateAPIView, UserMixin, ListFilterMixin):
+class UserEmailsList(
+    JSONAPIBaseView,
+    generics.ListAPIView,
+    generics.CreateAPIView,
+    UserMixin,
+    ListFilterMixin,
+):
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -818,7 +973,12 @@ class UserEmailsList(JSONAPIBaseView, generics.ListAPIView, generics.CreateAPIVi
     required_read_scopes = [CoreScopes.USER_SETTINGS_READ]
     required_write_scopes = [CoreScopes.USER_SETTINGS_WRITE]
 
-    throttle_classes = [UserRateThrottle, NonCookieAuthThrottle, BurstRateThrottle, SendEmailThrottle]
+    throttle_classes = [
+        UserRateThrottle,
+        NonCookieAuthThrottle,
+        BurstRateThrottle,
+        SendEmailThrottle,
+    ]
 
     view_category = 'users'
     view_name = 'user-emails'
@@ -831,7 +991,13 @@ class UserEmailsList(JSONAPIBaseView, generics.ListAPIView, generics.CreateAPIVi
         for email in user.emails.all():
             primary = email.address == user.username
             hashed_id = hashids.encode(email.id)
-            serialized_email = UserEmail(email_id=hashed_id, address=email.address, confirmed=True, verified=True, primary=primary)
+            serialized_email = UserEmail(
+                email_id=hashed_id,
+                address=email.address,
+                confirmed=True,
+                verified=True,
+                primary=primary,
+            )
             serialized_emails.append(serialized_email)
         email_verifications = user.email_verifications or {}
         for token, detail in email_verifications.items():
@@ -853,7 +1019,9 @@ class UserEmailsList(JSONAPIBaseView, generics.ListAPIView, generics.CreateAPIVi
         return self.get_queryset_from_request()
 
 
-class UserEmailsDetail(JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView, UserMixin):
+class UserEmailsDetail(
+    JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView, UserMixin,
+):
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -904,14 +1072,25 @@ class UserEmailsDetail(JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView, U
             raise NotFound
 
         # check for resend confirmation email query parameter in a GET request
-        if self.request.method == 'GET' and is_truthy(self.request.query_params.get('resend_confirmation')):
+        if self.request.method == 'GET' and is_truthy(
+            self.request.query_params.get('resend_confirmation'),
+        ):
             if not confirmed and settings.CONFIRM_REGISTRATIONS_BY_EMAIL:
-                if throttle_period_expired(user.email_last_sent, settings.SEND_EMAIL_THROTTLE):
+                if throttle_period_expired(
+                    user.email_last_sent, settings.SEND_EMAIL_THROTTLE,
+                ):
                     send_confirm_email(user, email=address, renew=True)
                     user.email_last_sent = timezone.now()
                     user.save()
 
-        return UserEmail(email_id=email_id, address=address, confirmed=confirmed, verified=verified, primary=primary, is_merge=is_merge)
+        return UserEmail(
+            email_id=email_id,
+            address=address,
+            confirmed=confirmed,
+            verified=verified,
+            primary=primary,
+            is_merge=is_merge,
+        )
 
     def get(self, request, *args, **kwargs):
         response = super(UserEmailsDetail, self).get(request, *args, **kwargs)

@@ -14,15 +14,17 @@ USER_REGEX = re.compile(
     r"(^[-!#$%&'*+/=?^_`{}|~0-9A-Z]+(\.[-!#$%&'*+/=?^_`{}|~0-9A-Z]+)*$"  # dot-atom
     # quoted-string
     r'|^"([\001-\010\013\014\016-\037!#-\[\]-\177]'
-    r'|\\[\001-\011\013\014\016-\177])*"$)', re.IGNORECASE)
+    r'|\\[\001-\011\013\014\016-\177])*"$)',
+    re.IGNORECASE,
+)
 
 DOMAIN_REGEX = re.compile(
     # domain
-    r'(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+'
-    r'(?:[A-Z]{2,6}|[A-Z0-9-]{2,})$'
+    r'(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+' r'(?:[A-Z]{2,6}|[A-Z0-9-]{2,})$'
     # literal form, ipv4 address (SMTP 4.1.3)
-    r'|^\[(25[0-5]|2[0-4]\d|[0-1]?\d?\d)'
-    r'(\.(25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3}\]$', re.IGNORECASE)
+    r'|^\[(25[0-5]|2[0-4]\d|[0-1]?\d?\d)' r'(\.(25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3}\]$',
+    re.IGNORECASE,
+)
 
 
 def validate_email(email):
@@ -91,6 +93,7 @@ def privacy_info_handle(info, anonymous, name=False):
 
 def ensure_external_identity_uniqueness(provider, identity, user=None):
     from osf.models import OSFUser
+
     users_with_identity = OSFUser.objects.filter(
         **{'external_identity__{}__{}__isnull'.format(provider, identity): False}
     )
@@ -103,7 +106,9 @@ def ensure_external_identity_uniqueness(provider, identity, user=None):
                 if user.external_identity[provider] == {}:
                     user.external_identity.pop(provider)
                 user.save()  # Note: This won't work in v2 because it rolls back transactions when status >= 400
-            raise ValidationError('Another user has already claimed this external identity')
+            raise ValidationError(
+                'Another user has already claimed this external identity'
+            )
         existing_user.external_identity[provider].pop(identity)
         if existing_user.external_identity[provider] == {}:
             existing_user.external_identity.pop(provider)

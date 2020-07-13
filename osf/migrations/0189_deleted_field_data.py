@@ -35,7 +35,7 @@ class Migration(migrations.Migration):
             migrations.RunSQL(FORWARD_INSTITUTION, REVERSE_INSTITUTION),
             migrations.RunSQL(FORWARD_ABSTRACT_NODE, REVERSE_ABSTRACT_NODE),
             migrations.RunSQL(FORWARD_PRIVATE_LINK, REVERSE_PRIVATE_LINK),
-            migrations.RunSQL(FORWARD_COMMENT, REVERSE_COMMENT)
+            migrations.RunSQL(FORWARD_COMMENT, REVERSE_COMMENT),
         ]
     else:
         operations = []

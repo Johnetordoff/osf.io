@@ -6,7 +6,6 @@ from osf.models.licenses import NodeLicense
 
 @pytest.mark.django_db
 class TestLicenseList:
-
     def test_license_list(self, app):
         licenses = NodeLicense.objects.project_licenses()
         license_node = licenses[0]
@@ -22,8 +21,7 @@ class TestLicenseList:
         assert total == licenses.count()
 
         # test_license_list_name_filter
-        url = '/{}licenses/?filter[name]={}'.format(
-            API_BASE, license_node.name)
+        url = '/{}licenses/?filter[name]={}'.format(API_BASE, license_node.name)
         res = app.get(url)
         data = res.json['data'][0]
         assert data['attributes']['name'] == license_node.name

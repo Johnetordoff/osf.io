@@ -43,9 +43,15 @@ def configure_subscription(auth):
     path = json_data.get('path')
     provider = json_data.get('provider')
 
-    if not event or (notification_type not in NOTIFICATION_TYPES and notification_type != 'adopt_parent'):
-        raise HTTPError(http_status.HTTP_400_BAD_REQUEST, data=dict(
-            message_long='Must provide an event and notification type for subscription.')
+    if not event or (
+        notification_type not in NOTIFICATION_TYPES
+        and notification_type != 'adopt_parent'
+    ):
+        raise HTTPError(
+            http_status.HTTP_400_BAD_REQUEST,
+            data=dict(
+                message_long='Must provide an event and notification type for subscription.'
+            ),
         )
 
     node = AbstractNode.load(target_id)
@@ -65,18 +71,26 @@ def configure_subscription(auth):
 
         if notification_type == 'adopt_parent':
             sentry.log_message(
-                '{!r} attempted to adopt_parent of a none node id, {}'.format(user, target_id)
+                '{!r} attempted to adopt_parent of a none node id, {}'.format(
+                    user, target_id
+                )
             )
             raise HTTPError(http_status.HTTP_400_BAD_REQUEST)
         owner = user
     else:
         if not node.has_permission(user, READ):
-            sentry.log_message('{!r} attempted to subscribe to private node, {}'.format(user, target_id))
+            sentry.log_message(
+                '{!r} attempted to subscribe to private node, {}'.format(
+                    user, target_id
+                )
+            )
             raise HTTPError(http_status.HTTP_403_FORBIDDEN)
 
         if isinstance(node, Registration):
             sentry.log_message(
-                '{!r} attempted to subscribe to registration, {}'.format(user, target_id)
+                '{!r} attempted to subscribe to registration, {}'.format(
+                    user, target_id
+                )
             )
             raise HTTPError(http_status.HTTP_400_BAD_REQUEST)
 
@@ -105,7 +119,9 @@ def configure_subscription(auth):
     subscription = NotificationSubscription.load(event_id)
 
     if not subscription:
-        subscription = NotificationSubscription(_id=event_id, owner=owner, event_name=event)
+        subscription = NotificationSubscription(
+            _id=event_id, owner=owner, event_name=event
+        )
         subscription.save()
 
     if node and node._id not in user.notifications_configured:
@@ -116,4 +132,8 @@ def configure_subscription(auth):
 
     subscription.save()
 
-    return {'message': 'Successfully subscribed to {} list on {}'.format(notification_type, event_id)}
+    return {
+        'message': 'Successfully subscribed to {} list on {}'.format(
+            notification_type, event_id
+        )
+    }

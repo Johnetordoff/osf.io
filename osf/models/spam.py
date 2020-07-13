@@ -21,21 +21,26 @@ def _get_client():
     return akismet.AkismetClient(
         apikey=settings.AKISMET_APIKEY,
         website=settings.DOMAIN,
-        verify=bool(settings.AKISMET_APIKEY)
+        verify=bool(settings.AKISMET_APIKEY),
     )
 
 
 def _validate_reports(value, *args, **kwargs):
     from osf.models import OSFUser
+
     for key, val in value.items():
         if not OSFUser.load(key):
             raise ValidationValueError('Keys must be user IDs')
         if not isinstance(val, dict):
             raise ValidationTypeError('Values must be dictionaries')
-        if ('category' not in val or 'text' not in val or 'date' not in val or 'retracted' not in val):
+        if (
+            'category' not in val
+            or 'text' not in val
+            or 'date' not in val
+            or 'retracted' not in val
+        ):
             raise ValidationValueError(
-                ('Values must include `date`, `category`, ',
-                 '`text`, `retracted` keys')
+                ('Values must include `date`, `category`, ', '`text`, `retracted` keys')
             )
 
 
@@ -57,7 +62,9 @@ class SpamMixin(models.Model):
     # SPAM_UPDATE_FIELDS = {
     #     'spam_status',
     # }
-    spam_status = models.IntegerField(default=SpamStatus.UNKNOWN, null=True, blank=True, db_index=True)
+    spam_status = models.IntegerField(
+        default=SpamStatus.UNKNOWN, null=True, blank=True, db_index=True
+    )
     spam_pro_tip = models.CharField(default=None, null=True, blank=True, max_length=200)
     # Data representing the original spam indication
     # - author: author name
@@ -68,7 +75,9 @@ class SpamMixin(models.Model):
     #   - User-Agent: user agent from request
     #   - Referer: referrer header from request (typo +1, rtd)
     spam_data = DateTimeAwareJSONField(default=dict, blank=True)
-    date_last_reported = NonNaiveDateTimeField(default=None, null=True, blank=True, db_index=True)
+    date_last_reported = NonNaiveDateTimeField(
+        default=None, null=True, blank=True, db_index=True
+    )
 
     # Reports is a dict of reports keyed on reporting user
     # Each report is a dictionary including:
@@ -145,8 +154,9 @@ class SpamMixin(models.Model):
     def confirm_ham(self, save=False):
         # not all mixins will implement check spam pre-req, only submit ham when it was incorrectly flagged
         if (
-            settings.SPAM_CHECK_ENABLED and
-            self.spam_data and self.spam_status in [SpamStatus.FLAGGED, SpamStatus.SPAM]
+            settings.SPAM_CHECK_ENABLED
+            and self.spam_data
+            and self.spam_status in [SpamStatus.FLAGGED, SpamStatus.SPAM]
         ):
             client = _get_client()
             client.submit_ham(
@@ -165,8 +175,9 @@ class SpamMixin(models.Model):
     def confirm_spam(self, save=False):
         # not all mixins will implement check spam pre-req, only submit spam when it was incorrectly flagged
         if (
-            settings.SPAM_CHECK_ENABLED and
-            self.spam_data and self.spam_status in [SpamStatus.UNKNOWN, SpamStatus.HAM]
+            settings.SPAM_CHECK_ENABLED
+            and self.spam_data
+            and self.spam_status in [SpamStatus.UNKNOWN, SpamStatus.HAM]
         ):
             client = _get_client()
             client.submit_spam(
@@ -187,7 +198,9 @@ class SpamMixin(models.Model):
         """Must return is_spam"""
         pass
 
-    def do_check_spam(self, author, author_email, content, request_headers, update=True):
+    def do_check_spam(
+        self, author, author_email, content, request_headers, update=True
+    ):
         if self.spam_status == SpamStatus.HAM:
             return False
         if self.is_spammy:
@@ -203,7 +216,7 @@ class SpamMixin(models.Model):
             referrer=referer,
             comment_content=content,
             comment_author=author,
-            comment_author_email=author_email
+            comment_author_email=author_email,
         )
 
         if update:

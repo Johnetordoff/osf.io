@@ -9,7 +9,6 @@ pytestmark = pytest.mark.django_db
 
 
 class TestCore(unittest.TestCase):
-
     def setUp(self):
 
         super(TestCore, self).setUp()

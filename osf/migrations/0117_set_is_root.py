@@ -7,11 +7,15 @@ from django.db import migrations
 
 def set_is_root(state, *args, **kwargs):
     OsfStorageFolder = state.get_model('osf', 'osfstoragefolder')
-    OsfStorageFolder.objects.filter(nodesettings__isnull=False, is_root__isnull=True).update(is_root=True)
+    OsfStorageFolder.objects.filter(
+        nodesettings__isnull=False, is_root__isnull=True
+    ).update(is_root=True)
 
 
 def unset_is_root(state, *args, **kwargs):
-    state.get_model('osf', 'osfstoragefolder').objects.filter(is_root=True).update(is_root=None)
+    state.get_model('osf', 'osfstoragefolder').objects.filter(is_root=True).update(
+        is_root=None
+    )
 
 
 class Migration(migrations.Migration):
@@ -20,6 +24,4 @@ class Migration(migrations.Migration):
         ('osf', '0116_merge_20180706_0901'),
     ]
 
-    operations = [
-        migrations.RunPython(set_is_root, unset_is_root)
-    ]
+    operations = [migrations.RunPython(set_is_root, unset_is_root)]

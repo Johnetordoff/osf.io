@@ -16,6 +16,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='preprintservice',
             name='preprint_doi_created',
-            field=osf.utils.fields.NonNaiveDateTimeField(blank=True, default=None, null=True),
+            field=osf.utils.fields.NonNaiveDateTimeField(
+                blank=True, default=None, null=True
+            ),
         ),
     ]

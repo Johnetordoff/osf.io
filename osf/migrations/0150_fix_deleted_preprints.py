@@ -9,30 +9,29 @@ import pytz
 
 dummy_datetime = dt.datetime(1970, 1, 1, tzinfo=pytz.UTC)
 
+
 def forward(state, *args, **kwargs):
     Preprint = state.get_model('osf', 'Preprint')
     with connection.cursor() as cursor:
-        cursor.execute("""
+        cursor.execute(
+            """
         SELECT applied FROM django_migrations
         WHERE name = '0136_preprint_node_divorce'
         AND app = 'osf'
-        """)
+        """
+        )
         npd_release_date = cursor.fetchone()[0]
-    preprints = (
-        Preprint.objects
-        .filter(created__lt=npd_release_date)
-        .filter(node__is_deleted=True, deleted__isnull=True)
+    preprints = Preprint.objects.filter(created__lt=npd_release_date).filter(
+        node__is_deleted=True, deleted__isnull=True
     )
     preprints.update(deleted=dummy_datetime)
 
 
 def backward(state, *args, **kwargs):
     Preprint = state.get_model('osf', 'Preprint')
-    preprints = (
-        Preprint.objects
-        .filter(deleted=dummy_datetime)
-    )
+    preprints = Preprint.objects.filter(deleted=dummy_datetime)
     preprints.update(deleted=None)
+
 
 class Migration(migrations.Migration):
 
@@ -40,6 +39,4 @@ class Migration(migrations.Migration):
         ('osf', '0149_add_datacite_doi_switch'),
     ]
 
-    operations = [
-        migrations.RunPython(forward, backward)
-    ]
+    operations = [migrations.RunPython(forward, backward)]

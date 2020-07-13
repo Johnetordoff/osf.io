@@ -17,8 +17,13 @@ def connect_s3(access_key=None, secret_key=None, node_settings=None):
     """
     if node_settings is not None:
         if node_settings.external_account is not None:
-            access_key, secret_key = node_settings.external_account.oauth_key, node_settings.external_account.oauth_secret
-    connection = S3Connection(access_key, secret_key, calling_format=OrdinaryCallingFormat())
+            access_key, secret_key = (
+                node_settings.external_account.oauth_key,
+                node_settings.external_account.oauth_secret,
+            )
+    connection = S3Connection(
+        access_key, secret_key, calling_format=OrdinaryCallingFormat()
+    )
     return connection
 
 
@@ -46,12 +51,17 @@ def validate_bucket_name(name):
     validate_name = re.compile('^' + label + '(?:\\.' + label + ')*$')
     is_ip_address = re.compile(r'^[0-9]+(?:\.[0-9]+){3}$')
     return (
-        len(name) >= 3 and len(name) <= 63 and bool(validate_name.match(name)) and not bool(is_ip_address.match(name))
+        len(name) >= 3
+        and len(name) <= 63
+        and bool(validate_name.match(name))
+        and not bool(is_ip_address.match(name))
     )
 
 
 def create_bucket(node_settings, bucket_name, location=''):
-    return connect_s3(node_settings=node_settings).create_bucket(bucket_name, location=location)
+    return connect_s3(node_settings=node_settings).create_bucket(
+        bucket_name, location=location
+    )
 
 
 def bucket_exists(access_key, secret_key, bucket_name):
@@ -92,6 +102,7 @@ def can_list(access_key, secret_key):
         return False
     return True
 
+
 def get_user_info(access_key, secret_key):
     """Returns an S3 User with .display_name and .id, or None
     """
@@ -103,6 +114,7 @@ def get_user_info(access_key, secret_key):
     except exception.S3ResponseError:
         return None
     return None
+
 
 def get_bucket_location_or_error(access_key, secret_key, bucket_name):
     """Returns the location of a bucket or raises AddonError
@@ -119,6 +131,10 @@ def get_bucket_location_or_error(access_key, secret_key, bucket_name):
 
     try:
         # Will raise an exception if bucket_name doesn't exist
-        return connect_s3(access_key, secret_key).get_bucket(bucket_name, validate=False).get_location()
+        return (
+            connect_s3(access_key, secret_key)
+            .get_bucket(bucket_name, validate=False)
+            .get_location()
+        )
     except exception.S3ResponseError:
         raise InvalidFolderError()

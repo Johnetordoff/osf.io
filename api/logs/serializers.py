@@ -22,10 +22,12 @@ class NodeLogIdentifiersSerializer(RestrictedDictSerializer):
     doi = ser.CharField(read_only=True)
     ark = ser.CharField(read_only=True)
 
+
 class NodeLogInstitutionSerializer(RestrictedDictSerializer):
 
     id = ser.CharField(read_only=True)
     name = ser.CharField(read_only=True)
+
 
 class NodeLogFileParamsSerializer(RestrictedDictSerializer):
 
@@ -38,13 +40,16 @@ class NodeLogFileParamsSerializer(RestrictedDictSerializer):
     def get_node_title(self, obj):
         user = self.context['request'].user
         node_title = obj['node']['title']
-        node = AbstractNode.load(obj['node']['_id']) or Preprint.load(obj['node']['_id'])
+        node = AbstractNode.load(obj['node']['_id']) or Preprint.load(
+            obj['node']['_id'],
+        )
         if not user.is_authenticated:
             if node.is_public:
                 return node_title
         elif node.has_permission(user, osf_permissions.READ):
             return node_title
         return 'Private Component'
+
 
 class NodeLogParamsSerializer(RestrictedDictSerializer):
 
@@ -115,7 +120,9 @@ class NodeLogParamsSerializer(RestrictedDictSerializer):
     def get_params_project(self, obj):
         project_id = obj.get('project', None)
         if project_id:
-            node = AbstractNode.objects.filter(guids___id=project_id).values('title').get()
+            node = (
+                AbstractNode.objects.filter(guids___id=project_id).values('title').get()
+            )
             return {'id': project_id, 'title': node['title']}
         return None
 
@@ -123,9 +130,14 @@ class NodeLogParamsSerializer(RestrictedDictSerializer):
         user = self.context['request'].user
         pointer = obj.get('pointer', None)
         if pointer:
-            pointer_node = AbstractNode.objects.get(guids___id=pointer['id'], guids___id__isnull=False)
+            pointer_node = AbstractNode.objects.get(
+                guids___id=pointer['id'], guids___id__isnull=False,
+            )
             if not pointer_node.is_deleted:
-                if pointer_node.is_public or (user.is_authenticated and pointer_node.has_permission(user, osf_permissions.READ)):
+                if pointer_node.is_public or (
+                    user.is_authenticated
+                    and pointer_node.has_permission(user, osf_permissions.READ)
+                ):
                     pointer['title'] = pointer_node.title
                     return pointer
         return None
@@ -141,48 +153,61 @@ class NodeLogParamsSerializer(RestrictedDictSerializer):
         params_node = obj.get('node', None)
 
         if contributor_data:
-            contributor_ids = [each for each in contributor_data if isinstance(each, basestring)]
+            contributor_ids = [
+                each for each in contributor_data if isinstance(each, basestring)
+            ]
             # Very old logs may contain contributror data with dictionaries for non-registered contributors,
             # e.g. {'nr_email': 'foo@bar.com', 'nr_name': 'Foo Bar'}
-            non_registered_contributor_data = [each for each in contributor_data if isinstance(each, dict)]
+            non_registered_contributor_data = [
+                each for each in contributor_data if isinstance(each, dict)
+            ]
 
             users = (
                 OSFUser.objects.filter(guids___id__in=contributor_ids)
                 .only(
-                    'fullname', 'given_name',
-                    'middle_names', 'family_name',
-                    'unclaimed_records', 'is_active',
+                    'fullname',
+                    'given_name',
+                    'middle_names',
+                    'family_name',
+                    'unclaimed_records',
+                    'is_active',
                 )
                 .order_by('fullname')
             )
             for user in users:
                 unregistered_name = None
                 if user.unclaimed_records.get(params_node):
-                    unregistered_name = user.unclaimed_records[params_node].get('name', None)
+                    unregistered_name = user.unclaimed_records[params_node].get(
+                        'name', None,
+                    )
 
-                contributor_info.append({
-                    'id': user._id,
-                    'full_name': user.fullname,
-                    'given_name': user.given_name,
-                    'middle_names': user.middle_names,
-                    'family_name': user.family_name,
-                    'unregistered_name': unregistered_name,
-                    'active': user.is_active,
-                })
+                contributor_info.append(
+                    {
+                        'id': user._id,
+                        'full_name': user.fullname,
+                        'given_name': user.given_name,
+                        'middle_names': user.middle_names,
+                        'family_name': user.family_name,
+                        'unregistered_name': unregistered_name,
+                        'active': user.is_active,
+                    },
+                )
 
             # Add unregistered contributor data
             for nr_contrib in non_registered_contributor_data:
                 full_name = nr_contrib.get('nr_name', '')
                 guessed_names = impute_names_model(full_name)
-                contributor_info.append({
-                    'id': None,
-                    'full_name': full_name,
-                    'unregistered_name': full_name,
-                    'given_name': guessed_names['given_name'],
-                    'middle_names': guessed_names['middle_names'],
-                    'family_name': guessed_names['family_name'],
-                    'active': False,
-                })
+                contributor_info.append(
+                    {
+                        'id': None,
+                        'full_name': full_name,
+                        'unregistered_name': full_name,
+                        'given_name': guessed_names['given_name'],
+                        'middle_names': guessed_names['middle_names'],
+                        'family_name': guessed_names['family_name'],
+                        'active': False,
+                    },
+                )
 
         return contributor_info
 
@@ -194,6 +219,7 @@ class NodeLogParamsSerializer(RestrictedDictSerializer):
                 provider = preprint.provider
                 return {'url': provider.external_url, 'name': provider.name}
         return None
+
 
 class NodeLogSerializer(JSONAPISerializer):
 
@@ -214,18 +240,21 @@ class NodeLogSerializer(JSONAPISerializer):
         type_ = 'logs'
 
     node = RelationshipField(
-        related_view=lambda n: 'registrations:registration-detail' if getattr(n, 'is_registration', False) else 'nodes:node-detail',
+        related_view=lambda n: 'registrations:registration-detail'
+        if getattr(n, 'is_registration', False)
+        else 'nodes:node-detail',
         related_view_kwargs={'node_id': '<node._id>'},
     )
 
     original_node = RelationshipField(
-        related_view=lambda n: 'registrations:registration-detail' if getattr(n, 'is_registration', False) else 'nodes:node-detail',
+        related_view=lambda n: 'registrations:registration-detail'
+        if getattr(n, 'is_registration', False)
+        else 'nodes:node-detail',
         related_view_kwargs={'node_id': '<original_node._id>'},
     )
 
     user = RelationshipField(
-        related_view='users:user-detail',
-        related_view_kwargs={'user_id': '<user._id>'},
+        related_view='users:user-detail', related_view_kwargs={'user_id': '<user._id>'},
     )
 
     # This would be a node_link, except that data isn't stored in the node log params
@@ -259,4 +288,6 @@ class NodeLogSerializer(JSONAPISerializer):
     def get_params(self, obj):
         if obj.action == 'osf_storage_folder_created' and obj.params.get('urls'):
             obj.params.pop('urls')
-        return NodeLogParamsSerializer(obj.params, context=self.context, read_only=True).data
+        return NodeLogParamsSerializer(
+            obj.params, context=self.context, read_only=True,
+        ).data

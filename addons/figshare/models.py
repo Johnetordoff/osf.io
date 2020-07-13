@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import markupsafe
-from addons.base.models import (BaseOAuthNodeSettings, BaseOAuthUserSettings,
-                                BaseStorageAddon)
+from addons.base.models import (
+    BaseOAuthNodeSettings,
+    BaseOAuthUserSettings,
+    BaseStorageAddon,
+)
 from django.db import models
 from framework.auth import Auth
 from framework.exceptions import HTTPError
@@ -13,6 +16,7 @@ from addons.figshare import settings as figshare_settings
 from addons.figshare import messages
 from addons.figshare.client import FigshareClient
 from addons.figshare.serializer import FigshareSerializer
+
 
 class FigshareFileNode(BaseFileNode):
     _provider = 'figshare'
@@ -39,7 +43,9 @@ class FigshareFile(FigshareFileNode, File):
 
         # Draft files are not renderable
         if data['extra']['status'] == 'drafts':
-            return (version, u"""
+            return (
+                version,
+                u"""
             <style>
             .file-download{{display: none;}}
             .file-share{{display: none;}}
@@ -50,7 +56,10 @@ class FigshareFile(FigshareFileNode, File):
             <a href="https://support.figshare.com/support/solutions">publish</a>
             it on figshare.
             </div>
-            """.format(name=markupsafe.escape(self.name)))
+            """.format(
+                    name=markupsafe.escape(self.name)
+                ),
+            )
 
         return version
 
@@ -78,13 +87,16 @@ class FigshareProvider(ExternalProvider):
 
         return {
             'provider_id': about['id'],
-            'display_name': u'{} {}'.format(about['first_name'], about.get('last_name')),
+            'display_name': u'{} {}'.format(
+                about['first_name'], about.get('last_name')
+            ),
         }
 
 
 class UserSettings(BaseOAuthUserSettings):
     """Stores user-specific figshare information
     """
+
     oauth_provider = FigshareProvider
     serializer = FigshareSerializer
 
@@ -96,7 +108,9 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
     folder_id = models.TextField(blank=True, null=True)
     folder_name = models.TextField(blank=True, null=True)
     folder_path = models.TextField(blank=True, null=True)
-    user_settings = models.ForeignKey(UserSettings, null=True, blank=True, on_delete=models.CASCADE)
+    user_settings = models.ForeignKey(
+        UserSettings, null=True, blank=True, on_delete=models.CASCADE
+    )
 
     _api = None
 
@@ -108,7 +122,10 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
         return self._api
 
     def fetch_folder_name(self):
-        return u'{0}:{1}'.format(self.folder_name or 'Unnamed {0}'.format(self.folder_path or ''), self.folder_id)
+        return u'{0}:{1}'.format(
+            self.folder_name or 'Unnamed {0}'.format(self.folder_path or ''),
+            self.folder_id,
+        )
 
     def fetch_full_folder_path(self):
         return self.folder_name
@@ -119,20 +136,23 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
     def archive_errors(self):
         items = []
         if self.folder_path in ('article', 'fileset'):
-            article = FigshareClient(self.external_account.oauth_key).article(self.folder_id)
+            article = FigshareClient(self.external_account.oauth_key).article(
+                self.folder_id
+            )
             items = [article]
         else:
-            project = FigshareClient(self.external_account.oauth_key).project(self.folder_id)
+            project = FigshareClient(self.external_account.oauth_key).project(
+                self.folder_id
+            )
             items = project['articles'] if project else []
-        private = any(
-            [item for item in items if item['status'].lower() != 'public']
-        )
+        private = any([item for item in items if item['status'].lower() != 'public'])
 
         if private:
             return 'The figshare {folder_path} <strong>{folder_name}</strong> contains private content that we cannot copy to the registration. If this content is made public on figshare we should then be able to copy those files. You can view those files <a href="{url}" target="_blank">here.</a>'.format(
                 folder_path=markupsafe.escape(self.folder_path),
                 folder_name=markupsafe.escape(self.folder_name),
-                url=self.owner.web_url_for('collect_file_trees'))
+                url=self.owner.web_url_for('collect_file_trees'),
+            )
 
     def clear_settings(self):
         self.folder_id = None
@@ -166,7 +186,9 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
         }
 
     def create_waterbutler_log(self, auth, action, metadata):
-        url = self.owner.web_url_for('addon_view_or_download_file', path=metadata['path'], provider='figshare')
+        url = self.owner.web_url_for(
+            'addon_view_or_download_file', path=metadata['path'], provider='figshare'
+        )
         self.owner.add_log(
             'figshare_{0}'.format(action),
             auth=auth,
@@ -175,16 +197,15 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
                 'node': self.owner._id,
                 'path': metadata['materialized'],
                 'filename': metadata['materialized'].strip('/'),
-                'urls': {
-                    'view': url,
-                    'download': url + '?action=download'
-                },
+                'urls': {'view': url, 'download': url + '?action=download'},
             },
         )
 
     def set_folder(self, folder_id, auth):
         try:
-            info = FigshareClient(self.external_account.oauth_key).get_linked_folder_info(folder_id)
+            info = FigshareClient(
+                self.external_account.oauth_key
+            ).get_linked_folder_info(folder_id)
         except HTTPError as e:
             raise exceptions.InvalidFolderError(e.message)
 
@@ -222,21 +243,29 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
 
         if figshare.folder_path == 'project':
             if node_permissions == 'private':
-                message = messages.BEFORE_PAGE_LOAD_PRIVATE_NODE_MIXED_FS.format(category=node.project_or_component, project_id=figshare.folder_id)
+                message = messages.BEFORE_PAGE_LOAD_PRIVATE_NODE_MIXED_FS.format(
+                    category=node.project_or_component, project_id=figshare.folder_id
+                )
                 return [message]
             else:
-                message = messages.BEFORE_PAGE_LOAD_PUBLIC_NODE_MIXED_FS.format(category=node.project_or_component, project_id=figshare.folder_id)
+                message = messages.BEFORE_PAGE_LOAD_PUBLIC_NODE_MIXED_FS.format(
+                    category=node.project_or_component, project_id=figshare.folder_id
+                )
 
         connect = FigshareClient(self.external_account.oauth_key)
         try:
-            project_is_public = connect.container_is_public(self.folder_id, self.folder_path)
+            project_is_public = connect.container_is_public(
+                self.folder_id, self.folder_path
+            )
         except HTTPError as e:
             if e.code == 403:
                 return [messages.OAUTH_INVALID]
             elif e.code == 500:
                 return [messages.FIGSHARE_INTERNAL_SERVER_ERROR]
             else:
-                return [messages.FIGSHARE_UNSPECIFIED_ERROR.format(error_message=e.message)]
+                return [
+                    messages.FIGSHARE_UNSPECIFIED_ERROR.format(error_message=e.message)
+                ]
 
         article_permissions = 'public' if project_is_public else 'private'
 
@@ -249,6 +278,8 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
                 folder_type=self.folder_path,
             )
             if article_permissions == 'private' and node_permissions == 'public':
-                message += messages.BEFORE_PAGE_LOAD_PUBLIC_NODE_PRIVATE_FS.format(folder_type=self.folder_path)
+                message += messages.BEFORE_PAGE_LOAD_PUBLIC_NODE_PRIVATE_FS.format(
+                    folder_type=self.folder_path
+                )
             # No HTML snippets, so escape message all at once
             return [markupsafe.escape(message)]

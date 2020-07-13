@@ -31,7 +31,8 @@ class Migration(migrations.Migration):
                 )
                 WHERE AG0.name LIKE 'reviews_%';
                 """
-            ], [
+            ],
+            [
                 """
                 UPDATE auth_group AG0
                 SET name = (
@@ -41,6 +42,6 @@ class Migration(migrations.Migration):
                 )
                 WHERE AG0.name LIKE 'reviews_%';
                 """
-            ]
+            ],
         )
     ]

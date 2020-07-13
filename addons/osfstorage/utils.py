@@ -31,9 +31,7 @@ def update_analytics(node, file, version_idx, action='download'):
     elif getattr(node, 'contributors', None):
         contributors = node.contributors
 
-    node_info = {
-        'contributors': contributors
-    }
+    node_info = {'contributors': contributors}
     resource = node.guids.first()
 
     update_counter(resource, file, version=None, action=action, node_info=node_info)
@@ -60,7 +58,9 @@ def serialize_revision(node, record, version, index, anon=False):
         'user': user,
         'index': index + 1,
         'date': version.created.isoformat(),
-        'downloads': version._download_count if hasattr(version, '_download_count') else record.get_download_count(version=index),
+        'downloads': version._download_count
+        if hasattr(version, '_download_count')
+        else record.get_download_count(version=index),
         'md5': version.metadata.get('md5'),
         'sha256': version.metadata.get('sha256'),
     }
@@ -71,8 +71,7 @@ SIGNED_REQUEST_ERROR = HTTPError(
     data={
         'message_short': 'Upload service unavailable',
         'message_long': (
-            'Upload service is not available; please retry '
-            'your upload in a moment'
+            'Upload service is not available; please retry ' 'your upload in a moment'
         ),
     },
 )
@@ -88,10 +87,8 @@ def get_filename(version_idx, file_version, file_record):
     if version_idx == len(file_record.versions):
         return file_record.name
     name, ext = os.path.splitext(file_record.name)
-    return u'{name}-{date}{ext}'.format(
-        name=name,
-        date=file_version.created.isoformat(),
-        ext=ext,
+    return '{name}-{date}{ext}'.format(
+        name=name, date=file_version.created.isoformat(), ext=ext,
     )
 
 
@@ -105,13 +102,16 @@ def must_be(_type):
     """A small decorator factory for OsfStorageFileNode. Acts as a poor mans
     polymorphic inheritance, ensures that the given instance is of "kind" folder or file
     """
+
     def _must_be(func):
         @functools.wraps(func)
         def wrapped(self, *args, **kwargs):
             if not self.kind == _type:
                 raise ValueError('This instance is not a {}'.format(_type))
             return func(self, *args, **kwargs)
+
         return wrapped
+
     return _must_be
 
 

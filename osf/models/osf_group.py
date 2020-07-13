@@ -5,7 +5,13 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from guardian.shortcuts import assign_perm, remove_perm, get_perms, get_objects_for_group, get_group_perms
+from guardian.shortcuts import (
+    assign_perm,
+    remove_perm,
+    get_perms,
+    get_objects_for_group,
+    get_group_perms,
+)
 from guardian.models import GroupObjectPermissionBase, UserObjectPermissionBase
 
 from framework.exceptions import PermissionsError
@@ -17,7 +23,15 @@ from osf.models.mixins import GuardianMixin, Loggable
 from osf.models import Node, OSFUser, NodeLog
 from osf.models.osf_grouplog import OSFGroupLog
 from osf.models.validators import validate_email
-from osf.utils.permissions import ADMIN, READ_NODE, WRITE, MANAGER, MEMBER, MANAGE, reduce_permissions
+from osf.utils.permissions import (
+    ADMIN,
+    READ_NODE,
+    WRITE,
+    MANAGER,
+    MEMBER,
+    MANAGE,
+    reduce_permissions,
+)
 from osf.utils import sanitize
 from website.project import signals as project_signals
 from website.osf_groups import signals as group_signals
@@ -36,11 +50,14 @@ class OSFGroup(GuardianMixin, Loggable, base.ObjectIDMixin, base.BaseModel):
     """
 
     name = models.TextField(blank=False)
-    creator = models.ForeignKey(OSFUser,
-                                db_index=True,
-                                related_name='osfgroups_created',
-                                on_delete=models.SET_NULL,
-                                null=True, blank=True)
+    creator = models.ForeignKey(
+        OSFUser,
+        db_index=True,
+        related_name='osfgroups_created',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
 
     groups = {
         'member': ('member_group',),
@@ -124,7 +141,9 @@ class OSFGroup(GuardianMixin, Loggable, base.ObjectIDMixin, base.BaseModel):
 
     def _require_manager_permission(self, auth=None):
         if auth and not self.has_permission(auth.user, MANAGE):
-            raise PermissionsError('Must be a group manager to modify group membership.')
+            raise PermissionsError(
+                'Must be a group manager to modify group membership.'
+            )
 
     def _disabled_user_check(self, user):
         if user.is_disabled:
@@ -132,7 +151,9 @@ class OSFGroup(GuardianMixin, Loggable, base.ObjectIDMixin, base.BaseModel):
 
     def _enforce_one_manager(self, user):
         # Group must have at least one registered manager
-        if (len(self.managers) == 1 and self.managers[0] == user) or not self.managers.filter(is_registered=True).exclude(id=user.id):
+        if (
+            len(self.managers) == 1 and self.managers[0] == user
+        ) or not self.managers.filter(is_registered=True).exclude(id=user.id):
             raise ValueError('Group must have at least one manager.')
 
     def _get_node_group_perms(self, node, permission):
@@ -148,7 +169,9 @@ class OSFGroup(GuardianMixin, Loggable, base.ObjectIDMixin, base.BaseModel):
         return permissions
 
     def send_member_email(self, user, permission, auth=None):
-        group_signals.member_added.send(self, user=user, permission=permission, auth=auth)
+        group_signals.member_added.send(
+            self, user=user, permission=permission, auth=auth
+        )
 
     def make_member(self, user, auth=None):
         """Add member or downgrade manager to member
@@ -170,11 +193,9 @@ class OSFGroup(GuardianMixin, Loggable, base.ObjectIDMixin, base.BaseModel):
         else:
             self.add_log(
                 OSFGroupLog.MEMBER_ADDED,
-                params={
-                    'group': self._id,
-                    'user': user._id,
-                },
-                auth=auth)
+                params={'group': self._id, 'user': user._id,},
+                auth=auth,
+            )
         self.update_search()
 
         if adding_member:
@@ -195,11 +216,9 @@ class OSFGroup(GuardianMixin, Loggable, base.ObjectIDMixin, base.BaseModel):
         if not self.is_member(user):
             self.add_log(
                 OSFGroupLog.MANAGER_ADDED,
-                params={
-                    'group': self._id,
-                    'user': user._id,
-                },
-                auth=auth)
+                params={'group': self._id, 'user': user._id,},
+                auth=auth,
+            )
 
         else:
             self.add_role_updated_log(user, MANAGER, auth)
@@ -231,7 +250,9 @@ class OSFGroup(GuardianMixin, Loggable, base.ObjectIDMixin, base.BaseModel):
                 raise ValueError('User already exists.')
         else:
             user = OSFUser.create_unregistered(fullname=fullname, email=email)
-        user.add_unclaimed_record(self, referrer=auth.user, given_name=fullname, email=email)
+        user.add_unclaimed_record(
+            self, referrer=auth.user, given_name=fullname, email=email
+        )
         user.save()
 
         if role == MANAGER:
@@ -284,11 +305,9 @@ class OSFGroup(GuardianMixin, Loggable, base.ObjectIDMixin, base.BaseModel):
 
         self.add_log(
             OSFGroupLog.MEMBER_REMOVED,
-            params={
-                'group': self._id,
-                'user': user._id,
-            },
-            auth=auth)
+            params={'group': self._id, 'user': user._id,},
+            auth=auth,
+        )
 
         self.update_search()
 
@@ -312,11 +331,9 @@ class OSFGroup(GuardianMixin, Loggable, base.ObjectIDMixin, base.BaseModel):
 
         self.add_log(
             OSFGroupLog.EDITED_NAME,
-            params={
-                'group': self._id,
-                'name_original': old_name
-            },
-            auth=auth)
+            params={'group': self._id, 'name_original': old_name},
+            auth=auth,
+        )
         self.update_search()
         for node in self.nodes:
             node.update_search()
@@ -341,22 +358,17 @@ class OSFGroup(GuardianMixin, Loggable, base.ObjectIDMixin, base.BaseModel):
         for perm in permissions:
             assign_perm(perm, self.member_group, node)
 
-        params = {
-            'group': self._id,
-            'node': node._id,
-            'permission': permission
-        }
+        params = {'group': self._id, 'node': node._id, 'permission': permission}
 
-        self.add_log(
-            OSFGroupLog.NODE_CONNECTED,
-            params=params,
-            auth=auth)
+        self.add_log(OSFGroupLog.NODE_CONNECTED, params=params, auth=auth)
 
         self.add_corresponding_node_log(node, NodeLog.GROUP_ADDED, params, auth)
         node.update_search()
 
         for user in self.members:
-            group_signals.group_added_to_node.send(self, node=node, user=user, permission=permission, auth=auth)
+            group_signals.group_added_to_node.send(
+                self, node=node, user=user, permission=permission, auth=auth
+            )
 
     def update_group_permissions_to_node(self, node, permission=WRITE, auth=None):
         """Updates the OSF Group permissions to the node.  Called from node model.
@@ -373,16 +385,8 @@ class OSFGroup(GuardianMixin, Loggable, base.ObjectIDMixin, base.BaseModel):
             remove_perm(perm, self.member_group, node)
         for perm in permissions:
             assign_perm(perm, self.member_group, node)
-        params = {
-            'group': self._id,
-            'node': node._id,
-            'permission': permission
-        }
-        self.add_log(
-            OSFGroupLog.NODE_PERMS_UPDATED,
-            params=params,
-            auth=auth
-        )
+        params = {'group': self._id, 'node': node._id, 'permission': permission}
+        self.add_log(OSFGroupLog.NODE_PERMS_UPDATED, params=params, auth=auth)
 
         self.add_corresponding_node_log(node, NodeLog.GROUP_UPDATED, params, auth)
 
@@ -399,10 +403,7 @@ class OSFGroup(GuardianMixin, Loggable, base.ObjectIDMixin, base.BaseModel):
             'group': self._id,
             'node': node._id,
         }
-        self.add_log(
-            OSFGroupLog.NODE_DISCONNECTED,
-            params=params,
-            auth=auth)
+        self.add_log(OSFGroupLog.NODE_DISCONNECTED, params=params, auth=auth)
 
         self.add_corresponding_node_log(node, NodeLog.GROUP_REMOVED, params, auth)
         node.update_search()
@@ -454,7 +455,9 @@ class OSFGroup(GuardianMixin, Loggable, base.ObjectIDMixin, base.BaseModel):
                     'group': group_id,
                     'node': node._id,
                 }
-                self.add_corresponding_node_log(node, NodeLog.GROUP_REMOVED, params, auth)
+                self.add_corresponding_node_log(
+                    node, NodeLog.GROUP_REMOVED, params, auth
+                )
                 project_signals.contributor_removed.send(node, user=user)
                 node.update_search()
 
@@ -473,12 +476,9 @@ class OSFGroup(GuardianMixin, Loggable, base.ObjectIDMixin, base.BaseModel):
         """
         self.add_log(
             OSFGroupLog.ROLE_UPDATED,
-            params={
-                'group': self._id,
-                'new_role': role,
-                'user': user._id,
-            },
-            auth=auth)
+            params={'group': self._id, 'new_role': role, 'user': user._id,},
+            auth=auth,
+        )
 
     def add_corresponding_node_log(self, node, action, params, auth):
         """ Used for logging OSFGroup-related action to nodes - for example,
@@ -488,12 +488,7 @@ class OSFGroup(GuardianMixin, Loggable, base.ObjectIDMixin, base.BaseModel):
         :param action: string, Node log action
         :param params: dict, log params
         """
-        node.add_log(
-            action=action,
-            params=params,
-            auth=auth,
-            save=True
-        )
+        node.add_log(action=action, params=params, auth=auth, save=True)
 
     def add_log(self, action, params, auth, log_date=None, save=True):
         """Create OSFGroupLog
@@ -504,10 +499,7 @@ class OSFGroup(GuardianMixin, Loggable, base.ObjectIDMixin, base.BaseModel):
         if auth:
             user = auth.user
 
-        log = OSFGroupLog(
-            action=action, user=user,
-            params=params, group=self
-        )
+        log = OSFGroupLog(action=action, user=user, params=params, group=self)
 
         log.save()
 
@@ -518,7 +510,9 @@ class OSFGroup(GuardianMixin, Loggable, base.ObjectIDMixin, base.BaseModel):
         from website import search
 
         try:
-            search.search.update_group(self, bulk=False, async_update=True, deleted_id=deleted_id)
+            search.search.update_group(
+                self, bulk=False, async_update=True, deleted_id=deleted_id
+            )
         except search.exceptions.SearchUnavailableError as e:
             logger.exception(e)
             log_exception()
@@ -526,8 +520,11 @@ class OSFGroup(GuardianMixin, Loggable, base.ObjectIDMixin, base.BaseModel):
     @classmethod
     def bulk_update_search(cls, groups, index=None):
         from website import search
+
         try:
-            serialize = functools.partial(search.search.update_group, index=index, bulk=True, async_update=False)
+            serialize = functools.partial(
+                search.search.update_group, index=index, bulk=True, async_update=False
+            )
             search.search.bulk_update_nodes(serialize, groups, index=index)
         except search.exceptions.SearchUnavailableError as e:
             logger.exception(e)
@@ -556,6 +553,7 @@ class OSFGroupUserObjectPermission(UserObjectPermissionBase):
     Direct Foreign Key Table for guardian - User models - we typically add object
     perms directly to Django groups instead of users, so this will be used infrequently
     """
+
     content_object = models.ForeignKey(OSFGroup, on_delete=models.CASCADE)
 
 
@@ -567,4 +565,5 @@ class OSFGroupGroupObjectPermission(GroupObjectPermissionBase):
     (Every time an OSFGroup is created, a Django member group, and Django manager group are created.
     The member group is given member perms, manager group has manager perms.)
     """
+
     content_object = models.ForeignKey(OSFGroup, on_delete=models.CASCADE)

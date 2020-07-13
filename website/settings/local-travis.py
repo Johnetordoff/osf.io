@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-'''Example settings/local.py file.
+"""Example settings/local.py file.
 These settings override what's in website/settings/defaults.py
 
 NOTE: local.py will not be added to source control.
-'''
+"""
 import inspect
 import logging
 
@@ -24,22 +24,22 @@ ENABLE_INSTITUTIONS = True
 PREPRINT_PROVIDER_DOMAINS = {
     'enabled': False,
     'prefix': 'http://local.',
-    'suffix': ':4201/'
+    'suffix': ':4201/',
 }
 USE_EXTERNAL_EMBER = True
 EXTERNAL_EMBER_APPS = {
     'ember_osf_web': {
         'server': 'http://localhost:4200',
-        'path': os.environ.get('HOME') + 'website/ember_osf_web/'
+        'path': os.environ.get('HOME') + 'website/ember_osf_web/',
     },
     'preprints': {
         'server': 'http://localhost:4201',
-        'path': os.environ.get('HOME') + '/preprints/'
+        'path': os.environ.get('HOME') + '/preprints/',
     },
     'registries': {
         'server': 'http://localhost:4202/',
-        'path': os.environ.get('HOME') + '/registries/'
-    }
+        'path': os.environ.get('HOME') + '/registries/',
+    },
 }
 
 SEARCH_ENGINE = 'elastic'
@@ -60,16 +60,19 @@ SESSION_COOKIE_SAMESITE = 'None'
 OSF_SERVER_KEY = None
 OSF_SERVER_CERT = None
 
+
 class CeleryConfig(defaults.CeleryConfig):
     """
     Celery configuration
     """
+
     ## Default RabbitMQ broker
     broker_url = 'amqp://'
 
     # In-memory result backend
     result_backend = 'cache'
     cache_backend = 'memory'
+
 
 USE_CDN_FOR_CLIENT_LIBS = False
 

@@ -15,8 +15,9 @@ CAPABILITY_SET = [
     'Delete files',
     'Logs',
     'Forking',
-    'Registering'
+    'Registering',
 ]
+
 
 def read_capabilities(filename):
 
@@ -35,12 +36,14 @@ def read_capabilities(filename):
             text = info[cap].get('text') or ''
             if status == 'NA':
                 continue
-            infos.append({
-                'function': cap,
-                'status': status,
-                'detail': text,
-                'class': CLASS_MAP[status],
-            })
+            infos.append(
+                {
+                    'function': cap,
+                    'status': status,
+                    'detail': text,
+                    'class': CLASS_MAP[status],
+                }
+            )
         ret[addon_name] = {
             'capabilities': infos,
             'terms': disclaimers,
@@ -48,6 +51,7 @@ def read_capabilities(filename):
 
     data_file.close()
     return ret
+
 
 here, _ = os.path.split(__file__)
 here = os.path.abspath(here)
@@ -61,11 +65,12 @@ lookup = TemplateLookup(
     ],
     imports=[
         'from website.util.sanitize import temp_ampersand_fixer',  # FIXME: Temporary workaround for data stored in wrong format in DB. Unescape it before it gets re-escaped by Markupsafe. See [#OSF-4432]
-    ]
+    ],
 )
 template = lookup.get_template('capabilities.mako')
 
 CAPABILITIES = read_capabilities(os.path.join(here, 'data', 'addons.json'))
+
 
 def render_addon_capabilities(addons_available):
 

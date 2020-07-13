@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0121_remove_wiki_fields_from_node'),
     ]
 
-    operations = [
-    ]
+    operations = []

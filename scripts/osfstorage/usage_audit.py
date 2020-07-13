@@ -62,13 +62,41 @@ def add_to_white_list(gtg):
 def get_usage(node):
     node_content_type = ContentType.objects.get_for_model(Node)
 
-    vids = [each for each in BaseFileNode.active.filter(provider='osfstorage', target_object_id=node.id, target_content_type=node_content_type).values_list('versions', flat=True) if each]
-    t_vids = [each for each in TrashedFile.objects.filter(provider='osfstorage', target_object_id=node.id, target_content_type=node_content_type).values_list('versions', flat=True) if each]
+    vids = [
+        each
+        for each in BaseFileNode.active.filter(
+            provider='osfstorage',
+            target_object_id=node.id,
+            target_content_type=node_content_type,
+        ).values_list('versions', flat=True)
+        if each
+    ]
+    t_vids = [
+        each
+        for each in TrashedFile.objects.filter(
+            provider='osfstorage',
+            target_object_id=node.id,
+            target_content_type=node_content_type,
+        ).values_list('versions', flat=True)
+        if each
+    ]
 
     usage = sum([v.size or 0 for v in FileVersion.objects.filter(id__in=vids)])
-    trashed_usage = sum([v.size or 0 for v in FileVersion.objects.filter(id__in=t_vids)])
+    trashed_usage = sum(
+        [v.size or 0 for v in FileVersion.objects.filter(id__in=t_vids)]
+    )
 
-    return list(map(sum, zip(*([(usage, trashed_usage)] + [get_usage(child) for child in node.nodes_primary]))))  # Adds tuples together, map(sum, zip((a, b), (c, d))) -> (a+c, b+d)
+    return list(
+        map(
+            sum,
+            zip(
+                *(
+                    [(usage, trashed_usage)]
+                    + [get_usage(child) for child in node.nodes_primary]
+                )
+            ),
+        )
+    )  # Adds tuples together, map(sum, zip((a, b), (c, d))) -> (a+c, b+d)
 
 
 def limit_filter(limit, item_usage_tuple):
@@ -90,28 +118,49 @@ def main(send_email=False):
     top_level_nodes = top_level_nodes.iterator()
 
     for i, node in enumerate(top_level_nodes):
-        progress_bar.update(i+1)
+        progress_bar.update(i + 1)
         if node._id in WHITE_LIST:
             continue  # Dont count whitelisted nodes against users
         projects[node._id] = get_usage(node)
         for contrib in node.contributors:
             if node.can_edit(user=contrib):
-                users[contrib._id] = tuple(map(sum, zip(users[contrib._id], projects[node._id])))  # Adds tuples together, map(sum, zip((a, b), (c, d))) -> (a+c, b+d)
+                users[contrib._id] = tuple(
+                    map(sum, zip(users[contrib._id], projects[node._id]))
+                )  # Adds tuples together, map(sum, zip((a, b), (c, d))) -> (a+c, b+d)
 
         if i % 25 == 0:
             gc.collect()
     progress_bar.close()
 
-    for model, collection, limit in ((OSFUser, users, USER_LIMIT), (AbstractNode, projects, PROJECT_LIMIT)):
-        for item, (used, deleted) in filter(functools.partial(limit_filter, limit), collection.items()):
-            line = '{!r} has exceeded the limit {:.2f}GBs ({}b) with {:.2f}GBs ({}b) used and {:.2f}GBs ({}b) deleted.'.format(model.load(item), limit / GBs, limit, used / GBs, used, deleted / GBs, deleted)
+    for model, collection, limit in (
+        (OSFUser, users, USER_LIMIT),
+        (AbstractNode, projects, PROJECT_LIMIT),
+    ):
+        for item, (used, deleted) in filter(
+            functools.partial(limit_filter, limit), collection.items()
+        ):
+            line = '{!r} has exceeded the limit {:.2f}GBs ({}b) with {:.2f}GBs ({}b) used and {:.2f}GBs ({}b) deleted.'.format(
+                model.load(item),
+                limit / GBs,
+                limit,
+                used / GBs,
+                used,
+                deleted / GBs,
+                deleted,
+            )
             logger.info(line)
             lines.append(line)
 
     if lines:
         if send_email:
             logger.info('Sending email...')
-            mails.send_mail('support+scripts@osf.io', mails.EMPTY, body='\n'.join(lines), subject='Script: OsfStorage usage audit', can_change_preferences=False,)
+            mails.send_mail(
+                'support+scripts@osf.io',
+                mails.EMPTY,
+                body='\n'.join(lines),
+                subject='Script: OsfStorage usage audit',
+                can_change_preferences=False,
+            )
         else:
             logger.info('send_email is False, not sending email'.format(len(lines)))
         logger.info('{} offending project(s) and user(s) found'.format(len(lines)))

@@ -18,54 +18,84 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='CollectionGroupObjectPermission',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={'abstract': False,},
         ),
         migrations.CreateModel(
             name='CollectionUserObjectPermission',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={'abstract': False,},
         ),
         migrations.AlterModelOptions(
             name='collection',
-            options={'permissions': (('read_collection', 'Read Collection'), ('write_collection', 'Write Collection'), ('admin_collection', 'Admin Collection'))},
+            options={
+                'permissions': (
+                    ('read_collection', 'Read Collection'),
+                    ('write_collection', 'Write Collection'),
+                    ('admin_collection', 'Admin Collection'),
+                )
+            },
         ),
         migrations.AddField(
             model_name='collectionuserobjectpermission',
             name='content_object',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='osf.Collection'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to='osf.Collection'
+            ),
         ),
         migrations.AddField(
             model_name='collectionuserobjectpermission',
             name='permission',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='auth.Permission'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to='auth.Permission'
+            ),
         ),
         migrations.AddField(
             model_name='collectionuserobjectpermission',
             name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL
+            ),
         ),
         migrations.AddField(
             model_name='collectiongroupobjectpermission',
             name='content_object',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='osf.Collection'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to='osf.Collection'
+            ),
         ),
         migrations.AddField(
             model_name='collectiongroupobjectpermission',
             name='group',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='auth.Group'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to='auth.Group'
+            ),
         ),
         migrations.AddField(
             model_name='collectiongroupobjectpermission',
             name='permission',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='auth.Permission'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to='auth.Permission'
+            ),
         ),
         migrations.AlterUniqueTogether(
             name='collectionuserobjectpermission',

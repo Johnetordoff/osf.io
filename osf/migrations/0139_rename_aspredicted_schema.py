@@ -7,6 +7,7 @@ from django.db import migrations
 OLD_NAME = 'AsPredicted Preregistration'
 NEW_NAME = 'Preregistration Template from AsPredicted.org'
 
+
 def rename_schema(model, from_name, to_name):
     try:
         schema = model.objects.get(name=from_name)
@@ -19,13 +20,16 @@ def rename_schema(model, from_name, to_name):
     schema.schema['pages'][0]['title'] = to_name
     return schema.save()
 
+
 def rename_aspredicted_schema(state, schema):
     RegistrationSchema = state.get_model('osf.registrationschema')
     return rename_schema(RegistrationSchema, OLD_NAME, NEW_NAME)
 
+
 def undo_aspredicted_rename(state, schema):
     RegistrationSchema = state.get_model('osf.registrationschema')
     return rename_schema(RegistrationSchema, NEW_NAME, OLD_NAME)
+
 
 class Migration(migrations.Migration):
 

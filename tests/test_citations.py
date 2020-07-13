@@ -21,14 +21,14 @@ from website.util import api_url_for
 
 pytestmark = pytest.mark.django_db
 
+
 class CitationsUtilsTestCase(OsfTestCase):
     def test_datetime_to_csl(self):
         # Convert a datetime instance to csl's date-variable schema
         now = timezone.now()
 
         assert_equal(
-            datetime_to_csl(now),
-            {'date-parts': [[now.year, now.month, now.day]]},
+            datetime_to_csl(now), {'date-parts': [[now.year, now.month, now.day]]},
         )
 
 
@@ -47,10 +47,12 @@ class CitationsNodeTestCase(OsfTestCase):
             self.node.csl,
             {
                 'publisher': 'OSF',
-                'author': [{
-                    'given': self.node.creator.given_name,
-                    'family': self.node.creator.family_name,
-                }],
+                'author': [
+                    {
+                        'given': self.node.creator.given_name,
+                        'family': self.node.creator.family_name,
+                    }
+                ],
                 'URL': self.node.display_absolute_url,
                 'issued': datetime_to_csl(self.node.logs.latest().date),
                 'title': self.node.title,
@@ -74,10 +76,7 @@ class CitationsNodeTestCase(OsfTestCase):
                         'given': self.node.creator.given_name,
                         'family': self.node.creator.family_name,
                     },
-                    {
-                        'given': user.given_name,
-                        'family': user.family_name,
-                    }
+                    {'given': user.given_name, 'family': user.family_name,},
                 ],
                 'URL': self.node.display_absolute_url,
                 'issued': datetime_to_csl(self.node.logs.latest().date),
@@ -101,8 +100,8 @@ class CitationsNodeTestCase(OsfTestCase):
 
         assert_equal(node.csl['author'], expected_authors)
 
-class CitationsUserTestCase(OsfTestCase):
 
+class CitationsUserTestCase(OsfTestCase):
     def test_registered_user_csl(self):
         # Tests the csl name for a registered user
         user = OSFUser.create_confirmed(
@@ -110,11 +109,8 @@ class CitationsUserTestCase(OsfTestCase):
         )
         if user.is_registered:
             assert bool(
-                user.csl_name() ==
-                {
-                    'given': user.csl_given_name,
-                    'family': user.family_name,
-                }
+                user.csl_name()
+                == {'given': user.csl_given_name, 'family': user.family_name,}
             )
 
     def test_unregistered_user_csl(self):
@@ -122,19 +118,15 @@ class CitationsUserTestCase(OsfTestCase):
         referrer = UserFactory()
         project = NodeFactory(creator=referrer)
         user = UnregUserFactory()
-        user.add_unclaimed_record(project,
-            given_name=user.fullname, referrer=referrer,
-            email=fake_email())
+        user.add_unclaimed_record(
+            project, given_name=user.fullname, referrer=referrer, email=fake_email()
+        )
         user.save()
         name = user.unclaimed_records[project._primary_key]['name'].split(' ')
         family_name = name[-1]
         given_name = ' '.join(name[:-1])
         assert bool(
-            user.csl_name(project._id) ==
-            {
-                'given': given_name,
-                'family': family_name,
-            }
+            user.csl_name(project._id) == {'given': given_name, 'family': family_name,}
         )
 
     def test_disabled_user_csl(self):
@@ -145,16 +137,12 @@ class CitationsUserTestCase(OsfTestCase):
         user.is_registered = False
         user.save()
         assert bool(
-            user.csl_name() ==
-            {
-                'given': user.csl_given_name,
-                'family': user.family_name,
-            }
+            user.csl_name()
+            == {'given': user.csl_given_name, 'family': user.family_name,}
         )
 
 
 class CitationsViewsTestCase(OsfTestCase):
-
     @pytest.fixture(autouse=True)
     def _parsed_citation_styles(self):
         # populate the DB with parsed citation styles
@@ -172,7 +160,8 @@ class CitationsViewsTestCase(OsfTestCase):
         assert_equal(
             len(
                 [
-                    style for style in response.json['styles']
+                    style
+                    for style in response.json['styles']
                     if style.get('id') == 'bibtex'
                 ]
             ),
@@ -185,18 +174,18 @@ class CitationsViewsTestCase(OsfTestCase):
 
         assert_true(response.json)
 
-        assert_equal(
-            len(response.json['styles']), 1
-        )
+        assert_equal(len(response.json['styles']), 1)
 
-        assert_equal(
-            response.json['styles'][0]['id'], 'bibtex'
-        )
+        assert_equal(response.json['styles'][0]['id'], 'bibtex')
 
     def test_node_citation_view(self):
         node = ProjectFactory()
         user = AuthUserFactory()
         node.add_contributor(user)
         node.save()
-        response = self.app.get('/api/v1' + '/project/' + node._id + '/citation/', auto_follow=True, auth=user.auth)
+        response = self.app.get(
+            '/api/v1' + '/project/' + node._id + '/citation/',
+            auto_follow=True,
+            auth=user.auth,
+        )
         assert_true(response.json)

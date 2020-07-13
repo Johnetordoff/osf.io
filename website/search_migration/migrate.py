@@ -13,11 +13,23 @@ from elasticsearch2 import helpers
 import website.search.search as search
 from website.search.elastic_search import client
 from website.search_migration import (
-    JSON_UPDATE_NODES_SQL, JSON_DELETE_NODES_SQL,
-    JSON_UPDATE_FILES_SQL, JSON_DELETE_FILES_SQL,
-    JSON_UPDATE_USERS_SQL, JSON_DELETE_USERS_SQL)
+    JSON_UPDATE_NODES_SQL,
+    JSON_DELETE_NODES_SQL,
+    JSON_UPDATE_FILES_SQL,
+    JSON_DELETE_FILES_SQL,
+    JSON_UPDATE_USERS_SQL,
+    JSON_DELETE_USERS_SQL,
+)
 from scripts import utils as script_utils
-from osf.models import OSFUser, Institution, AbstractNode, BaseFileNode, Preprint, OSFGroup, CollectionSubmission
+from osf.models import (
+    OSFUser,
+    Institution,
+    AbstractNode,
+    BaseFileNode,
+    Preprint,
+    OSFGroup,
+    CollectionSubmission,
+)
 from website import settings
 from website.app import init_app
 from website.search.elastic_search import client as es_client
@@ -26,6 +38,7 @@ from website.search.search import update_institution, bulk_update_collected_meta
 
 
 logger = logging.getLogger(__name__)
+
 
 def sql_migrate(index, sql, max_id, increment, es_args=None, **kwargs):
     """ Run provided SQL and send output to elastic.
@@ -50,24 +63,27 @@ def sql_migrate(index, sql, max_id, increment, es_args=None, **kwargs):
         page += 1
         page_end += increment
         if page <= total_pages:
-            logger.info('Updating page {} / {}'.format(page_end / increment, total_pages))
+            logger.info(
+                'Updating page {} / {}'.format(page_end / increment, total_pages)
+            )
         else:
             # An extra page is included to cover the edge case where:
             #       max_id == (total_pages * increment) - 1
             # and two additional objects are created during runtime.
             logger.info('Cleaning up...')
         with connection.cursor() as cursor:
-            cursor.execute(sql.format(
-                index=index,
-                page_start=page_start,
-                page_end=page_end,
-                **kwargs))
+            cursor.execute(
+                sql.format(
+                    index=index, page_start=page_start, page_end=page_end, **kwargs
+                )
+            )
             ser_objs = cursor.fetchone()[0]
             if ser_objs:
                 total_objs += len(ser_objs)
                 helpers.bulk(client(), ser_objs, **es_args)
         page_start = page_end
     return total_objs
+
 
 def migrate_nodes(index, delete, increment=10000):
     logger.info('Migrating nodes to index: {}'.format(index))
@@ -77,7 +93,8 @@ def migrate_nodes(index, delete, increment=10000):
         JSON_UPDATE_NODES_SQL,
         max_nid,
         increment,
-        spam_flagged_removed_from_search=settings.SPAM_FLAGGED_REMOVE_FROM_SEARCH)
+        spam_flagged_removed_from_search=settings.SPAM_FLAGGED_REMOVE_FROM_SEARCH,
+    )
     logger.info('{} nodes migrated'.format(total_nodes))
     if delete:
         logger.info('Preparing to delete old node documents')
@@ -88,8 +105,10 @@ def migrate_nodes(index, delete, increment=10000):
             max_nid,
             increment,
             es_args={'raise_on_error': False},  # ignore 404s
-            spam_flagged_removed_from_search=settings.SPAM_FLAGGED_REMOVE_FROM_SEARCH)
+            spam_flagged_removed_from_search=settings.SPAM_FLAGGED_REMOVE_FROM_SEARCH,
+        )
         logger.info('{} nodes marked deleted'.format(total_nodes))
+
 
 def migrate_preprints(index, delete):
     logger.info('Migrating preprints to index: {}'.format(index))
@@ -98,7 +117,10 @@ def migrate_preprints(index, delete):
     paginator = Paginator(preprints, increment)
     for page_number in paginator.page_range:
         logger.info('Updating page {} / {}'.format(page_number, paginator.num_pages))
-        Preprint.bulk_update_search(paginator.page(page_number).object_list, index=index)
+        Preprint.bulk_update_search(
+            paginator.page(page_number).object_list, index=index
+        )
+
 
 def migrate_preprint_files(index, delete):
     logger.info('Migrating preprint files to index: {}'.format(index))
@@ -108,7 +130,13 @@ def migrate_preprint_files(index, delete):
     serialize = functools.partial(search.update_file, index=index)
     for page_number in paginator.page_range:
         logger.info('Updating page {} / {}'.format(page_number, paginator.num_pages))
-        search.bulk_update_nodes(serialize, paginator.page(page_number).object_list, index=index, category='file')
+        search.bulk_update_nodes(
+            serialize,
+            paginator.page(page_number).object_list,
+            index=index,
+            category='file',
+        )
+
 
 def migrate_groups(index, delete):
     logger.info('Migrating groups to index: {}'.format(index))
@@ -117,7 +145,10 @@ def migrate_groups(index, delete):
     paginator = Paginator(groups, increment)
     for page_number in paginator.page_range:
         logger.info('Updating page {} / {}'.format(page_number, paginator.num_pages))
-        OSFGroup.bulk_update_search(paginator.page(page_number).object_list, index=index)
+        OSFGroup.bulk_update_search(
+            paginator.page(page_number).object_list, index=index
+        )
+
 
 def migrate_files(index, delete, increment=10000):
     logger.info('Migrating files to index: {}'.format(index))
@@ -127,7 +158,8 @@ def migrate_files(index, delete, increment=10000):
         JSON_UPDATE_FILES_SQL,
         max_fid,
         increment,
-        spam_flagged_removed_from_search=settings.SPAM_FLAGGED_REMOVE_FROM_SEARCH)
+        spam_flagged_removed_from_search=settings.SPAM_FLAGGED_REMOVE_FROM_SEARCH,
+    )
     logger.info('{} files migrated'.format(total_files))
     if delete:
         logger.info('Preparing to delete old file documents')
@@ -138,17 +170,15 @@ def migrate_files(index, delete, increment=10000):
             max_fid,
             increment,
             es_args={'raise_on_error': False},  # ignore 404s
-            spam_flagged_removed_from_search=settings.SPAM_FLAGGED_REMOVE_FROM_SEARCH)
+            spam_flagged_removed_from_search=settings.SPAM_FLAGGED_REMOVE_FROM_SEARCH,
+        )
         logger.info('{} files marked deleted'.format(total_files))
+
 
 def migrate_users(index, delete, increment=10000):
     logger.info('Migrating users to index: {}'.format(index))
     max_uid = OSFUser.objects.last().id
-    total_users = sql_migrate(
-        index,
-        JSON_UPDATE_USERS_SQL,
-        max_uid,
-        increment)
+    total_users = sql_migrate(index, JSON_UPDATE_USERS_SQL, max_uid, increment)
     logger.info('{} users migrated'.format(total_users))
     if delete:
         logger.info('Preparing to delete old user documents')
@@ -158,37 +188,47 @@ def migrate_users(index, delete, increment=10000):
             JSON_DELETE_USERS_SQL,
             max_uid,
             increment,
-            es_args={'raise_on_error': False})  # ignore 404s
+            es_args={'raise_on_error': False},
+        )  # ignore 404s
         logger.info('{} users marked deleted'.format(total_users))
+
 
 def migrate_collected_metadata(index, delete):
     cgms = CollectionSubmission.objects.filter(
         collection__provider__isnull=False,
         collection__is_public=True,
         collection__deleted__isnull=True,
-        collection__is_bookmark_collection=False)
+        collection__is_bookmark_collection=False,
+    )
 
-    docs = helpers.scan(es_client(), query={
-        'query': {'match': {'_type': 'collectionSubmission'}}
-    }, index=index)
+    docs = helpers.scan(
+        es_client(),
+        query={'query': {'match': {'_type': 'collectionSubmission'}}},
+        index=index,
+    )
 
-    actions = ({
-        '_op_type': 'delete',
-        '_index': index,
-        '_id': doc['_source']['id'],
-        '_type': 'collectionSubmission',
-        'doc': doc['_source'],
-        'doc_as_upsert': True,
-    } for doc in list(docs))
+    actions = (
+        {
+            '_op_type': 'delete',
+            '_index': index,
+            '_id': doc['_source']['id'],
+            '_type': 'collectionSubmission',
+            'doc': doc['_source'],
+            'doc_as_upsert': True,
+        }
+        for doc in list(docs)
+    )
 
     bulk_update_cgm(None, actions=actions, op='delete', index=index)
 
     bulk_update_collected_metadata(cgms, index=index)
     logger.info('{} collection submissions migrated'.format(cgms.count()))
 
+
 def migrate_institutions(index):
     for inst in Institution.objects.filter(is_deleted=False):
         update_institution(inst, index)
+
 
 def migrate(delete, remove=False, index=None, app=None):
     """Reindexes relevant documents in ES
@@ -226,6 +266,7 @@ def migrate(delete, remove=False, index=None, app=None):
         remove_old_index(new_index)
 
     ctx.pop()
+
 
 def set_up_index(idx):
     alias = es_client().indices.get_aliases(index=idx)

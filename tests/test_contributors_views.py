@@ -4,7 +4,12 @@ import time
 import datetime
 from nose.tools import *  # noqa; PEP8 asserts
 
-from osf_tests.factories import ProjectFactory, NodeFactory, AuthUserFactory, NodeRequestFactory
+from osf_tests.factories import (
+    ProjectFactory,
+    NodeFactory,
+    AuthUserFactory,
+    NodeRequestFactory,
+)
 from osf.utils import workflows
 from osf.utils import permissions
 from tests.base import OsfTestCase
@@ -15,7 +20,6 @@ from website.profile import utils
 
 
 class TestContributorUtils(OsfTestCase):
-
     def setUp(self):
         super(TestContributorUtils, self).setUp()
         self.project = ProjectFactory()
@@ -31,15 +35,14 @@ class TestContributorUtils(OsfTestCase):
 
     def test_serialize_user_full_includes_email_if_is_profile(self):
         serialized = utils.serialize_user(
-            self.project.creator,
-            self.project,
-            full=True,
-            is_profile=True
+            self.project.creator, self.project, full=True, is_profile=True
         )
         assert_in('emails', serialized)
 
     def test_serialize_user_admin(self):
-        serialized = utils.serialize_user(self.project.creator, self.project, admin=True)
+        serialized = utils.serialize_user(
+            self.project.creator, self.project, admin=True
+        )
         assert_false(serialized['visible'])
         assert_equal(serialized['permission'], permissions.READ)
 
@@ -49,7 +52,7 @@ class TestContributorUtils(OsfTestCase):
             creator=new_user,
             target=self.project,
             request_type=workflows.RequestTypes.ACCESS.value,
-            machine_state=workflows.DefaultStates.INITIAL.value
+            machine_state=workflows.DefaultStates.INITIAL.value,
         )
         node_request.run_submit(new_user)
         res = utils.serialize_access_requests(self.project)
@@ -61,7 +64,6 @@ class TestContributorUtils(OsfTestCase):
 
 
 class TestContributorViews(OsfTestCase):
-
     def setUp(self):
         super(TestContributorViews, self).setUp()
         self.user = AuthUserFactory()
@@ -70,50 +72,35 @@ class TestContributorViews(OsfTestCase):
 
     def test_get_contributors_no_limit(self):
         self.project.add_contributor(
-            AuthUserFactory(),
-            auth=self.auth,
-            visible=True,
+            AuthUserFactory(), auth=self.auth, visible=True,
         )
         self.project.add_contributor(
-            AuthUserFactory(),
-            auth=self.auth,
-            visible=False,
+            AuthUserFactory(), auth=self.auth, visible=False,
         )
         self.project.save()
         url = self.project.api_url_for('get_contributors')
         res = self.app.get(url, auth=self.user.auth)
         # Should be two visible contributors on the project
         assert_equal(
-            len(res.json['contributors']),
-            2,
+            len(res.json['contributors']), 2,
         )
 
     def test_get_contributors_with_limit(self):
         # Add five contributors
         self.project.add_contributor(
-            AuthUserFactory(),
-            auth=self.auth,
-            visible=True,
+            AuthUserFactory(), auth=self.auth, visible=True,
         )
         self.project.add_contributor(
-            AuthUserFactory(),
-            auth=self.auth,
-            visible=True,
+            AuthUserFactory(), auth=self.auth, visible=True,
         )
         self.project.add_contributor(
-            AuthUserFactory(),
-            auth=self.auth,
-            visible=True,
+            AuthUserFactory(), auth=self.auth, visible=True,
         )
         self.project.add_contributor(
-            AuthUserFactory(),
-            auth=self.auth,
-            visible=True,
+            AuthUserFactory(), auth=self.auth, visible=True,
         )
         self.project.add_contributor(
-            AuthUserFactory(),
-            auth=self.auth,
-            visible=False,
+            AuthUserFactory(), auth=self.auth, visible=False,
         )
         self.project.save()
         # Set limit to three contributors
@@ -121,38 +108,28 @@ class TestContributorViews(OsfTestCase):
         res = self.app.get(url, auth=self.user.auth)
         # Should be three visible contributors on the project
         assert_equal(
-            len(res.json['contributors']),
-            3,
+            len(res.json['contributors']), 3,
         )
         # There should be two 'more' contributors not shown
         assert_equal(
-            (res.json['more']),
-            2,
+            (res.json['more']), 2,
         )
 
     def test_get_contributors_from_parent(self):
         self.project.add_contributor(
-            AuthUserFactory(),
-            auth=self.auth,
-            visible=True,
+            AuthUserFactory(), auth=self.auth, visible=True,
         )
         self.project.add_contributor(
-            AuthUserFactory(),
-            auth=self.auth,
-            visible=False,
+            AuthUserFactory(), auth=self.auth, visible=False,
         )
         component = NodeFactory(parent=self.project, creator=self.user)
 
         user_already_on_component = AuthUserFactory()
         component.add_contributor(
-            user_already_on_component,
-            auth=self.auth,
-            visible=True,
+            user_already_on_component, auth=self.auth, visible=True,
         )
         self.project.add_contributor(
-            user_already_on_component,
-            auth=self.auth,
-            visible=True,
+            user_already_on_component, auth=self.auth, visible=True,
         )
 
         self.project.save()
@@ -166,6 +143,5 @@ class TestContributorViews(OsfTestCase):
         ids = [contrib['id'] for contrib in res.json['contributors']]
         assert_not_in(user_already_on_component.id, ids)
         assert_equal(
-            len(res.json['contributors']),
-            2,
+            len(res.json['contributors']), 2,
         )

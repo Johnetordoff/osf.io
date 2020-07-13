@@ -20,20 +20,16 @@ NO_SANCTION_MSG = 'There is no {0} associated with this token.'
 APPROVED_MSG = 'This registration is not pending {0}.'
 REJECTED_MSG = 'This registration {0} has been rejected.'
 
-class TestTokenHandler(OsfTestCase):
 
+class TestTokenHandler(OsfTestCase):
     def setUp(self, *args, **kwargs):
         super(TestTokenHandler, self).setUp(*args, **kwargs)
 
-        self.payload = {
-            'user_id': 'abc123',
-            'field_x': 'xyzert'
-        }
+        self.payload = {'user_id': 'abc123', 'field_x': 'xyzert'}
         self.secret = settings.JWT_SECRET
         self.encoded_token = jwt.encode(
-            self.payload,
-            self.secret,
-            algorithm=settings.JWT_ALGORITHM).decode()
+            self.payload, self.secret, algorithm=settings.JWT_ALGORITHM
+        ).decode()
 
     def test_encode(self):
         assert_equal(encode(self.payload), self.encoded_token)
@@ -64,12 +60,10 @@ class TestTokenHandler(OsfTestCase):
         token.to_response()
         assert_true(
             mock_handler.called_with(
-                'registration',
-                'approve',
-                self.payload,
-                self.encoded_token
+                'registration', 'approve', self.payload, self.encoded_token
             )
         )
+
 
 class SanctionTokenHandlerBase(OsfTestCase):
 
@@ -91,9 +85,13 @@ class SanctionTokenHandlerBase(OsfTestCase):
         approval_token = self.sanction.approval_state[self.user._id]['approval_token']
         handler = TokenHandler.from_string(approval_token)
         with mock_auth(self.user):
-            with mock.patch('osf.utils.tokens.handlers.{0}_handler'.format(self.kind)) as mock_handler:
+            with mock.patch(
+                'osf.utils.tokens.handlers.{0}_handler'.format(self.kind)
+            ) as mock_handler:
                 handler.to_response()
-                mock_handler.assert_called_with('approve', self.reg, self.reg.registered_from)
+                mock_handler.assert_called_with(
+                    'approve', self.reg, self.reg.registered_from
+                )
 
     def test_sanction_handler_no_sanction(self):
         if not self.kind:
@@ -106,7 +104,10 @@ class SanctionTokenHandlerBase(OsfTestCase):
                 handler.to_response()
             except HTTPError as e:
                 assert_equal(e.code, http_status.HTTP_400_BAD_REQUEST)
-                assert_equal(e.data['message_long'], NO_SANCTION_MSG.format(self.Model.DISPLAY_NAME))
+                assert_equal(
+                    e.data['message_long'],
+                    NO_SANCTION_MSG.format(self.Model.DISPLAY_NAME),
+                )
 
     def test_sanction_handler_sanction_approved(self):
         if not self.kind:
@@ -119,8 +120,16 @@ class SanctionTokenHandlerBase(OsfTestCase):
             try:
                 handler.to_response()
             except HTTPError as e:
-                assert_equal(e.code, http_status.HTTP_400_BAD_REQUEST if self.kind in ['embargo', 'registration_approval'] else http_status.HTTP_410_GONE)
-                assert_equal(e.data['message_long'], APPROVED_MSG.format(self.sanction.DISPLAY_NAME))
+                assert_equal(
+                    e.code,
+                    http_status.HTTP_400_BAD_REQUEST
+                    if self.kind in ['embargo', 'registration_approval']
+                    else http_status.HTTP_410_GONE,
+                )
+                assert_equal(
+                    e.data['message_long'],
+                    APPROVED_MSG.format(self.sanction.DISPLAY_NAME),
+                )
 
     def test_sanction_handler_sanction_rejected(self):
         if not self.kind:
@@ -133,8 +142,17 @@ class SanctionTokenHandlerBase(OsfTestCase):
             try:
                 handler.to_response()
             except HTTPError as e:
-                assert_equal(e.code, http_status.HTTP_410_GONE if self.kind in ['embargo', 'registration_approval'] else http_status.HTTP_400_BAD_REQUEST)
-                assert_equal(e.data['message_long'], REJECTED_MSG.format(self.sanction.DISPLAY_NAME))
+                assert_equal(
+                    e.code,
+                    http_status.HTTP_410_GONE
+                    if self.kind in ['embargo', 'registration_approval']
+                    else http_status.HTTP_400_BAD_REQUEST,
+                )
+                assert_equal(
+                    e.data['message_long'],
+                    REJECTED_MSG.format(self.sanction.DISPLAY_NAME),
+                )
+
 
 class TestEmbargoTokenHandler(SanctionTokenHandlerBase):
 
@@ -142,11 +160,13 @@ class TestEmbargoTokenHandler(SanctionTokenHandlerBase):
     Model = Embargo
     Factory = factories.EmbargoFactory
 
+
 class TestRegistrationApprovalTokenHandler(SanctionTokenHandlerBase):
 
     kind = 'registration_approval'
     Model = RegistrationApproval
     Factory = factories.RegistrationApprovalFactory
+
 
 class TestRetractionTokenHandler(SanctionTokenHandlerBase):
 

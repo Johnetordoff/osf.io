@@ -10,7 +10,6 @@ from api.base.settings import MAX_SIZE_OF_ES_QUERY, DEFAULT_ES_NULL_VALUE
 
 
 class MetricMixin(object):
-
     @classmethod
     def _get_relevant_indices(cls, after):
         # NOTE: This will only work for yearly indices. This logic
@@ -30,9 +29,9 @@ class MetricMixin(object):
         search = cls.search(after=after)
         if after:
             search = search.filter('range', timestamp={'gte': after})
-        search.aggs.\
-            bucket('by_id', 'terms', field=metric_field, size=size, order={'sum_count': 'desc'}).\
-            metric('sum_count', 'sum', field=count_field)
+        search.aggs.bucket(
+            'by_id', 'terms', field=metric_field, size=size, order={'sum_count': 'desc'}
+        ).metric('sum_count', 'sum', field=count_field)
         # Optimization: set size to 0 so that hits aren't returned (we only care about the aggregation)
         search = search.extra(size=0)
         try:
@@ -47,10 +46,7 @@ class MetricMixin(object):
             return None
         buckets = response.aggregations.by_id.buckets
         # Map _id => count
-        return {
-            bucket.key: int(bucket.sum_count.value)
-            for bucket in buckets
-        }
+        return {bucket.key: int(bucket.sum_count.value) for bucket in buckets}
 
     # Overrides Document.search to only search relevant
     # indices, determined from `after`
@@ -62,10 +58,17 @@ class MetricMixin(object):
         return super(MetricMixin, cls).search(using=using, index=index, *args, **kwargs)
 
     @classmethod
-    def get_top_by_count(cls, qs, model_field, metric_field,
-                         size, order_by=None,
-                         count_field='count',
-                         annotation='metric_count', after=None):
+    def get_top_by_count(
+        cls,
+        qs,
+        model_field,
+        metric_field,
+        size,
+        order_by=None,
+        count_field='count',
+        annotation='metric_count',
+        after=None,
+    ):
         """Return a queryset annotated with the metric counts for each item.
 
         Example: ::
@@ -108,16 +111,17 @@ class MetricMixin(object):
         # Annotate the queryset with the counts for each id
         # https://stackoverflow.com/a/48187723/1157536
         whens = [
-            models.When(**{
-                model_field: k,
-                'then': v,
-            }) for k, v in id_to_count.items()
+            models.When(**{model_field: k, 'then': v,}) for k, v in id_to_count.items()
         ]
         # By default order by annotation, desc
         order_by = order_by or '-{}'.format(annotation)
-        return qs.annotate(**{
-            annotation: models.Case(*whens, default=0, output_field=models.IntegerField())
-        }).order_by(order_by)
+        return qs.annotate(
+            **{
+                annotation: models.Case(
+                    *whens, default=0, output_field=models.IntegerField()
+                )
+            }
+        ).order_by(order_by)
 
 
 class BasePreprintMetric(MetricMixin, metrics.Metric):
@@ -227,38 +231,30 @@ class UserInstitutionProjectCounts(MetricMixin, metrics.Metric):
         search = cls.filter_institution(institution).sort('timestamp')
         last_record_time = cls.get_recent_datetime(institution)
 
-        return search.update_from_dict({
-            'aggs': {
-                'date_range': {
-                    'filter': {
-                        'range': {
-                            'timestamp': {
-                                'gte': last_record_time,
+        return search.update_from_dict(
+            {
+                'aggs': {
+                    'date_range': {
+                        'filter': {'range': {'timestamp': {'gte': last_record_time,}}},
+                        'aggs': {
+                            'departments': {
+                                'terms': {
+                                    'field': 'department',
+                                    'missing': DEFAULT_ES_NULL_VALUE,
+                                    'size': 250,
+                                },
+                                'aggs': {'users': {'terms': {'field': 'user_id'}}},
                             }
-                        }
-                    },
-                    'aggs': {
-                        'departments': {
-                            'terms': {
-                                'field': 'department',
-                                'missing': DEFAULT_ES_NULL_VALUE,
-                                'size': 250
-                            },
-                            'aggs': {
-                                'users': {
-                                    'terms': {
-                                        'field': 'user_id'
-                                    }
-                                }
-                            }
-                        }
+                        },
                     }
                 }
             }
-        })
+        )
 
     @classmethod
-    def record_user_institution_project_counts(cls, user, institution, public_project_count, private_project_count, **kwargs):
+    def record_user_institution_project_counts(
+        cls, user, institution, public_project_count, private_project_count, **kwargs
+    ):
         return cls.record(
             user_id=user._id,
             institution_id=institution._id,
@@ -277,21 +273,15 @@ class UserInstitutionProjectCounts(MetricMixin, metrics.Metric):
         """
         last_record_time = cls.get_recent_datetime(institution)
 
-        search = cls.filter_institution(
-            institution
-        ).filter(
-            'range',
-            timestamp={
-                'gte': last_record_time
-            }
-        ).sort(
-            'user_id'
+        search = (
+            cls.filter_institution(institution)
+            .filter('range', timestamp={'gte': last_record_time})
+            .sort('user_id')
         )
-        search.update_from_dict({
-            'size': MAX_SIZE_OF_ES_QUERY
-        })
+        search.update_from_dict({'size': MAX_SIZE_OF_ES_QUERY})
 
         return search
+
 
 class InstitutionProjectCounts(MetricMixin, metrics.Metric):
     institution_id = metrics.Keyword(index=True, doc_values=True, required=True)
@@ -310,7 +300,9 @@ class InstitutionProjectCounts(MetricMixin, metrics.Metric):
         source = metrics.MetaField(enabled=True)
 
     @classmethod
-    def record_institution_project_counts(cls, institution, public_project_count, private_project_count, **kwargs):
+    def record_institution_project_counts(
+        cls, institution, public_project_count, private_project_count, **kwargs
+    ):
         return cls.record(
             institution_id=institution._id,
             user_count=institution.osfuser_set.count(),
@@ -321,7 +313,11 @@ class InstitutionProjectCounts(MetricMixin, metrics.Metric):
 
     @classmethod
     def get_latest_institution_project_document(cls, institution):
-        search = cls.search().filter('match', institution_id=institution._id).sort('-timestamp')[:1]
+        search = (
+            cls.search()
+            .filter('match', institution_id=institution._id)
+            .sort('-timestamp')[:1]
+        )
         response = search.execute()
         if response:
             return response[0]

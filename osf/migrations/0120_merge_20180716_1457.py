@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0119_add_asset_perms'),
     ]
 
-    operations = [
-    ]
+    operations = []

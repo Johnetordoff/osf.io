@@ -6,26 +6,21 @@ from addons.github import views
 
 api_routes = {
     'rules': [
-
         Rule(
-            [
-                '/settings/github/accounts/',
-            ],
+            ['/settings/github/accounts/',],
             'get',
             views.github_account_list,
             json_renderer,
         ),
-
         Rule(
             [
                 '/project/<pid>/github/settings/',
-                '/project/<pid>/node/<nid>/github/settings/'
+                '/project/<pid>/node/<nid>/github/settings/',
             ],
             'get',
             views.github_get_config,
             json_renderer,
         ),
-
         Rule(
             [
                 '/project/<pid>/github/settings/',
@@ -35,27 +30,24 @@ api_routes = {
             views.github_set_config,
             json_renderer,
         ),
-
         Rule(
             [
                 '/project/<pid>/github/user_auth/',
-                '/project/<pid>/node/<nid>/github/user_auth/'
+                '/project/<pid>/node/<nid>/github/user_auth/',
             ],
             'put',
             views.github_import_auth,
             json_renderer,
         ),
-
         Rule(
             [
                 '/project/<pid>/github/user_auth/',
-                '/project/<pid>/node/<nid>/github/user_auth/'
+                '/project/<pid>/node/<nid>/github/user_auth/',
             ],
             'delete',
             views.github_deauthorize_node,
             json_renderer,
         ),
-
         Rule(
             [
                 '/project/<pid>/github/tarball/',
@@ -78,28 +70,21 @@ api_routes = {
             {'archive': 'zip'},
             endpoint_suffix='__zip',
         ),
-
         Rule(
-            [
-                '/project/<pid>/github/hook/',
-                '/project/<pid>/node/<nid>/github/hook/',
-            ],
+            ['/project/<pid>/github/hook/', '/project/<pid>/node/<nid>/github/hook/',],
             'post',
             views.github_hook_callback,
             json_renderer,
         ),
-
         Rule(
             [
                 '/project/<pid>/github/repo/create/',
                 '/project/<pid>/node/<nid>/github/repo/create/',
-
             ],
             'post',
             views.github_create_repo,
             json_renderer,
         ),
-
         Rule(
             [
                 '/project/<pid>/github/hgrid/root/',
@@ -109,7 +94,6 @@ api_routes = {
             views.github_root_folder,
             json_renderer,
         ),
-
         Rule(
             [
                 '/project/<pid>/github/folders/',
@@ -119,7 +103,6 @@ api_routes = {
             views.github_folder_list,
             json_renderer,
         ),
-
     ],
-    'prefix': '/api/v1'
+    'prefix': '/api/v1',
 }

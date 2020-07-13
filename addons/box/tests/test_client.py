@@ -9,8 +9,8 @@ from addons.box.models import UserSettings
 
 pytestmark = pytest.mark.django_db
 
-class TestCore(unittest.TestCase):
 
+class TestCore(unittest.TestCase):
     def setUp(self):
 
         super(TestCore, self).setUp()

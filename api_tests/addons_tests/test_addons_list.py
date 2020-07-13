@@ -5,7 +5,6 @@ from api.base.settings.defaults import API_BASE
 
 @pytest.mark.django_db
 class TestAddonsList:
-
     def test_filter_by_category(self, app):
         url = '/{}addons/'.format(API_BASE)
         url_storage = '{}?filter[categories]=storage'.format(url)

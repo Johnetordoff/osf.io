@@ -21,9 +21,7 @@ class _CachedProperty(property):
 
     def __init__(self, fget, fset=None, fdel=None, doc=None):
         """Initializes the cached property."""
-        self._cache_name = '_{name}_cache'.format(
-            name=fget.__name__,
-        )
+        self._cache_name = '_{name}_cache'.format(name=fget.__name__,)
         # Wrap the accessors.
         fget = self._wrap_fget(fget)
         if callable(fset):

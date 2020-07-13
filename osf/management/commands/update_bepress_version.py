@@ -34,14 +34,15 @@ BEPRESS_CHANGES = {
         'Social and Behavioral Sciences:Food Studies',
         'Social and Behavioral Sciences:Psychology:Comparative Psychology',
         'Social and Behavioral Sciences:Psychology:Transpersonal Psychology',
-        'Social and Behavioral Sciences:Public Affairs, Public Policy and Public Administration:Terrorism Studies'
+        'Social and Behavioral Sciences:Public Affairs, Public Policy and Public Administration:Terrorism Studies',
     ],
     'rename': {
         'Native American Studies': 'Indigenous Studies',
         'Computer Security': 'Information Security',
         'Military Studies': 'Military and Veterans Studies',
-    }
+    },
 }
+
 
 def update(dry_run=False):
     created_dict = {'osf': []}
@@ -49,35 +50,58 @@ def update(dry_run=False):
         new_text = hier.split(':')[-1]
         bepress_parent = BEPRESS_PROVIDER.subjects.get(text=hier.split(':')[-2])
         logger.info('Creating osf - {}'.format(new_text))
-        bepress_subject = Subject.objects.create(parent=bepress_parent, provider=BEPRESS_PROVIDER, text=new_text)
+        bepress_subject = Subject.objects.create(
+            parent=bepress_parent, provider=BEPRESS_PROVIDER, text=new_text
+        )
         created_dict['osf'].append(new_text)
         for custom_parent in bepress_parent.aliases.all():
             if not bepress_parent.children.count() > 1 or (
-                    custom_parent.children.exists() and
-                    set(bepress_parent.children.exclude(text=new_text).values_list('text', flat=True)).issubset(set(custom_parent.children.values_list('text', flat=True)))):
+                custom_parent.children.exists()
+                and set(
+                    bepress_parent.children.exclude(text=new_text).values_list(
+                        'text', flat=True
+                    )
+                ).issubset(set(custom_parent.children.values_list('text', flat=True)))
+            ):
                 # Either children were included in the custom taxonomy or they didn't exist before, probably
-                logger.info('Creating {} - {}'.format(custom_parent.provider._id, new_text))
-                Subject.objects.create(parent=custom_parent, provider=custom_parent.provider, text=new_text, bepress_subject=bepress_subject)
+                logger.info(
+                    'Creating {} - {}'.format(custom_parent.provider._id, new_text)
+                )
+                Subject.objects.create(
+                    parent=custom_parent,
+                    provider=custom_parent.provider,
+                    text=new_text,
+                    bepress_subject=bepress_subject,
+                )
                 if custom_parent.provider._id not in created_dict:
                     created_dict[custom_parent.provider._id] = []
                 created_dict[custom_parent.provider._id].append(new_text)
     for old, new in BEPRESS_CHANGES['rename'].items():
         logger.info('Renaming `{}`->`{}`'.format(old, new))
         to_update = Subject.objects.filter(text=old)
-        affected_preprints = set(to_update.exclude(preprints__isnull=True).values_list('preprints__guids___id', flat=True))
+        affected_preprints = set(
+            to_update.exclude(preprints__isnull=True).values_list(
+                'preprints__guids___id', flat=True
+            )
+        )
         to_update.update(text=new)
         for preprint_id in affected_preprints:
             logger.info('Notifying SHARE about preprint {} change'.format(preprint_id))
             if not dry_run:
                 on_preprint_updated(preprint_id)
     for provider_id, list_of_subjs in created_dict.items():
-        logger.info('Created {} new subjects on {}: "{}"'.format(len(list_of_subjs), provider_id, ', '.join(list_of_subjs)))
+        logger.info(
+            'Created {} new subjects on {}: "{}"'.format(
+                len(list_of_subjs), provider_id, ', '.join(list_of_subjs)
+            )
+        )
 
 
 class Command(BaseCommand):
     """
     Add/Rename subjects based on BePress taxonomy changes, update SHARE with new data for affected preprints
     """
+
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
         parser.add_argument(

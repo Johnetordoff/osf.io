@@ -11,6 +11,7 @@ from addons.gitlab.serializer import GitLabSerializer
 
 pytestmark = pytest.mark.django_db
 
+
 class TestGitLabSerializer(StorageAddonSerializerTestSuiteMixin, OsfTestCase):
 
     addon_short_name = 'gitlab'

@@ -6,7 +6,6 @@ from osf_tests.factories import ApiOAuth2ScopeFactory
 
 @pytest.mark.django_db
 class TestScopeList:
-
     def test_scope_list(self, app):
         scope = ApiOAuth2ScopeFactory()
         second_scope = ApiOAuth2ScopeFactory()

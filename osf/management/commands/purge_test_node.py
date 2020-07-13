@@ -18,20 +18,26 @@ def remove_logs_and_files(node_guid):
         logger.info('{} - Deleting file versions...'.format(n._id))
         for file in n.files.exclude(parent__isnull=True):
             try:
-                file.versions.exclude(id=file.versions.latest('date_created').id).delete()
+                file.versions.exclude(
+                    id=file.versions.latest('date_created').id
+                ).delete()
             except file.versions.model.DoesNotExist:
                 # No FileVersions, skip
                 pass
         logger.info('{} - Deleting trashed file nodes...'.format(n._id))
-        BaseFileNode.objects.filter(type__in=TrashedFileNode._typedmodels_subtypes, node=n).delete()
+        BaseFileNode.objects.filter(
+            type__in=TrashedFileNode._typedmodels_subtypes, node=n
+        ).delete()
         logger.info('{} - Deleting logs...'.format(n._id))
         n.logs.exclude(id=n.logs.earliest().id).delete()
+
 
 class Command(BaseCommand):
     """
     Removes all logs and non-root files from a node.
     For cleaning up after RunScope tests that get out of hand.
     """
+
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
         parser.add_argument(
@@ -46,7 +52,7 @@ class Command(BaseCommand):
             '--i-am-really-sure-about-this',
             action='store_true',
             dest='really_delete',
-            help='Actually delete data'
+            help='Actually delete data',
         )
 
     def handle(self, *args, **options):

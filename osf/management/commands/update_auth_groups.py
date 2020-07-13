@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     """Add/update reviews auth groups for all reviews providers"""
+
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
         parser.add_argument(

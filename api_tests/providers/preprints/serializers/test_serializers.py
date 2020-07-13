@@ -9,28 +9,37 @@ from osf_tests.factories import (
 )
 from tests.utils import make_drf_request_with_version
 
+
 @pytest.fixture()
 def preprint():
     return PreprintFactory()
 
+
 @pytest.mark.django_db
 class TestRetractedPreprintSerialization:
-
     def test_hidden_fields_on_retracted_preprint(self, preprint):
         hide_if_withdrawal_fields = {
-            'is_published', 'is_preprint_orphan', 'license_record',
-            'preprint_doi_created'
+            'is_published',
+            'is_preprint_orphan',
+            'license_record',
+            'preprint_doi_created',
         }
         hide_if_not_withdrawal_fields = {'withdrawal_justification'}
         always_show_fields = {
-            'date_created', 'date_modified', 'date_published', 'original_publication_date',
-            'doi', 'title', 'description', 'date_withdrawn', 'tags'}
+            'date_created',
+            'date_modified',
+            'date_published',
+            'original_publication_date',
+            'doi',
+            'title',
+            'description',
+            'date_withdrawn',
+            'tags',
+        }
 
         # test_non_retracted
         req = make_drf_request_with_version()
-        result = PreprintSerializer(
-            preprint,
-            context={'request': req}).data
+        result = PreprintSerializer(preprint, context={'request': req}).data
         data = result['data']
         attributes = set(data['attributes'])
 
@@ -44,21 +53,25 @@ class TestRetractedPreprintSerialization:
         preprint.save()
         preprint.reload()
 
-        result = PreprintSerializer(
-            preprint,
-            context={'request': req}).data
+        result = PreprintSerializer(preprint, context={'request': req}).data
         data = result['data']
         attributes = set(data['attributes'])
 
         assert preprint.is_retracted
         assert always_show_fields.issubset(attributes)
         assert hide_if_not_withdrawal_fields.issubset(attributes)
-        assert all(list([data['attributes'][field] is None for field in list(hide_if_withdrawal_fields)]))
+        assert all(
+            list(
+                [
+                    data['attributes'][field] is None
+                    for field in list(hide_if_withdrawal_fields)
+                ]
+            )
+        )
 
 
 @pytest.mark.django_db
 class TestDeprecatedPreprintProviderSerializer:
-
     @pytest.fixture()
     def preprint_provider(self):
         return PreprintProviderFactory()
@@ -67,8 +80,7 @@ class TestDeprecatedPreprintProviderSerializer:
         # test_preprint_provider_serialization_v2
         req = make_drf_request_with_version(version='2.0')
         result = DeprecatedPreprintProviderSerializer(
-            preprint_provider,
-            context={'request': req}
+            preprint_provider, context={'request': req}
         ).data
 
         data = result['data']
@@ -90,8 +102,7 @@ class TestDeprecatedPreprintProviderSerializer:
         # test_preprint_provider_serialization_v24
         req = make_drf_request_with_version(version='2.4')
         result = DeprecatedPreprintProviderSerializer(
-            preprint_provider,
-            context={'request': req}
+            preprint_provider, context={'request': req}
         ).data
 
         data = result['data']
@@ -111,8 +122,7 @@ class TestDeprecatedPreprintProviderSerializer:
         # # test_preprint_provider_serialization_v25
         req = make_drf_request_with_version(version='2.5')
         result = DeprecatedPreprintProviderSerializer(
-            preprint_provider,
-            context={'request': req}
+            preprint_provider, context={'request': req}
         ).data
 
         data = result['data']

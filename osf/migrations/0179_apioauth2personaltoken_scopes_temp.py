@@ -27,8 +27,9 @@ old_scope_mapping = {
     'osf.users.all_read': 'osf.users.profile_read',
     'osf.users.all_write': 'osf.users.profile_write',
     'osf.nodes.all_read': 'osf.nodes.full_read',
-    'osf.nodes.all_write': 'osf.nodes.full_write'
+    'osf.nodes.all_write': 'osf.nodes.full_write',
 }
+
 
 def remove_m2m_scopes(state, schema):
     ApiOAuth2PersonalToken = state.get_model('osf', 'apioauth2personaltoken')
@@ -38,6 +39,7 @@ def remove_m2m_scopes(state, schema):
         token.scopes_temp.clear()
         token.save()
 
+
 def migrate_scopes_from_char_to_m2m(state, schema):
     ApiOAuth2PersonalToken = state.get_model('osf', 'apioauth2personaltoken')
     ApiOAuth2Scope = state.get_model('osf', 'apioauth2scope')
@@ -46,9 +48,12 @@ def migrate_scopes_from_char_to_m2m(state, schema):
     for token in tokens:
         string_scopes = token.scopes.split(' ')
         for scope in string_scopes:
-            loaded_scope = ApiOAuth2Scope.objects.get(name=old_scope_mapping.get(scope, scope))
+            loaded_scope = ApiOAuth2Scope.objects.get(
+                name=old_scope_mapping.get(scope, scope)
+            )
             token.scopes_temp.add(loaded_scope)
             token.save()
+
 
 class Migration(migrations.Migration):
 
@@ -63,16 +68,14 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='apioauth2personaltoken',
             name='scopes',
-            field=models.CharField(blank=False, null=True, max_length=300)
+            field=models.CharField(blank=False, null=True, max_length=300),
         ),
-
         migrations.AddField(
             model_name='apioauth2personaltoken',
             name='scopes_temp',
-            field=models.ManyToManyField(related_name='tokens', to='osf.ApiOAuth2Scope'),
+            field=models.ManyToManyField(
+                related_name='tokens', to='osf.ApiOAuth2Scope'
+            ),
         ),
-        migrations.RunPython(
-            migrate_scopes_from_char_to_m2m,
-            remove_m2m_scopes
-        )
+        migrations.RunPython(migrate_scopes_from_char_to_m2m, remove_m2m_scopes),
     ]

@@ -9,6 +9,7 @@ from website.util import rubeus
 
 logger = logging.getLogger(__name__)
 
+
 def gitlab_hgrid_data(node_settings, auth, **kwargs):
 
     # Quit if no repo linked
@@ -31,48 +32,61 @@ def gitlab_hgrid_data(node_settings, auth, **kwargs):
             return None
 
     try:
-        branch, sha, branches = get_refs(node_settings, branch=kwargs.get('branch'), sha=kwargs.get('sha'), connection=connection)
+        branch, sha, branches = get_refs(
+            node_settings,
+            branch=kwargs.get('branch'),
+            sha=kwargs.get('sha'),
+            connection=connection,
+        )
     except (NotFoundError, GitLabError):
         logger.error('GitLab repo not found')
         return
 
     if branch is not None:
         ref = ref_to_params(branch, sha)
-        can_edit = check_permissions(node_settings, auth, connection, branch, sha, repo=repo)
+        can_edit = check_permissions(
+            node_settings, auth, connection, branch, sha, repo=repo
+        )
     else:
         ref = ''
         can_edit = False
 
-    permissions = {
-        'edit': can_edit,
-        'view': True,
-        'private': node_settings.is_private
-    }
+    permissions = {'edit': can_edit, 'view': True, 'private': node_settings.is_private}
     urls = {
         'upload': node_settings.owner.api_url + 'gitlab/file/' + ref,
         'fetch': node_settings.owner.api_url + 'gitlab/hgrid/' + ref,
         'branch': node_settings.owner.api_url + 'gitlab/hgrid/root/' + ref,
-        'zip': '{0}/{1}/repository/archive.zip?branch={2}'.format(node_settings.external_account.oauth_secret, repo.path_with_namespace, ref),
-        'repo': '{0}/{1}/tree/{2}'.format(node_settings.external_account.oauth_secret, repo.path_with_namespace, ref)
+        'zip': '{0}/{1}/repository/archive.zip?branch={2}'.format(
+            node_settings.external_account.oauth_secret, repo.path_with_namespace, ref
+        ),
+        'repo': '{0}/{1}/tree/{2}'.format(
+            node_settings.external_account.oauth_secret, repo.path_with_namespace, ref
+        ),
     }
 
     branch_names = [each.name for each in branches]
     if not branch_names:
-        branch_names = [branch]  # if repo un-init-ed then still add default branch to list of branches
+        branch_names = [
+            branch
+        ]  # if repo un-init-ed then still add default branch to list of branches
 
-    return [rubeus.build_addon_root(
-        node_settings,
-        repo.path_with_namespace,
-        urls=urls,
-        permissions=permissions,
-        branches=branch_names,
-        private_key=kwargs.get('view_only', None),
-        default_branch=repo.default_branch,
-    )]
+    return [
+        rubeus.build_addon_root(
+            node_settings,
+            repo.path_with_namespace,
+            urls=urls,
+            permissions=permissions,
+            branches=branch_names,
+            private_key=kwargs.get('view_only', None),
+            default_branch=repo.default_branch,
+        )
+    ]
+
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 NODE_SETTINGS_TEMPLATE = os.path.join(HERE, 'templates', 'gitlab_node_settings.mako')
 USER_SETTINGS_TEMPLATE = os.path.join(HERE, 'templates', 'gitlab_user_settings.mako')
+
 
 class GitLabAddonConfig(BaseAddonAppConfig):
 
@@ -108,11 +122,13 @@ class GitLabAddonConfig(BaseAddonAppConfig):
         NODE_AUTHORIZED,
         NODE_DEAUTHORIZED,
         NODE_DEAUTHORIZED_NO_USER,
-        REPO_LINKED)
+        REPO_LINKED,
+    )
 
     @property
     def routes(self):
         from . import routes
+
         return [routes.api_routes]
 
     @property

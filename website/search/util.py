@@ -8,6 +8,7 @@ DESCRIPTION_WEIGHT = 1.2
 JOB_SCHOOL_BOOST = 1
 ALL_JOB_SCHOOL_BOOST = 0.125
 
+
 def build_query(qs='*', start=0, size=10, sort=None):
     query = {
         'query': build_query_string(qs),
@@ -16,11 +17,7 @@ def build_query(qs='*', start=0, size=10, sort=None):
     }
 
     if sort:
-        query['sort'] = [
-            {
-                sort: 'desc'
-            }
-        ]
+        query['sort'] = [{sort: 'desc'}]
     return query
 
 
@@ -34,7 +31,6 @@ def build_query_string(qs):
         'all_jobs': ALL_JOB_SCHOOL_BOOST,
         'all_schools': ALL_JOB_SCHOOL_BOOST,
         '_all': 1,
-
     }
 
     fields = ['{}^{}'.format(k, v) for k, v in field_boosts.items()]
@@ -44,9 +40,10 @@ def build_query_string(qs):
             'fields': fields,
             'query': qs,
             'analyze_wildcard': True,
-            'lenient': True  # TODO, may not want to do this
+            'lenient': True,  # TODO, may not want to do this
         }
     }
+
 
 def clean_splitters(text):
     new_text = text.replace('_', ' ').replace('-', ' ').replace('.', ' ')

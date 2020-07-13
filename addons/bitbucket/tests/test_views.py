@@ -20,7 +20,8 @@ from framework.auth import Auth
 
 from website.util import api_url_for
 from addons.base.tests.views import (
-    OAuthAddonAuthViewsTestCaseMixin, OAuthAddonConfigViewsTestCaseMixin
+    OAuthAddonAuthViewsTestCaseMixin,
+    OAuthAddonConfigViewsTestCaseMixin,
 )
 from addons.bitbucket import utils
 from addons.bitbucket.api import BitbucketClient
@@ -32,16 +33,20 @@ from addons.bitbucket.tests.utils import BitbucketAddonTestCase, create_mock_bit
 pytestmark = pytest.mark.django_db
 
 
-class TestBitbucketAuthViews(BitbucketAddonTestCase, OAuthAddonAuthViewsTestCaseMixin, OsfTestCase):
+class TestBitbucketAuthViews(
+    BitbucketAddonTestCase, OAuthAddonAuthViewsTestCaseMixin, OsfTestCase
+):
     @mock.patch(
         'addons.bitbucket.models.UserSettings.revoke_remote_oauth_access',
-        mock.PropertyMock()
+        mock.PropertyMock(),
     )
     def test_delete_external_account(self):
         super(TestBitbucketAuthViews, self).test_delete_external_account()
 
 
-class TestBitbucketConfigViews(BitbucketAddonTestCase, OAuthAddonConfigViewsTestCaseMixin, OsfTestCase):
+class TestBitbucketConfigViews(
+    BitbucketAddonTestCase, OAuthAddonConfigViewsTestCaseMixin, OsfTestCase
+):
     folder = None
     Serializer = BitbucketSerializer
     client = BitbucketClient
@@ -50,7 +55,9 @@ class TestBitbucketConfigViews(BitbucketAddonTestCase, OAuthAddonConfigViewsTest
 
     def setUp(self):
         super(TestBitbucketConfigViews, self).setUp()
-        self.mock_access_token = mock.patch('addons.bitbucket.models.BitbucketProvider.fetch_access_token')
+        self.mock_access_token = mock.patch(
+            'addons.bitbucket.models.BitbucketProvider.fetch_access_token'
+        )
         self.mock_access_token.return_value = mock.Mock()
         self.mock_access_token.start()
 
@@ -69,20 +76,20 @@ class TestBitbucketConfigViews(BitbucketAddonTestCase, OAuthAddonConfigViewsTest
         mock_account.return_value = mock.Mock()
         mock_repo.return_value = 'repo_name'
         url = self.project.api_url_for('{0}_set_config'.format(self.ADDON_SHORT_NAME))
-        res = self.app.post_json(url, {
-            'bitbucket_user': 'octocat',
-            'bitbucket_repo': 'repo_name',
-        }, auth=self.user.auth)
+        res = self.app.post_json(
+            url,
+            {'bitbucket_user': 'octocat', 'bitbucket_repo': 'repo_name',},
+            auth=self.user.auth,
+        )
         assert_equal(res.status_code, http_status.HTTP_200_OK)
         self.project.reload()
         assert_equal(
             self.project.logs.latest().action,
-            '{0}_repo_linked'.format(self.ADDON_SHORT_NAME)
+            '{0}_repo_linked'.format(self.ADDON_SHORT_NAME),
         )
 
 
 class TestBitbucketViews(OsfTestCase):
-
     def setUp(self):
         super(TestBitbucketViews, self).setUp()
         self.user = AuthUserFactory()
@@ -91,8 +98,7 @@ class TestBitbucketViews(OsfTestCase):
         self.project = ProjectFactory(creator=self.user)
         self.non_authenticator = UserFactory()
         self.project.add_contributor(
-            contributor=self.non_authenticator,
-            auth=self.consolidated_auth,
+            contributor=self.non_authenticator, auth=self.consolidated_auth,
         )
         self.project.save()
 
@@ -106,7 +112,9 @@ class TestBitbucketViews(OsfTestCase):
         self.bitbucket = create_mock_bitbucket(user='fred', private=False)
 
         self.user_settings = self.project.creator.get_addon('bitbucket')
-        self.user_settings.oauth_grants[self.project._id] = {self.external_account._id: []}
+        self.user_settings.oauth_grants[self.project._id] = {
+            self.external_account._id: []
+        }
         self.user_settings.save()
 
         self.node_settings = self.project.get_addon('bitbucket')
@@ -132,19 +140,22 @@ class TestBitbucketViews(OsfTestCase):
     @mock.patch('addons.bitbucket.api.BitbucketClient.repo')
     @mock.patch('addons.bitbucket.api.BitbucketClient.repo_default_branch')
     @mock.patch('addons.bitbucket.models.NodeSettings.external_account')
-    def test_get_refs_defaults(self, mock_account, mock_default_branch, mock_repo, mock_branches):
+    def test_get_refs_defaults(
+        self, mock_account, mock_default_branch, mock_repo, mock_branches
+    ):
         bitbucket_mock = self.bitbucket
         mock_account.return_value = mock.Mock()
-        mock_default_branch.return_value = bitbucket_mock.repo_default_branch.return_value
+        mock_default_branch.return_value = (
+            bitbucket_mock.repo_default_branch.return_value
+        )
         mock_repo.return_value = bitbucket_mock.repo.return_value
         mock_branches.return_value = bitbucket_mock.branches.return_value
 
         branch, sha, branches = utils.get_refs(self.node_settings)
+        assert_equal(branch, bitbucket_mock.repo_default_branch.return_value)
         assert_equal(
-            branch,
-            bitbucket_mock.repo_default_branch.return_value
-        )
-        assert_equal(sha, self._get_sha_for_branch(branch=None))  # Get refs for default branch
+            sha, self._get_sha_for_branch(branch=None)
+        )  # Get refs for default branch
 
         expected_branches = [
             {'name': x['name'], 'sha': x['target']['hash']}
@@ -156,10 +167,14 @@ class TestBitbucketViews(OsfTestCase):
     @mock.patch('addons.bitbucket.api.BitbucketClient.repo')
     @mock.patch('addons.bitbucket.api.BitbucketClient.repo_default_branch')
     @mock.patch('addons.bitbucket.models.NodeSettings.external_account')
-    def test_get_refs_branch(self, mock_account, mock_default_branch, mock_repo, mock_branches):
+    def test_get_refs_branch(
+        self, mock_account, mock_default_branch, mock_repo, mock_branches
+    ):
         bitbucket_mock = self.bitbucket
         mock_account.return_value = mock.Mock()
-        mock_default_branch.return_value = bitbucket_mock.repo_default_branch.return_value
+        mock_default_branch.return_value = (
+            bitbucket_mock.repo_default_branch.return_value
+        )
         mock_repo.return_value = bitbucket_mock.repo.return_value
         mock_branches.return_value = bitbucket_mock.branches.return_value
 
@@ -190,10 +205,12 @@ class TestBitbucketViews(OsfTestCase):
             utils.get_refs(self.node_settings, sha='12345')
 
     def check_hook_urls(self, urls, node, path, sha):
-        url = node.web_url_for('addon_view_or_download_file', path=path, provider='bitbucket')
+        url = node.web_url_for(
+            'addon_view_or_download_file', path=path, provider='bitbucket'
+        )
         expected_urls = {
             'view': '{0}?ref={1}'.format(url, sha),
-            'download': '{0}?action=download&ref={1}'.format(url, sha)
+            'download': '{0}?action=download&ref={1}'.format(url, sha),
         }
 
         assert_equal(urls['view'], expected_urls['view'])
@@ -201,7 +218,6 @@ class TestBitbucketViews(OsfTestCase):
 
 
 class TestBitbucketSettings(OsfTestCase):
-
     def setUp(self):
 
         super(TestBitbucketSettings, self).setUp()
@@ -230,11 +246,8 @@ class TestBitbucketSettings(OsfTestCase):
         url = self.project.api_url + 'bitbucket/settings/'
         self.app.post_json(
             url,
-            {
-                'bitbucket_user': 'queen',
-                'bitbucket_repo': 'night at the opera',
-            },
-            auth=self.auth
+            {'bitbucket_user': 'queen', 'bitbucket_repo': 'night at the opera',},
+            auth=self.auth,
         ).maybe_follow()
 
         self.project.reload()
@@ -256,11 +269,8 @@ class TestBitbucketSettings(OsfTestCase):
         url = self.project.api_url + 'bitbucket/settings/'
         self.app.post_json(
             url,
-            {
-                'bitbucket_user': 'Queen',
-                'bitbucket_repo': 'Sheer-Heart-Attack',
-            },
-            auth=self.auth
+            {'bitbucket_user': 'Queen', 'bitbucket_repo': 'Sheer-Heart-Attack',},
+            auth=self.auth,
         ).maybe_follow()
 
         self.project.reload()
@@ -277,12 +287,9 @@ class TestBitbucketSettings(OsfTestCase):
         url = self.project.api_url + 'bitbucket/settings/'
         res = self.app.post_json(
             url,
-            {
-                'bitbucket_user': 'queen',
-                'bitbucket_repo': 'night at the opera',
-            },
+            {'bitbucket_user': 'queen', 'bitbucket_repo': 'night at the opera',},
             auth=self.auth,
-            expect_errors=True
+            expect_errors=True,
         ).maybe_follow()
 
         assert_equal(res.status_code, 400)
@@ -295,18 +302,15 @@ class TestBitbucketSettings(OsfTestCase):
         registration = self.project.register_node(
             schema=get_default_metaschema(),
             auth=self.consolidated_auth,
-            draft_registration=DraftRegistrationFactory(branched_from=self.project)
+            draft_registration=DraftRegistrationFactory(branched_from=self.project),
         )
 
         url = registration.api_url + 'bitbucket/settings/'
         res = self.app.post_json(
             url,
-            {
-                'bitbucket_user': 'queen',
-                'bitbucket_repo': 'night at the opera',
-            },
+            {'bitbucket_user': 'queen', 'bitbucket_repo': 'night at the opera',},
             auth=self.auth,
-            expect_errors=True
+            expect_errors=True,
         ).maybe_follow()
 
         assert_equal(res.status_code, 400)

@@ -6,6 +6,7 @@ import logging
 from datetime import datetime
 
 from website.app import setup_django
+
 setup_django()
 
 from django.utils import timezone
@@ -26,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
+
 def analyze_failed_registration_nodes():
     """ If we can just retry the archive, but we can only do that if the
     ORIGINAL node hasn't changed.
@@ -37,7 +39,9 @@ def analyze_failed_registration_nodes():
     failed_registration_info = []
     for broken_registration in failed_registration_nodes:
         unacceptable_node_logs_after_date = list(
-            broken_registration.registered_from.get_logs_queryset(Auth(broken_registration.registered_from.creator))
+            broken_registration.registered_from.get_logs_queryset(
+                Auth(broken_registration.registered_from.creator)
+            )
             .filter(date__gt=broken_registration.registered_date)
             .exclude(action__in=fa.LOG_WHITELIST)
             .exclude(action__in=fa.LOG_GREYLIST)
@@ -46,7 +50,8 @@ def analyze_failed_registration_nodes():
 
         # Does it have any addons?
         addon_list = [
-            addon for addon in ADDONS_REQUESTED
+            addon
+            for addon in ADDONS_REQUESTED
             if broken_registration.registered_from.has_addon(addon)
             and addon not in {'osfstorage', 'wiki'}
         ]
@@ -57,7 +62,7 @@ def analyze_failed_registration_nodes():
         succeeded_registrations_after_failed = []
         for other_reg in Registration.objects.filter(
             registered_from=broken_registration.registered_from,
-            registered_date__gt=broken_registration.registered_date
+            registered_date__gt=broken_registration.registered_date,
         ):
             if other_reg.sanction:
                 if other_reg.sanction.is_approved:
@@ -87,10 +92,17 @@ def analyze_failed_registration_nodes():
 def main():
     broken_registrations = analyze_failed_registration_nodes()
     if broken_registrations:
-        fieldnames = ['registration', 'registered_date', 'original_node',
-                    'logs_on_original_after_registration_date',
-                    'has_addons', 'addon_list', 'succeeded_registrations_after_failed', 'can_be_reset',
-                    'registered_from_public']
+        fieldnames = [
+            'registration',
+            'registered_date',
+            'original_node',
+            'logs_on_original_after_registration_date',
+            'has_addons',
+            'addon_list',
+            'succeeded_registrations_after_failed',
+            'can_be_reset',
+            'registered_from_public',
+        ]
         filename = 'stuck_registrations_{}.csv'.format(timezone.now().isoformat())
 
         output = io.StringIO()
@@ -115,6 +127,7 @@ def main():
 def run_main():
     scripts_utils.add_file_logger(logger, __file__)
     main()
+
 
 if __name__ == '__main__':
     main()

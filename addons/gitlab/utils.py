@@ -24,6 +24,8 @@ def make_hook_secret():
 
 
 HOOK_SIGNATURE_KEY = 'X-Hub-Signature'
+
+
 def verify_hook_signature(node_settings, data, headers):
     """Verify hook signature.
     :param GitLabNodeSettings node_settings:
@@ -36,7 +38,7 @@ def verify_hook_signature(node_settings, data, headers):
     digest = hmac.new(
         node_settings.hook_secret.encode('utf-8'),
         data.encode('utf-8'),
-        digestmod=hashlib.sha1
+        digestmod=hashlib.sha1,
     ).hexdigest()
     signature = headers.get(HOOK_SIGNATURE_KEY, '').replace('sha1=', '')
     if digest != signature:
@@ -94,12 +96,10 @@ def check_permissions(node_settings, auth, connection, branch, sha=None, repo=No
         repo = repo or connection.repo(node_settings.repo_id)
         project_permissions = repo.permissions.get('project_access') or {}
         group_permissions = repo.permissions.get('group_access') or {}
-        has_access = (
-            repo is not None and (
-                # See https://docs.gitlab.com/ee/api/members.html
-                project_permissions.get('access_level', 0) >= 30 or
-                group_permissions.get('access_level', 0) >= 30
-            )
+        has_access = repo is not None and (
+            # See https://docs.gitlab.com/ee/api/members.html
+            project_permissions.get('access_level', 0) >= 30
+            or group_permissions.get('access_level', 0) >= 30
         )
 
     if sha:
@@ -110,10 +110,10 @@ def check_permissions(node_settings, auth, connection, branch, sha=None, repo=No
         is_head = True
 
     can_edit = (
-        node_settings.owner.can_edit(auth) and
-        not node_settings.owner.is_registration and
-        has_access and
-        is_head
+        node_settings.owner.can_edit(auth)
+        and not node_settings.owner.is_registration
+        and has_access
+        and is_head
     )
 
     return can_edit

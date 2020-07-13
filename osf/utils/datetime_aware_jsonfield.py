@@ -15,6 +15,7 @@ from osf.exceptions import NaiveDatetimeException, ValidationError
 
 logger = logging.getLogger(__name__)
 
+
 def coerce_nonnaive_datetimes(json_data):
     if isinstance(json_data, list):
         coerced_data = [coerce_nonnaive_datetimes(data) for data in json_data]
@@ -24,9 +25,13 @@ def coerce_nonnaive_datetimes(json_data):
             coerced_data[key] = coerce_nonnaive_datetimes(value)
     elif isinstance(json_data, dt.datetime):
         try:
-            worked = json_data.astimezone(pytz.utc)  # aware object can be in any timezone # noqa
+            worked = json_data.astimezone(
+                pytz.utc
+            )  # aware object can be in any timezone # noqa
         except ValueError:  # naive
-            coerced_data = json_data.replace(tzinfo=pytz.utc)  # json_data must be in UTC
+            coerced_data = json_data.replace(
+                tzinfo=pytz.utc
+            )  # json_data must be in UTC
         else:
             coerced_data = json_data  # it's already aware
     else:
@@ -75,9 +80,12 @@ def decode_datetime_objects(nested_value):
 
 
 class DateTimeAwareJSONField(JSONField):
-
-    def __init__(self, verbose_name=None, name=None, encoder=DateTimeAwareJSONEncoder, **kwargs):
-        super(DateTimeAwareJSONField, self).__init__(verbose_name, name, encoder, **kwargs)
+    def __init__(
+        self, verbose_name=None, name=None, encoder=DateTimeAwareJSONEncoder, **kwargs
+    ):
+        super(DateTimeAwareJSONField, self).__init__(
+            verbose_name, name, encoder, **kwargs
+        )
 
     def formfield(self, **kwargs):
         defaults = {'form_class': DateTimeAwareJSONFormField}
@@ -87,7 +95,9 @@ class DateTimeAwareJSONField(JSONField):
     def from_db_value(self, value, expression, connection, context):
         if value is None:
             return None
-        return super(DateTimeAwareJSONField, self).to_python(decode_datetime_objects(value))
+        return super(DateTimeAwareJSONField, self).to_python(
+            decode_datetime_objects(value)
+        )
 
     def get_prep_lookup(self, lookup_type, value):
         if lookup_type in ('has_key', 'has_keys', 'has_any_keys'):
@@ -101,9 +111,7 @@ class DateTimeAwareJSONFormField(JSONFormField):
             return decode_datetime_objects(json.loads(value))
         except TypeError:
             raise ValidationError(
-                self.error_messages['invalid'],
-                code='invalid',
-                params={'value': value},
+                self.error_messages['invalid'], code='invalid', params={'value': value},
             )
 
     def prepare_value(self, value):
@@ -111,10 +119,9 @@ class DateTimeAwareJSONFormField(JSONFormField):
             return json.dumps(value, cls=DateTimeAwareJSONEncoder)
         except TypeError:
             raise ValidationError(
-                self.error_messages['invalid'],
-                code='invalid',
-                params={'value': value},
+                self.error_messages['invalid'], code='invalid', params={'value': value},
             )
+
 
 JSONField.register_lookup(lookups.DataContains)
 JSONField.register_lookup(lookups.ContainedBy)

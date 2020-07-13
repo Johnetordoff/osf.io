@@ -8,7 +8,7 @@ from osf_tests.factories import (
     AuthUserFactory,
     IdentifierFactory,
     NodeFactory,
-    PreprintFactory
+    PreprintFactory,
 )
 from osf.utils.permissions import READ
 from osf.utils.workflows import DefaultStates
@@ -16,7 +16,6 @@ from osf.utils.workflows import DefaultStates
 
 @pytest.mark.django_db
 class TestIdentifierDetail:
-
     @pytest.fixture()
     def user(self):
         return AuthUserFactory()
@@ -32,7 +31,8 @@ class TestIdentifierDetail:
     @pytest.fixture()
     def res_registration(self, app, identifier_registration):
         registration_url = '/{}identifiers/{}/'.format(
-            API_BASE, identifier_registration._id)
+            API_BASE, identifier_registration._id
+        )
         return app.get(registration_url)
 
     @pytest.fixture()
@@ -70,8 +70,7 @@ class TestIdentifierDetail:
         return IdentifierFactory(referent=preprint)
 
     def test_identifier_registration_detail(
-            self, registration, identifier_registration,
-            res_registration, data_registration
+        self, registration, identifier_registration, res_registration, data_registration
     ):
 
         # test_identifier_detail_success_registration
@@ -82,19 +81,18 @@ class TestIdentifierDetail:
         path = urlparse(
             data_registration['relationships']['referent']['links']['related']['href']
         ).path
-        assert '/{}registrations/{}/'.format(
-            API_BASE, registration._id) == path
+        assert '/{}registrations/{}/'.format(API_BASE, registration._id) == path
 
         # test_identifier_detail_returns_correct_category_registration
-        assert data_registration['attributes']['category'] == identifier_registration.category
+        assert (
+            data_registration['attributes']['category']
+            == identifier_registration.category
+        )
 
         # test_identifier_detail_returns_correct_value_registration
         assert data_registration['attributes']['value'] == identifier_registration.value
 
-    def test_identifier_node_detail(
-            self, node, identifier_node,
-            res_node, data_node
-    ):
+    def test_identifier_node_detail(self, node, identifier_node, res_node, data_node):
 
         # test_identifier_detail_success_node
         assert res_node.status_code == 200
@@ -112,10 +110,7 @@ class TestIdentifierDetail:
         # test_identifier_detail_returns_correct_value_node
         assert data_node['attributes']['value'] == identifier_node.value
 
-    def test_identifier_preprint_detail(
-            self, app, preprint, identifier_preprint,
-            user
-    ):
+    def test_identifier_preprint_detail(self, app, preprint, identifier_preprint, user):
         url = '/{}identifiers/{}/'.format(API_BASE, identifier_preprint._id)
 
         res = app.get(url, expect_errors=True)
@@ -138,7 +133,7 @@ class TestIdentifierDetail:
         assert data['attributes']['value'] == identifier_preprint.value
 
     def test_identifier_preprint_detail_unpublished(
-            self, app, preprint, user, identifier_preprint, noncontrib
+        self, app, preprint, user, identifier_preprint, noncontrib
     ):
         url = '/{}identifiers/{}/'.format(API_BASE, identifier_preprint._id)
         preprint.is_published = False
@@ -164,7 +159,7 @@ class TestIdentifierDetail:
         assert res.status_code == 200
 
     def test_identifier_preprint_detail_deleted(
-            self, app, preprint, user, identifier_preprint, noncontrib
+        self, app, preprint, user, identifier_preprint, noncontrib
     ):
         url = '/{}identifiers/{}/'.format(API_BASE, identifier_preprint._id)
         preprint.deleted = timezone.now()
@@ -190,7 +185,7 @@ class TestIdentifierDetail:
         assert res.status_code == 404
 
     def test_identifier_preprint_detail_private(
-            self, app, preprint, user, identifier_preprint, noncontrib
+        self, app, preprint, user, identifier_preprint, noncontrib
     ):
         url = '/{}identifiers/{}/'.format(API_BASE, identifier_preprint._id)
         preprint.is_public = False
@@ -216,7 +211,7 @@ class TestIdentifierDetail:
         assert res.status_code == 200
 
     def test_identifier_preprint_detail_abandoned(
-            self, app, preprint, user, identifier_preprint, noncontrib
+        self, app, preprint, user, identifier_preprint, noncontrib
     ):
         url = '/{}identifiers/{}/'.format(API_BASE, identifier_preprint._id)
         preprint.machine_state = DefaultStates.INITIAL.value
@@ -241,9 +236,7 @@ class TestIdentifierDetail:
         res = app.get(url, auth=user.auth, expect_errors=True)
         assert res.status_code == 200
 
-    def test_invalid_identifier(
-            self, app, user
-    ):
+    def test_invalid_identifier(self, app, user):
         url = '/{}identifiers/{}/'.format(API_BASE, 'invalid_id')
 
         # test_unpublished_preprint_identifier_unauthenticated

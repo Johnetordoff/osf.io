@@ -3,9 +3,7 @@ import pytest
 from api.base.settings.defaults import API_BASE
 from api_tests.providers.mixins import ProviderListViewTestBaseMixin
 
-from osf_tests.factories import (
-    CollectionProviderFactory,
-)
+from osf_tests.factories import CollectionProviderFactory
 
 
 class TestCollectionProviderList(ProviderListViewTestBaseMixin):

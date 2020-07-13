@@ -10,20 +10,24 @@ from osf_tests.factories import ProjectFactory, UserFactory, DraftRegistrationFa
 
 from framework.auth import Auth
 
-from addons.base.tests.models import (OAuthAddonNodeSettingsTestSuiteMixin,
-                                      OAuthAddonUserSettingTestSuiteMixin)
+from addons.base.tests.models import (
+    OAuthAddonNodeSettingsTestSuiteMixin,
+    OAuthAddonUserSettingTestSuiteMixin,
+)
 from addons.gitlab.exceptions import NotFoundError
 from addons.gitlab.models import NodeSettings
 from addons.gitlab.tests.factories import (
     GitLabAccountFactory,
     GitLabNodeSettingsFactory,
-    GitLabUserSettingsFactory
+    GitLabUserSettingsFactory,
 )
 
 from .utils import create_mock_gitlab
+
 mock_gitlab = create_mock_gitlab()
 
 pytestmark = pytest.mark.django_db
+
 
 class TestNodeSettings(OAuthAddonNodeSettingsTestSuiteMixin, unittest.TestCase):
 
@@ -43,7 +47,7 @@ class TestNodeSettings(OAuthAddonNodeSettingsTestSuiteMixin, unittest.TestCase):
             'repo': 'mock',
             'user': 'abc',
             'owner': self.node,
-            'repo_id': '123'
+            'repo_id': '123',
         }
 
     def test_set_folder(self):
@@ -55,12 +59,17 @@ class TestNodeSettings(OAuthAddonNodeSettingsTestSuiteMixin, unittest.TestCase):
         # GitLab's serialized_settings are a little different from
         # common storage addons.
         settings = self.node_settings.serialize_waterbutler_settings()
-        expected = {'host': 'some-super-secret', 'owner': 'abc', 'repo': 'mock', 'repo_id': '123'}
+        expected = {
+            'host': 'some-super-secret',
+            'owner': 'abc',
+            'repo': 'mock',
+            'repo_id': '123',
+        }
         assert_equal(settings, expected)
 
     @mock.patch(
         'addons.gitlab.models.UserSettings.revoke_remote_oauth_access',
-        mock.PropertyMock()
+        mock.PropertyMock(),
     )
     def test_complete_has_auth_not_verified(self):
         super(TestNodeSettings, self).test_complete_has_auth_not_verified()
@@ -100,7 +109,6 @@ class TestUserSettings(OAuthAddonUserSettingTestSuiteMixin, unittest.TestCase):
 
 
 class TestCallbacks(OsfTestCase):
-
     def setUp(self):
 
         super(TestCallbacks, self).setUp()
@@ -112,8 +120,7 @@ class TestCallbacks(OsfTestCase):
         self.non_authenticator.save()
         self.project.save()
         self.project.add_contributor(
-            contributor=self.non_authenticator,
-            auth=self.consolidated_auth,
+            contributor=self.non_authenticator, auth=self.consolidated_auth,
         )
 
         self.project.add_addon('gitlab', auth=self.consolidated_auth)
@@ -161,10 +168,7 @@ class TestCallbacks(OsfTestCase):
         message = self.node_settings.after_remove_contributor(
             self.project, self.project.creator, self.consolidated_auth
         )
-        assert_equal(
-            self.node_settings.user_settings,
-            None
-        )
+        assert_equal(self.node_settings.user_settings, None)
         assert_true(message)
         assert_not_in('You can re-authenticate', message)
 
@@ -173,10 +177,7 @@ class TestCallbacks(OsfTestCase):
         message = self.node_settings.after_remove_contributor(
             self.project, self.project.creator, auth
         )
-        assert_equal(
-            self.node_settings.user_settings,
-            None
-        )
+        assert_equal(self.node_settings.user_settings, None)
         assert_true(message)
         assert_in('You can re-authenticate', message)
 
@@ -185,18 +186,14 @@ class TestCallbacks(OsfTestCase):
             self.project, self.non_authenticator, self.consolidated_auth
         )
         assert_not_equal(
-            self.node_settings.user_settings,
-            None,
+            self.node_settings.user_settings, None,
         )
 
     def test_after_fork_authenticator(self):
         fork = ProjectFactory()
-        clone = self.node_settings.after_fork(
-            self.project, fork, self.project.creator,
-        )
+        clone = self.node_settings.after_fork(self.project, fork, self.project.creator,)
         assert_equal(
-            self.node_settings.user_settings,
-            clone.user_settings,
+            self.node_settings.user_settings, clone.user_settings,
         )
 
     def test_after_fork_not_authenticator(self):
@@ -205,8 +202,7 @@ class TestCallbacks(OsfTestCase):
             self.project, fork, self.non_authenticator,
         )
         assert_equal(
-            clone.user_settings,
-            None,
+            clone.user_settings, None,
         )
 
     def test_after_delete(self):
@@ -214,7 +210,6 @@ class TestCallbacks(OsfTestCase):
         # Ensure that changes to node settings have been saved
         self.node_settings.reload()
         assert_true(self.node_settings.user_settings is None)
-
 
     @mock.patch('website.archiver.tasks.archive')
     def test_does_not_get_copied_to_registrations(self, mock_archive):
@@ -227,7 +222,6 @@ class TestCallbacks(OsfTestCase):
 
 
 class TestGitLabNodeSettings(unittest.TestCase):
-
     def setUp(self):
         super(TestGitLabNodeSettings, self).setUp()
         self.user = UserFactory()

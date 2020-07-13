@@ -1,5 +1,6 @@
 from website.util import api_url_for
 
+
 def serialize_urls(user_addon):
     return {
         'enable': api_url_for('twofactor_enable'),
@@ -7,6 +8,7 @@ def serialize_urls(user_addon):
         'settings': api_url_for('twofactor_settings_put'),
         'otpauth': user_addon.otpauth_url if user_addon else '',
     }
+
 
 def serialize_settings(auth):
     user_addon = auth.user.get_addon('twofactor')

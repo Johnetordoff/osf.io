@@ -9,7 +9,6 @@ from osf_tests.factories import ConferenceFactory, ProjectFactory, AuthUserFacto
 
 @pytest.mark.django_db
 class TestMeetingSubmissionsDetail:
-
     @pytest.fixture()
     def meeting(self):
         return ConferenceFactory(name='OSF 2019', endpoint='osf2019')
@@ -24,21 +23,27 @@ class TestMeetingSubmissionsDetail:
 
     @pytest.fixture()
     def meeting_one_submission(self, meeting, user):
-        submission = ProjectFactory(title='Submission One', is_public=True, creator=user)
+        submission = ProjectFactory(
+            title='Submission One', is_public=True, creator=user
+        )
         meeting.submissions.add(submission)
         submission.add_tag('poster', Auth(user))
         return submission
 
     @pytest.fixture()
     def meeting_submission_no_category(self, meeting, user):
-        submission = ProjectFactory(title='Submission One', is_public=True, creator=user)
+        submission = ProjectFactory(
+            title='Submission One', is_public=True, creator=user
+        )
         meeting.submissions.add(submission)
         api_utils.create_test_file(submission, user, create_guid=False)
         return submission
 
     @pytest.fixture()
     def meeting_one_private_submission(self, meeting, user):
-        submission = ProjectFactory(title='Submission One', is_public=False, creator=user)
+        submission = ProjectFactory(
+            title='Submission One', is_public=False, creator=user
+        )
         meeting.submissions.add(submission)
         submission.add_tag('poster', Auth(user))
         return submission
@@ -51,7 +56,9 @@ class TestMeetingSubmissionsDetail:
 
     @pytest.fixture()
     def file(self, user, meeting_one_submission):
-        file = api_utils.create_test_file(meeting_one_submission, user, create_guid=False)
+        file = api_utils.create_test_file(
+            meeting_one_submission, user, create_guid=False
+        )
         self.mock_download(meeting_one_submission, file, 10)
         return file
 
@@ -60,14 +67,24 @@ class TestMeetingSubmissionsDetail:
             _id='download:{}:{}'.format(project._id, file._id),
             resource=project.guids.first(),
             action='download',
-            file=file
+            file=file,
         )
         pc.total = download_count
         pc.save()
         return pc
 
-    def test_meeting_submission_detail(self, app, user, meeting, base_url, meeting_one_submission,
-            meeting_one_private_submission, random_project, meeting_submission_no_category, file):
+    def test_meeting_submission_detail(
+        self,
+        app,
+        user,
+        meeting,
+        base_url,
+        meeting_one_submission,
+        meeting_one_private_submission,
+        random_project,
+        meeting_submission_no_category,
+        file,
+    ):
 
         # test_get_poster_submission
         url = '{}{}/'.format(base_url, meeting_one_submission._id)
@@ -81,7 +98,12 @@ class TestMeetingSubmissionsDetail:
         assert data['attributes']['download_count'] == 10
         assert 'date_created' in data['attributes']
         assert data['attributes']['meeting_category'] == 'poster'
-        assert '/_/meetings/{}/submissions/{}'.format(meeting.endpoint, meeting_one_submission._id) in data['links']['self']
+        assert (
+            '/_/meetings/{}/submissions/{}'.format(
+                meeting.endpoint, meeting_one_submission._id
+            )
+            in data['links']['self']
+        )
         assert data['relationships']['author']['data']['id'] == user._id
         assert file._id in data['links']['download']
 
@@ -99,7 +121,9 @@ class TestMeetingSubmissionsDetail:
         url = '{}{}/'.format(base_url, random_project._id)
         res = app.get(url, expect_errors=True)
         assert res.status_code == 404
-        assert res.json['errors'][0]['detail'] == 'This is not a submission to OSF 2019.'
+        assert (
+            res.json['errors'][0]['detail'] == 'This is not a submission to OSF 2019.'
+        )
 
         # test_get_invalid_submission
         url = '{}{}/'.format(base_url, 'jjjjj')

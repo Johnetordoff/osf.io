@@ -39,27 +39,39 @@ def reverse_migrate_preprints(state, schema):
     with connection.cursor() as cursor:
         cursor.execute(sql)
 
+
 # Forward migration - moving preprints to dfks
 def migrate_preprints_to_direct_fks(state, schema):
     GroupObjectPermission = state.get_model('guardian', 'groupobjectpermission')
     Preprint = state.get_model('osf', 'preprint')
     preprint_ct_id = ContentType.objects.get_for_model(Preprint).id
-    max_pid = getattr(GroupObjectPermission.objects.filter(content_type_id=preprint_ct_id).last(), 'id', 0)
+    max_pid = getattr(
+        GroupObjectPermission.objects.filter(content_type_id=preprint_ct_id).last(),
+        'id',
+        0,
+    )
 
     total_pages = int(ceil(max_pid / float(increment)))
     page_start = 0
     page_end = 0
     page = 0
 
-    logger.info('{}'.format('Migrating preprints to use direct foreign keys to speed up permission checks.'))
+    logger.info(
+        '{}'.format(
+            'Migrating preprints to use direct foreign keys to speed up permission checks.'
+        )
+    )
     while page_end <= (max_pid):
         page += 1
         page_end += increment
         if page <= total_pages:
-            logger.info('Updating page {} / {}'.format(page_end / increment, total_pages))
+            logger.info(
+                'Updating page {} / {}'.format(page_end / increment, total_pages)
+            )
 
         with connection.cursor() as cursor:
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO osf_preprintgroupobjectpermission (content_object_id, group_id, permission_id)
                 SELECT CAST(GO.object_pk AS INT), CAST(GO.group_id AS INT), CAST(GO.permission_id AS INT)
                 FROM guardian_groupobjectpermission GO, django_content_type CT
@@ -74,10 +86,12 @@ def migrate_preprints_to_direct_fks(state, schema):
                 AND GO.content_type_id = CT.id
                 AND CAST(GO.object_pk AS INT) > %s
                 AND CAST(GO.object_pk AS INT) <= %s;
-            """ % (page_start, page_end, page_start, page_end)
+            """
+                % (page_start, page_end, page_start, page_end)
             )
         page_start = page_end
     logger.info('Finished preprint direct foreign key migration.')
+
 
 class Migration(migrations.Migration):
 

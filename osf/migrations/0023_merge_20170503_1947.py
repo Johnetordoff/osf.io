@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0021_retraction_date_retracted'),
     ]
 
-    operations = [
-    ]
+    operations = []

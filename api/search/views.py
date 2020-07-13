@@ -19,7 +19,13 @@ from api.institutions.serializers import InstitutionSerializer
 from api.collections.serializers import CollectionSubmissionSerializer
 
 from framework.auth.oauth_scopes import CoreScopes
-from osf.models import Institution, BaseFileNode, AbstractNode, OSFUser, CollectionSubmission
+from osf.models import (
+    Institution,
+    BaseFileNode,
+    AbstractNode,
+    OSFUser,
+    CollectionSubmission,
+)
 
 from website.search import search
 from website.search.exceptions import MalformedQueryError
@@ -50,19 +56,28 @@ class BaseSearchView(JSONAPIBaseView, generics.ListCreateAPIView):
 
     def get_parsers(self):
         if self.request.method == 'POST':
-            return (SearchParser(), )
+            return (SearchParser(),)
         return super(BaseSearchView, self).get_parsers()
 
     def get_queryset(self, query=None):
         page = int(self.request.query_params.get('page', '1'))
-        page_size = min(int(self.request.query_params.get('page[size]', REST_FRAMEWORK['PAGE_SIZE'])), MAX_PAGE_SIZE)
+        page_size = min(
+            int(
+                self.request.query_params.get(
+                    'page[size]', REST_FRAMEWORK['PAGE_SIZE'],
+                ),
+            ),
+            MAX_PAGE_SIZE,
+        )
         start = (page - 1) * page_size
         if query:
             # Parser has built query, but needs paging info
             query['from'] = start
             query['size'] = page_size
         else:
-            query = build_query(self.request.query_params.get('q', '*'), start=start, size=page_size)
+            query = build_query(
+                self.request.query_params.get('q', '*'), start=start, size=page_size,
+            )
         try:
             results = search.search(query, doc_type=self.doc_type, raw=True)
         except MalformedQueryError as e:

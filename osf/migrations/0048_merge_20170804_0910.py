@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0044_basefilenode_uniqueness_index'),
     ]
 
-    operations = [
-    ]
+    operations = []

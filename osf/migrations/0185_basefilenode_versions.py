@@ -15,6 +15,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='basefilenode',
             name='versions',
-            field=models.ManyToManyField(through='osf.BaseFileVersionsThrough', to='osf.FileVersion'),
+            field=models.ManyToManyField(
+                through='osf.BaseFileVersionsThrough', to='osf.FileVersion'
+            ),
         ),
     ]

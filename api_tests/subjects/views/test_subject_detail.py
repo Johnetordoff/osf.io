@@ -7,7 +7,6 @@ from osf_tests.factories import SubjectFactory
 
 @pytest.mark.django_db
 class TestSubject:
-
     @pytest.fixture(autouse=True)
     def subject(self):
         return SubjectFactory(text='A')
@@ -36,14 +35,23 @@ class TestSubject:
     def url_subject_detail(self, subject):
         return '/{}subjects/{}/'.format(API_BASE, subject._id)
 
-    def test_get_subject_detail(self, app, url_subject_detail, subject, subject_child_one, subject_child_two):
-        res = app.get(url_subject_detail + '?version={}&related_counts=children'.format(subjects_as_relationships_version))
+    def test_get_subject_detail(
+        self, app, url_subject_detail, subject, subject_child_one, subject_child_two
+    ):
+        res = app.get(
+            url_subject_detail
+            + '?version={}&related_counts=children'.format(
+                subjects_as_relationships_version
+            )
+        )
         data = res.json['data']
         assert data['attributes']['text'] == subject.text
         assert 'children' in data['relationships']
         assert 'parent' in data['relationships']
         assert data['relationships']['parent']['data'] is None
-        assert data['relationships']['children']['links']['related']['meta']['count'] == 2
+        assert (
+            data['relationships']['children']['links']['related']['meta']['count'] == 2
+        )
 
         # Follow children link
         children_link = data['relationships']['children']['links']['related']['href']

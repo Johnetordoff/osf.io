@@ -9,6 +9,7 @@ from tests.base import OsfTestCase
 
 pytestmark = pytest.mark.django_db
 
+
 class TestDataverseNodeLogger(StorageAddonNodeLoggerTestSuiteMixin, OsfTestCase):
 
     addon_short_name = 'dataverse'

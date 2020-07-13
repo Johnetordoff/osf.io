@@ -13,5 +13,4 @@ class Migration(migrations.Migration):
         ('osf', '0077_ensure_schemas'),
     ]
 
-    operations = [
-    ]
+    operations = []

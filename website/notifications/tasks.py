@@ -42,8 +42,11 @@ def _send_global_and_node_emails(send_type):
             if not user.is_disabled:
                 # If there's only one node in digest we can show it's preferences link in the template.
                 notification_nodes = list(sorted_messages['children'].keys())
-                node = AbstractNode.load(notification_nodes[0]) if len(
-                    notification_nodes) == 1 else None
+                node = (
+                    AbstractNode.load(notification_nodes[0])
+                    if len(notification_nodes) == 1
+                    else None
+                )
                 mails.send_mail(
                     to_addr=user.username,
                     mimetype='html',
@@ -74,10 +77,14 @@ def _send_reviews_moderator_emails(send_type):
                 name=user.fullname,
                 message=info,
                 provider_name=provider.name,
-                reviews_submissions_url='{}reviews/preprints/{}'.format(settings.DOMAIN, provider._id),
-                notification_settings_url='{}reviews/preprints/{}/notifications'.format(settings.DOMAIN, provider._id),
+                reviews_submissions_url='{}reviews/preprints/{}'.format(
+                    settings.DOMAIN, provider._id
+                ),
+                notification_settings_url='{}reviews/preprints/{}/notifications'.format(
+                    settings.DOMAIN, provider._id
+                ),
                 is_reviews_moderator_notification=True,
-                is_admin=provider.get_group(ADMIN).user_set.filter(id=user.id).exists()
+                is_admin=provider.get_group(ADMIN).user_set.filter(id=user.id).exists(),
             )
         remove_notifications(email_notification_ids=notification_ids)
 
@@ -117,7 +124,7 @@ def get_moderators_emails(send_type):
         """
 
     with connection.cursor() as cursor:
-        cursor.execute(sql, [send_type, ])
+        cursor.execute(sql, [send_type,])
         return itertools.chain.from_iterable(cursor.fetchall())
 
 
@@ -164,7 +171,7 @@ def get_users_emails(send_type):
     """
 
     with connection.cursor() as cursor:
-        cursor.execute(sql, [send_type, ])
+        cursor.execute(sql, [send_type,])
         return itertools.chain.from_iterable(cursor.fetchall())
 
 

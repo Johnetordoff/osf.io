@@ -12,7 +12,6 @@ from website import settings
 
 @pytest.mark.django_db
 class TestCrossRefEmailResponse:
-
     def make_mailgun_payload(self, crossref_response):
         mailgun_payload = {
             'From': ['CrossRef <admin@crossref.org>'],
@@ -27,7 +26,7 @@ class TestCrossRefEmailResponse:
             'sender': ['test-admin@crossref.org'],
             'Content-Type': [u'text/plain; charset="UTF-8"'],
             'Subject': [u'CrossRef submission ID: 1390671938'],
-            'token': 'secret'
+            'token': 'secret',
         }
 
         # temporarily override MAILGUN_API_KEY
@@ -37,18 +36,13 @@ class TestCrossRefEmailResponse:
             'signature': hmac.new(
                 key=settings.MAILGUN_API_KEY.encode(),
                 msg='{}{}'.format(
-                    mailgun_payload['timestamp'],
-                    mailgun_payload['token']
+                    mailgun_payload['timestamp'], mailgun_payload['token']
                 ).encode(),
                 digestmod=hashlib.sha256,
             ).hexdigest(),
         }
         data.update(mailgun_payload)
-        data = {
-            key: value
-            for key, value in data.items()
-            if value is not None
-        }
+        data = {key: value for key, value in data.items() if value is not None}
         return data
 
     @pytest.fixture()
@@ -73,7 +67,9 @@ class TestCrossRefEmailResponse:
               <failure_count>1</failure_count>
            </batch_data>
         </doi_batch_diagnostic>
-        """.format(preprint._id)
+        """.format(
+            preprint._id
+        )
 
     @pytest.fixture()
     def success_xml(self, preprint):
@@ -93,7 +89,9 @@ class TestCrossRefEmailResponse:
                   <failure_count>0</failure_count>
                </batch_data>
             </doi_batch_diagnostic>
-        """.format(preprint._id, preprint._id)
+        """.format(
+            preprint._id, preprint._id
+        )
 
     @pytest.fixture()
     def update_success_xml(self, preprint):
@@ -113,7 +111,9 @@ class TestCrossRefEmailResponse:
                 <failure_count>0</failure_count>
             </batch_data>
         </doi_batch_diagnostic>
-        """.format(preprint._id, preprint._id)
+        """.format(
+            preprint._id, preprint._id
+        )
 
     def build_batch_success_xml(self, preprint_list):
         preprint_count = len(preprint_list)
@@ -129,14 +129,18 @@ class TestCrossRefEmailResponse:
                 <failure_count>0</failure_count>
             </batch_data>
         </doi_batch_diagnostic>
-        """.format(preprint_count, preprint_count)
+        """.format(
+            preprint_count, preprint_count
+        )
         base_xml = lxml.etree.fromstring(base_xml_string.strip().encode())
         provider_prefix = preprint_list[0].provider.doi_prefix
         for preprint in preprint_list:
             record_diagnostic = lxml.etree.Element('record_diagnostic')
             record_diagnostic.attrib['status'] = 'Success'
             doi = lxml.etree.Element('doi')
-            doi.text = settings.DOI_FORMAT.format(prefix=provider_prefix, guid=preprint._id)
+            doi.text = settings.DOI_FORMAT.format(
+                prefix=provider_prefix, guid=preprint._id
+            )
             msg = lxml.etree.Element('msg')
             msg.text = 'Successfully added'
             record_diagnostic.append(doi)
@@ -156,7 +160,9 @@ class TestCrossRefEmailResponse:
 
         assert response.status_code == 400
 
-    def test_error_response_sends_message_does_not_set_doi(self, app, url, preprint, error_xml):
+    def test_error_response_sends_message_does_not_set_doi(
+        self, app, url, preprint, error_xml
+    ):
         assert not preprint.get_identifier_value('doi')
 
         with mock.patch('framework.auth.views.mails.send_mail') as mock_send_mail:
@@ -189,7 +195,9 @@ class TestCrossRefEmailResponse:
         assert not mock_send_mail.called
         assert preprint.get_identifier_value(category='doi') != initial_value
 
-    def test_update_success_does_not_set_preprint_doi_created(self, app, preprint, url, update_success_xml):
+    def test_update_success_does_not_set_preprint_doi_created(
+        self, app, preprint, url, update_success_xml
+    ):
         preprint.set_identifier_value(category='doi', value='test')
         preprint.preprint_doi_created = timezone.now()
         preprint.save()
@@ -206,16 +214,23 @@ class TestCrossRefEmailResponse:
         provider = factories.PreprintProviderFactory()
         provider.doi_prefix = '10.123yeah'
         provider.save()
-        preprint_list = [factories.PreprintFactory(set_doi=False, provider=provider) for _ in range(5)]
+        preprint_list = [
+            factories.PreprintFactory(set_doi=False, provider=provider)
+            for _ in range(5)
+        ]
 
         xml_response = self.build_batch_success_xml(preprint_list)
         context_data = self.make_mailgun_payload(xml_response)
         app.post(url, context_data)
 
         for preprint in preprint_list:
-            assert preprint.get_identifier_value('doi') == settings.DOI_FORMAT.format(prefix=provider.doi_prefix, guid=preprint._id)
+            assert preprint.get_identifier_value('doi') == settings.DOI_FORMAT.format(
+                prefix=provider.doi_prefix, guid=preprint._id
+            )
 
-    def test_confirmation_marks_legacy_doi_as_deleted(self, app, url, preprint, update_success_xml):
+    def test_confirmation_marks_legacy_doi_as_deleted(
+        self, app, url, preprint, update_success_xml
+    ):
         legacy_value = 'IAmALegacyDOI'
         preprint.set_identifier_value(category='legacy_doi', value=legacy_value)
         update_xml = self.update_success_xml(preprint)

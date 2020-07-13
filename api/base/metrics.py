@@ -22,6 +22,7 @@ class MetricsViewMixin(object):
     * For list views: implement `get_annotated_queryset_with_metrics`
     * For detail views: implement `add_metric_to_object`
     """
+
     # Adapted from FilterMixin.QUERY_PATTERN
     METRICS_QUERY_PATTERN = re.compile(r'^metrics\[(?P<metric_name>((?:,*\s*\w+)*))\]$')
     TIMEDELTA_MAP = {
@@ -40,23 +41,30 @@ class MetricsViewMixin(object):
 
     @property
     def metric_map(self):
-        raise NotImplementedError('MetricsViewMixin sublcasses must define a metric_map class variable.')
+        raise NotImplementedError(
+            'MetricsViewMixin sublcasses must define a metric_map class variable.',
+        )
 
-    def get_annotated_queryset_with_metrics(self, queryset, metric_class, metric_name, after):
+    def get_annotated_queryset_with_metrics(
+        self, queryset, metric_class, metric_name, after,
+    ):
         """Return a queryset annotated with metrics. Use for list endpoints that expose metrics."""
-        raise NotImplementedError('MetricsViewMixin subclasses must define get_annotated_queryset_with_metrics().')
+        raise NotImplementedError(
+            'MetricsViewMixin subclasses must define get_annotated_queryset_with_metrics().',
+        )
 
     def add_metric_to_object(self, obj, metric_class, metric_name, after):
         """Set an attribute for a metric on obj. Use for detail endpoints that expose metrics.
         Return the modified object.
         """
-        raise NotImplementedError('MetricsViewMixin subclasses must define add_metric_to_object().')
+        raise NotImplementedError(
+            'MetricsViewMixin subclasses must define add_metric_to_object().',
+        )
 
     @property
     def metrics_requested(self):
-        return (
-            waffle.switch_is_active(features.ELASTICSEARCH_METRICS) and
-            bool(self.parse_metric_query_params(self.request.query_params))
+        return waffle.switch_is_active(features.ELASTICSEARCH_METRICS) and bool(
+            self.parse_metric_query_params(self.request.query_params),
         )
 
     # Adapted from FilterMixin.parse_query_params
@@ -91,9 +99,15 @@ class MetricsViewMixin(object):
             metric_map = self.metric_map
             for metric, period in metrics_requested.items():
                 if metric not in metric_map:
-                    raise InvalidQueryStringError("Invalid metric in query string: '{}'".format(metric), parameter='metrics')
+                    raise InvalidQueryStringError(
+                        "Invalid metric in query string: '{}'".format(metric),
+                        parameter='metrics',
+                    )
                 if period not in self.VALID_METRIC_PERIODS:
-                    raise InvalidQueryStringError("Invalid period for metric: '{}'".format(period), parameter='metrics')
+                    raise InvalidQueryStringError(
+                        "Invalid period for metric: '{}'".format(period),
+                        parameter='metrics',
+                    )
                 metric_class = metric_map[metric]
                 if period == 'total':
                     after = None
@@ -108,12 +122,15 @@ class MetricsViewMixin(object):
 
     def get_metrics_queryset(self, queryset):
         """Helper method used for list views."""
-        return self._add_metrics(queryset, method=self.get_annotated_queryset_with_metrics)
+        return self._add_metrics(
+            queryset, method=self.get_annotated_queryset_with_metrics,
+        )
 
     # Override get_default_queryset for convenience
     def get_default_queryset(self):
         queryset = super(MetricsViewMixin, self).get_default_queryset()
         return self.get_metrics_queryset(queryset)
+
 
 class MetricsSerializerMixin(object):
     @property

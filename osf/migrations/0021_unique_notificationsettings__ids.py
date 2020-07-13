@@ -9,6 +9,7 @@ from django.db import connection, migrations
 
 logger = logging.getLogger(__file__)
 
+
 def remove_duplicate_notificationsubscriptions(state, schema):
     NotificationSubscription = state.get_model('osf', 'notificationsubscription')
     # Deletes the newest from each set of duplicates
@@ -20,12 +21,16 @@ def remove_duplicate_notificationsubscriptions(state, schema):
     with connection.cursor() as cursor:
         cursor.execute(sql)
         ids = list(sum(cursor.fetchall(), ()))
-        logger.info('Deleting duplicate NotificationSubscriptions with `id`s {}'.format(ids))
+        logger.info(
+            'Deleting duplicate NotificationSubscriptions with `id`s {}'.format(ids)
+        )
         # Use Django to cascade delete through tables
         NotificationSubscription.objects.filter(id__in=ids).delete()
 
+
 def noop(*args):
     logger.info('Removal of duplicates cannot be reversed, skipping.')
+
 
 class Migration(migrations.Migration):
 
@@ -34,7 +39,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(
-            remove_duplicate_notificationsubscriptions, noop
-        ),
+        migrations.RunPython(remove_duplicate_notificationsubscriptions, noop),
     ]

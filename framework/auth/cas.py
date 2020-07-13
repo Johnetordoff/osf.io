@@ -30,8 +30,10 @@ class CasHTTPError(CasError):
         self.content = content
 
     def __repr__(self):
-        return ('CasHTTPError({self.message!r}, {self.code}, '
-                'headers={self.headers}, content={self.content!r})').format(self=self)
+        return (
+            'CasHTTPError({self.message!r}, {self.code}, '
+            'headers={self.headers}, content={self.content!r})'
+        ).format(self=self)
 
     __str__ = __repr__
 
@@ -59,7 +61,9 @@ class CasClient(object):
     def __init__(self, base_url):
         self.BASE_URL = base_url
 
-    def get_login_url(self, service_url, campaign=None, username=None, verification_key=None):
+    def get_login_url(
+        self, service_url, campaign=None, username=None, verification_key=None
+    ):
         """
         Get CAS login url with `service_url` as redirect location. There are three options:
         1. no additional parameters provided -> go to CAS login page
@@ -153,14 +157,18 @@ class CasClient(object):
         doc = etree.fromstring(xml)
         auth_doc = doc.xpath('/cas:serviceResponse/*[1]', namespaces=doc.nsmap)[0]
         resp.status = str(auth_doc.xpath('local-name()'))
-        if (resp.status == 'authenticationSuccess'):
+        if resp.status == 'authenticationSuccess':
             resp.authenticated = True
             resp.user = str(auth_doc.xpath('string(./cas:user)', namespaces=doc.nsmap))
             attributes = auth_doc.xpath('./cas:attributes/*', namespaces=doc.nsmap)
             for attribute in attributes:
-                resp.attributes[str(attribute.xpath('local-name()'))] = str(attribute.text)
+                resp.attributes[str(attribute.xpath('local-name()'))] = str(
+                    attribute.text
+                )
             scopes = resp.attributes.get('accessTokenScope')
-            resp.attributes['accessTokenScope'] = set(scopes.split(' ') if scopes else [])
+            resp.attributes['accessTokenScope'] = set(
+                scopes.split(' ') if scopes else []
+            )
         else:
             resp.authenticated = False
         return resp
@@ -176,7 +184,9 @@ class CasClient(object):
 
     def revoke_application_tokens(self, client_id, client_secret):
         """Revoke all tokens associated with a given CAS client_id"""
-        return self.revoke_tokens(payload={'client_id': client_id, 'client_secret': client_secret})
+        return self.revoke_tokens(
+            payload={'client_id': client_id, 'client_secret': client_secret}
+        )
 
     def revoke_tokens(self, payload):
         """Revoke a tokens based on payload"""
@@ -224,7 +234,7 @@ def get_login_url(*args, **kwargs):
 
 
 def get_institution_target(redirect_url):
-    return '/login?service={}&auto=true'.format(quote(redirect_url, safe='~()*!.\''))
+    return '/login?service={}&auto=true'.format(quote(redirect_url, safe="~()*!.'"))
 
 
 def get_logout_url(*args, **kwargs):
@@ -275,24 +285,32 @@ def make_response_from_ticket(ticket, service_url):
             if external_credential:
                 user.verification_key = generate_verification_key()
                 user.save()
-                return redirect(get_logout_url(get_login_url(
-                    service_url,
-                    username=user.username,
-                    verification_key=user.verification_key
-                )))
+                return redirect(
+                    get_logout_url(
+                        get_login_url(
+                            service_url,
+                            username=user.username,
+                            verification_key=user.verification_key,
+                        )
+                    )
+                )
 
             # if user is authenticated by CAS
             # TODO [CAS-27]: Remove Access Token From Service Validation
             return authenticate(
                 user,
                 cas_resp.attributes.get('accessToken', ''),
-                redirect(service_furl.url)
+                redirect(service_furl.url),
             )
         # first time login from external identity provider
         if not user and external_credential and action == 'external_first_login':
             from website.util import web_url_for
+
             # orcid attributes can be marked private and not shared, default to orcid otherwise
-            fullname = u'{} {}'.format(cas_resp.attributes.get('given-names', ''), cas_resp.attributes.get('family-name', '')).strip()
+            fullname = u'{} {}'.format(
+                cas_resp.attributes.get('given-names', ''),
+                cas_resp.attributes.get('family-name', ''),
+            ).strip()
             # TODO [CAS-27]: Remove Access Token From Service Validation
             user = {
                 'external_id_provider': external_credential['provider'],
@@ -302,8 +320,7 @@ def make_response_from_ticket(ticket, service_url):
                 'service_url': service_furl.url,
             }
             return external_first_login_authenticate(
-                user,
-                redirect(web_url_for('external_login_email_get'))
+                user, redirect(web_url_for('external_login_email_get'))
             )
     # Unauthorized: ticket could not be validated, or user does not exist.
     return redirect(service_furl.url)
@@ -319,6 +336,7 @@ def get_user_from_cas_resp(cas_resp):
     :return: the user, the external_credential, and the next action
     """
     from osf.models import OSFUser
+
     if cas_resp.user:
         user = OSFUser.load(cas_resp.user)
         # cas returns a valid OSF user id
@@ -331,8 +349,10 @@ def get_user_from_cas_resp(cas_resp):
             if not external_credential:
                 return None, None, None
             # cas returns a valid external credential
-            user = get_user(external_id_provider=external_credential['provider'],
-                            external_id=external_credential['id'])
+            user = get_user(
+                external_id_provider=external_credential['provider'],
+                external_id=external_credential['id'],
+            )
             # existing user found
             if user:
                 return user, external_credential, 'authenticate'

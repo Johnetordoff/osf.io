@@ -12,7 +12,6 @@ from framework.celery_tasks import handlers
 
 @pytest.mark.enable_enqueue_task
 class TestMailChimpHelpers(OsfTestCase):
-
     def setUp(self, *args, **kwargs):
         super(TestMailChimpHelpers, self).setUp(*args, **kwargs)
         with self.context:
@@ -23,7 +22,9 @@ class TestMailChimpHelpers(OsfTestCase):
         list_name = 'foo'
         mock_client = mock.MagicMock()
         mock_get_mailchimp_api.return_value = mock_client
-        mock_client.lists.list.return_value = {'data': [{'id': 1, 'list_name': list_name}]}
+        mock_client.lists.list.return_value = {
+            'data': [{'id': 1, 'list_name': list_name}]
+        }
         list_id = mailchimp_utils.get_list_id_from_name(list_name)
         mock_client.lists.list.assert_called_with(filters={'list_name': list_name})
         assert_equal(list_id, 1)
@@ -44,28 +45,31 @@ class TestMailChimpHelpers(OsfTestCase):
         user = UserFactory()
         mock_client = mock.MagicMock()
         mock_get_mailchimp_api.return_value = mock_client
-        mock_client.lists.list.return_value = {'data': [{'id': 1, 'list_name': list_name}]}
+        mock_client.lists.list.return_value = {
+            'data': [{'id': 1, 'list_name': list_name}]
+        }
         list_id = mailchimp_utils.get_list_id_from_name(list_name)
         mailchimp_utils.subscribe_mailchimp(list_name, user._id)
         handlers.celery_teardown_request()
         mock_client.lists.subscribe.assert_called_with(
             id=list_id,
             email={'email': user.username},
-            merge_vars={
-                'fname': user.given_name,
-                'lname': user.family_name,
-            },
+            merge_vars={'fname': user.given_name, 'lname': user.family_name,},
             double_optin=False,
             update_existing=True,
         )
 
     @mock.patch('website.mailchimp_utils.get_mailchimp_api')
-    def test_subscribe_fake_email_does_not_throw_validation_error(self, mock_get_mailchimp_api):
+    def test_subscribe_fake_email_does_not_throw_validation_error(
+        self, mock_get_mailchimp_api
+    ):
         list_name = 'foo'
         user = UserFactory(username='fake@fake.com')
         mock_client = mock.MagicMock()
         mock_get_mailchimp_api.return_value = mock_client
-        mock_client.lists.list.return_value = {'data': [{'id': 1, 'list_name': list_name}]}
+        mock_client.lists.list.return_value = {
+            'data': [{'id': 1, 'list_name': list_name}]
+        }
         mock_client.lists.subscribe.side_effect = mailchimp.ValidationError
         mailchimp_utils.subscribe_mailchimp(list_name, user._id)
         handlers.celery_teardown_request()
@@ -78,9 +82,12 @@ class TestMailChimpHelpers(OsfTestCase):
         user = UserFactory()
         mock_client = mock.MagicMock()
         mock_get_mailchimp_api.return_value = mock_client
-        mock_client.lists.list.return_value = {'data': [{'id': 2, 'list_name': list_name}]}
+        mock_client.lists.list.return_value = {
+            'data': [{'id': 2, 'list_name': list_name}]
+        }
         list_id = mailchimp_utils.get_list_id_from_name(list_name)
         mailchimp_utils.unsubscribe_mailchimp_async(list_name, user._id)
         handlers.celery_teardown_request()
-        mock_client.lists.unsubscribe.assert_called_with(id=list_id, email={'email': user.username}, send_goodbye=True)
-
+        mock_client.lists.unsubscribe.assert_called_with(
+            id=list_id, email={'email': user.username}, send_goodbye=True
+        )

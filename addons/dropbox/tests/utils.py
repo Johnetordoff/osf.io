@@ -31,11 +31,11 @@ class MockFolderMetadata(object):
 
 
 class MockListFolderResult(object):
-
     def __init__(self, has_more=False):
         self.entries = [MockFileMetadata(), MockFolderMetadata()]
         self.cursor = 'ZtkX9_EHj3x7PMkVuFIhwKYXEpwpLwyxp9vMKomUhllil9q7eWiAu'
         self.has_more = has_more
+
 
 class MockName(object):
 
@@ -48,14 +48,15 @@ class MockFullAccount(object):
 
 
 class MockDropbox(object):
-
-    def files_list_folder(self,
-            path,
-            recursive=False,
-            include_media_info=False,
-            include_deleted=False,
-            include_has_explicit_shared_members=False):
-         return MockListFolderResult()
+    def files_list_folder(
+        self,
+        path,
+        recursive=False,
+        include_media_info=False,
+        include_deleted=False,
+        include_has_explicit_shared_members=False,
+    ):
+        return MockListFolderResult()
 
     def files_list_folder_continue(self, cursor):
         return MockListFolderResult()

@@ -5,21 +5,27 @@ from future.moves.urllib.parse import urlparse, urljoin
 import responses
 
 from framework.auth import Auth
-from nose.tools import (assert_equal, assert_true, assert_false)
+from nose.tools import assert_equal, assert_true, assert_false
 from addons.base.tests import views
 from addons.base.tests.utils import MockLibrary, MockFolder
 from addons.zotero.models import Zotero
 from addons.zotero.provider import ZoteroCitationsProvider
 from addons.zotero.serializer import ZoteroSerializer
 
-from addons.zotero.tests.utils import ZoteroTestCase, mock_responses, mock_responses_with_filed_and_unfiled
+from addons.zotero.tests.utils import (
+    ZoteroTestCase,
+    mock_responses,
+    mock_responses_with_filed_and_unfiled,
+)
 from tests.base import OsfTestCase
 
 API_URL = 'https://api.zotero.org'
 pytestmark = pytest.mark.django_db
 
-class TestAuthViews(ZoteroTestCase, views.OAuthAddonAuthViewsTestCaseMixin, OsfTestCase):
 
+class TestAuthViews(
+    ZoteroTestCase, views.OAuthAddonAuthViewsTestCaseMixin, OsfTestCase
+):
     @mock.patch('osf.models.external.OAuth1Session.fetch_request_token')
     def test_oauth_start(self, mock_token):
         mock_token.return_value = {
@@ -29,7 +35,9 @@ class TestAuthViews(ZoteroTestCase, views.OAuthAddonAuthViewsTestCaseMixin, OsfT
         super(TestAuthViews, self).test_oauth_start()
 
 
-class TestConfigViews(ZoteroTestCase, views.OAuthCitationAddonConfigViewsTestCaseMixin, OsfTestCase):
+class TestConfigViews(
+    ZoteroTestCase, views.OAuthCitationAddonConfigViewsTestCaseMixin, OsfTestCase
+):
     folder = MockFolder()
     library = MockLibrary()
     Serializer = ZoteroSerializer
@@ -42,10 +50,12 @@ class TestConfigViews(ZoteroTestCase, views.OAuthCitationAddonConfigViewsTestCas
 
     def setUp(self):
         super(TestConfigViews, self).setUp()
-        self.foldersApiUrl = urljoin(API_URL, 'users/{}/collections'
-            .format(self.external_account.provider_id))
-        self.documentsApiUrl = urljoin(API_URL, 'users/{}/items/top'
-            .format(self.external_account.provider_id))
+        self.foldersApiUrl = urljoin(
+            API_URL, 'users/{}/collections'.format(self.external_account.provider_id)
+        )
+        self.documentsApiUrl = urljoin(
+            API_URL, 'users/{}/items/top'.format(self.external_account.provider_id)
+        )
 
         # Sets library key
         self.citationsProvider().set_config(
@@ -55,7 +65,7 @@ class TestConfigViews(ZoteroTestCase, views.OAuthCitationAddonConfigViewsTestCas
             self.folder.name,
             Auth(self.user),
             'personal',
-            'personal'
+            'personal',
         )
 
     def test_widget_view_incomplete_library_set_only(self):
@@ -68,12 +78,14 @@ class TestConfigViews(ZoteroTestCase, views.OAuthCitationAddonConfigViewsTestCas
             self.folder.name,
             Auth(self.user),
             self.library.json['id'],
-            self.library.name
+            self.library.name,
         )
         assert_false(self.node_settings.complete)
         assert_equal(self.node_settings.list_id, None)
         assert_equal(self.node_settings.library_id, 'Fake Library Key')
-        res = self.citationsProvider().widget(self.project.get_addon(self.ADDON_SHORT_NAME))
+        res = self.citationsProvider().widget(
+            self.project.get_addon(self.ADDON_SHORT_NAME)
+        )
         assert_false(res['complete'])
         assert_equal(res['list_id'], None)
         assert_equal(res['library_id'], 'Fake Library Key')
@@ -89,7 +101,7 @@ class TestConfigViews(ZoteroTestCase, views.OAuthCitationAddonConfigViewsTestCas
             self.folder.name,
             Auth(self.user),
             self.library.json['id'],
-            self.library.name
+            self.library.name,
         )
         # Sets folder
         self.citationsProvider().set_config(
@@ -102,7 +114,9 @@ class TestConfigViews(ZoteroTestCase, views.OAuthCitationAddonConfigViewsTestCas
         assert_true(self.node_settings.complete)
         assert_equal(self.node_settings.list_id, 'Fake Key')
         assert_equal(self.node_settings.library_id, 'Fake Library Key')
-        res = self.citationsProvider().widget(self.project.get_addon(self.ADDON_SHORT_NAME))
+        res = self.citationsProvider().widget(
+            self.project.get_addon(self.ADDON_SHORT_NAME)
+        )
         assert_true(res['complete'])
         assert_equal(res['list_id'], 'Fake Key')
         assert_equal(res['library_id'], 'Fake Library Key')
@@ -114,7 +128,7 @@ class TestConfigViews(ZoteroTestCase, views.OAuthCitationAddonConfigViewsTestCas
                 responses.GET,
                 self.foldersApiUrl,
                 body=self.mockResponsesFiledUnfiled['folders'],
-                content_type='application/json'
+                content_type='application/json',
             )
         )
 
@@ -123,13 +137,15 @@ class TestConfigViews(ZoteroTestCase, views.OAuthCitationAddonConfigViewsTestCas
                 responses.GET,
                 self.documentsApiUrl,
                 body=self.mockResponsesFiledUnfiled['documents'],
-                content_type='application/json'
+                content_type='application/json',
             )
         )
 
         res = self.app.get(
-            self.project.api_url_for('{0}_citation_list'.format(self.ADDON_SHORT_NAME), list_id='ROOT'),
-            auth=self.user.auth
+            self.project.api_url_for(
+                '{0}_citation_list'.format(self.ADDON_SHORT_NAME), list_id='ROOT'
+            ),
+            auth=self.user.auth,
         )
 
         children = res.json['contents']

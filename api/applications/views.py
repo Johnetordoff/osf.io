@@ -17,15 +17,24 @@ from api.base.filters import ListFilterMixin
 from api.base.utils import get_object_or_error
 from api.base.views import JSONAPIBaseView, DeprecatedView
 from api.base import permissions as base_permissions
-from api.applications.serializers import ApiOAuth2ApplicationSerializer, ApiOAuth2ApplicationDetailSerializer, ApiOAuth2ApplicationResetSerializer
+from api.applications.serializers import (
+    ApiOAuth2ApplicationSerializer,
+    ApiOAuth2ApplicationDetailSerializer,
+    ApiOAuth2ApplicationResetSerializer,
+)
 
 
 class ApplicationMixin(object):
     """Mixin with convenience methods for retrieving the current application based on the
     current URL. By default, fetches the current application based on the client_id kwarg.
     """
+
     def get_app(self):
-        app = get_object_or_error(ApiOAuth2Application, Q(client_id=self.kwargs['client_id'], is_active=True), self.request)
+        app = get_object_or_error(
+            ApiOAuth2Application,
+            Q(client_id=self.kwargs['client_id'], is_active=True),
+            self.request,
+        )
         self.check_object_permissions(self.request, app)
         return app
 
@@ -34,6 +43,7 @@ class ApplicationList(JSONAPIBaseView, generics.ListCreateAPIView, ListFilterMix
     """
     Get a list of API applications (eg OAuth2) that the user has registered
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticated,
         base_permissions.OwnerOnly,
@@ -47,12 +57,17 @@ class ApplicationList(JSONAPIBaseView, generics.ListCreateAPIView, ListFilterMix
     view_category = 'applications'
     view_name = 'application-list'
 
-    renderer_classes = [JSONRendererWithESISupport, JSONAPIRenderer, ]  # Hide from web-browsable API tool
+    renderer_classes = [
+        JSONRendererWithESISupport,
+        JSONAPIRenderer,
+    ]  # Hide from web-browsable API tool
 
     ordering = ('-created',)
 
     def get_default_queryset(self):
-        return ApiOAuth2Application.objects.filter(owner=self.request.user, is_active=True)
+        return ApiOAuth2Application.objects.filter(
+            owner=self.request.user, is_active=True,
+        )
 
     # overrides ListAPIView
     def get_queryset(self):
@@ -64,12 +79,15 @@ class ApplicationList(JSONAPIBaseView, generics.ListCreateAPIView, ListFilterMix
         serializer.save()
 
 
-class ApplicationDetail(JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView, ApplicationMixin):
+class ApplicationDetail(
+    JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView, ApplicationMixin,
+):
     """
     Get information about a specific API application (eg OAuth2) that the user has registered
 
     Should not return information if the application belongs to a different user
     """
+
     permission_classes = (
         drf_permissions.IsAuthenticated,
         base_permissions.OwnerOnly,
@@ -83,7 +101,10 @@ class ApplicationDetail(JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView, 
     view_category = 'applications'
     view_name = 'application-detail'
 
-    renderer_classes = [JSONRendererWithESISupport, JSONAPIRenderer, ]  # Hide from web-browsable API tool
+    renderer_classes = [
+        JSONRendererWithESISupport,
+        JSONAPIRenderer,
+    ]  # Hide from web-browsable API tool
 
     def get_object(self):
         return self.get_app()
@@ -95,7 +116,9 @@ class ApplicationDetail(JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView, 
         try:
             obj.deactivate(save=True)
         except cas.CasHTTPError:
-            raise APIException('Could not revoke application auth tokens; please try again later')
+            raise APIException(
+                'Could not revoke application auth tokens; please try again later',
+            )
 
     def perform_update(self, serializer):
         """Necessary to prevent owner field from being blanked on updates"""
@@ -124,7 +147,10 @@ class ApplicationReset(DeprecatedView, generics.CreateAPIView, ApplicationMixin)
 
     serializer_class = ApiOAuth2ApplicationResetSerializer
 
-    renderer_classes = [JSONRendererWithESISupport, JSONAPIRenderer, ]  # Hide from web-browsable API tool
+    renderer_classes = [
+        JSONRendererWithESISupport,
+        JSONAPIRenderer,
+    ]  # Hide from web-browsable API tool
 
     view_category = 'applications'
     view_name = 'application-reset'

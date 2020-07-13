@@ -12,6 +12,7 @@ from django.apps import apps
 from addons.wiki import settings as wiki_settings
 from addons.wiki.exceptions import InvalidVersionError
 from osf.utils.permissions import ADMIN, READ, WRITE
+
 # MongoDB forbids field names that begin with "$" or contain ".". These
 # utilities map to and from Mongo field names.
 
@@ -20,13 +21,16 @@ mongo_map = {
     '$': '__!dollar!__',
 }
 
+
 def to_mongo(item):
     for key, value in mongo_map.items():
         item = item.replace(key, value)
     return item
 
+
 def to_mongo_key(item):
     return to_mongo(item).strip().lower()
+
 
 def generate_private_uuid(node, wname):
     """
@@ -49,10 +53,11 @@ def get_sharejs_uuid(node, wname):
     """
     wiki_key = to_mongo_key(wname)
     private_uuid = node.wiki_private_uuids.get(wiki_key)
-    return str(uuid.uuid5(
-        uuid.UUID(private_uuid),
-        str(node._id)
-    )) if private_uuid else None
+    return (
+        str(uuid.uuid5(uuid.UUID(private_uuid), str(node._id)))
+        if private_uuid
+        else None
+    )
 
 
 def delete_share_doc(node, wname):
@@ -95,8 +100,7 @@ def migrate_uuid(node, wname):
         db['docs_ops'].remove({'name': old_sharejs_uuid})
 
     write_contributors = [
-        user._id for user in node.contributors
-        if node.has_permission(user, WRITE)
+        user._id for user in node.contributors if node.has_permission(user, WRITE)
     ]
     broadcast_to_sharejs('unlock', old_sharejs_uuid, data=write_contributors)
 
@@ -127,20 +131,19 @@ def broadcast_to_sharejs(action, sharejs_uuid, node=None, wiki_name='home', data
         host=wiki_settings.SHAREJS_HOST,
         port=wiki_settings.SHAREJS_PORT,
         action=action,
-        id=sharejs_uuid
+        id=sharejs_uuid,
     )
 
     if action == 'redirect' or action == 'delete':
         redirect_url = quote(
-            node.web_url_for('project_wiki_view', wname=wiki_name, _guid=True),
-            safe='',
+            node.web_url_for('project_wiki_view', wname=wiki_name, _guid=True), safe='',
         )
         url = os.path.join(url, redirect_url)
 
     try:
         requests.post(url, json=data)
     except requests.ConnectionError:
-        pass    # Assume sharejs is not online
+        pass  # Assume sharejs is not online
 
 
 def format_wiki_version(version, num_versions, allow_preview):
@@ -170,6 +173,7 @@ def format_wiki_version(version, num_versions, allow_preview):
 
     return version
 
+
 def serialize_wiki_settings(user, nodes):
     """ Format wiki data for project settings page
 
@@ -195,15 +199,16 @@ def serialize_wiki_settings(user, nodes):
 
         wiki = node.get_addon('wiki')
         if wiki:
-            children_tree.append({
-                'select': {
-                    'title': 'permission',
-                    'permission':
-                        'public'
+            children_tree.append(
+                {
+                    'select': {
+                        'title': 'permission',
+                        'permission': 'public'
                         if wiki.is_publicly_editable
-                        else 'private'
-                },
-            })
+                        else 'private',
+                    },
+                }
+            )
 
         children_tree.extend(serialize_wiki_settings(user, children))
 
@@ -212,16 +217,15 @@ def serialize_wiki_settings(user, nodes):
                 'id': node._id,
                 'url': node.url if can_read else '',
                 'title': node.title if can_read else 'Private Project',
-                'is_public': node.is_public
+                'is_public': node.is_public,
             },
             'children': children_tree,
-            'kind': 'folder' if not node.parent_node or not node.parent_node.has_permission(user, READ) else 'node',
+            'kind': 'folder'
+            if not node.parent_node or not node.parent_node.has_permission(user, READ)
+            else 'node',
             'nodeType': node.project_or_component,
             'category': node.category,
-            'permissions': {
-                'view': can_read,
-                'admin': is_admin,
-            },
+            'permissions': {'view': can_read, 'admin': is_admin,},
         }
 
         items.append(item)
@@ -242,7 +246,9 @@ def serialize_wiki_widget(node):
     if wiki_version and wiki_version.html(node):
         wiki_html = BeautifulSoup(wiki_version.html(node)).text
         if len(wiki_html) > MAX_DISPLAY_LENGTH:
-            wiki_html = BeautifulSoup(wiki_html[:MAX_DISPLAY_LENGTH] + '...', 'html.parser')
+            wiki_html = BeautifulSoup(
+                wiki_html[:MAX_DISPLAY_LENGTH] + '...', 'html.parser'
+            )
             more = True
 
         rendered_before_update = wiki_version.rendered_before_update

@@ -1,6 +1,6 @@
 NODE_SUBSCRIPTIONS_AVAILABLE = {
     'comments': 'Comments added',
-    'file_updated': 'Files updated'
+    'file_updated': 'Files updated',
 }
 
 # Note: if the subscription starts with 'global_', it will be treated like a default
@@ -11,7 +11,7 @@ USER_SUBSCRIPTIONS_AVAILABLE = {
     'global_comments': 'Comments added',
     'global_file_updated': 'Files updated',
     'global_mentions': 'Mentions added',
-    'global_reviews': 'Preprint submissions updated'
+    'global_reviews': 'Preprint submissions updated',
 }
 
 PROVIDER_SUBSCRIPTIONS_AVAILABLE = {
@@ -22,7 +22,7 @@ PROVIDER_SUBSCRIPTIONS_AVAILABLE = {
 NOTIFICATION_TYPES = {
     'email_transactional': 'Email when a change occurs',
     'email_digest': 'Daily email digest of all changes to this project',
-    'none': 'None'
+    'none': 'None',
 }
 
 # Formatted file provider names for notification emails
@@ -38,5 +38,5 @@ PROVIDERS = {
     'googledrive': 'Google Drive',
     'owncloud': 'ownCloud',
     'onedrive': 'Microsoft OneDrive',
-    's3': 'Amazon S3'
+    's3': 'Amazon S3',
 }

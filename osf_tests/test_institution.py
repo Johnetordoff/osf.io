@@ -58,7 +58,6 @@ def test_institution_banner_path():
 
 
 class TestInstitutionPermissions:
-
     @pytest.fixture()
     def institution(self):
         return InstitutionFactory()
@@ -77,7 +76,9 @@ class TestInstitutionPermissions:
 
     @pytest.mark.django_db
     def test_group_member_has_perms(self, institution, institution_admin_user):
-        assert institution_admin_user.has_perm('view_institutional_metrics', institution)
+        assert institution_admin_user.has_perm(
+            'view_institutional_metrics', institution
+        )
 
     @pytest.mark.django_db
     def test_non_group_member_doesnt_have_perms(self, institution, user):

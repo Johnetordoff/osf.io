@@ -12,7 +12,6 @@ pytestmark = pytest.mark.django_db
 
 
 class TestNodeSettings(unittest.TestCase):
-
     def setUp(self):
         super(TestNodeSettings, self).setUp()
         self.node = ProjectFactory()
@@ -26,9 +25,9 @@ class TestNodeSettings(unittest.TestCase):
         forward = registration.get_addon('forward')
         assert_equal(forward.url, 'http://frozen.pizza.reviews/')
 
+
 @pytest.mark.enable_implicit_clean
 class TestSettingsValidation(unittest.TestCase):
-
     def setUp(self):
         super(TestSettingsValidation, self).setUp()
         self.settings = ForwardSettingsFactory()

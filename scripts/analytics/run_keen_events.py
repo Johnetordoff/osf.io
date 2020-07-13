@@ -1,5 +1,6 @@
 import logging
 import django
+
 django.setup()
 
 from framework.celery_tasks import app as celery_app
@@ -12,7 +13,6 @@ logger = logging.getLogger('scripts.analytics')
 
 
 class EventAnalyticsHarness(DateAnalyticsHarness):
-
     @property
     def analytics_classes(self):
         return [NodeLogEvents, UserDomainEvents]

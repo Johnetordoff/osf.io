@@ -15,4 +15,6 @@ class TestSubmissionList(ProviderSubmissionListViewTestBaseMixin):
 
     @pytest.fixture()
     def url(self, submission_provider):
-        return '/{}providers/registrations/{}/submissions/'.format(API_BASE, submission_provider._id)
+        return '/{}providers/registrations/{}/submissions/'.format(
+            API_BASE, submission_provider._id
+        )

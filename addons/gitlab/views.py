@@ -20,9 +20,12 @@ from framework.auth.decorators import must_be_logged_in
 from osf.models import ExternalAccount, NodeLog
 from osf.utils.permissions import WRITE
 from website.project.decorators import (
-    must_have_addon, must_be_addon_authorizer,
-    must_have_permission, must_not_be_registration,
-    must_be_contributor_or_public, must_be_valid_project,
+    must_have_addon,
+    must_be_addon_authorizer,
+    must_have_permission,
+    must_not_be_registration,
+    must_be_contributor_or_public,
+    must_be_valid_project,
 )
 from website.util import api_url_for
 
@@ -36,33 +39,21 @@ FULL_NAME = 'GitLab'
 # Generics #
 ############
 
-gitlab_account_list = generic_views.account_list(
-    SHORT_NAME,
-    GitLabSerializer
-)
+gitlab_account_list = generic_views.account_list(SHORT_NAME, GitLabSerializer)
 
-gitlab_import_auth = generic_views.import_auth(
-    SHORT_NAME,
-    GitLabSerializer
-)
+gitlab_import_auth = generic_views.import_auth(SHORT_NAME, GitLabSerializer)
+
 
 def _get_folders(node_addon, folder_id):
     pass
 
-gitlab_folder_list = generic_views.folder_list(
-    SHORT_NAME,
-    FULL_NAME,
-    _get_folders
-)
 
-gitlab_get_config = generic_views.get_config(
-    SHORT_NAME,
-    GitLabSerializer
-)
+gitlab_folder_list = generic_views.folder_list(SHORT_NAME, FULL_NAME, _get_folders)
 
-gitlab_deauthorize_node = generic_views.deauthorize_node(
-    SHORT_NAME
-)
+gitlab_get_config = generic_views.get_config(SHORT_NAME, GitLabSerializer)
+
+gitlab_deauthorize_node = generic_views.deauthorize_node(SHORT_NAME)
+
 
 @must_be_logged_in
 def gitlab_user_config_get(auth, **kwargs):
@@ -75,16 +66,20 @@ def gitlab_user_config_get(auth, **kwargs):
     if user_addon:
         user_has_auth = user_addon.has_auth
 
-    return {
-        'result': {
-            'userHasAuth': user_has_auth,
-            'urls': {
-                'create': api_url_for('gitlab_add_user_account'),
-                'accounts': api_url_for('gitlab_account_list'),
+    return (
+        {
+            'result': {
+                'userHasAuth': user_has_auth,
+                'urls': {
+                    'create': api_url_for('gitlab_add_user_account'),
+                    'accounts': api_url_for('gitlab_account_list'),
+                },
+                'hosts': DEFAULT_HOSTS,
             },
-            'hosts': DEFAULT_HOSTS,
         },
-    }, http_status.HTTP_200_OK
+        http_status.HTTP_200_OK,
+    )
+
 
 @must_be_logged_in
 def gitlab_add_user_account(auth, **kwargs):
@@ -104,7 +99,7 @@ def gitlab_add_user_account(auth, **kwargs):
             display_name=user.username,
             oauth_key=access_token,
             oauth_secret=host,  # Hijacked to allow multiple hosts
-            provider_id=user.web_url,   # unique for host/username
+            provider_id=user.web_url,  # unique for host/username
         )
         account.save()
     except ValidationError:
@@ -125,9 +120,11 @@ def gitlab_add_user_account(auth, **kwargs):
 
     return {}
 
+
 #################
 # Special Cased #
 #################
+
 
 @must_not_be_registration
 @must_have_addon(SHORT_NAME, 'user')
@@ -161,9 +158,17 @@ def gitlab_set_config(auth, **kwargs):
     try:
         repo = connection.repo(gitlab_repo_id)
     except gitlab.exceptions.GitlabError as exc:
-        if exc.response_code == 403 and 'must accept the Terms of Service' in exc.error_message:
-            return {'message': 'Your gitlab account does not have proper authentication. Ensure you have agreed to Gitlab\'s '
-                     'current Terms of Service by disabling and re-enabling your account.'}, http_status.HTTP_400_BAD_REQUEST
+        if (
+            exc.response_code == 403
+            and 'must accept the Terms of Service' in exc.error_message
+        ):
+            return (
+                {
+                    'message': "Your gitlab account does not have proper authentication. Ensure you have agreed to Gitlab's "
+                    'current Terms of Service by disabling and re-enabling your account.'
+                },
+                http_status.HTTP_400_BAD_REQUEST,
+            )
 
     if repo is None:
         if user_settings:
@@ -172,15 +177,13 @@ def gitlab_set_config(auth, **kwargs):
                 'or your account does not have permission to view it.'
             )
         else:
-            message = (
-                'Cannot access repo.'
-            )
+            message = 'Cannot access repo.'
         return {'message': message}, http_status.HTTP_400_BAD_REQUEST
 
     changed = (
-        gitlab_user_name != node_settings.user or
-        gitlab_repo_name != node_settings.repo or
-        gitlab_repo_id != node_settings.repo_id
+        gitlab_user_name != node_settings.user
+        or gitlab_repo_name != node_settings.repo
+        or gitlab_repo_id != node_settings.repo_id
     )
 
     # Update hooks
@@ -204,7 +207,7 @@ def gitlab_set_config(auth, **kwargs):
                     'user': gitlab_user_name,
                     'repo': gitlab_repo_name,
                     'repo_id': gitlab_repo_id,
-                }
+                },
             },
             auth=auth,
         )
@@ -216,6 +219,7 @@ def gitlab_set_config(auth, **kwargs):
         node_settings.save()
 
     return {}
+
 
 @must_be_contributor_or_public
 @must_have_addon('gitlab', 'node')
@@ -234,9 +238,11 @@ def gitlab_download_starball(node_addon, **kwargs):
 
     return resp
 
+
 #########
 # HGrid #
 #########
+
 
 @must_be_contributor_or_public
 @must_have_addon('gitlab', 'node')
@@ -252,12 +258,23 @@ def gitlab_root_folder(*args, **kwargs):
 
     return gitlab_hgrid_data(node_settings, auth=auth, **data)
 
+
 #########
 # Repos #
 #########
 
-def add_hook_log(node, gitlab, action, path, date, committer, include_urls=False,
-                 sha=None, save=False):
+
+def add_hook_log(
+    node,
+    gitlab,
+    action,
+    path,
+    date,
+    committer,
+    include_urls=False,
+    sha=None,
+    save=False,
+):
     """Add log event for commit from webhook payload.
 
     :param node: Node to add logs to
@@ -278,11 +295,13 @@ def add_hook_log(node, gitlab, action, path, date, committer, include_urls=False
     urls = {}
 
     if include_urls:
-        url = node.web_url_for('addon_view_or_download_file', path=path, provider=SHORT_NAME)
+        url = node.web_url_for(
+            'addon_view_or_download_file', path=path, provider=SHORT_NAME
+        )
 
         urls = {
             'view': '{0}?branch={1}'.format(url, sha),
-            'download': '{0}?action=download&branch={1}'.format(url, sha)
+            'download': '{0}?action=download&branch={1}'.format(url, sha),
         }
 
     node.add_log(
@@ -313,9 +332,7 @@ def gitlab_hook_callback(node_addon, **kwargs):
 
     # Fail if hook signature is invalid
     verify_hook_signature(
-        node_addon,
-        request.data,
-        request.headers,
+        node_addon, request.data, request.headers,
     )
 
     node = kwargs['node'] or kwargs['project']
@@ -337,18 +354,34 @@ def gitlab_hook_callback(node_addon, **kwargs):
         # Add logs
         for path in commit.get('added', []):
             add_hook_log(
-                node, node_addon, 'gitlab_' + NodeLog.FILE_ADDED,
-                path, date, committer, include_urls=True, sha=_id,
+                node,
+                node_addon,
+                'gitlab_' + NodeLog.FILE_ADDED,
+                path,
+                date,
+                committer,
+                include_urls=True,
+                sha=_id,
             )
         for path in commit.get('modified', []):
             add_hook_log(
-                node, node_addon, 'gitlab_' + NodeLog.FILE_UPDATED,
-                path, date, committer, include_urls=True, sha=_id,
+                node,
+                node_addon,
+                'gitlab_' + NodeLog.FILE_UPDATED,
+                path,
+                date,
+                committer,
+                include_urls=True,
+                sha=_id,
             )
         for path in commit.get('removed', []):
             add_hook_log(
-                node, node_addon, 'gitlab_' + NodeLog.FILE_REMOVED,
-                path, date, committer,
+                node,
+                node_addon,
+                'gitlab_' + NodeLog.FILE_REMOVED,
+                path,
+                date,
+                committer,
             )
 
     node.save()

@@ -45,34 +45,33 @@ class TestSpamListView(AdminTestCase):
             user=self.user_2,
             save=True,
             category='spam',
-            date=date - timedelta(seconds=5)
+            date=date - timedelta(seconds=5),
         )
         self.comment_2.report_abuse(
             user=self.user_2,
             save=True,
             category='spam',
-            date=date - timedelta(seconds=4)
+            date=date - timedelta(seconds=4),
         )
         self.comment_3.report_abuse(
             user=self.user_2,
             save=True,
             category='spam',
-            date=date - timedelta(seconds=3)
+            date=date - timedelta(seconds=3),
         )
         self.comment_4.report_abuse(
             user=self.user_2,
             save=True,
             category='spam',
-            date=date - timedelta(seconds=2)
+            date=date - timedelta(seconds=2),
         )
         self.comment_5.report_abuse(
             user=self.user_1,
             save=True,
             category='spam',
-            date=date - timedelta(seconds=1)
+            date=date - timedelta(seconds=1),
         )
-        self.comment_6.report_abuse(user=self.user_1, save=True,
-                                    category='spam')
+        self.comment_6.report_abuse(user=self.user_1, save=True, category='spam')
         self.request = RequestFactory().get('/fake_path')
         self.view = SpamList()
         self.view = setup_view(self.view, self.request, user_id=self.user_1._id)
@@ -87,7 +86,7 @@ class TestSpamListView(AdminTestCase):
             self.comment_4._id,
             self.comment_3._id,
             self.comment_2._id,
-            self.comment_1._id
+            self.comment_1._id,
         ]
         nt.assert_list_equal(should_be, response_list)
 
@@ -104,8 +103,7 @@ class TestSpamDetail(AdminTestCase):
     def setUp(self):
         super(TestSpamDetail, self).setUp()
         self.comment = CommentFactory()
-        self.comment.report_abuse(user=AuthUserFactory(), save=True,
-                                  category='spam')
+        self.comment.report_abuse(user=AuthUserFactory(), save=True, category='spam')
         self.request = RequestFactory().post('/fake_path')
         self.request.user = UserFactory()
 
@@ -114,8 +112,7 @@ class TestSpamDetail(AdminTestCase):
         form = ConfirmForm(data=form_data)
         nt.assert_true(form.is_valid())
         view = SpamDetail()
-        view = setup_form_view(
-            view, self.request, form, spam_id=self.comment._id)
+        view = setup_form_view(view, self.request, form, spam_id=self.comment._id)
         with transaction.atomic():
             view.form_valid(form)
         obj = AdminLogEntry.objects.latest(field_name='action_time')
@@ -127,8 +124,7 @@ class TestSpamDetail(AdminTestCase):
         form = ConfirmForm(data=form_data)
         nt.assert_true(form.is_valid())
         view = SpamDetail()
-        view = setup_form_view(
-            view, self.request, form, spam_id=self.comment._id)
+        view = setup_form_view(view, self.request, form, spam_id=self.comment._id)
         with transaction.atomic():
             view.form_valid(form)
         obj = AdminLogEntry.objects.latest(field_name='action_time')
@@ -164,8 +160,7 @@ class TestEmailView(AdminTestCase):
     def setUp(self):
         super(TestEmailView, self).setUp()
         self.comment = CommentFactory()
-        self.comment.report_abuse(user=AuthUserFactory(), save=True,
-                                  category='spam')
+        self.comment.report_abuse(user=AuthUserFactory(), save=True, category='spam')
         self.request = RequestFactory().post('/fake_path')
         self.request.user = UserFactory()
 
@@ -192,18 +187,12 @@ class TestUserSpamListView(AdminTestCase):
         self.comment_4 = CommentFactory(node=self.project, user=self.user_1)
         self.comment_5 = CommentFactory(node=self.project, user=self.user_2)
         self.comment_6 = CommentFactory(node=self.project, user=self.user_2)
-        self.comment_1.report_abuse(user=self.user_2, save=True,
-                                    category='spam')
-        self.comment_2.report_abuse(user=self.user_2, save=True,
-                                    category='spam')
-        self.comment_3.report_abuse(user=self.user_2, save=True,
-                                    category='spam')
-        self.comment_4.report_abuse(user=self.user_2, save=True,
-                                    category='spam')
-        self.comment_5.report_abuse(user=self.user_1, save=True,
-                                    category='spam')
-        self.comment_6.report_abuse(user=self.user_1, save=True,
-                                    category='spam')
+        self.comment_1.report_abuse(user=self.user_2, save=True, category='spam')
+        self.comment_2.report_abuse(user=self.user_2, save=True, category='spam')
+        self.comment_3.report_abuse(user=self.user_2, save=True, category='spam')
+        self.comment_4.report_abuse(user=self.user_2, save=True, category='spam')
+        self.comment_5.report_abuse(user=self.user_1, save=True, category='spam')
+        self.comment_6.report_abuse(user=self.user_1, save=True, category='spam')
         self.request = RequestFactory().get('/fake_path')
         self.view = UserSpamList()
         self.view = setup_view(self.view, self.request, user_id=self.user_1._id)

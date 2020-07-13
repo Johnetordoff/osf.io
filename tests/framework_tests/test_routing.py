@@ -8,17 +8,18 @@ from webtest_plus import TestApp
 from framework.exceptions import HTTPError
 from framework.routing import json_renderer, process_rules, Rule
 
+
 def error_view():
     raise HTTPError(400)
 
+
 def error_with_msg():
-    raise HTTPError(400, data={
-        'message_short': 'Invalid',
-        'message_long': 'Invalid request'
-    })
+    raise HTTPError(
+        400, data={'message_short': 'Invalid', 'message_long': 'Invalid request'}
+    )
+
 
 class TestJSONRenderer(unittest.TestCase):
-
     def setUp(self):
         self.app = Flask(__name__)
         self.app.debug = True

@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0096_abstractprovider_primary_collection'),
     ]
 
-    operations = [
-    ]
+    operations = []

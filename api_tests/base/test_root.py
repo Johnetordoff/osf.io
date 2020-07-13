@@ -19,6 +19,7 @@ from website import settings
 from osf.models import ApiOAuth2PersonalToken, Session
 from osf.utils.permissions import ADMIN
 
+
 @pytest.mark.enable_quickfiles_creation
 class TestWelcomeToApi(ApiTestCase):
     def setUp(self):
@@ -42,7 +43,7 @@ class TestWelcomeToApi(ApiTestCase):
         assert_equal(res.content_type, 'application/vnd.api+json')
         assert_equal(
             res.json['meta']['current_user']['data']['attributes']['given_name'],
-            self.user.given_name
+            self.user.given_name,
         )
 
     def test_current_user_accepted_tos(self):
@@ -50,8 +51,10 @@ class TestWelcomeToApi(ApiTestCase):
         assert_equal(res.status_code, 200)
         assert_equal(res.content_type, 'application/vnd.api+json')
         assert_equal(
-            res.json['meta']['current_user']['data']['attributes']['accepted_terms_of_service'],
-            False
+            res.json['meta']['current_user']['data']['attributes'][
+                'accepted_terms_of_service'
+            ],
+            False,
         )
         self.user.accepted_terms_of_service = timezone.now()
         self.user.save()
@@ -59,8 +62,10 @@ class TestWelcomeToApi(ApiTestCase):
         assert_equal(res.status_code, 200)
         assert_equal(res.content_type, 'application/vnd.api+json')
         assert_equal(
-            res.json['meta']['current_user']['data']['attributes']['accepted_terms_of_service'],
-            True
+            res.json['meta']['current_user']['data']['attributes'][
+                'accepted_terms_of_service'
+            ],
+            True,
         )
 
     def test_returns_302_redirect_for_base_url(self):
@@ -85,15 +90,9 @@ class TestWelcomeToApi(ApiTestCase):
 
     @mock.patch('api.base.authentication.drf.OSFCASAuthentication.authenticate')
     # TODO: Remove when available outside of DEV_MODE
-    @unittest.skipIf(
-        not settings.DEV_MODE,
-        'DEV_MODE disabled, osf.admin unavailable'
-    )
+    @unittest.skipIf(not settings.DEV_MODE, 'DEV_MODE disabled, osf.admin unavailable')
     def test_admin_scoped_token_has_admin(self, mock_auth):
-        token = ApiOAuth2PersonalToken(
-            owner=self.user,
-            name='Admin Token',
-        )
+        token = ApiOAuth2PersonalToken(owner=self.user, name='Admin Token',)
         token.save()
         scope = ApiOAuth2ScopeFactory()
         scope.name = 'osf.admin'
@@ -105,15 +104,12 @@ class TestWelcomeToApi(ApiTestCase):
             user=self.user._id,
             attributes={
                 'accessToken': token.token_id,
-                'accessTokenScope': [s.name for s in token.scopes.all()]
-            }
+                'accessTokenScope': [s.name for s in token.scopes.all()],
+            },
         )
         mock_auth.return_value = self.user, mock_cas_resp
         res = self.app.get(
-            self.url,
-            headers={
-                'Authorization': 'Bearer {}'.format(token.token_id)
-            }
+            self.url, headers={'Authorization': 'Bearer {}'.format(token.token_id)}
         )
 
         assert_equal(res.status_code, 200)
@@ -121,10 +117,7 @@ class TestWelcomeToApi(ApiTestCase):
 
     @mock.patch('api.base.authentication.drf.OSFCASAuthentication.authenticate')
     def test_non_admin_scoped_token_does_not_have_admin(self, mock_auth):
-        token = ApiOAuth2PersonalToken(
-            owner=self.user,
-            name='Admin Token',
-        )
+        token = ApiOAuth2PersonalToken(owner=self.user, name='Admin Token',)
         token.save()
         scope = ApiOAuth2ScopeFactory()
         scope.name = 'osf.full_write'
@@ -136,15 +129,12 @@ class TestWelcomeToApi(ApiTestCase):
             user=self.user._id,
             attributes={
                 'accessToken': token.token_id,
-                'accessTokenScope': [s.name for s in token.scopes.all()]
-            }
+                'accessTokenScope': [s.name for s in token.scopes.all()],
+            },
         )
         mock_auth.return_value = self.user, mock_cas_resp
         res = self.app.get(
-            self.url,
-            headers={
-                'Authorization': 'Bearer {}'.format(token.token_id)
-            }
+            self.url, headers={'Authorization': 'Bearer {}'.format(token.token_id)}
         )
 
         assert_equal(res.status_code, 200)

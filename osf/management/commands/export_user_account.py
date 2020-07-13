@@ -24,7 +24,7 @@ from osf.models import (
     OSFUser,
     Preprint,
     Registration,
-    QuickFilesNode
+    QuickFilesNode,
 )
 from osf.utils.workflows import DefaultStates
 from scripts.utils import Progress
@@ -40,7 +40,7 @@ PREPRINT_EXPORT_FIELDS = [
     'is_published',
     'created',
     'modified',
-    'date_published'
+    'date_published',
 ]
 
 NODE_EXPORT_FIELDS = [
@@ -51,16 +51,14 @@ NODE_EXPORT_FIELDS = [
     'description',
     'forked_date',
     'created',
-    'modified'
+    'modified',
 ]
 
-REGISTRATION_EXPORT_FIELDS = NODE_EXPORT_FIELDS + [
-    'registered_data',
-    'registered_meta'
-]
+REGISTRATION_EXPORT_FIELDS = NODE_EXPORT_FIELDS + ['registered_data', 'registered_meta']
 
 logging.getLogger('urllib3').setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
+
 
 def export_metadata(node, current_dir):
     """
@@ -75,8 +73,11 @@ def export_metadata(node, current_dir):
         export_fields = PREPRINT_EXPORT_FIELDS
     with open(os.path.join(current_dir, 'metadata.json'), 'w') as f:
         # only write the fields dict, throw away pk and model_name
-        metadata = json.loads(serializers.serialize('json', [node], fields=export_fields))
+        metadata = json.loads(
+            serializers.serialize('json', [node], fields=export_fields)
+        )
         json.dump(metadata[0]['fields'], f, indent=4, sort_keys=True)
+
 
 def export_files(node, user, current_dir):
     """
@@ -94,7 +95,7 @@ def export_files(node, user, current_dir):
             provider='osfstorage',
             zip='',
             cookie=user.get_or_create_cookie(),
-            base_url=node.osfstorage_region.waterbutler_url
+            base_url=node.osfstorage_region.waterbutler_url,
         )
     )
     if response.status_code == 200:
@@ -102,9 +103,11 @@ def export_files(node, user, current_dir):
             f.write(response.content)
     else:
         ERRORS.append(
-            'Error exporting files for node {}. Waterbutler responded with a {} status code. Response: {}'
-            .format(node._id, response.status_code, response.json())
+            'Error exporting files for node {}. Waterbutler responded with a {} status code. Response: {}'.format(
+                node._id, response.status_code, response.json()
+            )
         )
+
 
 def export_wikis(node, current_dir):
     """
@@ -116,8 +119,13 @@ def export_wikis(node, current_dir):
     os.mkdir(wikis_dir)
     for wiki in WikiPage.objects.get_wiki_pages_latest(node):
         if wiki.content:
-            with io.open(os.path.join(wikis_dir, '{}.md'.format(wiki.wiki_page.page_name)), 'w', encoding='utf-8') as f:
+            with io.open(
+                os.path.join(wikis_dir, '{}.md'.format(wiki.wiki_page.page_name)),
+                'w',
+                encoding='utf-8',
+            ) as f:
                 f.write(wiki.content)
+
 
 def export_resource(node, user, current_dir):
     """
@@ -133,7 +141,9 @@ def export_resource(node, user, current_dir):
     if hasattr(node, 'wikis') and WikiPage.objects.get_wiki_pages_latest(node):
         export_wikis(node, current_dir)
     ctype = ContentType.objects.get_for_model(node.__class__)
-    if OsfStorageFileNode.objects.filter(target_object_id=node.id, target_content_type=ctype):
+    if OsfStorageFileNode.objects.filter(
+        target_object_id=node.id, target_content_type=ctype
+    ):
         export_files(node, user, current_dir)
 
     if hasattr(node, 'find_readable_descendants'):
@@ -145,6 +155,7 @@ def export_resource(node, user, current_dir):
                 current_dir = os.path.join(components_dir, child._id)
                 os.mkdir(current_dir)
                 export_resource(child, user, current_dir)
+
 
 def export_resources(nodes_to_export, user, dir, nodes_type):
     """
@@ -161,30 +172,48 @@ def export_resources(nodes_to_export, user, dir, nodes_type):
         progress.increment()
     progress.stop()
 
+
 def get_usage(user):
     # includes nodes, registrations, quickfiles
-    nodes = user.nodes.filter(is_deleted=False).exclude(type='osf.collection').values_list('id', flat=True)
+    nodes = (
+        user.nodes.filter(is_deleted=False)
+        .exclude(type='osf.collection')
+        .values_list('id', flat=True)
+    )
     node_ctype = ContentType.objects.get_for_model(AbstractNode)
     node_files = get_resource_files(nodes, node_ctype)
 
     preprint_ctype = ContentType.objects.get_for_model(Preprint)
     preprint_files = get_resource_files(get_preprints_to_export(user), preprint_ctype)
 
-    versions = FileVersion.objects.filter(Q(basefilenode__in=node_files) | Q(basefilenode__in=preprint_files))
+    versions = FileVersion.objects.filter(
+        Q(basefilenode__in=node_files) | Q(basefilenode__in=preprint_files)
+    )
     return sum([v.size or 0 for v in versions]) / GBs
 
+
 def get_resource_files(resource_list, resource_ctype):
-    return OsfStorageFile.objects.filter(target_object_id__in=resource_list, target_content_type=resource_ctype).values_list('id', flat=True)
+    return OsfStorageFile.objects.filter(
+        target_object_id__in=resource_list, target_content_type=resource_ctype
+    ).values_list('id', flat=True)
+
 
 def get_preprints_to_export(user):
     return Preprint.objects.filter(
-        Q(preprintcontributor__user_id=user.id) &
-        Q(deleted__isnull=True) &
-        ~Q(machine_state=DefaultStates.INITIAL.value)
+        Q(preprintcontributor__user_id=user.id)
+        & Q(deleted__isnull=True)
+        & ~Q(machine_state=DefaultStates.INITIAL.value)
     )
 
 
-def export_account(user_id, path, only_private=False, only_admin=False, export_files=True, export_wikis=True):
+def export_account(
+    user_id,
+    path,
+    only_private=False,
+    only_admin=False,
+    export_files=True,
+    export_wikis=True,
+):
     """
     Exports (as a zip file) all of the projects, registrations, and preprints for which the given user is a contributor.
 
@@ -225,7 +254,11 @@ def export_account(user_id, path, only_private=False, only_admin=False, export_f
 
     """
     user = OSFUser.objects.get(guids___id=user_id, guids___id__isnull=False)
-    proceed = input('\nUser has {:.2f} GB of data in OSFStorage that will be exported.\nWould you like to continue? [y/n] '.format(get_usage(user)))
+    proceed = input(
+        '\nUser has {:.2f} GB of data in OSFStorage that will be exported.\nWould you like to continue? [y/n] '.format(
+            get_usage(user)
+        )
+    )
     if not proceed or proceed.lower() != 'y':
         print('Exiting...')
         exit(1)
@@ -244,19 +277,15 @@ def export_account(user_id, path, only_private=False, only_admin=False, export_f
 
     preprints_to_export = get_preprints_to_export(user)
 
-    projects_to_export = (user.nodes
-        .filter(is_deleted=False, type='osf.node')
-        .get_roots()
-    )
+    projects_to_export = user.nodes.filter(
+        is_deleted=False, type='osf.node'
+    ).get_roots()
 
-    registrations_to_export = (user.nodes
-        .filter(is_deleted=False, type='osf.registration', retraction__isnull=True)
-        .get_roots()
-    )
+    registrations_to_export = user.nodes.filter(
+        is_deleted=False, type='osf.registration', retraction__isnull=True
+    ).get_roots()
 
-    quickfiles_to_export = (
-        QuickFilesNode.objects.filter(creator=user)
-    )
+    quickfiles_to_export = QuickFilesNode.objects.filter(creator=user)
 
     export_resources(projects_to_export, user, projects_dir, 'projects')
     export_resources(preprints_to_export, user, preprints_dir, 'preprints')
@@ -269,7 +298,11 @@ def export_account(user_id, path, only_private=False, only_admin=False, export_f
     shutil.make_archive(output, 'zip', base_dir)
     shutil.rmtree(base_dir)
 
-    finished_msg = 'Finished without errors.' if not ERRORS else 'Finished with errors logged below.'
+    finished_msg = (
+        'Finished without errors.'
+        if not ERRORS
+        else 'Finished with errors logged below.'
+    )
     print(finished_msg)
 
     for err in ERRORS:
@@ -277,7 +310,6 @@ def export_account(user_id, path, only_private=False, only_admin=False, export_f
 
 
 class Command(BaseCommand):
-
     def add_arguments(self, parser):
         # TODO: add arguments to narrow down what should be exported
         #   export only files and/or wikis
@@ -286,19 +318,16 @@ class Command(BaseCommand):
         #   export only projects on which user is an admin
         super(Command, self).add_arguments(parser)
         parser.add_argument(
-            'user',
-            type=str,
-            help='GUID of the user account to export.'
+            'user', type=str, help='GUID of the user account to export.'
         )
         parser.add_argument(
             '--path',
             type=str,
             required=True,
-            help='Path where to save the output file.'
+            help='Path where to save the output file.',
         )
 
     def handle(self, *args, **options):
         export_account(
-            user_id=options['user'],
-            path=options['path'],
+            user_id=options['user'], path=options['path'],
         )

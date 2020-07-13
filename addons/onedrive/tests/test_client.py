@@ -7,8 +7,8 @@ from addons.onedrive.models import UserSettings
 
 pytestmark = pytest.mark.django_db
 
-class TestCore:
 
+class TestCore:
     @pytest.fixture()
     def user(self):
         ret = UserFactory()

@@ -10,7 +10,11 @@ class BaseWaffleSerializer(JSONAPISerializer):
     type = TypeField()
     name = ser.CharField(required=True, help_text='The name of the waffle object')
     active = ser.SerializerMethodField()
-    note = ser.CharField(required=False, allow_blank=True, help_text='Describe where the waffle object is used.')
+    note = ser.CharField(
+        required=False,
+        allow_blank=True,
+        help_text='Describe where the waffle object is used.',
+    )
 
     def get_type(self, obj):
         return type(obj).__name__.lower()
@@ -19,7 +23,9 @@ class BaseWaffleSerializer(JSONAPISerializer):
         """
         Use waffle_feature_is_active helper to determine if waffle flag, sample, or switch is active
         """
-        return waffle_feature_is_active(self.context.get('request'), self.get_type(obj), obj.name)
+        return waffle_feature_is_active(
+            self.context.get('request'), self.get_type(obj), obj.name,
+        )
 
     def get_id(self, obj):
         return '{}_{}'.format(self.get_type(obj), obj.id)
@@ -44,7 +50,6 @@ class SwitchSerializer(BaseWaffleSerializer):
 
 
 class WaffleSerializer(JSONAPISerializer):
-
     def to_representation(self, data, envelope='data'):
 
         if isinstance(data, Flag):

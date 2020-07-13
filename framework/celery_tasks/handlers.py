@@ -63,8 +63,7 @@ def _enqueue_task(signature):
     :param signature: Celery task signature
     """
     if (
-        context_stack.top is None and
-        getattr(api_globals, 'request', None) is None
+        context_stack.top is None and getattr(api_globals, 'request', None) is None
     ):  # Not in a request context
         signature()
     else:
@@ -78,10 +77,12 @@ def queued_task(task):
     tasks; should be used for all tasks fired within a request context that
     may write to the database to avoid race conditions.
     """
+
     @functools.wraps(task)
     def wrapped(*args, **kwargs):
         signature = task.si(*args, **kwargs)
         enqueue_task(signature)
+
     return wrapped
 
 

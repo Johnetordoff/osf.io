@@ -5,9 +5,9 @@ from tests.base import DbTestCase
 from osf_tests.factories import SessionFactory, UserFactory
 from osf.models import OSFUser, Session
 
+
 @pytest.mark.django_db
 class TestSession:
-
     def test_is_authenticated(self):
         session = Session(data={'auth_user_id': 'abc12'})
         assert session.is_authenticated
@@ -22,7 +22,10 @@ class TestSession:
         assert Session.load(session._id)
 
     def test_remove(self):
-        session, session2 = Session(data={'auth_user_id': '123ab'}), Session(data={'auth_user_id': 'ab123'})
+        session, session2 = (
+            Session(data={'auth_user_id': '123ab'}),
+            Session(data={'auth_user_id': 'ab123'}),
+        )
         session.save()
         session2.save()
 

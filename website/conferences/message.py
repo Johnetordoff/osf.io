@@ -30,8 +30,8 @@ BASE_REGEX = r"""
         @osf\.io
     """
 
-class ConferenceMessage(object):
 
+class ConferenceMessage(object):
     def __init__(self):
         self.request = request._get_current_object()
 
@@ -45,10 +45,7 @@ class ConferenceMessage(object):
         """
         signature = hmac.new(
             key=settings.MAILGUN_API_KEY.encode(),
-            msg='{}{}'.format(
-                self.form['timestamp'],
-                self.form['token'],
-            ).encode(),
+            msg='{}{}'.format(self.form['timestamp'], self.form['token'],).encode(),
             digestmod=hashlib.sha256,
         ).hexdigest()
         if signature != self.form['signature']:
@@ -70,9 +67,9 @@ class ConferenceMessage(object):
         dkim_header = self.form.get('X-Mailgun-Dkim-Check-Result')
         spf_header = self.form.get('X-Mailgun-Spf')
         return (
-            (sscore_header and sscore_header > SSCORE_MAX_VALUE) or
-            (dkim_header and dkim_header not in DKIM_PASS_VALUES) or
-            (spf_header and spf_header not in SPF_PASS_VALUES)
+            (sscore_header and sscore_header > SSCORE_MAX_VALUE)
+            or (dkim_header and dkim_header not in DKIM_PASS_VALUES)
+            or (spf_header and spf_header not in SPF_PASS_VALUES)
         )
 
     @cached_property
@@ -136,13 +133,21 @@ class ConferenceMessage(object):
 
     @cached_property
     def route(self):
-        match = re.search(re.compile(BASE_REGEX.format(allowed_types=(self.allowed_types or 'poster|talk')), re.IGNORECASE | re.VERBOSE), self.form['recipient'])
+        match = re.search(
+            re.compile(
+                BASE_REGEX.format(allowed_types=(self.allowed_types or 'poster|talk')),
+                re.IGNORECASE | re.VERBOSE,
+            ),
+            self.form['recipient'],
+        )
         if not match:
             raise ConferenceError('Invalid recipient: '.format(self.form['recipient']))
         data = match.groupdict()
         if bool(settings.DEV_MODE) != bool(data['test']):
             # NOTE: test.osf.io has DEV_MODE = False
-            if not data['test'] or (data['test'] and data['test'].rstrip('-') != 'test'):
+            if not data['test'] or (
+                data['test'] and data['test'].rstrip('-') != 'test'
+            ):
                 raise ConferenceError(
                     'Mismatch between `DEV_MODE` and recipient {0}'.format(
                         self.form['recipient']
@@ -165,19 +170,27 @@ class ConferenceMessage(object):
             count = int(count)
         except (TypeError, ValueError):
             count = 0
-        return list(filter(
-            lambda value: value is not None,
-            list(map(
-                lambda idx: self.request.files.get('attachment-{0}'.format(idx + 1)),
-                list(range(count)),
-            )),
-        ))
+        return list(
+            filter(
+                lambda value: value is not None,
+                list(
+                    map(
+                        lambda idx: self.request.files.get(
+                            'attachment-{0}'.format(idx + 1)
+                        ),
+                        list(range(count)),
+                    )
+                ),
+            )
+        )
 
     @property
     def allowed_types(self):
         Conference = apps.get_model('osf.Conference')
         allowed_types = []
         for field_names in Conference.objects.values_list('field_names', flat=True):
-            allowed_types.extend([field_names['submission1'], field_names['submission2']])
+            allowed_types.extend(
+                [field_names['submission1'], field_names['submission2']]
+            )
         regex_types_allowed = '|'.join(set(allowed_types))
         return regex_types_allowed

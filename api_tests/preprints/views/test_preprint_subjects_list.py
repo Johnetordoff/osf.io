@@ -2,9 +2,7 @@ import pytest
 
 from api.base.settings.defaults import API_BASE
 from api_tests.subjects.mixins import SubjectsListMixin
-from osf_tests.factories import (
-    PreprintFactory,
-)
+from osf_tests.factories import PreprintFactory
 from osf.utils.permissions import WRITE, READ
 
 
@@ -23,20 +21,27 @@ class TestPreprintSubjectsList(SubjectsListMixin):
     def url(self, resource):
         return '/{}preprints/{}/subjects/'.format(API_BASE, resource._id)
 
-    def test_get_resource_subjects_permissions(self, app, user_write_contrib,
-            user_read_contrib, user_non_contrib, resource, url):
+    def test_get_resource_subjects_permissions(
+        self,
+        app,
+        user_write_contrib,
+        user_read_contrib,
+        user_non_contrib,
+        resource,
+        url,
+    ):
         # test_unauthorized
         res = app.get(url, expect_errors=True)
         assert res.status_code == 401
 
         # test_noncontrib
-        res = app. get(url, auth=user_non_contrib.auth, expect_errors=True)
+        res = app.get(url, auth=user_non_contrib.auth, expect_errors=True)
         assert res.status_code == 403
 
         # test_read_contrib
-        res = app. get(url, auth=user_write_contrib.auth, expect_errors=True)
+        res = app.get(url, auth=user_write_contrib.auth, expect_errors=True)
         assert res.status_code == 403
 
         # test_write_contrib
-        res = app. get(url, auth=user_read_contrib.auth, expect_errors=True)
+        res = app.get(url, auth=user_read_contrib.auth, expect_errors=True)
         assert res.status_code == 403

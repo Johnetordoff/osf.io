@@ -3,8 +3,9 @@ import uuid
 
 import psycopg2
 from django.conf import settings
-from django.db.backends.postgresql.base import \
-    DatabaseWrapper as PostgresqlDatabaseWrapper
+from django.db.backends.postgresql.base import (
+    DatabaseWrapper as PostgresqlDatabaseWrapper,
+)
 from django.db.backends.postgresql.base import utc_tzinfo_factory
 
 
@@ -59,9 +60,9 @@ class DatabaseWrapper(PostgresqlDatabaseWrapper):
             return super(DatabaseWrapper, self).create_cursor(name=name)
 
         cursor = self.connection.cursor(
-            name='osf.db.backends.postgresql_cursors:{}'.format(
-                uuid.uuid4().hex),
-            cursor_factory=psycopg2.extras.DictCursor, )
+            name='osf.db.backends.postgresql_cursors:{}'.format(uuid.uuid4().hex),
+            cursor_factory=psycopg2.extras.DictCursor,
+        )
         cursor.tzinfo_factory = utc_tzinfo_factory if settings.USE_TZ else None
         cursor.itersize = self.server_side_cursor_itersize
 

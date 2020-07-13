@@ -20,7 +20,11 @@ def update_node_links(designated_node, target_nodes, description):
     if len(target_nodes) == 0:
         logger.info('No target nodes specified - no node links will be added!')
     else:
-        logger.info('Repopulating {} with latest {} nodes.'.format(designated_node._id, description))
+        logger.info(
+            'Repopulating {} with latest {} nodes.'.format(
+                designated_node._id, description
+            )
+        )
     user = designated_node.creator
     auth = Auth(user)
 
@@ -31,6 +35,7 @@ def update_node_links(designated_node, target_nodes, description):
         designated_node.add_pointer(node, auth, save=True)
         logger.info('Added node link {} to {}'.format(node, designated_node))
 
+
 def main(dry_run=True):
     init_app(routes=False)
     from osf.models import AbstractNode
@@ -39,12 +44,18 @@ def main(dry_run=True):
     popular_activity = activity()
 
     popular_nodes = popular_activity['popular_public_projects']
-    popular_links_node = AbstractNode.objects.get(guids___id=POPULAR_LINKS_NODE, guids___id__isnull=False)
+    popular_links_node = AbstractNode.objects.get(
+        guids___id=POPULAR_LINKS_NODE, guids___id__isnull=False
+    )
     popular_registrations = popular_activity['popular_public_registrations']
-    popular_links_registrations = AbstractNode.objects.get(guids___id=POPULAR_LINKS_REGISTRATIONS)
+    popular_links_registrations = AbstractNode.objects.get(
+        guids___id=POPULAR_LINKS_REGISTRATIONS
+    )
 
     update_node_links(popular_links_node, popular_nodes, 'popular')
-    update_node_links(popular_links_registrations, popular_registrations, 'popular registrations')
+    update_node_links(
+        popular_links_registrations, popular_registrations, 'popular registrations'
+    )
     try:
         popular_links_node.save()
         logger.info('Node links on {} updated.'.format(popular_links_node._id))
@@ -54,7 +65,11 @@ def main(dry_run=True):
 
     try:
         popular_links_registrations.save()
-        logger.info('Node links for registrations on {} updated.'.format(popular_links_registrations._id))
+        logger.info(
+            'Node links for registrations on {} updated.'.format(
+                popular_links_registrations._id
+            )
+        )
     except (KeyError, RuntimeError) as error:
         logger.error('Could not migrate popular nodes for registrations due to error')
         logger.exception(error)
@@ -69,6 +84,7 @@ def run_main(dry_run=True):
         script_utils.add_file_logger(logger, __file__)
     with transaction.atomic():
         main(dry_run=dry_run)
+
 
 if __name__ == '__main__':
     dry_run = '--dry' in sys.argv

@@ -15,21 +15,22 @@ def sync_registration_creator_bibliographic_status(registration_guid):
     registration = Registration.load(registration_guid)
     creator = registration.creator
     creator_contributor_reg = registration.contributor_set.get(user=creator)
-    creator_contributor_node = registration.registered_from.contributor_set.get(user=creator)
+    creator_contributor_node = registration.registered_from.contributor_set.get(
+        user=creator
+    )
 
     creator_contributor_reg.visible = creator_contributor_node.visible
     creator_contributor_reg.save()
 
 
 class Command(BaseCommand):
-
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
         parser.add_argument(
             '--registrations',
             nargs='+',
             dest='registration_guids',
-            help='Registrations to sync the initiator contributor settings for'
+            help='Registrations to sync the initiator contributor settings for',
         )
 
     def handle(self, *args, **options):

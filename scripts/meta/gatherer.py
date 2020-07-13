@@ -10,6 +10,7 @@ GIT_STATUS_FILE = os.path.join('website', 'static', 'built', 'git_branch.txt')
 
 def gather_pr_data(current_branch='develop', master_branch='master'):
     import requests
+
     regex = re.compile(r'\(#([\d]{4,})\)|Merge pull request #([\d]{4,})')
     pr_data = []
     headers = {
@@ -17,7 +18,9 @@ def gather_pr_data(current_branch='develop', master_branch='master'):
         'media_type': 'application/vnd.github.VERSION.sha',
     }
     # GET /repos/:owner/:repo/compare/hubot:branchname...octocat:branchname
-    url_string = 'https://api.github.com/repos/centerforopenscience/osf.io/compare/{}...{}'
+    url_string = (
+        'https://api.github.com/repos/centerforopenscience/osf.io/compare/{}...{}'
+    )
     url = url_string.format(master_branch, current_branch)
     res = requests.get(url, headers=headers)
     if res.status_code == 200:
@@ -39,13 +42,16 @@ def gather_pr_data(current_branch='develop', master_branch='master'):
 
 def get_pr_data(pr):
     import requests
+
     headers = {
         'Authorization': 'token %s' % GITHUB_API_TOKEN,
         'media_type': 'application/vnd.github.VERSION.sha',
     }
     # GET /repos/:owner/:repo/pulls/:number
-    res = requests.get('https://api.github.com/repos/centerforopenscience/osf.io/pulls/{}'.format(pr),
-                       headers=headers)
+    res = requests.get(
+        'https://api.github.com/repos/centerforopenscience/osf.io/pulls/{}'.format(pr),
+        headers=headers,
+    )
     if res.status_code == 200:
         return res.json()
     else:
@@ -53,13 +59,16 @@ def get_pr_data(pr):
 
 
 def main(branch=None):
-    current_branch = branch or check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).rstrip()
+    current_branch = (
+        branch or check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).rstrip()
+    )
     with open(GIT_STATUS_FILE, 'w') as f:
         f.write(current_branch)
     if GITHUB_API_TOKEN:
         pr_data = json.dumps(gather_pr_data(current_branch))
         with open(GIT_LOGS_FILE, 'w') as f:
             f.write(pr_data)
+
 
 if __name__ == '__main__':
     main()

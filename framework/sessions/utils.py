@@ -22,4 +22,5 @@ def remove_session(session):
     :return:
     """
     from osf.models import Session
+
     Session.objects.filter(id=session.id).delete()

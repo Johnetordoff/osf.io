@@ -10,21 +10,23 @@ from django.utils.http import urlencode
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 
-from osf.models.admin_log_entry import (
-    update_admin_log,
-    EMBARGO_UPDATED
-)
+from osf.models.admin_log_entry import update_admin_log, EMBARGO_UPDATED
 
 from website import settings
 
 validate_slug = RegexValidator(
     _lazy_re_compile(r'^[a-z]+\Z'),
     _("Enter a valid 'slug' consisting only of lowercase letters."),
-    'invalid'
+    'invalid',
 )
 
-def reverse_qs(view, urlconf=None, args=None, kwargs=None, current_app=None, query_kwargs=None):
-    base_url = reverse(view, urlconf=urlconf, args=args, kwargs=kwargs, current_app=current_app)
+
+def reverse_qs(
+    view, urlconf=None, args=None, kwargs=None, current_app=None, query_kwargs=None
+):
+    base_url = reverse(
+        view, urlconf=urlconf, args=args, kwargs=kwargs, current_app=current_app
+    )
     if query_kwargs:
         return '{}?{}'.format(base_url, urlencode(query_kwargs))
 
@@ -53,10 +55,18 @@ def get_subject_rules(subjects_selected):
     new_rules = []
     subjects_done = []
     while len(subjects_done) < len(subjects_selected):
-        parents_left = [sub for sub in subjects_selected if not sub.parent and sub not in subjects_done]
-        subjects_left = [sub for sub in subjects_selected if sub not in subjects_done and sub.parent]
+        parents_left = [
+            sub
+            for sub in subjects_selected
+            if not sub.parent and sub not in subjects_done
+        ]
+        subjects_left = [
+            sub for sub in subjects_selected if sub not in subjects_done and sub.parent
+        ]
         if subjects_left and not parents_left:
-            raise AttributeError('Error parsing  rules - should not be children with no parents to process')
+            raise AttributeError(
+                'Error parsing  rules - should not be children with no parents to process'
+            )
         for parent in parents_left:
             parent_has_no_descendants_in_rules = True
             used_children = []
@@ -76,17 +86,23 @@ def get_subject_rules(subjects_selected):
                                 child_has_no_descendants_in_rules = False
 
                                 if grandchild in subjects_left:
-                                    potential_grandchildren_rules.append([[parent._id, child._id, grandchild._id], False])
+                                    potential_grandchildren_rules.append(
+                                        [[parent._id, child._id, grandchild._id], False]
+                                    )
                                 used_grandchildren.append(grandchild)
 
                         if len(used_grandchildren) == child.children.count():
                             all_grandchildren = True
-                            potential_children_rules.append([[parent._id, child._id], True])
+                            potential_children_rules.append(
+                                [[parent._id, child._id], True]
+                            )
                         else:
                             new_rules += potential_grandchildren_rules
 
                         if child_has_no_descendants_in_rules:
-                            potential_children_rules.append([[parent._id, child._id], False])
+                            potential_children_rules.append(
+                                [[parent._id, child._id], False]
+                            )
                         subjects_done += used_grandchildren
                 subjects_done += used_children
 
@@ -106,25 +122,32 @@ def get_subject_rules(subjects_selected):
 def get_nodelicense_choices():
     return NodeLicense.objects.exclude(license_id='OTHER').values_list('id', 'name')
 
+
 def get_defaultlicense_choices():
     no_default = ('', '---------')
     licenses = NodeLicense.objects.exclude(license_id='OTHER')
     return [no_default] + [(lic.id, lic.__unicode__) for lic in licenses]
+
 
 def get_brand_choices():
     no_default = ('', '---------')
     brands = Brand.objects.all()
     return [no_default] + [(brand.id, brand.name) for brand in brands]
 
+
 def get_toplevel_subjects():
-    return Subject.objects.filter(parent__isnull=True, provider___id='osf').values_list('id', 'text')
+    return Subject.objects.filter(parent__isnull=True, provider___id='osf').values_list(
+        'id', 'text'
+    )
 
 
 def validate_embargo_date(registration, user, end_date):
     if not user.has_perm('osf.change_node'):
         raise PermissionDenied('Only osf_admins may update a registration embargo.')
     if end_date - registration.registered_date >= settings.EMBARGO_END_DATE_MAX:
-        raise ValidationError('Registrations can only be embargoed for up to four years.')
+        raise ValidationError(
+            'Registrations can only be embargoed for up to four years.'
+        )
     elif end_date < timezone.now():
         raise ValidationError('Embargo end date must be in the future.')
 
@@ -138,9 +161,12 @@ def change_embargo_date(registration, user, end_date):
 
     validate_embargo_date(registration, user, end_date)
 
-    registration._initiate_embargo(user, end_date,
-                                         for_existing_registration=True,
-                                         notify_initiator_on_complete=False)
+    registration._initiate_embargo(
+        user,
+        end_date,
+        for_existing_registration=True,
+        notify_initiator_on_complete=False,
+    )
 
     if registration.is_public:
         registration.is_public = False
@@ -153,5 +179,5 @@ def change_embargo_date(registration, user, end_date):
         message='User {} changed the embargo end date of {} to {}.'.format(
             user.pk, registration.pk, end_date
         ),
-        action_flag=EMBARGO_UPDATED
+        action_flag=EMBARGO_UPDATED,
     )

@@ -8,16 +8,13 @@ from django.utils import timezone
 
 from website import settings
 
-from osf_tests.factories import (
-    AuthUserFactory,
-    SessionFactory
-)
+from osf_tests.factories import AuthUserFactory, SessionFactory
 from tests.base import OsfTestCase
+
 
 @pytest.mark.django_db
 @pytest.mark.enable_enqueue_task
 class TestUserLastLoginDate(OsfTestCase):
-
     def setUp(self):
         super(TestUserLastLoginDate, self).setUp()
 
@@ -26,10 +23,12 @@ class TestUserLastLoginDate(OsfTestCase):
         self.session = SessionFactory(
             data={
                 'auth_user_id': self.user._id,
-                'auth_user_username': self.user.username
+                'auth_user_username': self.user.username,
             }
         )
-        self.cookie = itsdangerous.Signer(settings.SECRET_KEY).sign(self.session._id).decode()
+        self.cookie = (
+            itsdangerous.Signer(settings.SECRET_KEY).sign(self.session._id).decode()
+        )
 
     @mock.patch.object(timezone, 'now')
     def test_date_last_login_updated_from_none(self, mock_time):
@@ -38,7 +37,9 @@ class TestUserLastLoginDate(OsfTestCase):
         assert self.user.date_last_login is None
 
         self.app.set_cookie(settings.COOKIE_NAME, self.cookie)
-        self.app.get(f'{settings.DOMAIN}{self.user._id}')  # user page will fail because not emberized
+        self.app.get(
+            f'{settings.DOMAIN}{self.user._id}'
+        )  # user page will fail because not emberized
 
         self.user.refresh_from_db()
         assert self.user.date_last_login == now
@@ -51,9 +52,13 @@ class TestUserLastLoginDate(OsfTestCase):
         self.user.save()
 
         # Time is mocked one second below the last login date threshold, so it should not change.
-        mock_time.return_value = now + (settings.DATE_LAST_LOGIN_THROTTLE_DELTA - timedelta(seconds=1))
+        mock_time.return_value = now + (
+            settings.DATE_LAST_LOGIN_THROTTLE_DELTA - timedelta(seconds=1)
+        )
         self.app.set_cookie(settings.COOKIE_NAME, self.cookie)
-        self.app.get(f'{settings.DOMAIN}{self.user._id}')  # user page will fail because not emberized
+        self.app.get(
+            f'{settings.DOMAIN}{self.user._id}'
+        )  # user page will fail because not emberized
 
         self.user.refresh_from_db()
         # date_last_login is unchanged
@@ -67,10 +72,14 @@ class TestUserLastLoginDate(OsfTestCase):
         self.user.save()
 
         # Time is mocked one second below the last login date threshold, so it should not change.
-        new_time = now + (settings.DATE_LAST_LOGIN_THROTTLE_DELTA + timedelta(seconds=1))
+        new_time = now + (
+            settings.DATE_LAST_LOGIN_THROTTLE_DELTA + timedelta(seconds=1)
+        )
         mock_time.return_value = new_time
         self.app.set_cookie(settings.COOKIE_NAME, self.cookie)
-        self.app.get(f'{settings.DOMAIN}{self.user._id}')  # user page will fail because not emberized
+        self.app.get(
+            f'{settings.DOMAIN}{self.user._id}'
+        )  # user page will fail because not emberized
 
         self.user.refresh_from_db()
         # date_last_login is changed!

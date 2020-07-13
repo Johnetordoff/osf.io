@@ -30,24 +30,51 @@ REVIEW_PERMISSIONS = (
     ('withdraw_submissions', 'Can withdraw submissions from this provider'),
     ('edit_review_comments', 'Can edit comments on actions for this provider'),
     ('view_actions', 'Can view actions on submissions to this provider'),
-
     ('add_moderator', 'Can add other users as moderators for this provider'),
     ('update_moderator', 'Can elevate or lower other moderators/admins'),
-    ('remove_moderator', 'Can remove moderators from this provider. Implicitly granted to self'),
-
+    (
+        'remove_moderator',
+        'Can remove moderators from this provider. Implicitly granted to self',
+    ),
     # TODO Implement editing settings, assign this to admin groups
     ('edit_reviews_settings', 'Can edit reviews settings for this provider'),
-
     # TODO Implement reviewers, review workflows, use these permissions
     ('add_reviewer', 'Can add other users as reviewers for this provider'),
-    ('assign_reviewer', 'Can assign reviewers to review specific submissions to this provider'),
-    ('view_assigned_submissions', 'Can view submissions to this provider which have been assigned to this user'),
-    ('review_assigned_submissions', 'Can submit reviews for submissions to this provider which have been assigned to this user'),
+    (
+        'assign_reviewer',
+        'Can assign reviewers to review specific submissions to this provider',
+    ),
+    (
+        'view_assigned_submissions',
+        'Can view submissions to this provider which have been assigned to this user',
+    ),
+    (
+        'review_assigned_submissions',
+        'Can submit reviews for submissions to this provider which have been assigned to this user',
+    ),
 )
 
 REVIEW_GROUPS = {
-    'admin': ('set_up_moderation', 'add_moderator', 'update_moderator', 'remove_moderator', 'view_submissions', 'accept_submissions', 'reject_submissions', 'withdraw_submissions', 'edit_review_comments', 'view_actions'),
-    'moderator': ('view_submissions', 'accept_submissions', 'reject_submissions', 'withdraw_submissions', 'edit_review_comments', 'view_actions'),
+    'admin': (
+        'set_up_moderation',
+        'add_moderator',
+        'update_moderator',
+        'remove_moderator',
+        'view_submissions',
+        'accept_submissions',
+        'reject_submissions',
+        'withdraw_submissions',
+        'edit_review_comments',
+        'view_actions',
+    ),
+    'moderator': (
+        'view_submissions',
+        'accept_submissions',
+        'reject_submissions',
+        'withdraw_submissions',
+        'edit_review_comments',
+        'view_actions',
+    ),
     # 'manager': (),  # TODO "Senior editor"-like role, can add/remove/assign moderators and reviewers
     # 'reviewer': (),  # TODO Implement reviewers
 }
@@ -69,6 +96,7 @@ def reduce_permissions(permissions):
 
 def check_private_key_for_anonymized_link(private_key):
     from osf.models import PrivateLink
+
     try:
         link = PrivateLink.objects.get(key=private_key, is_deleted=False)
     except PrivateLink.DoesNotExist:

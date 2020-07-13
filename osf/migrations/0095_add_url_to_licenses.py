@@ -14,9 +14,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name='nodelicense',
-            name='url',
-            field=models.URLField(blank=True),
+            model_name='nodelicense', name='url', field=models.URLField(blank=True),
         ),
         migrations.RunPython(ensure_licenses, remove_licenses),
     ]

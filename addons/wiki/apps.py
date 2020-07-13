@@ -32,6 +32,7 @@ class WikiAddonAppConfig(BaseAddonAppConfig):
     @property
     def routes(self):
         from addons.wiki import routes
+
         return [routes.page_routes, routes.api_routes]
 
     @property

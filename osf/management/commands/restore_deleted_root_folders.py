@@ -9,15 +9,15 @@ from osf.models import BaseFileNode
 
 logger = logging.getLogger(__name__)
 
+
 def restore_deleted_root_folders(dry_run=False):
     deleted_roots = BaseFileNode.objects.filter(
-        type='osf.trashedfolder',
-        is_root=True,
-        name='',
-        provider='osfstorage'
+        type='osf.trashedfolder', is_root=True, name='', provider='osfstorage'
     )
 
-    logger.info('Restoring {} deleted osfstorage root folders'.format(len(deleted_roots)))
+    logger.info(
+        'Restoring {} deleted osfstorage root folders'.format(len(deleted_roots))
+    )
 
     for i, folder in enumerate(deleted_roots, 1):
         folder.deleted_on = None
@@ -30,6 +30,7 @@ def restore_deleted_root_folders(dry_run=False):
 class Command(BaseCommand):
     """Restore deleted osfstorage root folders
     """
+
     def add_arguments(self, parser):
         parser.add_argument(
             '--dry_run',

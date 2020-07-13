@@ -16,6 +16,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='comment',
             name='content',
-            field=models.TextField(validators=[osf.models.validators.CommentMaxLength(1000), osf.models.validators.string_required]),
+            field=models.TextField(
+                validators=[
+                    osf.models.validators.CommentMaxLength(1000),
+                    osf.models.validators.string_required,
+                ]
+            ),
         ),
     ]

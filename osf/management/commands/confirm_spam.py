@@ -9,13 +9,16 @@ from osf.models import Guid, Preprint
 
 logger = logging.getLogger(__name__)
 
+
 def confirm_spam(guid):
     node = guid.referent
     referent_type = 'preprint' if isinstance(node, Preprint) else 'node'
 
     logger.info('Marking {} {} as spam...'.format(referent_type, node._id))
 
-    saved_fields = {'is_public', } if referent_type == 'node' else {'is_published', }
+    saved_fields = (
+        {'is_public',} if referent_type == 'node' else {'is_published',}
+    )
 
     content = node._get_spam_content(saved_fields | node.SPAM_CHECK_FIELDS)[:300]
     # spam_data must be populated in order for confirm_spam to work
@@ -34,7 +37,9 @@ def confirm_spam(guid):
 class Command(BaseCommand):
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
-        parser.add_argument('guids', type=str, nargs='+', help='List of Node or Preprint GUIDs')
+        parser.add_argument(
+            'guids', type=str, nargs='+', help='List of Node or Preprint GUIDs'
+        )
 
     def handle(self, *args, **options):
         guids = options.get('guids', [])

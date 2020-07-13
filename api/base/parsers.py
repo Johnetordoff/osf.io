@@ -19,6 +19,7 @@ class JSONAPIParser(JSONParser):
     """
     Parses JSON-serialized data. Overrides media_type.
     """
+
     media_type = 'application/vnd.api+json'
     renderer_class = JSONAPIRenderer
 
@@ -27,7 +28,11 @@ class JSONAPIParser(JSONParser):
         target_type = data.get('type')
         if not target_type:
             raise JSONAPIException(
-                source={'pointer': 'data/relationships/{}/data/type'.format(related_resource)},
+                source={
+                    'pointer': 'data/relationships/{}/data/type'.format(
+                        related_resource,
+                    ),
+                },
                 detail=NO_TYPE_ERROR,
             )
 
@@ -46,12 +51,20 @@ class JSONAPIParser(JSONParser):
 
         # Can only create one type of relationship.
         related_resource = list(relationships.keys())[0]
-        if not isinstance(relationships[related_resource], dict) or related_resource == 'data':
+        if (
+            not isinstance(relationships[related_resource], dict)
+            or related_resource == 'data'
+        ):
             raise ParseError()
         data = relationships[related_resource].get('data')
 
         if not data:
-            raise JSONAPIException(source={'pointer': 'data/relationships/{}/data'.format(related_resource)}, detail=NO_DATA_ERROR)
+            raise JSONAPIException(
+                source={
+                    'pointer': 'data/relationships/{}/data'.format(related_resource),
+                },
+                detail=NO_DATA_ERROR,
+            )
 
         if isinstance(data, list):
             return [self.get_relationship(item, related_resource) for item in data]
@@ -71,22 +84,31 @@ class JSONAPIParser(JSONParser):
 
         if is_relationship and request_method == 'POST':
             if not relationships:
-                raise JSONAPIException(source={'pointer': '/data/relationships'}, detail=NO_RELATIONSHIPS_ERROR)
+                raise JSONAPIException(
+                    source={'pointer': '/data/relationships'},
+                    detail=NO_RELATIONSHIPS_ERROR,
+                )
 
         object_id = resource_object.get('id')
         object_type = resource_object.get('type')
 
         type_required = not (
-            legacy_type_allowed and float(parser_context['request'].version) < 2.7 and request_method == 'PATCH'
+            legacy_type_allowed
+            and float(parser_context['request'].version) < 2.7
+            and request_method == 'PATCH'
         )
 
         # For validating type and id for bulk delete:
         if is_list and request_method == 'DELETE':
             if object_id is None:
-                raise JSONAPIException(source={'pointer': '/data/id'}, detail=NO_ID_ERROR)
+                raise JSONAPIException(
+                    source={'pointer': '/data/id'}, detail=NO_ID_ERROR,
+                )
 
             if type_required and object_type is None:
-                raise JSONAPIException(source={'pointer': '/data/type'}, detail=NO_TYPE_ERROR)
+                raise JSONAPIException(
+                    source={'pointer': '/data/type'}, detail=NO_TYPE_ERROR,
+                )
 
         attributes = resource_object.get('attributes')
         parsed = {'id': object_id, 'type': object_type}
@@ -113,7 +135,9 @@ class JSONAPIParser(JSONParser):
         """
         Parses the incoming bytestream as JSON and returns the resulting data.
         """
-        result = super(JSONAPIParser, self).parse(stream, media_type=media_type, parser_context=parser_context)
+        result = super(JSONAPIParser, self).parse(
+            stream, media_type=media_type, parser_context=parser_context,
+        )
 
         if not isinstance(result, dict):
             raise ParseError()
@@ -125,7 +149,12 @@ class JSONAPIParser(JSONParser):
                     raise ParseError('Expected a list of items but got type "dict".')
 
                 data_collection = []
-                data_collection.extend([self.flatten_data(data_object, parser_context, is_list=True) for data_object in data])
+                data_collection.extend(
+                    [
+                        self.flatten_data(data_object, parser_context, is_list=True)
+                        for data_object in data
+                    ],
+                )
 
                 return data_collection
 
@@ -140,7 +169,9 @@ class JSONAPIParser(JSONParser):
     def flatten_multiple_relationships(self, parser, relationships):
         rel = {}
         for resource in relationships:
-            ret = super(parser, self).flatten_relationships({resource: relationships[resource]})
+            ret = super(parser, self).flatten_relationships(
+                {resource: relationships[resource]},
+            )
             if isinstance(ret, list):
                 rel[resource] = []
                 for item in ret:
@@ -156,16 +187,21 @@ class JSONAPIParserForRegularJSON(JSONAPIParser):
     """
     Allows same processing as JSONAPIParser to occur for requests with application/json media type.
     """
+
     media_type = 'application/json'
+
 
 class JSONAPIRelationshipParser(JSONParser):
     """
     Parses JSON-serialized data for relationship endpoints. Overrides media_type.
     """
+
     media_type = 'application/vnd.api+json'
 
     def parse(self, stream, media_type=None, parser_context=None):
-        res = super(JSONAPIRelationshipParser, self).parse(stream, media_type, parser_context)
+        res = super(JSONAPIRelationshipParser, self).parse(
+            stream, media_type, parser_context,
+        )
 
         if not isinstance(res, dict):
             raise ParseError('Request body must be dictionary')
@@ -177,10 +213,16 @@ class JSONAPIRelationshipParser(JSONParser):
             for i, datum in enumerate(data):
 
                 if datum.get('id') is None:
-                    raise JSONAPIException(source={'pointer': '/data/{}/id'.format(str(i))}, detail=NO_ID_ERROR)
+                    raise JSONAPIException(
+                        source={'pointer': '/data/{}/id'.format(str(i))},
+                        detail=NO_ID_ERROR,
+                    )
 
                 if datum.get('type') is None:
-                    raise JSONAPIException(source={'pointer': '/data/{}/type'.format(str(i))}, detail=NO_TYPE_ERROR)
+                    raise JSONAPIException(
+                        source={'pointer': '/data/{}/type'.format(str(i))},
+                        detail=NO_TYPE_ERROR,
+                    )
 
             return {'data': data}
 
@@ -191,6 +233,7 @@ class JSONAPIRelationshipParserForRegularJSON(JSONAPIRelationshipParser):
     """
     Allows same processing as JSONAPIRelationshipParser to occur for requests with application/json media type.
     """
+
     media_type = 'application/json'
 
 
@@ -198,10 +241,13 @@ class JSONAPIOnetoOneRelationshipParser(JSONParser):
     """
     Parses JSON-serialized data for relationship endpoints. Overrides media_type.
     """
+
     media_type = 'application/vnd.api+json'
 
     def parse(self, stream, media_type=None, parser_context=None):
-        res = super(JSONAPIOnetoOneRelationshipParser, self).parse(stream, media_type, parser_context)
+        res = super(JSONAPIOnetoOneRelationshipParser, self).parse(
+            stream, media_type, parser_context,
+        )
 
         if not isinstance(res, dict):
             raise ParseError('Request body must be dictionary')
@@ -209,29 +255,36 @@ class JSONAPIOnetoOneRelationshipParser(JSONParser):
         # allow skip type check for legacy api version
         legacy_type_allowed = parser_context.get('legacy_type_allowed', True)
         type_required = not (
-            legacy_type_allowed and
-            float(parser_context['request'].version) < 2.7 and
-            parser_context['request'].method == 'PATCH'
+            legacy_type_allowed
+            and float(parser_context['request'].version) < 2.7
+            and parser_context['request'].method == 'PATCH'
         )
         if data:
             id_ = data.get('id')
             type_ = data.get('type')
 
             if id_ is None:
-                raise JSONAPIException(source={'pointer': '/data/id'}, detail=NO_ID_ERROR)
+                raise JSONAPIException(
+                    source={'pointer': '/data/id'}, detail=NO_ID_ERROR,
+                )
 
             if type_required and type_ is None:
-                raise JSONAPIException(source={'pointer': '/data/type'}, detail=NO_TYPE_ERROR)
+                raise JSONAPIException(
+                    source={'pointer': '/data/type'}, detail=NO_TYPE_ERROR,
+                )
 
             return data
 
         return {'type': None, 'id': None}
 
 
-class JSONAPIOnetoOneRelationshipParserForRegularJSON(JSONAPIOnetoOneRelationshipParser):
+class JSONAPIOnetoOneRelationshipParserForRegularJSON(
+    JSONAPIOnetoOneRelationshipParser,
+):
     """
     Allows same processing as JSONAPIRelationshipParser to occur for requests with application/json media type.
     """
+
     media_type = 'application/json'
 
 
@@ -240,25 +293,32 @@ class JSONAPIMultipleRelationshipsParser(JSONAPIParser):
     If edits are made to this class, be sure to check JSONAPIMultipleRelationshipsParserForRegularJSON to see if corresponding
     edits should be made there.
     """
+
     def flatten_relationships(self, relationships):
-        return self.flatten_multiple_relationships(JSONAPIMultipleRelationshipsParser, relationships)
+        return self.flatten_multiple_relationships(
+            JSONAPIMultipleRelationshipsParser, relationships,
+        )
 
 
 class JSONAPIMultipleRelationshipsParserForRegularJSON(JSONAPIParserForRegularJSON):
     """
     Allows same processing as JSONAPIMultipleRelationshipsParser to occur for requests with application/json media type.
     """
+
     def flatten_relationships(self, relationships):
-        return self.flatten_multiple_relationships(JSONAPIMultipleRelationshipsParserForRegularJSON, relationships)
+        return self.flatten_multiple_relationships(
+            JSONAPIMultipleRelationshipsParserForRegularJSON, relationships,
+        )
 
 
 class HMACSignedParser(JSONParser):
-
     def parse(self, stream, media_type=None, parser_context=None):
         """
         Parses the incoming bytestream as JSON. Validates the 'signature' in the payload then returns the resulting data.
         """
-        data = super(HMACSignedParser, self).parse(stream, media_type=media_type, parser_context=parser_context)
+        data = super(HMACSignedParser, self).parse(
+            stream, media_type=media_type, parser_context=parser_context,
+        )
 
         try:
             sig = data['signature']
@@ -275,44 +335,45 @@ class HMACSignedParser(JSONParser):
 
         return payload
 
-class SearchParser(JSONAPIParser):
 
+class SearchParser(JSONAPIParser):
     def parse(self, stream, media_type=None, parser_context=None):
         try:
             view = parser_context['view']
         except KeyError:
             raise ImproperlyConfigured('SearchParser requires "view" context.')
-        data = super(SearchParser, self).parse(stream, media_type=media_type, parser_context=parser_context)
+        data = super(SearchParser, self).parse(
+            stream, media_type=media_type, parser_context=parser_context,
+        )
         if not data:
             raise JSONAPIException(detail='Invalid Payload')
 
         res = {
-            'query': {
-                'bool': {},
-            },
+            'query': {'bool': {},},
         }
 
         sort = parser_context['request'].query_params.get('sort')
         if sort:
-            res['sort'] = [{
-                sort.lstrip('-'): {
-                    'order': 'desc' if sort.startswith('-') else 'asc',
+            res['sort'] = [
+                {
+                    sort.lstrip('-'): {
+                        'order': 'desc' if sort.startswith('-') else 'asc',
+                    },
                 },
-            }]
+            ]
 
         try:
             q = data.pop('q')
         except KeyError:
             pass
         else:
-            res['query']['bool'].update({
-                'must': {
-                    'query_string': {
-                        'query': q,
-                        'fields': view.search_fields,
+            res['query']['bool'].update(
+                {
+                    'must': {
+                        'query_string': {'query': q, 'fields': view.search_fields,},
                     },
                 },
-            })
+            )
 
         if any(data.values()):
             res['query']['bool'].update({'filter': []})

@@ -17,14 +17,12 @@ from website.files.utils import attach_versions
 
 @pytest.mark.django_db
 class TestSerializeRevision(StorageTestCase):
-
     def setUp(self):
         super(TestSerializeRevision, self).setUp()
         self.path = 'kind-of-magic.webm'
         self.record = self.node_settings.get_root().append_file(self.path)
         self.versions = [
-            factories.FileVersionFactory(creator=self.user)
-            for __ in range(3)
+            factories.FileVersionFactory(creator=self.user) for __ in range(3)
         ]
         attach_versions(self.record, self.versions)
         self.record.save()
@@ -36,20 +34,14 @@ class TestSerializeRevision(StorageTestCase):
         utils.update_analytics(self.project, self.record, 2)
         expected = {
             'index': 1,
-            'user': {
-                'name': self.user.fullname,
-                'url': self.user.url,
-            },
+            'user': {'name': self.user.fullname, 'url': self.user.url,},
             'date': self.versions[0].created.isoformat(),
             'downloads': 2,
             'md5': None,
             'sha256': None,
         }
         observed = utils.serialize_revision(
-            self.project,
-            self.record,
-            self.versions[0],
-            0,
+            self.project, self.record, self.versions[0], 0,
         )
         assert_equal(expected, observed)
         assert_equal(self.record.get_download_count(), 3)
@@ -70,10 +62,6 @@ class TestSerializeRevision(StorageTestCase):
             'sha256': None,
         }
         observed = utils.serialize_revision(
-            self.project,
-            self.record,
-            self.versions[0],
-            1,
-            anon=True
+            self.project, self.record, self.versions[0], 1, anon=True
         )
         assert_equal(expected, observed)

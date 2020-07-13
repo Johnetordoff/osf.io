@@ -3,6 +3,7 @@ import logging
 import django
 from django.db import transaction
 from django.utils import timezone
+
 django.setup()
 
 from framework.celery_tasks import app as celery_app
@@ -36,24 +37,42 @@ def main(dry_run=True):
             with transaction.atomic():
                 try:
                     sent_ = mail.send_mail()
-                    message = 'Email of type {0} sent to {1}'.format(mail.email_type, mail.to_addr) if sent_ else \
-                        'Email of type {0} failed to be sent to {1}'.format(mail.email_type, mail.to_addr)
+                    message = (
+                        'Email of type {0} sent to {1}'.format(
+                            mail.email_type, mail.to_addr
+                        )
+                        if sent_
+                        else 'Email of type {0} failed to be sent to {1}'.format(
+                            mail.email_type, mail.to_addr
+                        )
+                    )
                     logger.info(message)
                 except Exception as error:
-                    logger.error('Email of type {0} to be sent to {1} caused an ERROR'.format(mail.email_type, mail.to_addr))
+                    logger.error(
+                        'Email of type {0} to be sent to {1} caused an ERROR'.format(
+                            mail.email_type, mail.to_addr
+                        )
+                    )
                     logger.exception(error)
                     pass
         else:
-            logger.info('Email of type {} will be sent to {}'.format(mail.email_type, mail.to_addr))
+            logger.info(
+                'Email of type {} will be sent to {}'.format(
+                    mail.email_type, mail.to_addr
+                )
+            )
 
 
 def find_queued_mails_ready_to_be_sent():
     return QueuedMail.objects.filter(send_at__lt=timezone.now(), sent_at__isnull=True)
 
+
 def pop_and_verify_mails_for_each_user(user_queue):
     for user_emails in user_queue.values():
         mail = user_emails[0]
-        mails_past_week = mail.user.queuedmail_set.filter(sent_at__gt=timezone.now() - settings.WAIT_BETWEEN_MAILS)
+        mails_past_week = mail.user.queuedmail_set.filter(
+            sent_at__gt=timezone.now() - settings.WAIT_BETWEEN_MAILS
+        )
         if not mails_past_week.count():
             yield mail
 

@@ -14,7 +14,6 @@ from osf.models import Identifier
 
 
 class TestIdentifierModel(OsfTestCase):
-
     def test_fields(self):
         node = RegistrationFactory()
         identifier = Identifier(referent=node, category='catid', value='cat:7')

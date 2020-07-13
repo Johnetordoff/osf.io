@@ -2,14 +2,9 @@
 Switches Sloan user tags, Switches and Flags into a state where the Sloan study can begin.
 """
 import logging
-from osf.models import (
-    Tag,
-)
+from osf.models import Tag
 
-from waffle.models import (
-    Flag,
-    Switch
-)
+from waffle.models import Flag, Switch
 from django.utils import timezone
 from django.core.management.base import BaseCommand
 from django.db import transaction
@@ -54,10 +49,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
         parser.add_argument(
-            '--flag',
-            type=str,
-            help='Flags to be updated',
-            required=True
+            '--flag', type=str, help='Flags to be updated', required=True
         )
         parser.add_argument(
             '--dry',
@@ -69,7 +61,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         dry_run = options.get('dry_run', True)
         flag = options.get('flag', None)
-        assert flag in AVAILABLE_FLAGS, f'the given flag : \'{flag}\' was invalid'
+        assert flag in AVAILABLE_FLAGS, f"the given flag : '{flag}' was invalid"
         with transaction.atomic():
             flip(flag)
             if dry_run:

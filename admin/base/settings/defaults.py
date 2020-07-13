@@ -4,6 +4,7 @@ Django settings for the admin project.
 
 from django.contrib import messages
 from api.base.settings import *  # noqa
+
 # TODO ALL SETTINGS FROM API WILL BE IMPORTED AND WILL NEED TO BE OVERRRIDEN
 # TODO THIS IS A STEP TOWARD INTEGRATING ADMIN & API INTO ONE PROJECT
 
@@ -39,9 +40,7 @@ CSRF_COOKIE_SECURE = osf_settings.SECURE_MODE
 # set to False for admin draft registration uses a SPA and ajax and grab the token to use it in the requests
 CSRF_COOKIE_HTTPONLY = False
 
-ALLOWED_HOSTS = [
-    '.osf.io'
-]
+ALLOWED_HOSTS = ['.osf.io']
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -49,9 +48,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-        'OPTIONS': {
-            'min_length': 5,
-        }
+        'OPTIONS': {'min_length': 5,},
     },
 ]
 
@@ -79,7 +76,6 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.sessions',
     'django.contrib.staticfiles',
-
     # 3rd party
     'django_celery_results',
     'raven.contrib.django.raven_compat',
@@ -89,15 +85,12 @@ INSTALLED_APPS = (
     'guardian',
     'waffle',
     'elasticsearch_metrics',
-
     # OSF
     'osf',
-
     # Addons
     'addons.osfstorage',
     'addons.wiki',
     'addons.twofactor',
-
     # Internal apps
     'admin.common_auth',
     'admin.base',
@@ -109,7 +102,6 @@ INSTALLED_APPS = (
     'admin.meetings',
     'admin.institutions',
     'admin.preprint_providers',
-
 )
 
 MIGRATION_MODULES = {
@@ -140,9 +132,10 @@ RAVEN_CONFIG = {
 # Settings related to CORS Headers addon: allow API to receive authenticated requests from OSF
 # CORS plugin only matches based on "netloc" part of URL, so as workaround we add that to the list
 CORS_ORIGIN_ALLOW_ALL = False
-CORS_ORIGIN_WHITELIST = (urlparse(osf_settings.DOMAIN).netloc,
-                         osf_settings.DOMAIN,
-                         )
+CORS_ORIGIN_WHITELIST = (
+    urlparse(osf_settings.DOMAIN).netloc,
+    osf_settings.DOMAIN,
+)
 CORS_ALLOW_CREDENTIALS = True
 
 MIDDLEWARE = (
@@ -153,7 +146,6 @@ MIDDLEWARE = (
     'api.base.middleware.DjangoGlobalMiddleware',
     'api.base.middleware.CeleryTaskMiddleware',
     'api.base.middleware.PostcommitTaskMiddleware',
-
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -183,8 +175,9 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
-        }
-    }]
+        },
+    }
+]
 
 ROOT_URLCONF = 'admin.base.urls'
 WSGI_APPLICATION = 'admin.base.wsgi.application'
@@ -217,16 +210,16 @@ KEEN_PROJECT_ID = osf_settings.KEEN['private']['project_id']
 KEEN_READ_KEY = osf_settings.KEEN['private']['read_key']
 KEEN_WRITE_KEY = osf_settings.KEEN['private']['write_key']
 
-KEEN_CREDENTIALS = {
-    'keen_ready': False
-}
+KEEN_CREDENTIALS = {'keen_ready': False}
 
 if KEEN_CREDENTIALS['keen_ready']:
-    KEEN_CREDENTIALS.update({
-        'keen_project_id': KEEN_PROJECT_ID,
-        'keen_read_key': KEEN_READ_KEY,
-        'keen_write_key': KEEN_WRITE_KEY
-    })
+    KEEN_CREDENTIALS.update(
+        {
+            'keen_project_id': KEEN_PROJECT_ID,
+            'keen_read_key': KEEN_READ_KEY,
+            'keen_write_key': KEEN_WRITE_KEY,
+        }
+    )
 
 
 # Set in local.py
@@ -239,14 +232,20 @@ SHARE_URL = osf_settings.SHARE_URL
 API_DOMAIN = osf_settings.API_DOMAIN
 
 if DEBUG:
-    INSTALLED_APPS += ('debug_toolbar', 'nplusone.ext.django',)
-    MIDDLEWARE += ('debug_toolbar.middleware.DebugToolbarMiddleware', 'nplusone.ext.django.NPlusOneMiddleware',)
+    INSTALLED_APPS += (
+        'debug_toolbar',
+        'nplusone.ext.django',
+    )
+    MIDDLEWARE += (
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
+        'nplusone.ext.django.NPlusOneMiddleware',
+    )
     DEBUG_TOOLBAR_CONFIG = {
         'SHOW_TOOLBAR_CALLBACK': lambda _: True,
         'DISABLE_PANELS': {
             'debug_toolbar.panels.templates.TemplatesPanel',
-            'debug_toolbar.panels.redirects.RedirectsPanel'
-        }
+            'debug_toolbar.panels.redirects.RedirectsPanel',
+        },
     }
 
 # If set to True, automated tests with extra queries will fail.

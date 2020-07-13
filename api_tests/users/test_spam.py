@@ -5,16 +5,11 @@ from urllib.parse import parse_qs
 
 from osf.models import NodeLog, SpamStatus
 
-from osf_tests.factories import (
-    AuthUserFactory,
-    ProjectFactory,
-    ConferenceFactory
-)
+from osf_tests.factories import AuthUserFactory, ProjectFactory, ConferenceFactory
 
 
 @pytest.mark.django_db
 class TestSpam:
-
     @pytest.fixture()
     def user(self):
         return AuthUserFactory()
@@ -46,7 +41,7 @@ class TestSpam:
             'headers': request_headers,
             'content': 'test content',
             'author': user.fullname,
-            'author_email': user.email
+            'author_email': user.email,
         }
 
     def test_do_spam_check_true(self, mock_akismet, user, request_headers):
@@ -55,14 +50,14 @@ class TestSpam:
             'https://none.rest.akismet.com/1.1/comment-check',
             headers={'X-akismet-pro-tip': 'test pro-tip'},
             status=200,
-            body='true'
+            body='true',
         )
 
         is_spam = user.do_check_spam(
             author='test-author',
             author_email='test@test.com',
             content='test',
-            request_headers=request_headers
+            request_headers=request_headers,
         )
 
         data = parse_qs(mock_akismet.calls[0].request.body)
@@ -77,7 +72,9 @@ class TestSpam:
         assert user.spam_pro_tip == 'test pro-tip'
 
     def test_confirm_spam(self, mock_akismet, user, spam_data):
-        mock_akismet.add(responses.POST, 'https://none.rest.akismet.com/1.1/submit-spam')
+        mock_akismet.add(
+            responses.POST, 'https://none.rest.akismet.com/1.1/submit-spam'
+        )
         user.spam_data = spam_data
         user.save()
 
@@ -110,7 +107,9 @@ class TestSpam:
 
     def test_revert_spam(self, mock_akismet, user, node, spam_data):
         mock_akismet.add(responses.POST, 'https://none.rest.akismet.com/1.1/submit-ham')
-        mock_akismet.add(responses.POST, 'https://none.rest.akismet.com/1.1/submit-spam')
+        mock_akismet.add(
+            responses.POST, 'https://none.rest.akismet.com/1.1/submit-spam'
+        )
 
         user.spam_data = spam_data
         user.save()
@@ -134,7 +133,9 @@ class TestSpam:
         assert node.logs.latest().action == NodeLog.CONFIRM_HAM
         assert node.logs.latest().should_hide
 
-    def test_meetings_skip_spam_check(self, mock_akismet, user, node_in_conference, node, request_headers):
+    def test_meetings_skip_spam_check(
+        self, mock_akismet, user, node_in_conference, node, request_headers
+    ):
         """
         This test covers an edge case for meetings where users are banned overzealously. This is because users who use
         osf4m to add their account and create a project automatically which creates a false positive for the spam
@@ -148,7 +149,7 @@ class TestSpam:
             responses.POST,
             'https://none.rest.akismet.com/1.1/comment-check',
             status=200,
-            body='true'
+            body='true',
         )
         is_spam = node_in_conference.check_spam(user, {'title'}, request_headers)
 

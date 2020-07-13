@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0136_add_ember_auth_register_waffle_flag'),
     ]
 
-    operations = [
-    ]
+    operations = []

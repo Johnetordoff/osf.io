@@ -13,9 +13,11 @@ from addons.bitbucket.apps import bitbucket_hgrid_data
 from addons.bitbucket.serializer import BitbucketSerializer
 
 from website.project.decorators import (
-    must_have_addon, must_be_addon_authorizer,
-    must_have_permission, must_not_be_registration,
-    must_be_contributor_or_public
+    must_have_addon,
+    must_be_addon_authorizer,
+    must_have_permission,
+    must_not_be_registration,
+    must_be_contributor_or_public,
 )
 from osf.utils.permissions import WRITE
 
@@ -29,38 +31,26 @@ FULL_NAME = 'Bitbucket'
 # Generics #
 ############
 
-bitbucket_account_list = generic_views.account_list(
-    SHORT_NAME,
-    BitbucketSerializer
-)
+bitbucket_account_list = generic_views.account_list(SHORT_NAME, BitbucketSerializer)
 
-bitbucket_import_auth = generic_views.import_auth(
-    SHORT_NAME,
-    BitbucketSerializer
-)
+bitbucket_import_auth = generic_views.import_auth(SHORT_NAME, BitbucketSerializer)
+
 
 def _get_folders(node_addon, folder_id):
     pass
 
-bitbucket_folder_list = generic_views.folder_list(
-    SHORT_NAME,
-    FULL_NAME,
-    _get_folders
-)
 
-bitbucket_get_config = generic_views.get_config(
-    SHORT_NAME,
-    BitbucketSerializer
-)
+bitbucket_folder_list = generic_views.folder_list(SHORT_NAME, FULL_NAME, _get_folders)
 
-bitbucket_deauthorize_node = generic_views.deauthorize_node(
-    SHORT_NAME
-)
+bitbucket_get_config = generic_views.get_config(SHORT_NAME, BitbucketSerializer)
+
+bitbucket_deauthorize_node = generic_views.deauthorize_node(SHORT_NAME)
 
 
 #################
 # Special Cased #
 #################
+
 
 @must_not_be_registration
 @must_have_addon(SHORT_NAME, 'user')
@@ -97,14 +87,12 @@ def bitbucket_set_config(auth, **kwargs):
                 'or your account does not have permission to view it.'
             )
         else:
-            message = (
-                'Cannot access repo.'
-            )
+            message = 'Cannot access repo.'
         return {'message': message}, http_status.HTTP_400_BAD_REQUEST
 
     changed = (
-        bitbucket_user_name != node_settings.user or
-        bitbucket_repo_name != node_settings.repo
+        bitbucket_user_name != node_settings.user
+        or bitbucket_repo_name != node_settings.repo
     )
 
     # Update hooks
@@ -126,7 +114,7 @@ def bitbucket_set_config(auth, **kwargs):
                 'bitbucket': {
                     'user': bitbucket_user_name,
                     'repo': bitbucket_repo_name,
-                }
+                },
             },
             auth=auth,
         )
@@ -139,6 +127,7 @@ def bitbucket_set_config(auth, **kwargs):
 
     return {}
 
+
 @must_be_contributor_or_public
 @must_have_addon('bitbucket', 'node')
 def bitbucket_download_starball(node_addon, **kwargs):
@@ -147,9 +136,7 @@ def bitbucket_download_starball(node_addon, **kwargs):
     ref = request.args.get('sha', 'master')
 
     connection = BitbucketClient(access_token=node_addon.external_account.oauth_key)
-    headers, data = connection.starball(
-        node_addon.user, node_addon.repo, archive, ref
-    )
+    headers, data = connection.starball(node_addon.user, node_addon.repo, archive, ref)
 
     resp = make_response(data)
     for key, value in headers.items():
@@ -157,9 +144,11 @@ def bitbucket_download_starball(node_addon, **kwargs):
 
     return resp
 
+
 #########
 # HGrid #
 #########
+
 
 @must_be_contributor_or_public
 @must_have_addon('bitbucket', 'node')

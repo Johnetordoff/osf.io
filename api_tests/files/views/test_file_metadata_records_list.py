@@ -10,7 +10,6 @@ from osf_tests.factories import (
 
 @pytest.mark.django_db
 class TestFileMetadataRecordsList:
-
     @pytest.fixture()
     def user(self):
         return AuthUserFactory()
@@ -55,5 +54,7 @@ class TestFileMetadataRecordsList:
         assert res.status_code == 403
 
         # test_cannot_create_metadata_records
-        res = app.post_json_api(self.get_url(private_file), auth=user.auth, expect_errors=True)
+        res = app.post_json_api(
+            self.get_url(private_file), auth=user.auth, expect_errors=True
+        )
         assert res.status_code == 405

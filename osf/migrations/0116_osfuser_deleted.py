@@ -16,6 +16,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='osfuser',
             name='deleted',
-            field=osf.utils.fields.NonNaiveDateTimeField(blank=True, db_index=True, null=True),
+            field=osf.utils.fields.NonNaiveDateTimeField(
+                blank=True, db_index=True, null=True
+            ),
         ),
     ]

@@ -87,6 +87,7 @@ def populate_fileversion_name(state, schema):
     with connection.cursor() as cursor:
         cursor.execute(sql)
 
+
 class Migration(migrations.Migration):
 
     dependencies = [

@@ -8,6 +8,7 @@ from django_bulk_update.helper import bulk_update
 
 logger = logging.getLogger(__file__)
 
+
 def add_registration_files_count(state, *args, **kwargs):
     """
     Caches registration files count on Registration object.
@@ -16,7 +17,9 @@ def add_registration_files_count(state, *args, **kwargs):
     this migration may have to be modified in the future so it runs on an empty db.
     """
     Registration = state.get_model('osf', 'registration')
-    registrations = Registration.objects.filter(is_deleted=False, files_count__isnull=True)
+    registrations = Registration.objects.filter(
+        is_deleted=False, files_count__isnull=True
+    )
     BaseFileNode = state.get_model('osf', 'BaseFileNode')
     ContentType = state.get_model('contenttypes', 'ContentType')
     content_type = ContentType.objects.get(app_label='osf', model='abstractnode')
@@ -33,11 +36,16 @@ def add_registration_files_count(state, *args, **kwargs):
         registrations_to_update.append(registration)
 
     bulk_update(registrations_to_update, update_fields=['files_count'], batch_size=5000)
-    logger.info('Populated `files_count` on a total of {} registrations'.format(len(registrations_to_update)))
+    logger.info(
+        'Populated `files_count` on a total of {} registrations'.format(
+            len(registrations_to_update)
+        )
+    )
 
 
 def noop(*args, **kwargs):
     pass
+
 
 class Migration(migrations.Migration):
 
@@ -51,5 +59,5 @@ class Migration(migrations.Migration):
             name='files_count',
             field=models.PositiveIntegerField(blank=True, null=True),
         ),
-        migrations.RunPython(add_registration_files_count, noop)
+        migrations.RunPython(add_registration_files_count, noop),
     ]

@@ -14,10 +14,10 @@ from osf_tests.factories import (
 from osf.metrics import UserInstitutionProjectCounts
 from api.base import settings
 
+
 @pytest.mark.es
 @pytest.mark.django_db
 class TestInstitutionUserMetricList:
-
     @pytest.fixture()
     def institution(self):
         return InstitutionFactory()
@@ -58,7 +58,7 @@ class TestInstitutionUserMetricList:
             department='Biology dept',
             public_project_count=4,
             private_project_count=4,
-            timestamp=datetime.date(2019, 6, 4)
+            timestamp=datetime.date(2019, 6, 4),
         ).save()
 
         # New data
@@ -146,25 +146,22 @@ class TestInstitutionUserMetricList:
                     'user_name': user.fullname,
                     'public_projects': 6,
                     'private_projects': 5,
-                    'department': 'Biology dept'
+                    'department': 'Biology dept',
                 },
                 'relationships': {
                     'user': {
                         'links': {
                             'related': {
                                 'href': f'http://localhost:8000/v2/users/{user._id}/',
-                                'meta': {}
+                                'meta': {},
                             }
                         },
-                        'data': {
-                            'id': user._id,
-                            'type': 'users'
-                        }
+                        'data': {'id': user._id, 'type': 'users'},
                     }
                 },
                 'links': {
                     'self': f'http://localhost:8000/v2/institutions/{institution._id}/metrics/users/'
-                }
+                },
             },
             {
                 'id': user2._id,
@@ -173,41 +170,38 @@ class TestInstitutionUserMetricList:
                     'user_name': user2.fullname,
                     'public_projects': 3,
                     'private_projects': 2,
-                    'department': 'Psychology dept'
+                    'department': 'Psychology dept',
                 },
                 'relationships': {
                     'user': {
                         'links': {
                             'related': {
                                 'href': f'http://localhost:8000/v2/users/{user2._id}/',
-                                'meta': {}
+                                'meta': {},
                             }
                         },
-                        'data': {
-                            'id': user2._id,
-                            'type': 'users'
-                        }
+                        'data': {'id': user2._id, 'type': 'users'},
                     }
                 },
                 'links': {
                     'self': f'http://localhost:8000/v2/institutions/{institution._id}/metrics/users/'
-                }
-            }
+                },
+            },
         ]
 
         # Tests CSV Export
-        headers = {
-            'accept': 'text/csv'
-        }
+        headers = {'accept': 'text/csv'}
         resp = app.get(url, auth=admin.auth, headers=headers)
         assert resp.status_code == 200
         assert resp.headers['Content-Type'] == 'text/csv; charset=utf-8'
 
         response_body = resp.text
 
-        expected_response = [['id', 'user_name', 'public_projects', 'private_projects', 'type'],
+        expected_response = [
+            ['id', 'user_name', 'public_projects', 'private_projects', 'type'],
             [user._id, user.fullname, '6', '5', 'institution-users'],
-            [user2._id, user2.fullname, '3', '2', 'institution-users']]
+            [user2._id, user2.fullname, '3', '2', 'institution-users'],
+        ]
 
         with StringIO(response_body) as csv_file:
             csvreader = csv.reader(csv_file, delimiter=',')
@@ -219,7 +213,18 @@ class TestInstitutionUserMetricList:
         assert resp.json['data'][0]['attributes']['department'] == 'Psychology dept'
 
     @pytest.mark.skipif(settings.TRAVIS_ENV, reason='Non-deterministic fails on travis')
-    def test_sort_and_pagination(self, app, url, user, user2, user3, admin, populate_counts, populate_more_counts, institution):
+    def test_sort_and_pagination(
+        self,
+        app,
+        url,
+        user,
+        user2,
+        user3,
+        admin,
+        populate_counts,
+        populate_more_counts,
+        institution,
+    ):
         resp = app.get(f'{url}?sort=user_name&page[size]=1&page=2', auth=admin.auth)
         assert resp.status_code == 200
         assert resp.json['links']['meta']['total'] == 11
@@ -230,7 +235,18 @@ class TestInstitutionUserMetricList:
         assert resp.json['data'][-1]['attributes']['user_name'] == 'Zedd'
 
     @pytest.mark.skipif(settings.TRAVIS_ENV, reason='Non-deterministic fails on travis')
-    def test_filter_and_pagination(self, app, user, user2, user3, url, admin, populate_counts, populate_more_counts, institution):
+    def test_filter_and_pagination(
+        self,
+        app,
+        user,
+        user2,
+        user3,
+        url,
+        admin,
+        populate_counts,
+        populate_more_counts,
+        institution,
+    ):
         resp = app.get(f'{url}?page=2', auth=admin.auth)
         assert resp.json['links']['meta']['total'] == 11
         assert resp.json['data'][0]['attributes']['user_name'] == 'Zedd'
@@ -239,7 +255,19 @@ class TestInstitutionUserMetricList:
         assert resp.json['data'][0]['attributes']['user_name'] == 'Zedd'
 
     @pytest.mark.skipif(settings.TRAVIS_ENV, reason='Non-deterministic fails on travis')
-    def test_filter_and_sort(self, app, url, user, user2, user3, admin, user4, populate_counts, populate_na_department, institution):
+    def test_filter_and_sort(
+        self,
+        app,
+        url,
+        user,
+        user2,
+        user3,
+        admin,
+        user4,
+        populate_counts,
+        populate_na_department,
+        institution,
+    ):
         """
         Testing for bug where sorting and filtering would throw 502.
         :param app:
@@ -248,7 +276,10 @@ class TestInstitutionUserMetricList:
         :param populate_more_counts:
         :return:
         """
-        resp = app.get(f'{url}?page=1&page[size]=10&filter[department]={DEFAULT_ES_NULL_VALUE}&sort=user_name', auth=admin.auth)
+        resp = app.get(
+            f'{url}?page=1&page[size]=10&filter[department]={DEFAULT_ES_NULL_VALUE}&sort=user_name',
+            auth=admin.auth,
+        )
         assert resp.status_code == 200
 
         data = resp.json['data']

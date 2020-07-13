@@ -18,12 +18,18 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='usersettings',
             name='created',
-            field=django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, default=datetime.datetime(1970, 1, 1, 0, 0, tzinfo=pytz.utc), verbose_name='created'),
+            field=django_extensions.db.fields.CreationDateTimeField(
+                auto_now_add=True,
+                default=datetime.datetime(1970, 1, 1, 0, 0, tzinfo=pytz.utc),
+                verbose_name='created',
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
             model_name='usersettings',
             name='modified',
-            field=django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified'),
+            field=django_extensions.db.fields.ModificationDateTimeField(
+                auto_now=True, verbose_name='modified'
+            ),
         ),
     ]

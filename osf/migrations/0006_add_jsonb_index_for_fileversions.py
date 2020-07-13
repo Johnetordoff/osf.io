@@ -24,6 +24,6 @@ class Migration(migrations.Migration):
                 """
                 DROP INDEX fileversion_metadata_sha_arch_vault_index;
                 """
-            ]
+            ],
         )
     ]

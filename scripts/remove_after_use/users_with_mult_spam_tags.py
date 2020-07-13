@@ -1,13 +1,14 @@
 import logging
 
 from website.app import setup_django
+
 setup_django()
 
 from osf.models import OSFUser
 
 logger = logging.getLogger(__name__)
 
-SPAM_TAGS= ['spam_flagged', 'spam_confirmed', 'ham_confirmed']
+SPAM_TAGS = ['spam_flagged', 'spam_confirmed', 'ham_confirmed']
 
 
 def find_users_with_multiple_spam_tags():
@@ -20,7 +21,9 @@ def find_users_with_multiple_spam_tags():
     return set(multiple_tags)
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     users_with_mult_tags = find_users_with_multiple_spam_tags()
-    logger.info('There are {} users with multiple spam tags'.format(len(users_with_mult_tags)))
+    logger.info(
+        'There are {} users with multiple spam tags'.format(len(users_with_mult_tags))
+    )
     logger.info(users_with_mult_tags)

@@ -22,34 +22,101 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='NodeSettings',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('_id', models.CharField(db_index=True, default=osf.models.base.generate_object_id, max_length=24, unique=True)),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    '_id',
+                    models.CharField(
+                        db_index=True,
+                        default=osf.models.base.generate_object_id,
+                        max_length=24,
+                        unique=True,
+                    ),
+                ),
                 ('deleted', models.BooleanField(default=False)),
                 ('folder_id', models.TextField(blank=True, null=True)),
                 ('folder_path', models.TextField(blank=True, null=True)),
-                ('external_account', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='addons_onedrive_node_settings', to='osf.ExternalAccount')),
-                ('owner', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='addons_onedrive_node_settings', to='osf.AbstractNode')),
+                (
+                    'external_account',
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='addons_onedrive_node_settings',
+                        to='osf.ExternalAccount',
+                    ),
+                ),
+                (
+                    'owner',
+                    models.OneToOneField(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='addons_onedrive_node_settings',
+                        to='osf.AbstractNode',
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={'abstract': False,},
         ),
         migrations.CreateModel(
             name='UserSettings',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('_id', models.CharField(db_index=True, default=osf.models.base.generate_object_id, max_length=24, unique=True)),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    '_id',
+                    models.CharField(
+                        db_index=True,
+                        default=osf.models.base.generate_object_id,
+                        max_length=24,
+                        unique=True,
+                    ),
+                ),
                 ('deleted', models.BooleanField(default=False)),
-                ('oauth_grants', osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONField(blank=True, default=dict, encoder=osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONEncoder)),
-                ('owner', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='addons_onedrive_user_settings', to=settings.AUTH_USER_MODEL)),
+                (
+                    'oauth_grants',
+                    osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONField(
+                        blank=True,
+                        default=dict,
+                        encoder=osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONEncoder,
+                    ),
+                ),
+                (
+                    'owner',
+                    models.OneToOneField(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='addons_onedrive_user_settings',
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={'abstract': False,},
         ),
         migrations.AddField(
             model_name='nodesettings',
             name='user_settings',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='addons_onedrive.UserSettings'),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to='addons_onedrive.UserSettings',
+            ),
         ),
     ]

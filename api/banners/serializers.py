@@ -15,11 +15,13 @@ class BannerSerializer(JSONAPISerializer):
     default_alt_text = ser.SerializerMethodField()
     mobile_alt_text = ser.SerializerMethodField()
 
-    links = LinksField({
-        'self': 'get_absolute_url',
-        'default_photo': 'get_default_photo_url',
-        'mobile_photo': 'get_mobile_photo_url',
-    })
+    links = LinksField(
+        {
+            'self': 'get_absolute_url',
+            'default_photo': 'get_default_photo_url',
+            'mobile_photo': 'get_mobile_photo_url',
+        },
+    )
 
     def get_default_photo_url(self, banner):
         if banner.default_photo:

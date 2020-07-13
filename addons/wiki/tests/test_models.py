@@ -12,7 +12,6 @@ pytestmark = pytest.mark.django_db
 
 # from website/addons/wiki/tests/test_wiki.py
 class TestWikiPageModel:
-
     @pytest.mark.enable_implicit_clean
     def test_page_name_cannot_be_greater_than_100_characters(self):
         bad_name = 'a' * 101
@@ -50,7 +49,6 @@ class TestWikiPageModel:
 
 
 class TestWikiPage(OsfTestCase):
-
     def setUp(self):
         super(TestWikiPage, self).setUp()
         self.user = UserFactory()
@@ -71,7 +69,9 @@ class TestWikiPage(OsfTestCase):
         assert bool(version.wiki_page)
 
     def test_url(self):
-        assert self.wiki.url == '{project_url}wiki/home/'.format(project_url=self.project.url)
+        assert self.wiki.url == '{project_url}wiki/home/'.format(
+            project_url=self.project.url
+        )
 
     def test_url_for_wiki_page_name_with_spaces(self):
         wiki = WikiFactory(user=self.user, node=self.project, page_name='Test Wiki')

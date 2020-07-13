@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-class AbstractIdentifierClient(object):
 
+class AbstractIdentifierClient(object):
     def build_doi(self, object):
         """Method this client uses to build a DOI
         """

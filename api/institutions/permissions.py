@@ -3,6 +3,7 @@ from rest_framework import permissions
 
 from api.base.utils import get_user_auth
 
+
 class UserIsAffiliated(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         assert isinstance(obj, dict)

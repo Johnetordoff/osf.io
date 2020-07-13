@@ -4,18 +4,12 @@ Serialize user
 
 
 def serialize_group_for_user(group, user):
-    return {
-        'name': group.name,
-        'id': group._id,
-        'role': user.group_role(group)
-    }
+    return {'name': group.name, 'id': group._id, 'role': user.group_role(group)}
+
 
 def serialize_user(user):
 
-    potential_spam_profile_content = {
-        'schools': user.schools,
-        'jobs': user.jobs
-    }
+    potential_spam_profile_content = {'schools': user.schools, 'jobs': user.jobs}
 
     return {
         'username': user.username,
@@ -34,8 +28,12 @@ def serialize_user(user):
         'spam_status': user.spam_status,
         'unclaimed': bool(user.unclaimed_records),
         'requested_deactivation': bool(user.requested_deactivation),
-        'osf_groups': [serialize_group_for_user(group, user) for group in user.osf_groups],
-        'potential_spam_profile_content': user._get_spam_content(potential_spam_profile_content),
+        'osf_groups': [
+            serialize_group_for_user(group, user) for group in user.osf_groups
+        ],
+        'potential_spam_profile_content': user._get_spam_content(
+            potential_spam_profile_content
+        ),
     }
 
 
@@ -49,6 +47,7 @@ def serialize_simple_node(node):
         'is_registration': node.is_registration,
         'deleted': node.is_deleted,
     }
+
 
 def serialize_simple_preprint(preprint):
     return {

@@ -16,8 +16,16 @@ from api.base.versioning import PrivateVersioning
 from api.base.views import JSONAPIBaseView
 from api.base import permissions as base_permissions
 from api.base.utils import get_user_auth
-from api.chronos.permissions import SubmissionOnPreprintPublishedOrAdmin, SubmissionAcceptedOrPublishedOrPreprintAdmin
-from api.chronos.serializers import ChronosJournalSerializer, ChronosSubmissionSerializer, ChronosSubmissionCreateSerializer, ChronosSubmissionDetailSerializer
+from api.chronos.permissions import (
+    SubmissionOnPreprintPublishedOrAdmin,
+    SubmissionAcceptedOrPublishedOrPreprintAdmin,
+)
+from api.chronos.serializers import (
+    ChronosJournalSerializer,
+    ChronosSubmissionSerializer,
+    ChronosSubmissionCreateSerializer,
+    ChronosSubmissionDetailSerializer,
+)
 from framework.auth.oauth_scopes import CoreScopes
 from osf.models import ChronosJournal, ChronosSubmission, Preprint
 from osf.external.tasks import update_submissions_status_async
@@ -68,7 +76,9 @@ class ChronosJournalDetail(JSONAPIBaseView, generics.RetrieveAPIView):
             raise NotFound
 
 
-class ChronosSubmissionList(JSONAPIBaseView, generics.ListCreateAPIView, ListFilterMixin):
+class ChronosSubmissionList(
+    JSONAPIBaseView, generics.ListCreateAPIView, ListFilterMixin,
+):
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -78,7 +88,10 @@ class ChronosSubmissionList(JSONAPIBaseView, generics.ListCreateAPIView, ListFil
     required_write_scopes = [CoreScopes.CHRONOS_SUBMISSION_WRITE]
 
     serializer_class = ChronosSubmissionSerializer
-    parser_classes = (JSONAPIMultipleRelationshipsParser, JSONAPIMultipleRelationshipsParserForRegularJSON,)
+    parser_classes = (
+        JSONAPIMultipleRelationshipsParser,
+        JSONAPIMultipleRelationshipsParserForRegularJSON,
+    )
 
     # This view goes under the _/ namespace
     versioning_class = PrivateVersioning
@@ -94,7 +107,9 @@ class ChronosSubmissionList(JSONAPIBaseView, generics.ListCreateAPIView, ListFil
     def get_default_queryset(self):
         user = get_user_auth(self.request).user
         preprint_contributors = Preprint.load(self.kwargs['preprint_id'])._contributors
-        queryset = ChronosSubmission.objects.filter(preprint__guids___id=self.kwargs['preprint_id'])
+        queryset = ChronosSubmission.objects.filter(
+            preprint__guids___id=self.kwargs['preprint_id'],
+        )
 
         # Get the list of stale submissions and queue a task to update them
         update_list_id = queryset.filter(
@@ -146,7 +161,9 @@ class ChronosSubmissionDetail(JSONAPIBaseView, generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         try:
-            submission = ChronosSubmission.objects.get(publication_id=self.kwargs['submission_id'])
+            submission = ChronosSubmission.objects.get(
+                publication_id=self.kwargs['submission_id'],
+            )
         except ChronosSubmission.DoesNotExist:
             raise NotFound
         else:

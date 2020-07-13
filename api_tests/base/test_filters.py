@@ -32,6 +32,7 @@ from api.base.serializers import RelationshipField
 
 from functools import cmp_to_key
 
+
 class FakeSerializer(ser.Serializer):
 
     filterable_fields = (
@@ -42,7 +43,7 @@ class FakeSerializer(ser.Serializer):
         'date_field',
         'int_field',
         'bool_field',
-        'relationship_field'
+        'relationship_field',
     )
 
     id = ser.CharField()
@@ -54,24 +55,21 @@ class FakeSerializer(ser.Serializer):
     int_field = ser.IntegerField()
     float_field = ser.FloatField()
     bool_field = ser.BooleanField(source='foobar')
-    relationship_field = RelationshipField(
-        related_view='fake', related_view_kwargs={}
-    )
+    relationship_field = RelationshipField(related_view='fake', related_view_kwargs={})
 
 
 class FakeRecord(object):
-
     def __init__(
-            self,
-            _id=None,
-            string_field='foo',
-            second_string_field='bar',
-            list_field=None,
-            date_field=timezone.now(),
-            datetime_field=timezone.now(),
-            int_field=42,
-            float_field=41.99999,
-            foobar=True
+        self,
+        _id=None,
+        string_field='foo',
+        second_string_field='bar',
+        list_field=None,
+        date_field=timezone.now(),
+        datetime_field=timezone.now(),
+        int_field=42,
+        float_field=41.99999,
+        foobar=True,
     ):
         self._id = _id
         self.string_field = string_field
@@ -91,7 +89,6 @@ class FakeListView(ListFilterMixin):
 
 
 class TestFilterMixin(ApiTestCase):
-
     def setUp(self):
         super(TestFilterMixin, self).setUp()
         self.view = FakeListView()
@@ -106,16 +103,10 @@ class TestFilterMixin(ApiTestCase):
 
         fields = self.view.parse_query_params(query_params)
         assert_in('string_field', fields['filter[string_field]'])
-        assert_equal(
-            fields['filter[string_field]']['string_field']['op'],
-            'icontains'
-        )
+        assert_equal(fields['filter[string_field]']['string_field']['op'], 'icontains')
 
         assert_in('list_field', fields['filter[list_field]'])
-        assert_equal(
-            fields['filter[list_field]']['list_field']['op'],
-            'contains'
-        )
+        assert_equal(fields['filter[list_field]']['list_field']['op'], 'contains')
 
         assert_in('int_field', fields['filter[int_field]'])
         assert_equal(fields['filter[int_field]']['int_field']['op'], 'eq')
@@ -133,25 +124,16 @@ class TestFilterMixin(ApiTestCase):
 
         fields = self.view.parse_query_params(query_params)
         assert_in('string_field', fields['filter[string_field]'])
-        assert_equal(
-            fields['filter[string_field]']['string_field']['value'],
-            'foo'
-        )
+        assert_equal(fields['filter[string_field]']['string_field']['value'], 'foo')
 
         assert_in('list_field', fields['filter[list_field]'])
-        assert_equal(
-            fields['filter[list_field]']['list_field']['value'],
-            'bar'
-        )
+        assert_equal(fields['filter[list_field]']['list_field']['value'], 'bar')
 
         assert_in('int_field', fields['filter[int_field]'])
         assert_equal(fields['filter[int_field]']['int_field']['value'], 42)
 
         assert_in('bool_field', fields.get('filter[bool_field]'))
-        assert_equal(
-            fields['filter[bool_field]']['bool_field']['value'],
-            False
-        )
+        assert_equal(fields['filter[bool_field]']['bool_field']['value'], False)
 
     def test_parse_query_params_uses_field_source_attribute(self):
         query_params = {
@@ -165,9 +147,7 @@ class TestFilterMixin(ApiTestCase):
         assert_equal(parsed_field['op'], 'eq')
 
     def test_parse_query_params_generalizes_dates(self):
-        query_params = {
-            'filter[date_field]': '2014-12-12'
-        }
+        query_params = {'filter[date_field]': '2014-12-12'}
 
         fields = self.view.parse_query_params(query_params)
         start = parser.parse('2014-12-12').replace(tzinfo=pytz.utc)
@@ -182,10 +162,7 @@ class TestFilterMixin(ApiTestCase):
                     self.fail()
 
     def test_parse_query_params_comparable_field(self):
-        query_params = {
-            'filter[int_field][gt]': 42,
-            'filter[int_field][lte]': 9000
-        }
+        query_params = {'filter[int_field][gt]': 42, 'filter[int_field][lte]': 9000}
         fields = self.view.parse_query_params(query_params)
         for key, field_name in fields.items():
             if field_name['int_field']['op'] == 'gt':
@@ -198,7 +175,7 @@ class TestFilterMixin(ApiTestCase):
     def test_parse_query_params_matchable_field(self):
         query_params = {
             'filter[string_field][contains]': 'foo',
-            'filter[string_field][icontains]': 'bar'
+            'filter[string_field][icontains]': 'bar',
         }
         fields = self.view.parse_query_params(query_params)
         for key, field_name in fields.items():
@@ -210,56 +187,38 @@ class TestFilterMixin(ApiTestCase):
                 self.fail()
 
     def test_parse_query_params_raises_InvalidFilterError_bad_field(self):
-        query_params = {
-            'filter[fake]': 'foo'
-        }
+        query_params = {'filter[fake]': 'foo'}
         with assert_raises(InvalidFilterError):
             self.view.parse_query_params(query_params)
 
     def test_parse_query_params_raises_InvalidFilterComparisonType(self):
-        query_params = {
-            'filter[string_field][gt]': 'foo'
-        }
+        query_params = {'filter[string_field][gt]': 'foo'}
         with assert_raises(InvalidFilterComparisonType):
             self.view.parse_query_params(query_params)
 
     def test_parse_query_params_raises_InvalidFilterMatchType(self):
-        query_params = {
-            'filter[date_field][icontains]': '2015'
-        }
+        query_params = {'filter[date_field][icontains]': '2015'}
         with assert_raises(InvalidFilterMatchType):
             self.view.parse_query_params(query_params)
 
     def test_parse_query_params_raises_InvalidFilterOperator(self):
-        query_params = {
-            'filter[int_field][bar]': 42
-        }
+        query_params = {'filter[int_field][bar]': 42}
         with assert_raises(InvalidFilterOperator):
             self.view.parse_query_params(query_params)
 
     def test_InvalidFilterOperator_parameterizes_valid_operators(self):
-        query_params = {
-            'filter[int_field][bar]': 42
-        }
+        query_params = {'filter[int_field][bar]': 42}
         try:
             self.view.parse_query_params(query_params)
         except InvalidFilterOperator as err:
-            ops = re.search(
-                r'one of (?P<ops>.+)\.$',
-                err.detail
-            ).groupdict()['ops']
+            ops = re.search(r'one of (?P<ops>.+)\.$', err.detail).groupdict()['ops']
             assert_equal(ops, 'gt, gte, lt, lte, eq, ne')
 
-        query_params = {
-            'filter[string_field][bar]': 'foo'
-        }
+        query_params = {'filter[string_field][bar]': 'foo'}
         try:
             self.view.parse_query_params(query_params)
         except InvalidFilterOperator as err:
-            ops = re.search(
-                r'one of (?P<ops>.+)\.$',
-                err.detail
-            ).groupdict()['ops']
+            ops = re.search(r'one of (?P<ops>.+)\.$', err.detail).groupdict()['ops']
             assert_equal(ops, 'contains, icontains, eq, ne')
 
     def test_parse_query_params_supports_multiple_filters(self):
@@ -275,6 +234,7 @@ class TestFilterMixin(ApiTestCase):
         for key, field_name in fields.items():
             assert_in(field_name['string_field']['value'], ('foo', 'bar'))
         """
+
     def test_convert_value_bool(self):
         value = 'true'
         field = FakeSerializer._declared_fields['bool_field']
@@ -287,10 +247,7 @@ class TestFilterMixin(ApiTestCase):
         field = FakeSerializer._declared_fields['date_field']
         value = self.view.convert_value(value, field)
         assert_true(isinstance(value, datetime.datetime))
-        assert_equal(
-            value,
-            parser.parse('2014-12-12').replace(tzinfo=pytz.utc)
-        )
+        assert_equal(value, parser.parse('2014-12-12').replace(tzinfo=pytz.utc))
 
     def test_convert_value_int(self):
         value = '9000'
@@ -311,9 +268,7 @@ class TestFilterMixin(ApiTestCase):
         assert_equal(value, [])
 
     def test_multiple_filter_params_bad_filter(self):
-        query_params = {
-            'filter[string_field, not_a_field]': 'test'
-        }
+        query_params = {'filter[string_field, not_a_field]': 'test'}
         with assert_raises(InvalidFilterError):
             self.view.parse_query_params(query_params)
 
@@ -326,64 +281,49 @@ class TestFilterMixin(ApiTestCase):
 
 
 class TestListFilterMixin(ApiTestCase):
-
     def setUp(self):
         super(TestListFilterMixin, self).setUp()
         self.view = FakeListView()
 
     def test_get_filtered_queryset_for_list_field_converts_to_lowercase(self):
         field_name = 'list_field'
-        params = {
-            'value': 'FOO',
-            'source_field_name': field_name
-        }
+        params = {'value': 'FOO', 'source_field_name': field_name}
         default_queryset = [
             FakeRecord(_id=1, list_field=['fOO', 'Foo', 'Bar', 'baR']),
             FakeRecord(_id=2, list_field=['Foo', 'Bax']),
-            FakeRecord(_id=3, list_field=['Bar', 'baR', 'bat'])
+            FakeRecord(_id=3, list_field=['Bar', 'baR', 'bat']),
         ]
-        filtered = self.view.get_filtered_queryset(
-            field_name, params, default_queryset)
+        filtered = self.view.get_filtered_queryset(field_name, params, default_queryset)
         for record in filtered:
             assert_not_equal(record._id, 3)
         for id in (1, 2):
             assert_in(id, [f._id for f in filtered])
 
     def test_get_filtered_queryset_for_list_respects_special_case_of_ids_being_list(
-            self):
+        self,
+    ):
         field_name = 'bool_field'
-        params = {
-            'value': True,
-            'op': 'eq',
-            'source_field_name': 'foobar'
-        }
+        params = {'value': True, 'op': 'eq', 'source_field_name': 'foobar'}
         default_queryset = [
             FakeRecord(_id=1, foobar=True),
             FakeRecord(_id=2, foobar=True),
-            FakeRecord(_id=3, foobar=False)
+            FakeRecord(_id=3, foobar=False),
         ]
-        filtered = self.view.get_filtered_queryset(
-            field_name, params, default_queryset)
+        filtered = self.view.get_filtered_queryset(field_name, params, default_queryset)
         for record in filtered:
             assert_not_equal(record._id, 3)
         for id in (1, 2):
             assert_in(id, [f._id for f in filtered])
 
-    def test_get_filtered_queryset_for_list_respects_id_always_being_list(
-            self):
+    def test_get_filtered_queryset_for_list_respects_id_always_being_list(self):
         field_name = 'id'
-        params = {
-            'value': '2',
-            'op': 'in',
-            'source_field_name': '_id'
-        }
+        params = {'value': '2', 'op': 'in', 'source_field_name': '_id'}
         default_queryset = [
             FakeRecord(_id='1', foobar=True),
             FakeRecord(_id='2', foobar=True),
-            FakeRecord(_id='3', foobar=False)
+            FakeRecord(_id='3', foobar=False),
         ]
-        filtered = self.view.get_filtered_queryset(
-            field_name, params, default_queryset)
+        filtered = self.view.get_filtered_queryset(field_name, params, default_queryset)
         for record in filtered:
             assert_equal(record._id, '2')
         for id in ('1', '3'):
@@ -399,6 +339,7 @@ class TestListFilterMixin(ApiTestCase):
         assert_equal(parsed_field['source_field_name'], 'foobar')
         assert_equal(parsed_field['value'], False)
         assert_equal(parsed_field['op'], 'eq')
+
 
 @pytest.mark.django_db
 class TestOSFOrderingFilter(ApiTestCase):
@@ -424,53 +365,57 @@ class TestOSFOrderingFilter(ApiTestCase):
 
     def test_filter_queryset_forward(self):
         query_to_be_sorted = [
-            self.query(x) for x in 'NewProj Zip Proj Activity'.split()]
+            self.query(x) for x in 'NewProj Zip Proj Activity'.split()
+        ]
         sorted_query = sorted(
-            query_to_be_sorted,
-            key=cmp_to_key(filters.sort_multiple(['title']))
+            query_to_be_sorted, key=cmp_to_key(filters.sort_multiple(['title']))
         )
         sorted_output = [str(i) for i in sorted_query]
         assert_equal(sorted_output, ['Activity', 'NewProj', 'Proj', 'Zip'])
 
     def test_filter_queryset_forward_duplicate(self):
         query_to_be_sorted = [
-            self.query(x) for x in 'NewProj Activity Zip Activity'.split()]
+            self.query(x) for x in 'NewProj Activity Zip Activity'.split()
+        ]
         sorted_query = sorted(
-            query_to_be_sorted,
-            key=cmp_to_key(filters.sort_multiple(['title']))
+            query_to_be_sorted, key=cmp_to_key(filters.sort_multiple(['title']))
         )
         sorted_output = [str(i) for i in sorted_query]
         assert_equal(sorted_output, ['Activity', 'Activity', 'NewProj', 'Zip'])
 
     def test_filter_queryset_reverse(self):
         query_to_be_sorted = [
-            self.query(x) for x in 'NewProj Zip Proj Activity'.split()]
+            self.query(x) for x in 'NewProj Zip Proj Activity'.split()
+        ]
         sorted_query = sorted(
-            query_to_be_sorted,
-            key=cmp_to_key(filters.sort_multiple(['-title']))
+            query_to_be_sorted, key=cmp_to_key(filters.sort_multiple(['-title']))
         )
         sorted_output = [str(i) for i in sorted_query]
         assert_equal(sorted_output, ['Zip', 'Proj', 'NewProj', 'Activity'])
 
     def test_filter_queryset_reverse_duplicate(self):
         query_to_be_sorted = [
-            self.query(x) for x in 'NewProj Activity Zip Activity'.split()]
+            self.query(x) for x in 'NewProj Activity Zip Activity'.split()
+        ]
         sorted_query = sorted(
-            query_to_be_sorted,
-            key=cmp_to_key(filters.sort_multiple(['-title']))
+            query_to_be_sorted, key=cmp_to_key(filters.sort_multiple(['-title']))
         )
         sorted_output = [str(i) for i in sorted_query]
         assert_equal(sorted_output, ['Zip', 'NewProj', 'Activity', 'Activity'])
 
     def test_filter_queryset_handles_multiple_fields(self):
-        objs = [self.query_with_num(title='NewProj', number=10),
-                self.query_with_num(title='Zip', number=20),
-                self.query_with_num(title='Activity', number=30),
-                self.query_with_num(title='Activity', number=40)]
+        objs = [
+            self.query_with_num(title='NewProj', number=10),
+            self.query_with_num(title='Zip', number=20),
+            self.query_with_num(title='Activity', number=30),
+            self.query_with_num(title='Activity', number=40),
+        ]
         actual = [
-            x.number for x in sorted(
+            x.number
+            for x in sorted(
                 objs, key=cmp_to_key(filters.sort_multiple(['title', '-number']))
-            )]
+            )
+        ]
         assert_equal(actual, [40, 30, 10, 20])
 
     def get_node_sort_url(self, field, ascend=True):
@@ -491,23 +436,36 @@ class TestOSFOrderingFilter(ApiTestCase):
         # Ensuring that sorting by the serializer field returns the same result
         # as using the source field
         res_created = self.app.get(self.get_node_sort_url('created'), auth=user.auth)
-        res_date_created = self.app.get(self.get_node_sort_url('date_created'), auth=user.auth)
+        res_date_created = self.app.get(
+            self.get_node_sort_url('date_created'), auth=user.auth
+        )
         assert res_created.status_code == 200
         assert res_created.json['data'] == res_date_created.json['data']
-        assert res_created.json['data'][0]['id'] == res_date_created.json['data'][0]['id']
-        assert res_created.json['data'][1]['id'] == res_date_created.json['data'][1]['id']
+        assert (
+            res_created.json['data'][0]['id'] == res_date_created.json['data'][0]['id']
+        )
+        assert (
+            res_created.json['data'][1]['id'] == res_date_created.json['data'][1]['id']
+        )
 
         # Testing both are capable of using the inverse sort sign '-'
-        res_created = self.app.get(self.get_node_sort_url('created', False), auth=user.auth)
-        res_date_created = self.app.get(self.get_node_sort_url('date_created', False), auth=user.auth)
+        res_created = self.app.get(
+            self.get_node_sort_url('created', False), auth=user.auth
+        )
+        res_date_created = self.app.get(
+            self.get_node_sort_url('date_created', False), auth=user.auth
+        )
         assert res_created.status_code == 200
         assert res_created.json['data'] == res_date_created.json['data']
-        assert res_created.json['data'][1]['id'] == res_date_created.json['data'][1]['id']
-        assert res_created.json['data'][0]['id'] == res_date_created.json['data'][0]['id']
+        assert (
+            res_created.json['data'][1]['id'] == res_date_created.json['data'][1]['id']
+        )
+        assert (
+            res_created.json['data'][0]['id'] == res_date_created.json['data'][0]['id']
+        )
 
 
 class TestQueryPatternRegex(TestCase):
-
     def setUp(self):
         super(TestQueryPatternRegex, self).setUp()
         self.filter_regex = FakeListView.QUERY_PATTERN

@@ -12,5 +12,4 @@ class Migration(migrations.Migration):
         ('osf', '0100_set_access_request_enabled'),
     ]
 
-    operations = [
-    ]
+    operations = []

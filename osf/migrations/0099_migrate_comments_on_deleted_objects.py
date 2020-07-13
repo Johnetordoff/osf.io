@@ -15,14 +15,26 @@ def update_comment_root_target(state, *args, **kwargs):
     for comment in comments:
         if comment.root_target:
             root_target_ctype = comment.root_target.content_type
-            root_target_model_cls = state.get_model(root_target_ctype.app_label, root_target_ctype.model)
-            root_target = root_target_model_cls.objects.get(pk=comment.root_target.object_id)
+            root_target_model_cls = state.get_model(
+                root_target_ctype.app_label, root_target_ctype.model
+            )
+            root_target = root_target_model_cls.objects.get(
+                pk=comment.root_target.object_id
+            )
             if hasattr(root_target, 'is_deleted') and root_target.is_deleted:
-                logger.info('{} is deleted. Setting Comment {} root_target to None'.format(root_target, comment.pk))
+                logger.info(
+                    '{} is deleted. Setting Comment {} root_target to None'.format(
+                        root_target, comment.pk
+                    )
+                )
                 comment.root_target = None
                 comments_to_update.append(comment)
             if hasattr(root_target, 'deleted') and root_target.deleted:
-                logger.info('{} is deleted. Setting Comment {} root_target to None'.format(root_target, comment.pk))
+                logger.info(
+                    '{} is deleted. Setting Comment {} root_target to None'.format(
+                        root_target, comment.pk
+                    )
+                )
                 comment.root_target = None
                 comments_to_update.append(comment)
     bulk_update(comments_to_update, update_fields=['root_target'])
@@ -35,6 +47,4 @@ class Migration(migrations.Migration):
         ('osf', '0098_merge_20180416_1807'),
     ]
 
-    operations = [
-        migrations.RunPython(update_comment_root_target)
-    ]
+    operations = [migrations.RunPython(update_comment_root_target)]

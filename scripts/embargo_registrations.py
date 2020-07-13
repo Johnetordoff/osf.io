@@ -8,6 +8,7 @@ import logging
 import django
 from django.utils import timezone
 from django.db import transaction
+
 django.setup()
 
 from framework.celery_tasks import app as celery_app
@@ -37,8 +38,9 @@ def main(dry_run=True):
                 )
                 continue
             logger.warn(
-                'Embargo {0} approved. Activating embargo for registration {1}'
-                .format(embargo._id, parent_registration._id)
+                'Embargo {0} approved. Activating embargo for registration {1}'.format(
+                    embargo._id, parent_registration._id
+                )
             )
             if not dry_run:
                 if parent_registration.is_deleted:
@@ -63,7 +65,8 @@ def main(dry_run=True):
                     except Exception as err:
                         logger.error(
                             'Unexpected error raised when activating embargo for '
-                            'registration {}. Continuing...'.format(parent_registration))
+                            'registration {}. Continuing...'.format(parent_registration)
+                        )
                         logger.exception(err)
 
     active_embargoes = Embargo.objects.filter(state=Embargo.APPROVED)
@@ -73,8 +76,9 @@ def main(dry_run=True):
                 logger.warn('Dry run mode')
             parent_registration = Registration.objects.get(embargo=embargo)
             logger.warn(
-                'Embargo {0} complete. Making registration {1} public'
-                .format(embargo._id, parent_registration._id)
+                'Embargo {0} complete. Making registration {1} public'.format(
+                    embargo._id, parent_registration._id
+                )
             )
             if not dry_run:
                 if parent_registration.is_deleted:
@@ -104,13 +108,16 @@ def main(dry_run=True):
                     except Exception as err:
                         logger.error(
                             'Unexpected error raised when completing embargo for '
-                            'registration {}. Continuing...'.format(parent_registration))
+                            'registration {}. Continuing...'.format(parent_registration)
+                        )
                         logger.exception(err)
 
 
 def should_be_embargoed(embargo):
     """Returns true if embargo was initiated more than 48 hours prior."""
-    return (timezone.now() - embargo.initiation_date) >= settings.EMBARGO_PENDING_TIME and not embargo.is_deleted
+    return (
+        timezone.now() - embargo.initiation_date
+    ) >= settings.EMBARGO_PENDING_TIME and not embargo.is_deleted
 
 
 @celery_app.task(name='scripts.embargo_registrations')
@@ -119,6 +126,7 @@ def run_main(dry_run=True):
     if not dry_run:
         scripts_utils.add_file_logger(logger, __file__)
     main(dry_run=dry_run)
+
 
 if __name__ == '__main__':
     main(False)

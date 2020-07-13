@@ -236,8 +236,9 @@ FINALIZE_MIGRATION = [
     'ALTER TABLE osf_tag ALTER COLUMN created SET NOT NULL;',
     'ALTER TABLE osf_tag ALTER COLUMN modified SET NOT NULL;',
     'ALTER TABLE osf_useractivitycounter ALTER COLUMN created SET NOT NULL;',
-    'ALTER TABLE osf_useractivitycounter ALTER COLUMN modified SET NOT NULL;'
+    'ALTER TABLE osf_useractivitycounter ALTER COLUMN modified SET NOT NULL;',
 ]
+
 
 @celery_app.task
 def run_sql(sql):
@@ -249,6 +250,7 @@ def run_sql(sql):
             rows = cursor.fetchall()
             if not rows:
                 raise Exception('Sentry notification that {} is migrated'.format(table))
+
 
 @celery_app.task(name='scripts.premigrate_created_modified')
 def migrate():
@@ -265,15 +267,18 @@ def migrate():
     for statement in POPULATE_COLUMNS:
         run_sql.delay(statement)
 
+
 def add_columns():
     for statement in ADD_COLUMNS:
         with connection.cursor() as cursor:
             cursor.execute(statement)
 
+
 def finalize_migration():
     for statement in FINALIZE_MIGRATION:
         with connection.cursor() as cursor:
             cursor.execute(statement)
+
 
 def main():
     django.setup()
@@ -287,16 +292,10 @@ def main():
         help='Run migration and roll back changes to db',
     )
     parser.add_argument(
-        '--start',
-        action='store_true',
-        dest='start',
-        help='Adds columns',
+        '--start', action='store_true', dest='start', help='Adds columns',
     )
     parser.add_argument(
-        '--finish',
-        action='store_true',
-        dest='finish',
-        help='Sets NOT NULL',
+        '--finish', action='store_true', dest='finish', help='Sets NOT NULL',
     )
     pargs = parser.parse_args()
     if pargs.start and pargs.finish:
@@ -310,6 +309,7 @@ def main():
             raise Exception('Must specify start or finish')
         if pargs.dry_run:
             raise Exception('Dry Run -- Transaction aborted.')
+
 
 if __name__ == '__main__':
     main()

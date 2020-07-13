@@ -3,6 +3,7 @@ from addons.googledrive.settings import MAX_UPLOAD_SIZE
 
 googledrive_root_folder = generic_root_folder('googledrive')
 
+
 class GoogleDriveAddonConfig(BaseAddonAppConfig):
 
     name = 'addons.googledrive'
@@ -23,11 +24,16 @@ class GoogleDriveAddonConfig(BaseAddonAppConfig):
     NODE_AUTHORIZED = 'googledrive_node_authorized'
     NODE_DEAUTHORIZED = 'googledrive_node_deauthorized'
 
-    actions = (FOLDER_SELECTED, NODE_AUTHORIZED, NODE_DEAUTHORIZED, )
+    actions = (
+        FOLDER_SELECTED,
+        NODE_AUTHORIZED,
+        NODE_DEAUTHORIZED,
+    )
 
     @property
     def routes(self):
         from . import routes
+
         return [routes.api_routes]
 
     @property

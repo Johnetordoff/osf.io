@@ -25,16 +25,19 @@ EMBER_WAFFLE_PAGES = [
     'search',
     'support',
     'user_profile',
-    'user_settings'
+    'user_settings',
 ]
+
 
 def reverse_func(state, schema):
     pages = [format_ember_waffle_flag_name(page) for page in EMBER_WAFFLE_PAGES]
     Flag.objects.filter(name__in=pages).delete()
     return
 
+
 def format_ember_waffle_flag_name(page):
     return '{}{}{}'.format('ember_', page, '_page')
+
 
 def add_ember_waffle_flags(state, schema):
     """
@@ -46,8 +49,11 @@ def add_ember_waffle_flags(state, schema):
     making the flag False for everyone.  Flag settings can be changed in the Django admin app.
     """
     for page in EMBER_WAFFLE_PAGES:
-        Flag.objects.get_or_create(name=format_ember_waffle_flag_name(page), everyone=False)
+        Flag.objects.get_or_create(
+            name=format_ember_waffle_flag_name(page), everyone=False
+        )
     return
+
 
 class Migration(migrations.Migration):
 
@@ -55,6 +61,4 @@ class Migration(migrations.Migration):
         ('waffle', '0002_auto_20161201_0958'),
     ]
 
-    operations = [
-        migrations.RunPython(add_ember_waffle_flags, reverse_func)
-    ]
+    operations = [migrations.RunPython(add_ember_waffle_flags, reverse_func)]

@@ -41,8 +41,18 @@ from osf.models.admin_log_entry import (
     REINDEX_ELASTIC,
 )
 
-from admin.users.serializers import serialize_user, serialize_simple_preprint, serialize_simple_node
-from admin.users.forms import EmailResetForm, WorkshopForm, UserSearchForm, MergeUserForm, AddSystemTagForm
+from admin.users.serializers import (
+    serialize_user,
+    serialize_simple_preprint,
+    serialize_simple_node,
+)
+from admin.users.forms import (
+    EmailResetForm,
+    WorkshopForm,
+    UserSearchForm,
+    MergeUserForm,
+    AddSystemTagForm,
+)
 from admin.users.templatetags.user_extras import reverse_user
 from website.settings import DOMAIN, OSF_SUPPORT_EMAIL
 
@@ -52,6 +62,7 @@ class UserDeleteView(PermissionRequiredMixin, DeleteView):
 
     Interface with OSF database. No admin models.
     """
+
     template_name = 'users/remove_user.html'
     context_object_name = 'user'
     object = None
@@ -78,7 +89,9 @@ class UserDeleteView(PermissionRequiredMixin, DeleteView):
                 user.date_disabled = None
                 subscribe_on_confirm(user)
                 user.is_registered = True
-                user.tags.through.objects.filter(tag__name__in=['spam_flagged', 'spam_confirmed'], tag__system=True).delete()
+                user.tags.through.objects.filter(
+                    tag__name__in=['spam_flagged', 'spam_confirmed'], tag__system=True
+                ).delete()
                 user.confirm_ham()
                 flag = USER_RESTORED
                 message = 'User account {} reenabled'.format(user.pk)
@@ -86,15 +99,15 @@ class UserDeleteView(PermissionRequiredMixin, DeleteView):
         except AttributeError:
             raise Http404(
                 '{} with id "{}" not found.'.format(
-                    self.context_object_name.title(),
-                    self.kwargs.get('guid')
-                ))
+                    self.context_object_name.title(), self.kwargs.get('guid')
+                )
+            )
         update_admin_log(
             user_id=self.request.user.id,
             object_id=user.pk,
             object_repr='User',
             message=message,
-            action_flag=flag
+            action_flag=flag,
         )
         return redirect(reverse_user(self.kwargs.get('guid')))
 
@@ -112,6 +125,7 @@ class UserGDPRDeleteView(PermissionRequiredMixin, DeleteView):
 
     Interface with OSF database. No admin models.
     """
+
     template_name = 'users/GDPR_delete_user.html'
     context_object_name = 'user'
     object = None
@@ -130,7 +144,7 @@ class UserGDPRDeleteView(PermissionRequiredMixin, DeleteView):
                 object_id=user.pk,
                 object_repr='User',
                 message=message,
-                action_flag=USER_GDPR_DELETED
+                action_flag=USER_GDPR_DELETED,
             )
         except UserStateError as e:
             messages.warning(request, str(e))
@@ -149,9 +163,9 @@ class UserGDPRDeleteView(PermissionRequiredMixin, DeleteView):
         else:
             raise Http404(
                 '{} with id "{}" not found.'.format(
-                    self.context_object_name.title(),
-                    self.kwargs.get('guid')
-                ))
+                    self.context_object_name.title(), self.kwargs.get('guid')
+                )
+            )
 
 
 class SpamUserDeleteView(UserDeleteView):
@@ -168,9 +182,9 @@ class SpamUserDeleteView(UserDeleteView):
         except AttributeError:
             raise Http404(
                 '{} with id "{}" not found.'.format(
-                    self.context_object_name.title(),
-                    self.kwargs.get('guid')
-                ))
+                    self.context_object_name.title(), self.kwargs.get('guid')
+                )
+            )
         if user:
             for node in user.contributor_or_group_member_to:
                 if not node.is_registration and not node.is_spam:
@@ -179,8 +193,10 @@ class SpamUserDeleteView(UserDeleteView):
                         user_id=request.user.id,
                         object_id=node._id,
                         object_repr='Node',
-                        message='Confirmed SPAM: {} when user {} marked as spam'.format(node._id, user._id),
-                        action_flag=CONFIRM_SPAM
+                        message='Confirmed SPAM: {} when user {} marked as spam'.format(
+                            node._id, user._id
+                        ),
+                        action_flag=CONFIRM_SPAM,
                     )
 
         kwargs.update({'is_spam': True})
@@ -200,9 +216,9 @@ class HamUserRestoreView(UserDeleteView):
         except AttributeError:
             raise Http404(
                 '{} with id "{}" not found.'.format(
-                    self.context_object_name.title(),
-                    self.kwargs.get('guid')
-                ))
+                    self.context_object_name.title(), self.kwargs.get('guid')
+                )
+            )
         if user:
             user.confirm_ham(save=True)
             for node in user.contributor_or_group_member_to:
@@ -212,8 +228,10 @@ class HamUserRestoreView(UserDeleteView):
                         user_id=request.user.id,
                         object_id=node._id,
                         object_repr='Node',
-                        message='Confirmed HAM: {} when user {} marked as ham'.format(node._id, user._id),
-                        action_flag=CONFIRM_SPAM
+                        message='Confirmed HAM: {} when user {} marked as ham'.format(
+                            node._id, user._id
+                        ),
+                        action_flag=CONFIRM_SPAM,
                     )
 
         kwargs.update({'is_spam': False})
@@ -225,19 +243,22 @@ class UserSpamList(PermissionRequiredMixin, ListView):
 
     paginate_by = 25
     paginate_orphans = 1
-    ordering = ('date_disabled')
+    ordering = 'date_disabled'
     context_object_name = '-osfuser'
     permission_required = ('osf.view_spam', 'osf.view_osfuser')
     raise_exception = True
 
     def get_queryset(self):
-        return OSFUser.objects.filter(spam_status=self.SPAM_STATUS).order_by(self.ordering)
+        return OSFUser.objects.filter(spam_status=self.SPAM_STATUS).order_by(
+            self.ordering
+        )
 
     def get_context_data(self, **kwargs):
         query_set = kwargs.pop('object_list', self.object_list)
         page_size = self.get_paginate_by(query_set)
         paginator, page, query_set, is_paginated = self.paginate_queryset(
-            query_set, page_size)
+            query_set, page_size
+        )
         return {
             'users': list(map(serialize_user, query_set)),
             'page': page,
@@ -251,7 +272,9 @@ class UserFlaggedSpamList(UserSpamList, DeleteView):
 
     def delete(self, request, *args, **kwargs):
         if not request.user.has_perm('osf.mark_spam'):
-            raise PermissionDenied("You don't have permission to update this user's spam status.")
+            raise PermissionDenied(
+                "You don't have permission to update this user's spam status."
+            )
 
         user_ids = []
         for key in list(request.POST.keys()):
@@ -278,7 +301,7 @@ class UserFlaggedSpamList(UserSpamList, DeleteView):
                 object_id=uid,
                 object_repr='User',
                 message=f'Confirmed {action}: {uid}',
-                action_flag=action_flag
+                action_flag=action_flag,
             )
         return redirect('users:flagged-spam')
 
@@ -287,15 +310,18 @@ class UserKnownSpamList(UserSpamList):
     SPAM_STATUS = SpamStatus.SPAM
     template_name = 'users/known_spam_list.html'
 
+
 class UserKnownHamList(UserSpamList):
     SPAM_STATUS = SpamStatus.HAM
     template_name = 'users/known_spam_list.html'
+
 
 class User2FactorDeleteView(UserDeleteView):
     """ Allow authorised admin user to remove 2 factor authentication.
 
     Interface with OSF database. No admin models.
     """
+
     template_name = 'users/remove_2_factor.html'
 
     def delete(self, request, *args, **kwargs):
@@ -305,15 +331,15 @@ class User2FactorDeleteView(UserDeleteView):
         except AttributeError:
             raise Http404(
                 '{} with id "{}" not found.'.format(
-                    self.context_object_name.title(),
-                    self.kwargs.get('guid')
-                ))
+                    self.context_object_name.title(), self.kwargs.get('guid')
+                )
+            )
         update_admin_log(
             user_id=self.request.user.id,
             object_id=user.pk,
             object_repr='User',
             message='Removed 2 factor auth for user {}'.format(user.pk),
-            action_flag=USER_2_FACTOR
+            action_flag=USER_2_FACTOR,
         )
         return redirect(reverse_user(self.kwargs.get('guid')))
 
@@ -363,12 +389,30 @@ class UserFormView(PermissionRequiredMixin, FormView):
         if guid or email:
             if email:
                 try:
-                    user = OSFUser.objects.filter(Q(username=email) | Q(emails__address=email)).distinct('id').get()
+                    user = (
+                        OSFUser.objects.filter(
+                            Q(username=email) | Q(emails__address=email)
+                        )
+                        .distinct('id')
+                        .get()
+                    )
                     guid = user.guids.first()._id
                 except OSFUser.DoesNotExist:
-                    return page_not_found(self.request, AttributeError('User with email address {} not found.'.format(email)))
+                    return page_not_found(
+                        self.request,
+                        AttributeError(
+                            'User with email address {} not found.'.format(email)
+                        ),
+                    )
                 except OSFUser.MultipleObjectsReturned:
-                    return page_not_found(self.request, AttributeError('Multiple users with email address {} found, please notify DevOps.'.format(email)))
+                    return page_not_found(
+                        self.request,
+                        AttributeError(
+                            'Multiple users with email address {} found, please notify DevOps.'.format(
+                                email
+                            )
+                        ),
+                    )
             self.redirect_url = reverse('users:user', kwargs={'guid': guid})
         elif name:
             self.redirect_url = reverse('users:search_list', kwargs={'name': name})
@@ -378,6 +422,7 @@ class UserFormView(PermissionRequiredMixin, FormView):
     @property
     def success_url(self):
         return self.redirect_url
+
 
 class UserMergeAccounts(PermissionRequiredMixin, FormView):
     template_name = 'users/merge_accounts_modal.html'
@@ -396,7 +441,9 @@ class UserMergeAccounts(PermissionRequiredMixin, FormView):
         user = self.get_object()
         guid_to_be_merged = form.cleaned_data['user_guid_to_be_merged']
 
-        user_to_be_merged = OSFUser.objects.get(guids___id=guid_to_be_merged, guids___id__isnull=False)
+        user_to_be_merged = OSFUser.objects.get(
+            guids___id=guid_to_be_merged, guids___id__isnull=False
+        )
         user.merge_user(user_to_be_merged)
 
         return redirect(reverse_user(user._id))
@@ -405,7 +452,9 @@ class UserMergeAccounts(PermissionRequiredMixin, FormView):
         raise Http404(
             '{} not found.'.format(
                 form.cleaned_data.get('user_guid_to_be_merged', 'guid')
-            ))
+            )
+        )
+
 
 class UserSearchList(PermissionRequiredMixin, ListView):
     template_name = 'users/list.html'
@@ -423,15 +472,20 @@ class UserSearchList(PermissionRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         users = self.get_queryset()
         page_size = self.get_paginate_by(users)
-        paginator, page, query_set, is_paginated = self.paginate_queryset(users, page_size)
+        paginator, page, query_set, is_paginated = self.paginate_queryset(
+            users, page_size
+        )
         kwargs['page'] = page
-        kwargs['users'] = [{
-            'name': user.fullname,
-            'username': user.username,
-            'id': user.guids.first()._id,
-            'confirmed': user.date_confirmed,
-            'disabled': user.date_disabled if user.is_disabled else None
-        } for user in query_set]
+        kwargs['users'] = [
+            {
+                'name': user.fullname,
+                'username': user.username,
+                'id': user.guids.first()._id,
+                'confirmed': user.date_confirmed,
+                'disabled': user.date_disabled if user.is_disabled else None,
+            }
+            for user in query_set
+        ]
         return super(UserSearchList, self).get_context_data(**kwargs)
 
 
@@ -444,13 +498,19 @@ class UserView(PermissionRequiredMixin, GuidView):
 
     def get_context_data(self, **kwargs):
         kwargs = super(UserView, self).get_context_data(**kwargs)
-        kwargs.update({'SPAM_STATUS': SpamStatus})  # Pass spam status in to check against
+        kwargs.update(
+            {'SPAM_STATUS': SpamStatus}
+        )  # Pass spam status in to check against
         user = OSFUser.load(self.kwargs.get('guid'))  # Pull User for Node/Preprints
 
         preprint_queryset = user.preprints.filter(deleted=None).order_by('title')
         node_queryset = user.contributor_or_group_member_to.order_by('title')
-        kwargs = self.get_paginated_queryset(preprint_queryset, 'preprint', serialize_simple_preprint, **kwargs)
-        kwargs = self.get_paginated_queryset(node_queryset, 'node', serialize_simple_node, **kwargs)
+        kwargs = self.get_paginated_queryset(
+            preprint_queryset, 'preprint', serialize_simple_preprint, **kwargs
+        )
+        kwargs = self.get_paginated_queryset(
+            node_queryset, 'node', serialize_simple_node, **kwargs
+        )
 
         return kwargs
 
@@ -459,9 +519,14 @@ class UserView(PermissionRequiredMixin, GuidView):
         paginator = Paginator(queryset, self.paginate_by)
         page_queryset = paginator.page(page_num)
 
-        kwargs.setdefault('{}s'.format(resource_type), list(map(serializer, page_queryset)))
+        kwargs.setdefault(
+            '{}s'.format(resource_type), list(map(serializer, page_queryset))
+        )
         kwargs.setdefault('{}_page'.format(resource_type), paginator.page(page_num))
-        kwargs.setdefault('current_{}'.format(resource_type), '&{}_page='.format(resource_type) + str(page_queryset.number))
+        kwargs.setdefault(
+            'current_{}'.format(resource_type),
+            '&{}_page='.format(resource_type) + str(page_queryset.number),
+        )
 
         return kwargs
 
@@ -480,9 +545,13 @@ class UserWorkshopFormView(PermissionRequiredMixin, FormView):
         csv_file = form.cleaned_data['document']
         final = self.parse(csv_file)
         file_name = csv_file.name
-        results_file_name = '{}_user_stats.csv'.format(file_name.replace(' ', '_').strip('.csv'))
+        results_file_name = '{}_user_stats.csv'.format(
+            file_name.replace(' ', '_').strip('.csv')
+        )
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="{}"'.format(results_file_name)
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(
+            results_file_name
+        )
         writer = csv.writer(response)
         for row in final:
             writer.writerow(row)
@@ -529,9 +598,14 @@ class UserWorkshopFormView(PermissionRequiredMixin, FormView):
 
         for index, row in enumerate(csv_reader):
             if index == 0:
-                row.extend([
-                    'OSF ID', 'Logs Since Workshop', 'Nodes Created Since Workshop', 'Last Log Date'
-                ])
+                row.extend(
+                    [
+                        'OSF ID',
+                        'Logs Since Workshop',
+                        'Nodes Created Since Workshop',
+                        'Last Log Date',
+                    ]
+                )
                 result.append(row)
                 continue
 
@@ -547,7 +621,9 @@ class UserWorkshopFormView(PermissionRequiredMixin, FormView):
                     result.append(row)
                     continue
 
-                user_by_name = self.find_user_by_full_name(full_name) or self.find_user_by_family_name(family_name)
+                user_by_name = self.find_user_by_full_name(
+                    full_name
+                ) or self.find_user_by_family_name(family_name)
                 if not user_by_name:
                     row.extend(['', 0, 0, ''])
                     result.append(row)
@@ -561,11 +637,13 @@ class UserWorkshopFormView(PermissionRequiredMixin, FormView):
             workshop_date = pytz.utc.localize(datetime.strptime(row[1], '%m/%d/%y'))
             nodes = self.get_num_nodes_since_workshop(user, workshop_date)
             user_logs = self.get_num_logs_since_workshop(user, workshop_date)
-            last_log_date = self.get_user_latest_log(user, workshop_date).date.strftime('%m/%d/%y') if user_logs else ''
+            last_log_date = (
+                self.get_user_latest_log(user, workshop_date).date.strftime('%m/%d/%y')
+                if user_logs
+                else ''
+            )
 
-            row.extend([
-                user._id, user_logs, nodes, last_log_date
-            ])
+            row.extend([user._id, user_logs, nodes, last_log_date])
             result.append(row)
 
         return result
@@ -610,12 +688,18 @@ class GetUserConfirmationLink(GetUserLink):
 
 class GetPasswordResetLink(GetUserLink):
     def get_link(self, user):
-        user.verification_key_v2 = generate_verification_key(verification_type='password')
-        user.verification_key_v2['expires'] = datetime.utcnow().replace(tzinfo=pytz.utc) + timedelta(hours=48)
+        user.verification_key_v2 = generate_verification_key(
+            verification_type='password'
+        )
+        user.verification_key_v2['expires'] = datetime.utcnow().replace(
+            tzinfo=pytz.utc
+        ) + timedelta(hours=48)
         user.save()
 
         reset_abs_url = furl(DOMAIN)
-        reset_abs_url.path.add(('resetpassword/{}/{}'.format(user._id, user.verification_key_v2['token'])))
+        reset_abs_url.path.add(
+            ('resetpassword/{}/{}'.format(user._id, user.verification_key_v2['token']))
+        )
         return reset_abs_url
 
     def get_link_type(self):
@@ -629,14 +713,15 @@ class GetUserClaimLinks(GetUserLink):
         for guid, value in user.unclaimed_records.items():
             obj = Guid.load(guid)
             url = '{base_url}user/{uid}/{project_id}/claim/?token={token}'.format(
-                base_url=DOMAIN,
-                uid=user._id,
-                project_id=guid,
-                token=value['token']
+                base_url=DOMAIN, uid=user._id, project_id=guid, token=value['token']
             )
-            links.append('Claim URL for {} {}: {}'.format(obj.content_type.model, obj._id, url))
+            links.append(
+                'Claim URL for {} {}: {}'.format(obj.content_type.model, obj._id, url)
+            )
 
-        return links or ['User currently has no active unclaimed records for any nodes.']
+        return links or [
+            'User currently has no active unclaimed records for any nodes.'
+        ]
 
     def get_link(self, user):
         return None
@@ -657,15 +742,17 @@ class ResetPasswordView(PermissionRequiredMixin, FormView):
         if self.user is None:
             raise Http404(
                 '{} with id "{}" not found.'.format(
-                    self.context_object_name.title(),
-                    self.kwargs.get('guid')
-                ))
+                    self.context_object_name.title(), self.kwargs.get('guid')
+                )
+            )
         return super(ResetPasswordView, self).dispatch(request, *args, **kwargs)
 
     def get_initial(self):
         self.initial = {
             'guid': self.user._id,
-            'emails': [(r, r) for r in self.user.emails.values_list('address', flat=True)],
+            'emails': [
+                (r, r) for r in self.user.emails.values_list('address', flat=True)
+            ],
         }
         return super(ResetPasswordView, self).get_initial()
 
@@ -680,18 +767,20 @@ class ResetPasswordView(PermissionRequiredMixin, FormView):
         if user is None or user._id != self.kwargs.get('guid'):
             return HttpResponse(
                 '{} with id "{}" and email "{}" not found.'.format(
-                    self.context_object_name.title(),
-                    self.kwargs.get('guid'),
-                    email
+                    self.context_object_name.title(), self.kwargs.get('guid'), email
                 ),
-                status=409
+                status=409,
             )
         reset_abs_url = furl(DOMAIN)
 
-        user.verification_key_v2 = generate_verification_key(verification_type='password')
+        user.verification_key_v2 = generate_verification_key(
+            verification_type='password'
+        )
         user.save()
 
-        reset_abs_url.path.add(('resetpassword/{}/{}'.format(user._id, user.verification_key_v2['token'])))
+        reset_abs_url.path.add(
+            ('resetpassword/{}/{}'.format(user._id, user.verification_key_v2['token']))
+        )
 
         send_mail(
             subject='Reset OSF Password',
@@ -699,14 +788,14 @@ class ResetPasswordView(PermissionRequiredMixin, FormView):
                 reset_abs_url.url
             ),
             from_email=OSF_SUPPORT_EMAIL,
-            recipient_list=[email]
+            recipient_list=[email],
         )
         update_admin_log(
             user_id=self.request.user.id,
             object_id=user.pk,
             object_repr='User',
             message='Emailed user {} a reset link.'.format(user.pk),
-            action_flag=USER_EMAILED
+            action_flag=USER_EMAILED,
         )
         return super(ResetPasswordView, self).form_valid(form)
 
@@ -726,6 +815,6 @@ class UserReindexElastic(UserDeleteView):
             object_id=user._id,
             object_repr='User',
             message='User Reindexed (Elastic): {}'.format(user._id),
-            action_flag=REINDEX_ELASTIC
+            action_flag=REINDEX_ELASTIC,
         )
         return redirect(reverse_user(self.kwargs.get('guid')))

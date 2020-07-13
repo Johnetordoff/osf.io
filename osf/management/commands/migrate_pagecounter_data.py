@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 LIMIT_CLAUSE = ' LIMIT %s);'
 NO_LIMIT_CLAUSE = ');'
 
-REVERSE_SQL_BASE = '''
+REVERSE_SQL_BASE = """
 UPDATE osf_pagecounter PC
 SET
     resource_id = NULL,
@@ -24,11 +24,11 @@ WHERE PC.id IN (
     SELECT PC.id FROM osf_pagecounter PC
         INNER JOIN osf_guid Guid on Guid._id = split_part(PC._id, ':', 2)
         INNER JOIN osf_basefilenode File on File._id = split_part(PC._id, ':', 3)
-'''
+"""
 REVERSE_SQL = '{} {}'.format(REVERSE_SQL_BASE, NO_LIMIT_CLAUSE)
 REVERSE_SQL_LIMITED = '{} {}'.format(REVERSE_SQL_BASE, LIMIT_CLAUSE)
 
-FORWARD_SQL_BASE = '''
+FORWARD_SQL_BASE = """
     UPDATE osf_pagecounter PC
     SET
         action = split_part(PC._id, ':', 1),
@@ -44,17 +44,18 @@ FORWARD_SQL_BASE = '''
                       INNER JOIN osf_guid Guid on Guid._id = split_part(PC._id, ':', 2)
                       INNER JOIN osf_basefilenode File on File._id = split_part(PC._id, ':', 3)
                   WHERE (PC.resource_id IS NULL OR PC.file_id IS NULL)
-'''
+"""
 FORWARD_SQL = '{} {}'.format(FORWARD_SQL_BASE, NO_LIMIT_CLAUSE)
 FORWARD_SQL_LIMITED = '{} {}'.format(FORWARD_SQL_BASE, LIMIT_CLAUSE)
 
-COUNT_SQL = '''
+COUNT_SQL = """
 SELECT count(PC.id)
     from osf_pagecounter as PC
     INNER JOIN osf_guid Guid on Guid._id = split_part(PC._id, ':', 2)
     INNER JOIN osf_basefilenode File on File._id = split_part(PC._id, ':', 3)
 where (PC.resource_id IS NULL or PC.file_id IS NULL);
-'''
+"""
+
 
 @celery_app.task(name='management.commands.migrate_pagecounter_data')
 def migrate_page_counters(dry_run=False, rows=10000, reverse=False):
@@ -80,9 +81,9 @@ def migrate_page_counters(dry_run=False, rows=10000, reverse=False):
 
 
 class Command(BaseCommand):
-    help = '''Does the work of the pagecounter migration so that it can be done incrementally when convenient.
+    help = """Does the work of the pagecounter migration so that it can be done incrementally when convenient.
     You will either need to set the page_size large enough to get all of the records, or you will need to run the
-    script multiple times until it tells you that it is done.'''
+    script multiple times until it tells you that it is done."""
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -98,10 +99,7 @@ class Command(BaseCommand):
             help='How many rows to process during this run',
         )
         parser.add_argument(
-            '--reverse',
-            type=bool,
-            default=False,
-            help='Reverse out the migration',
+            '--reverse', type=bool, default=False, help='Reverse out the migration',
         )
 
     # Management command handler
@@ -112,11 +110,7 @@ class Command(BaseCommand):
         rows = options['rows']
         reverse = options['reverse']
         logger.debug(
-            'Dry run: {}, rows: {}, reverse: {}'.format(
-                dry_run,
-                rows,
-                reverse,
-            )
+            'Dry run: {}, rows: {}, reverse: {}'.format(dry_run, rows, reverse,)
         )
         if dry_run:
             logger.info('DRY RUN')

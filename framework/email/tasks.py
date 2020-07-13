@@ -11,8 +11,20 @@ logger = logging.getLogger(__name__)
 
 
 @app.task
-def send_email(from_addr, to_addr, subject, message, mimetype='html', ttls=True, login=True,
-                username=None, password=None, categories=None, attachment_name=None, attachment_content=None):
+def send_email(
+    from_addr,
+    to_addr,
+    subject,
+    message,
+    mimetype='html',
+    ttls=True,
+    login=True,
+    username=None,
+    password=None,
+    categories=None,
+    attachment_name=None,
+    attachment_content=None,
+):
     """Send email to specified destination.
     Email is sent from the email specified in FROM_EMAIL settings in the
     settings module.
@@ -58,7 +70,17 @@ def send_email(from_addr, to_addr, subject, message, mimetype='html', ttls=True,
         )
 
 
-def _send_with_smtp(from_addr, to_addr, subject, message, mimetype='html', ttls=True, login=True, username=None, password=None):
+def _send_with_smtp(
+    from_addr,
+    to_addr,
+    subject,
+    message,
+    mimetype='html',
+    ttls=True,
+    login=True,
+    username=None,
+    password=None,
+):
     username = username or settings.MAIL_USERNAME
     password = password or settings.MAIL_PASSWORD
 
@@ -78,17 +100,26 @@ def _send_with_smtp(from_addr, to_addr, subject, message, mimetype='html', ttls=
         s.ehlo()
     if login:
         s.login(username, password)
-    s.sendmail(
-        from_addr=from_addr,
-        to_addrs=[to_addr],
-        msg=msg.as_string()
-    )
+    s.sendmail(from_addr=from_addr, to_addrs=[to_addr], msg=msg.as_string())
     s.quit()
     return True
 
 
-def _send_with_sendgrid(from_addr, to_addr, subject, message, mimetype='html', categories=None, attachment_name=None, attachment_content=None, client=None):
-    if (settings.SENDGRID_WHITELIST_MODE and to_addr in settings.SENDGRID_EMAIL_WHITELIST) or settings.SENDGRID_WHITELIST_MODE is False:
+def _send_with_sendgrid(
+    from_addr,
+    to_addr,
+    subject,
+    message,
+    mimetype='html',
+    categories=None,
+    attachment_name=None,
+    attachment_content=None,
+    client=None,
+):
+    if (
+        settings.SENDGRID_WHITELIST_MODE
+        and to_addr in settings.SENDGRID_EMAIL_WHITELIST
+    ) or settings.SENDGRID_WHITELIST_MODE is False:
         client = client or sendgrid.SendGridClient(settings.SENDGRID_API_KEY)
         mail = sendgrid.Mail()
         mail.set_from(from_addr)
@@ -105,17 +136,19 @@ def _send_with_sendgrid(from_addr, to_addr, subject, message, mimetype='html', c
         status, msg = client.send(mail)
         if status >= 400:
             sentry.log_message(
-                '{} error response from sendgrid.'.format(status) +
-                'from_addr:  {}\n'.format(from_addr) +
-                'to_addr:  {}\n'.format(to_addr) +
-                'subject:  {}\n'.format(subject) +
-                'mimetype:  {}\n'.format(mimetype) +
-                'message:  {}\n'.format(message[:30]) +
-                'categories:  {}\n'.format(categories) +
-                'attachment_name:  {}\n'.format(attachment_name)
+                '{} error response from sendgrid.'.format(status)
+                + 'from_addr:  {}\n'.format(from_addr)
+                + 'to_addr:  {}\n'.format(to_addr)
+                + 'subject:  {}\n'.format(subject)
+                + 'mimetype:  {}\n'.format(mimetype)
+                + 'message:  {}\n'.format(message[:30])
+                + 'categories:  {}\n'.format(categories)
+                + 'attachment_name:  {}\n'.format(attachment_name)
             )
         return status < 400
     else:
         sentry.log_message(
-            'SENDGRID_WHITELIST_MODE is True. Failed to send emails to non-whitelisted recipient {}.'.format(to_addr)
+            'SENDGRID_WHITELIST_MODE is True. Failed to send emails to non-whitelisted recipient {}.'.format(
+                to_addr
+            )
         )

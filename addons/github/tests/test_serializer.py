@@ -12,6 +12,7 @@ from addons.github.serializer import GitHubSerializer
 
 pytestmark = pytest.mark.django_db
 
+
 class TestGitHubSerializer(StorageAddonSerializerTestSuiteMixin, OsfTestCase):
 
     addon_short_name = 'github'
@@ -31,7 +32,9 @@ class TestGitHubSerializer(StorageAddonSerializerTestSuiteMixin, OsfTestCase):
         self.mock_api_user.return_value = mock.Mock()
         self.mock_api_user.start()
 
-        self.mock_api_credentials_are_valid = mock.patch('addons.github.api.GitHubClient.check_authorization', return_value=True)
+        self.mock_api_credentials_are_valid = mock.patch(
+            'addons.github.api.GitHubClient.check_authorization', return_value=True
+        )
         self.mock_api_credentials_are_valid.start()
 
     def tearDown(self):

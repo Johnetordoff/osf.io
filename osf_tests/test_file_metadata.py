@@ -16,9 +16,11 @@ from api_tests.utils import create_test_file
 def node():
     return ProjectFactory()
 
+
 @pytest.fixture()
 def osf_file(node):
     return create_test_file(target=node, user=node.creator)
+
 
 def inject_placeholder_doi(json_data):
     # the OSF cannot currently issue DOIs for a file, which is required for datacite schema validation.
@@ -30,7 +32,6 @@ def inject_placeholder_doi(json_data):
 
 @pytest.mark.django_db
 class TestFileMetadataRecordSerializer:
-
     def test_record_created_post_save(self, node, osf_file):
         # check there's a record for every FileMetadataSchema
         assert FileMetadataSchema.objects.count() > 0
@@ -45,11 +46,7 @@ class TestFileMetadataRecordSerializer:
 
         # add a contributor with an ORCID
         contributor = AuthUserFactory()
-        contributor.external_identity = {
-            'ORCID': {
-                '0000-0001-9143-4653': 'VERIFIED'
-            }
-        }
+        contributor.external_identity = {'ORCID': {'0000-0001-9143-4653': 'VERIFIED'}}
         contributor.save()
         node.add_contributor(contributor, save=False)
 
@@ -63,7 +60,7 @@ class TestFileMetadataRecordSerializer:
         license_detail = {
             'id': no_license.license_id,
             'year': '2018',
-            'copyrightHolders': ['Woop', 'Yeah']
+            'copyrightHolders': ['Woop', 'Yeah'],
         }
 
         set_license(node, license_detail, Auth(node.creator))
@@ -113,21 +110,20 @@ class TestFileMetadataRecordSerializer:
         record = osf_file.records.get(schema___id='datacite')
         json_data = json.loads(record.serialize())
 
-        assert jsonschema.validate(
-            inject_placeholder_doi(json_data),
-            record.schema.schema
-        ) is None
+        assert (
+            jsonschema.validate(inject_placeholder_doi(json_data), record.schema.schema)
+            is None
+        )
 
 
 @pytest.mark.django_db
 class TestFileMetadataRecord:
-
     @pytest.fixture()
     def initial_metadata(self):
         return {
             'file_description': 'Hello this is a description',
             'resource_type': 'Book',
-            'related_publication_doi': '10.123/fkosf/hello'
+            'related_publication_doi': '10.123/fkosf/hello',
         }
 
     @pytest.fixture()
@@ -159,26 +155,29 @@ class TestFileMetadataRecord:
             ],
             'file_description': 'Hey this is a great interesting important file',
             'resource_type': 'Funding Submission',
-            'related_publication_doi': '10.12345/fk2osf.io/hello/'
+            'related_publication_doi': '10.12345/fk2osf.io/hello/',
         }
         record.update(full_metadata, user=node.creator)
 
         json_data = json.loads(record.serialize())
-        datacite_user_entered_fields = ['fundingReferences', 'resourceType', 'descriptions', 'relatedIdentifiers']
+        datacite_user_entered_fields = [
+            'fundingReferences',
+            'resourceType',
+            'descriptions',
+            'relatedIdentifiers',
+        ]
         for field in datacite_user_entered_fields:
             assert field in json_data.keys()
 
         # validate record with all user entered metadata
-        assert jsonschema.validate(
-            inject_placeholder_doi(json_data),
-            record.schema.schema
-        ) is None
+        assert (
+            jsonschema.validate(inject_placeholder_doi(json_data), record.schema.schema)
+            is None
+        )
 
     def test_update_fails_with_incorrect_metadata(self, node, record):
         # metadata not in schema fails
-        wrong_metadata = {
-            'favorite_schema': 'crossref'
-        }
+        wrong_metadata = {'favorite_schema': 'crossref'}
         with pytest.raises(jsonschema.ValidationError):
             record.update(wrong_metadata, user=node.creator)
         record.reload()
@@ -186,33 +185,23 @@ class TestFileMetadataRecord:
         assert node.logs.latest().action != NodeLog.FILE_METADATA_UPDATED
 
         # metadata not matching schema pattern fails
-        wrong_doi = {
-            'related_publication_doi': 'whatever'
-        }
+        wrong_doi = {'related_publication_doi': 'whatever'}
         with pytest.raises(jsonschema.ValidationError):
             record.update(wrong_doi, user=node.creator)
 
         # resource_type not in specified options fails
-        wrong_resource_type = {
-            'resource_type': 'Scrap Book'
-        }
+        wrong_resource_type = {'resource_type': 'Scrap Book'}
         with pytest.raises(jsonschema.ValidationError):
             record.update(wrong_resource_type, user=node.creator)
 
         # funders but no funding agency
-        no_funding_agency_metadata = {
-            'funders': [
-                {'grant_number': 'Woooo'}
-            ]
-        }
+        no_funding_agency_metadata = {'funders': [{'grant_number': 'Woooo'}]}
         with pytest.raises(jsonschema.ValidationError):
             record.update(no_funding_agency_metadata, user=node.creator)
 
         # additional properties for funders fails
         more_funders_metadata = {
-            'funders': [
-                {'funding_agency': 'Woop', 'there_it': 'is'}
-            ]
+            'funders': [{'funding_agency': 'Woop', 'there_it': 'is'}]
         }
         with pytest.raises(jsonschema.ValidationError):
             record.update(more_funders_metadata, user=node.creator)

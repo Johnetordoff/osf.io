@@ -13,32 +13,33 @@ from osf.features import OSF_GROUPS
 
 
 def build_member_relationship_payload(user_ids):
-    return {
-        'data': [{
-            'type': 'users',
-            'id': user_id
-        } for user_id in user_ids]
-    }
+    return {'data': [{'type': 'users', 'id': user_id} for user_id in user_ids]}
+
 
 @pytest.fixture()
 def user():
     return AuthUserFactory()
 
+
 @pytest.fixture()
 def manager():
     return AuthUserFactory()
+
 
 @pytest.fixture()
 def member():
     return AuthUserFactory()
 
+
 @pytest.fixture()
 def old_name():
     return 'Platform Team'
 
+
 @pytest.fixture()
 def new_name():
     return 'My New Lab'
+
 
 @pytest.fixture()
 def osf_group(manager, member, old_name):
@@ -46,17 +47,21 @@ def osf_group(manager, member, old_name):
     group.make_member(member)
     return group
 
+
 @pytest.fixture()
 def url(osf_group):
     return '/{}groups/{}/'.format(API_BASE, osf_group._id)
+
 
 @pytest.fixture()
 def managers_url(url):
     return url + 'managers/'
 
+
 @pytest.fixture()
 def members_url(url):
     return url + 'members/'
+
 
 @pytest.fixture()
 def name_payload(osf_group, new_name):
@@ -64,9 +69,7 @@ def name_payload(osf_group, new_name):
         'data': {
             'id': osf_group._id,
             'type': 'groups',
-            'attributes': {
-                'name': new_name
-            }
+            'attributes': {'name': new_name},
         }
     }
 
@@ -74,7 +77,6 @@ def name_payload(osf_group, new_name):
 @pytest.mark.django_db
 @pytest.mark.enable_quickfiles_creation
 class TestGroupDetail:
-
     def test_return(self, app, member, manager, user, osf_group, url):
         with override_flag(OSF_GROUPS, active=True):
             # test unauthenticated
@@ -122,7 +124,9 @@ class TestGroupDetail:
 @pytest.mark.django_db
 @pytest.mark.enable_quickfiles_creation
 class TestOSFGroupUpdate:
-    def test_patch_osf_group_perms(self, app, member, manager, user, osf_group, url, name_payload, new_name):
+    def test_patch_osf_group_perms(
+        self, app, member, manager, user, osf_group, url, name_payload, new_name
+    ):
         with override_flag(OSF_GROUPS, active=True):
             # test unauthenticated
             res = app.patch_json_api(url, expect_errors=True)
@@ -137,16 +141,22 @@ class TestOSFGroupUpdate:
             assert res.status_code == 403
 
             # test authenticated_manager
-            res = app.patch_json_api(url, name_payload, auth=manager.auth, expect_errors=True)
+            res = app.patch_json_api(
+                url, name_payload, auth=manager.auth, expect_errors=True
+            )
             assert res.status_code == 200
             assert res.json['data']['attributes']['name'] == new_name
 
-    def test_patch_osf_group_attributes(self, app, manager, osf_group, url, name_payload, old_name, new_name):
+    def test_patch_osf_group_attributes(
+        self, app, manager, osf_group, url, name_payload, old_name, new_name
+    ):
         with override_flag(OSF_GROUPS, active=True):
             # test_blank_name
             assert osf_group.name == old_name
             name_payload['data']['attributes']['name'] = ''
-            res = app.patch_json_api(url, name_payload, auth=manager.auth, expect_errors=True)
+            res = app.patch_json_api(
+                url, name_payload, auth=manager.auth, expect_errors=True
+            )
             assert res.status_code == 400
             assert res.json['errors'][0]['detail'] == 'This field may not be blank.'
             osf_group.reload
@@ -154,7 +164,9 @@ class TestOSFGroupUpdate:
 
             # test_name_updated
             name_payload['data']['attributes']['name'] = new_name
-            res = app.patch_json_api(url, name_payload, auth=manager.auth, expect_errors=True)
+            res = app.patch_json_api(
+                url, name_payload, auth=manager.auth, expect_errors=True
+            )
             assert res.status_code == 200
             assert res.json['data']['attributes']['name'] == new_name
             osf_group.reload()
@@ -162,13 +174,17 @@ class TestOSFGroupUpdate:
 
             # test_invalid_type
             name_payload['data']['type'] = 'bad_type'
-            res = app.patch_json_api(url, name_payload, auth=manager.auth, expect_errors=True)
+            res = app.patch_json_api(
+                url, name_payload, auth=manager.auth, expect_errors=True
+            )
             assert res.status_code == 409
 
             # test_id_mismatch
             name_payload['data']['type'] = 'groups'
             name_payload['data']['id'] = '12345_bad_id'
-            res = app.patch_json_api(url, name_payload, auth=manager.auth, expect_errors=True)
+            res = app.patch_json_api(
+                url, name_payload, auth=manager.auth, expect_errors=True
+            )
             assert res.status_code == 409
 
 
@@ -205,7 +221,9 @@ class TestOSFGroupDelete:
             assert not Group.objects.filter(name=manager_group_name).exists()
             assert not Group.objects.filter(name=member_group_name).exists()
 
-            assert manager_group_name not in manager.groups.values_list('name', flat=True)
+            assert manager_group_name not in manager.groups.values_list(
+                'name', flat=True
+            )
             assert member_group_name not in member.groups.values_list('name', flat=True)
 
             res = app.get(url, auth=manager.auth, expect_errors=True)

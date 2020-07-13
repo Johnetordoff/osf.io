@@ -2,12 +2,14 @@ import logging
 import sys
 
 from website.app import setup_django
+
 setup_django()
 
 import pytz
 import argparse
 from django.db import transaction
 import datetime
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 from scripts import utils as scripts_utils
@@ -15,7 +17,6 @@ from osf.models import DraftRegistration
 from django.core.paginator import Paginator
 from osf.models import DraftRegistrationContributor
 from tqdm import tqdm
-
 
 
 def main(dry=True, page_size=1000):
@@ -28,9 +29,7 @@ def main(dry=True, page_size=1000):
 
     bugged_regs = DraftRegistration.objects.filter(
         created__lte=date_of_migration
-    ).exclude(
-        _contributors__isnull=False
-    )
+    ).exclude(_contributors__isnull=False)
 
     paginator = Paginator(bugged_regs, page_size)
     for page_num in tqdm(paginator.page_range, desc='Page of migration'):
@@ -40,10 +39,14 @@ def main(dry=True, page_size=1000):
                 draft_perm_groups = reg.group_objects.order_by('name')
                 node_perm_groups = reg.branched_from.group_objects.order_by('name')
 
-                for draft_perm_group, node_perm_group in zip(draft_perm_groups, node_perm_groups):
+                for draft_perm_group, node_perm_group in zip(
+                    draft_perm_groups, node_perm_groups
+                ):
                     node_users = node_perm_group.user_set.all()
                     if dry:
-                        logger.info(f'{draft_perm_group} updated from {node_perm_group}')
+                        logger.info(
+                            f'{draft_perm_group} updated from {node_perm_group}'
+                        )
                         continue
                     draft_perm_group.user_set.add(*node_users)
 
@@ -56,7 +59,7 @@ def main(dry=True, page_size=1000):
                         draft_registration=reg,
                         _order=contrib._order,
                         visible=contrib.visible,
-                        user=contrib.user
+                        user=contrib.user,
                     ).save()
 
 
@@ -70,8 +73,7 @@ if __name__ == '__main__':
         help='How many items at a time to include for each query',
     )
     cli.add_argument(
-        '--dry',
-        action='store_true',
+        '--dry', action='store_true',
     )
     args = cli.parse_args()
 

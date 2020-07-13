@@ -33,7 +33,6 @@ def auth(user):
 
 @pytest.mark.enable_quickfiles_creation
 class TestQuickFilesNode:
-
     @pytest.fixture()
     def quickfiles(self, user):
         return QuickFilesNode.objects.get(creator=user)
@@ -67,7 +66,12 @@ class TestQuickFilesNode:
 
     def test_quickfiles_cannot_be_registered(self, quickfiles, auth):
         with pytest.raises(DraftRegistrationStateError):
-            quickfiles.register_node(get_default_metaschema(), auth, factories.DraftRegistrationFactory(branched_from=quickfiles), None)
+            quickfiles.register_node(
+                get_default_metaschema(),
+                auth,
+                factories.DraftRegistrationFactory(branched_from=quickfiles),
+                None,
+            )
 
     def test_quickfiles_cannot_be_forked(self, quickfiles, auth):
         with pytest.raises(NodeStateError):
@@ -116,14 +120,20 @@ class TestQuickFilesNode:
             assert stored_file.target == quickfiles
             assert stored_file.parent.target == quickfiles
 
-    def test_quickfiles_moves_files_on_triple_merge_with_name_conflict(self, user, quickfiles):
+    def test_quickfiles_moves_files_on_triple_merge_with_name_conflict(
+        self, user, quickfiles
+    ):
         name = 'Woo.pdf'
         other_user = factories.UserFactory()
         third_user = factories.UserFactory()
 
         create_test_file(quickfiles, user, filename=name)
-        create_test_file(QuickFilesNode.objects.get(creator=other_user), other_user, filename=name)
-        create_test_file(QuickFilesNode.objects.get(creator=third_user), third_user, filename=name)
+        create_test_file(
+            QuickFilesNode.objects.get(creator=other_user), other_user, filename=name
+        )
+        create_test_file(
+            QuickFilesNode.objects.get(creator=third_user), third_user, filename=name
+        )
 
         user.merge_user(other_user)
         user.save()
@@ -131,19 +141,27 @@ class TestQuickFilesNode:
         user.merge_user(third_user)
         user.save()
 
-        actual_filenames = list(OsfStorageFile.objects.all().values_list('name', flat=True))
+        actual_filenames = list(
+            OsfStorageFile.objects.all().values_list('name', flat=True)
+        )
         expected_filenames = ['Woo.pdf', 'Woo (1).pdf', 'Woo (2).pdf']
 
         assert_equals(actual_filenames, expected_filenames)
 
-    def test_quickfiles_moves_files_on_triple_merge_with_name_conflict_with_digit(self, user, quickfiles):
+    def test_quickfiles_moves_files_on_triple_merge_with_name_conflict_with_digit(
+        self, user, quickfiles
+    ):
         name = 'Woo (1).pdf'
         other_user = factories.UserFactory()
         third_user = factories.UserFactory()
 
         create_test_file(quickfiles, user, filename=name)
-        create_test_file(QuickFilesNode.objects.get(creator=other_user), other_user, filename=name)
-        create_test_file(QuickFilesNode.objects.get(creator=third_user), third_user, filename=name)
+        create_test_file(
+            QuickFilesNode.objects.get(creator=other_user), other_user, filename=name
+        )
+        create_test_file(
+            QuickFilesNode.objects.get(creator=third_user), third_user, filename=name
+        )
 
         user.merge_user(other_user)
         user.save()
@@ -151,19 +169,31 @@ class TestQuickFilesNode:
         user.merge_user(third_user)
         user.save()
 
-        actual_filenames = list(OsfStorageFile.objects.all().values_list('name', flat=True))
+        actual_filenames = list(
+            OsfStorageFile.objects.all().values_list('name', flat=True)
+        )
         expected_filenames = ['Woo (1).pdf', 'Woo (2).pdf', 'Woo (3).pdf']
         assert_equals(actual_filenames, expected_filenames)
 
-    def test_quickfiles_moves_destination_quickfiles_has_weird_numbers(self, user, quickfiles):
+    def test_quickfiles_moves_destination_quickfiles_has_weird_numbers(
+        self, user, quickfiles
+    ):
         other_user = factories.UserFactory()
         third_user = factories.UserFactory()
 
         create_test_file(quickfiles, user, filename='Woo (1).pdf')
         create_test_file(quickfiles, user, filename='Woo (3).pdf')
 
-        create_test_file(QuickFilesNode.objects.get(creator=other_user), other_user, filename='Woo.pdf')
-        create_test_file(QuickFilesNode.objects.get(creator=third_user), other_user, filename='Woo.pdf')
+        create_test_file(
+            QuickFilesNode.objects.get(creator=other_user),
+            other_user,
+            filename='Woo.pdf',
+        )
+        create_test_file(
+            QuickFilesNode.objects.get(creator=third_user),
+            other_user,
+            filename='Woo.pdf',
+        )
 
         user.merge_user(other_user)
         user.save()
@@ -182,7 +212,11 @@ class TestQuickFilesNode:
         create_test_file(quickfiles, user, filename='Woo (2).pdf')
 
         other_user = factories.UserFactory()
-        create_test_file(QuickFilesNode.objects.get(creator=other_user), other_user, filename='Woo (1).pdf')
+        create_test_file(
+            QuickFilesNode.objects.get(creator=other_user),
+            other_user,
+            filename='Woo (1).pdf',
+        )
 
         with pytest.raises(MaxRetriesError):
             user.merge_user(other_user)
