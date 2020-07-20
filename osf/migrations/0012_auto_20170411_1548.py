@@ -4,10 +4,6 @@ from __future__ import unicode_literals
 
 from django.db import migrations
 
-def noop(*args):
-    # This migration used to handle admin permissions
-    # This is now handled by the post_migrate signal
-    pass
 
 class Migration(migrations.Migration):
 
@@ -16,5 +12,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(noop, noop),
     ]
