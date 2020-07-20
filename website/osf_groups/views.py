@@ -14,6 +14,7 @@ from website.osf_groups.signals import (
     group_added_to_node,
 )
 logger = logging.getLogger(__name__)
+from django.db.utils import ProgrammingError
 
 
 @member_added.connect
@@ -136,3 +137,5 @@ def subscribe_group_member(group, node, user, permission, auth, throttle=None):
     except InvalidSubscriptionError as err:
         logger.warn('Skipping subscription of user {} to node {}'.format(user, node._id))
         logger.warn('Reason: {}'.format(str(err)))
+    except ProgrammingError:
+        logging.debug('unique error')
