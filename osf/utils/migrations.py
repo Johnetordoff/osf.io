@@ -16,7 +16,13 @@ from osf.models.base import generate_object_id
 from osf.utils.sanitize import strip_html, unescape_entities
 from website import settings
 from website.project.metadata.schemas import OSF_META_SCHEMAS
+from waffle.models import Flag
 
+from osf.features import (
+    SLOAN_COI_DISPLAY,
+    SLOAN_DATA_DISPLAY,
+    SLOAN_PREREG_DISPLAY
+)
 
 logger = logging.getLogger(__file__)
 
@@ -598,3 +604,23 @@ def batch_node_migrations(state, migrations):
                     end=page_end
                 ))
             page_start = page_end
+
+
+def make_egap_active_but_invisible(state, schema):
+    RegistrationSchema = state.get_model('osf', 'registrationschema')
+    new_egap_registration = RegistrationSchema.objects.get(name='EGAP Registration', schema_version=3)
+    new_egap_registration.visible = False
+    new_egap_registration.active = True
+    new_egap_registration.save()
+
+
+def remove_sloan_flags_and_groups(*args, **kwargs):
+    Flag.objects.get(name=SLOAN_COI_DISPLAY).delete()
+    Flag.objects.get(name=SLOAN_DATA_DISPLAY).delete()
+    Flag.objects.get(name=SLOAN_PREREG_DISPLAY).delete()
+
+
+def add_sloan_flags_and_groups(*args, **kwargs):
+    Flag.objects.create(name=SLOAN_COI_DISPLAY, percent=50, everyone=False).save()
+    Flag.objects.create(name=SLOAN_DATA_DISPLAY, percent=50, everyone=False).save()
+    Flag.objects.create(name=SLOAN_PREREG_DISPLAY, percent=50, everyone=False).save()

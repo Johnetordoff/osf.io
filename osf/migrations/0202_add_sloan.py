@@ -1,26 +1,8 @@
 from __future__ import unicode_literals
 
-from waffle.models import Flag
-
 import django.contrib.postgres.fields
 from django.db import migrations, models
-from osf.features import (
-    SLOAN_COI_DISPLAY,
-    SLOAN_DATA_DISPLAY,
-    SLOAN_PREREG_DISPLAY
-)
-
-
-def remove_sloan_flags_and_groups(*args, **kwargs):
-    Flag.objects.get(name=SLOAN_COI_DISPLAY).delete()
-    Flag.objects.get(name=SLOAN_DATA_DISPLAY).delete()
-    Flag.objects.get(name=SLOAN_PREREG_DISPLAY).delete()
-
-
-def add_sloan_flags_and_groups(*args, **kwargs):
-    Flag.objects.create(name=SLOAN_COI_DISPLAY, percent=50, everyone=False).save()
-    Flag.objects.create(name=SLOAN_DATA_DISPLAY, percent=50, everyone=False).save()
-    Flag.objects.create(name=SLOAN_PREREG_DISPLAY, percent=50, everyone=False).save()
+from osf.utils.migrations import add_sloan_flags_and_groups, remove_sloan_flags_and_groups
 
 
 class Migration(migrations.Migration):

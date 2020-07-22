@@ -23,32 +23,9 @@ https://github.com/CenterForOpenScience/osf.io/pull/5959.
 Also, some staging scopes aren't public scopes, and would have to be loaded
 in with public=False.
 """
-old_scope_mapping = {
-    'osf.users.all_read': 'osf.users.profile_read',
-    'osf.users.all_write': 'osf.users.profile_write',
-    'osf.nodes.all_read': 'osf.nodes.full_read',
-    'osf.nodes.all_write': 'osf.nodes.full_write'
-}
 
-def remove_m2m_scopes(state, schema):
-    ApiOAuth2PersonalToken = state.get_model('osf', 'apioauth2personaltoken')
-    tokens = ApiOAuth2PersonalToken.objects.all()
-    for token in tokens:
-        token.scopes = ' '.join([scope.name for scope in token.scopes_temp.all()])
-        token.scopes_temp.clear()
-        token.save()
+from osf.migrations.utils.utils import remove_m2m_scopes, migrate_scopes_from_char_to_m2m
 
-def migrate_scopes_from_char_to_m2m(state, schema):
-    ApiOAuth2PersonalToken = state.get_model('osf', 'apioauth2personaltoken')
-    ApiOAuth2Scope = state.get_model('osf', 'apioauth2scope')
-
-    tokens = ApiOAuth2PersonalToken.objects.all()
-    for token in tokens:
-        string_scopes = token.scopes.split(' ')
-        for scope in string_scopes:
-            loaded_scope = ApiOAuth2Scope.objects.get(name=old_scope_mapping.get(scope, scope))
-            token.scopes_temp.add(loaded_scope)
-            token.save()
 
 class Migration(migrations.Migration):
 

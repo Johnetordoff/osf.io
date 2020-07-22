@@ -1,17 +1,8 @@
 from __future__ import unicode_literals
 
 from django.db import migrations
-from osf.utils.migrations import UpdateRegistrationSchemasAndSchemaBlocks
+from osf.utils.migrations import UpdateRegistrationSchemasAndSchemaBlocks, make_egap_active_but_invisible
 
-def make_egap_active_but_invisible(state, schema):
-        RegistrationSchema = state.get_model('osf', 'registrationschema')
-        new_egap_registration = RegistrationSchema.objects.get(name='EGAP Registration', schema_version=3)
-        new_egap_registration.visible = False
-        new_egap_registration.active = True
-        new_egap_registration.save()
-
-def noop(*args, **kwargs):
-    pass
 
 class Migration(migrations.Migration):
 
@@ -21,5 +12,5 @@ class Migration(migrations.Migration):
 
     operations = [
         UpdateRegistrationSchemasAndSchemaBlocks(),
-        migrations.RunPython(make_egap_active_but_invisible, noop),
+        migrations.RunPython(make_egap_active_but_invisible, migrations.RunPython.noop),
     ]
