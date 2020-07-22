@@ -6,13 +6,14 @@ from urllib.parse import quote, unquote
 from django.db.models import F
 
 from osf.utils.workflows import DefaultStates
+from math import ceil
 
 from django_bulk_update.helper import bulk_update
 from osf.utils.migrations import disable_auto_now_fields
 from osf.management.commands.add_notification_subscription import add_reviews_notification_setting
 
 from addons.osfstorage.models import NodeSettings as OSFSNodeSettings, OsfStorageFolder
-from osf.models import OSFUser, QuickFilesNode, Contributor
+from osf.models import OSFUser, QuickFilesNode, Contributor, SpamStatus
 from osf.models.base import ensure_guid
 from osf.models.quickfiles import get_quickfiles_project_title
 from lxml import etree
@@ -973,3 +974,128 @@ def add_registration_files_count(state, *args, **kwargs):
 
     bulk_update(registrations_to_update, update_fields=['files_count'], batch_size=5000)
     logger.info('Populated `files_count` on a total of {} registrations'.format(len(registrations_to_update)))
+
+
+TAG_MAP = {
+    'spam_flagged': SpamStatus.FLAGGED,
+    'spam_confirmed': SpamStatus.SPAM,
+    'ham_confirmed': SpamStatus.HAM
+}
+
+
+def add_spam_status_to_tagged_users(state, schema):
+    OSFUser = state.get_model('osf', 'osfuser')
+    users_with_tag = OSFUser.objects.filter(tags__name__in=TAG_MAP.keys()).prefetch_related('tags')
+    users_to_update = []
+    for user in users_with_tag:
+        for tag, value in TAG_MAP.items():
+            if user.tags.filter(system=True, name=tag).exists():
+                user.spam_status = value
+        users_to_update.append(user)
+    bulk_update(users_to_update, update_fields=['spam_status'])
+
+
+def remove_spam_status_from_tagged_users(state, schema):
+    OSFUser = state.get_model('osf', 'osfuser')
+    users_with_tag = OSFUser.objects.filter(tags__name__in=TAG_MAP.keys())
+    users_with_tag.update(spam_status=None)
+
+
+def forward(state, *args, **kwargs):
+    """
+    For every conference, fetches all AbstractNodes with a case-insensitive matching Tag
+    to the conference endpoint.  Adds these nodes to conference.submissions.
+    """
+    Conference = state.get_model('osf', 'Conference')
+    AbstractNode = state.get_model('osf', 'AbstractNode')
+    Tag = state.get_model('osf', 'Tag')
+
+    # Small number of conferences
+    for conference in Conference.objects.all():
+        tags = Tag.objects.filter(system=False, name__iexact=conference.endpoint).values_list('pk', flat=True)
+        # Not restricting on public/deleted here, just adding all nodes with meeting tags
+        # and then API will restrict to only public, non-deleted nodes
+        for node in AbstractNode.objects.filter(tags__in=tags):
+            conference.submissions.add(node)
+    logger.info('Finished adding submissions to conferences.')
+
+
+def backward(state, *args, **kwargs):
+    Conference = state.get_model('osf', 'Conference')
+    for conference in Conference.objects.all():
+        for submission in conference.submissions.all():
+            conference.submissions.remove(submission)
+    logger.info('Finished clearing submissions from conferences.')
+
+
+increment = 100000
+
+"""
+PREPRINT MIGRATION (we were already using guardian for preprints, but weren't using direct foreign keys)
+1) For each guardian GroupObjectPermission table entry that is related to a preprint, add entry to the
+PreprintGroupObjectPermission table
+"""
+
+# DELETE FROM guardian_groupobjectpermission present in both forward and reverse migrations because forward migration had already been
+# completed on staging environment and reverse migration needed to delete old rows before restoring out of the box guardian rows
+def reverse_migrate_preprints(state, schema):
+    sql = """
+        DELETE FROM guardian_groupobjectpermission GO
+        USING django_content_type CT
+        WHERE CT.model = 'preprint' AND CT.app_label = 'osf'
+        AND GO.content_type_id = CT.id;
+
+        -- Reverse migration - Repopulating out of the box guardian table
+        INSERT INTO guardian_groupobjectpermission (object_pk, content_type_id, group_id, permission_id)
+        SELECT CAST(PG.content_object_id AS INT), CAST(CT.id AS INT), CAST(PG.group_id AS INT), CAST(PG.permission_id AS INT)
+        FROM osf_preprintgroupobjectpermission PG, django_content_type CT
+        WHERE CT.model = 'preprint' AND CT.app_label = 'osf';
+
+        -- Reverse migration - dropping custom PreprintGroupObject permission table
+        DELETE FROM osf_preprintgroupobjectpermission;
+        """
+
+    with connection.cursor() as cursor:
+        cursor.execute(sql)
+
+# Forward migration - moving preprints to dfks
+def migrate_preprints_to_direct_fks(state, schema):
+    GroupObjectPermission = state.get_model('guardian', 'groupobjectpermission')
+    ContentType = state.get_model('contenttypes', 'ContentType')
+
+    Preprint = state.get_model('osf', 'preprint')
+    preprint_ct_id = ContentType.objects.get_for_model(Preprint).id
+    max_pid = getattr(GroupObjectPermission.objects.filter(content_type_id=preprint_ct_id).last(), 'id', 0)
+
+    total_pages = int(ceil(max_pid / float(increment)))
+    page_start = 0
+    page_end = 0
+    page = 0
+
+    logger.info('{}'.format('Migrating preprints to use direct foreign keys to speed up permission checks.'))
+    while page_end <= (max_pid):
+        page += 1
+        page_end += increment
+        if page <= total_pages:
+            logger.info('Updating page {} / {}'.format(page_end / increment, total_pages))
+
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO osf_preprintgroupobjectpermission (content_object_id, group_id, permission_id)
+                SELECT CAST(GO.object_pk AS INT), CAST(GO.group_id AS INT), CAST(GO.permission_id AS INT)
+                FROM guardian_groupobjectpermission GO, django_content_type CT
+                WHERE CT.model = 'preprint' AND CT.app_label = 'osf'
+                AND GO.content_type_id = CT.id
+                AND CAST(GO.object_pk AS INT) > %s
+                AND CAST(GO.object_pk AS INT) <= %s;
+
+                DELETE FROM guardian_groupobjectpermission GO
+                USING django_content_type CT
+                WHERE CT.model = 'preprint' AND CT.app_label = 'osf'
+                AND GO.content_type_id = CT.id
+                AND CAST(GO.object_pk AS INT) > %s
+                AND CAST(GO.object_pk AS INT) <= %s;
+            """ % (page_start, page_end, page_start, page_end)
+            )
+        page_start = page_end
+    logger.info('Finished preprint direct foreign key migration.')
