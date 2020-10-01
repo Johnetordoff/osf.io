@@ -195,7 +195,6 @@ class ReviewsMachine(BaseMachine):
                 contributor.username,
                 mails.WITHDRAWAL_REQUEST_GRANTED,
                 mimetype='html',
-                document_type=self.machineable.provider.preprint_word,
                 **context
             )
 
@@ -207,6 +206,7 @@ class ReviewsMachine(BaseMachine):
             'provider_url': self.machineable.provider.domain or '{domain}preprints/{provider_id}'.format(domain=DOMAIN, provider_id=self.machineable.provider._id),
             'provider_contact_email': self.machineable.provider.email_contact or OSF_CONTACT_EMAIL,
             'provider_support_email': self.machineable.provider.email_support or OSF_SUPPORT_EMAIL,
+            'document_type': self.machineable.provider.preprint_word
         }
 
 
@@ -316,7 +316,7 @@ class PreprintRequestMachine(BaseMachine):
             context = self.get_context()
             mails.send_mail(
                 self.machineable.creator.username,
-                mails.PREPRINT_WITHDRAWAL_REQUEST_DECLINED,
+                mails.WITHDRAWAL_REQUEST_DECLINED,
                 mimetype='html',
                 **context
             )
