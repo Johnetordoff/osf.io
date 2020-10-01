@@ -145,25 +145,25 @@ REGISTRATION_TRANSITIONS = [
         'trigger': RegistrationTriggers.EMBARGO.value,
         'source': [RegistrationStates.PENDING.value],
         'dest': RegistrationStates.EMBARGO.value,
-        'after': ['save_action', 'update_last_transitioned', 'accept_draft_registration', 'embargo_registration', 'notify_embargo']
+        'after': ['save_action', 'update_last_transitioned', 'accept_draft_registration', 'embargo_registration']
     },
     {
         'trigger': RegistrationTriggers.REQUEST_EMBARGO_TERMINATION.value,
         'source': [RegistrationStates.EMBARGO.value],
         'dest': RegistrationStates.PENDING_EMBARGO_TERMINATION.value,
-        'after': ['save_action', 'update_last_transitioned', 'request_terminate_embargo', 'notify_embargo_termination']
+        'after': ['save_action', 'update_last_transitioned', 'request_terminate_embargo']
     },
     {
         'trigger': RegistrationTriggers.TERMINATE_EMBARGO.value,
         'source': [RegistrationStates.PENDING_EMBARGO_TERMINATION.value],
         'dest': RegistrationStates.ACCEPTED.value,
-        'after': ['save_action', 'update_last_transitioned', 'terminate_embargo', 'notify_embargo_termination']
+        'after': ['save_action', 'update_last_transitioned', 'terminate_embargo']
     },
     {
         'trigger': RegistrationTriggers.REQUEST_WITHDRAW.value,
         'source': [RegistrationStates.ACCEPTED.value],
         'dest': RegistrationStates.PENDING_WITHDRAW.value,
-        'after': ['save_action', 'update_last_transitioned', 'request_withdrawal', 'notify_withdraw']
+        'after': ['save_action', 'update_last_transitioned', 'request_withdrawal']
     },
     {
         'trigger': RegistrationTriggers.WITHDRAW.value,
@@ -175,7 +175,7 @@ REGISTRATION_TRANSITIONS = [
         'trigger': RegistrationTriggers.REJECT_WITHDRAW.value,
         'source': [RegistrationStates.PENDING_WITHDRAW.value],
         'dest': RegistrationStates.ACCEPTED.value,
-        'after': ['save_action', 'update_last_transitioned', 'reject_withdrawal', 'notify_withdraw']
+        'after': ['save_action', 'update_last_transitioned', 'reject_withdrawal']
     }
 ]
 
