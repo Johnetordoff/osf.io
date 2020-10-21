@@ -50,7 +50,6 @@ from osf.utils.workflows import (
     DefaultTriggers,
     ReviewStates,
     ReviewTriggers,
-    RegistrationStates,
     RegistrationTriggers
 )
 
@@ -795,7 +794,14 @@ class MachineableMixin(models.Model):
         abstract = True
 
     # NOTE: machine_state should rarely/never be modified directly -- use the state transition methods below
-    machine_state = models.CharField(max_length=15, db_index=True, choices=DefaultStates.choices(), default=DefaultStates.INITIAL.value)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields[self.MachineClass.state_name] = models.CharField(
+            max_length=500,
+            db_index=True,
+            choices=self.MachineClass.States.choices(),
+            default=self.MachineClass.States.INITIAL.value
+        )
 
     date_last_transitioned = models.DateTimeField(null=True, blank=True, db_index=True)
 
@@ -876,8 +882,6 @@ class ReviewableMixin(MachineableMixin):
     """Something that may be included in a reviewed collection and is subject to a reviews workflow.
     """
     TriggersClass = ReviewTriggers
-
-    machine_state = models.CharField(max_length=15, db_index=True, choices=ReviewStates.choices(), default=ReviewStates.INITIAL.value)
 
     class Meta:
         abstract = True
@@ -2250,13 +2254,6 @@ class RegistriesModerationMixin(MachineableMixin):
     """This is to facilitate the registraies modeation process and should extend the DraftRegistration model.
     """
     TriggersClass = RegistrationTriggers
-
-    machine_state = models.CharField(
-        max_length=30,
-        db_index=True,
-        choices=RegistrationStates.choices(),
-        default=RegistrationStates.INITIAL.value
-    )
 
     class Meta:
         abstract = True

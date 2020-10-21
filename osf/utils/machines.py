@@ -31,8 +31,9 @@ class BaseMachine(Machine):
     from_state = None
     States = DefaultStates
     Transitions = DEFAULT_TRANSITIONS
+    state_name = 'machine_state'
 
-    def __init__(self, machineable, state_attr='machine_state'):
+    def __init__(self, machineable):
         """
         Welcome to the machine, this is our attempt at a state machine. It was written for nodes, prerprints etc,
         but sometimes applies to sanctions, it may be to applied to anything that wants to have states and transitions.
@@ -47,7 +48,7 @@ class BaseMachine(Machine):
         :param state_attr: The name of the state attribute, usually `machine_state`
         """
         self.machineable = machineable
-        self.__state_attr = state_attr
+        self.__state_attr = self.state_name
         self._validate_transitions(self.Transitions)
 
         super(BaseMachine, self).__init__(
@@ -348,6 +349,7 @@ class RegistrationMachine(BaseMachine):
     ActionClass = RegistrationAction
     States = RegistrationStates
     Transitions = REGISTRATION_TRANSITIONS
+    state_name = 'moderation_state'
 
     def save_action(self, ev):
         user = ev.kwargs.get('user')
