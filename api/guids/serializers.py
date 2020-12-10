@@ -4,7 +4,7 @@ from django.urls import resolve, reverse
 
 from api.base.serializers import (JSONAPISerializer, IDField, TypeField, RelationshipField, LinksField)
 from api.base.utils import absolute_reverse
-from osf.models import OSFUser, AbstractNode, Registration, Guid, BaseFileNode
+from osf.models import OSFUser, AbstractNode, Registration, Guid, BaseFileNode, Preprint
 from website import settings as website_settings
 
 
@@ -17,8 +17,12 @@ def get_type(record):
         return 'users'
     elif isinstance(record, BaseFileNode):
         return 'files'
+    elif isinstance(record, Preprint):
+        return 'preprints'
     elif isinstance(record, Guid):
         return get_type(record.referent)
+    else:
+        raise NotImplementedError(f'{record} related serialization not implemented')
 
 def get_related_view(record):
     kind = get_type(record)
@@ -81,7 +85,7 @@ class GuidSerializer(JSONAPISerializer):
             obj = obj.referent
             ser = resolve(reverse(
                 get_related_view(obj),
-                kwargs={'node_id': obj._id, 'version': self.context['view'].kwargs.get('version', '2')},
+                kwargs={list(get_related_view_kwargs(obj).keys())[0]: obj._id, 'version': self.context['view'].kwargs.get('version', '2')},
             )).func.cls.serializer_class(context=self.context)
             [ser.context.update({k: v}) for k, v in self.context.items()]
             return ser.to_representation(obj)
