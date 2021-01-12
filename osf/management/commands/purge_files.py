@@ -29,11 +29,35 @@ def purge_deleted_withdrawn_files(dry_run=False):
     deleted_file_ids_on_withdrawn_node = Registration.objects.filter(
         moderation_state=RegistrationModerationStates.WITHDRAWN.db_name,
         files__deleted__lte=timezone.now() - PURGE_DELTA
-    ).values_list('files__parent_id', flat=True).distinct()
+    ).values_list('files__id', flat=True).distinct()
 
     creds = Credentials.from_service_account_file(GCS_CREDS)
     client = Client(credentials=creds)
-    for file in TrashedFileNode.objects.filter(parent_id__in=deleted_file_ids_on_withdrawn_node):
+    for file in TrashedFileNode.objects.filter(id__in=deleted_file_ids_on_withdrawn_node):
+        if not dry_run:
+            file._purge(client=client)
+
+
+def mark_failed_registration_files_as_deleted(dry_run=False):
+    """
+    These registrations have ArchiveJobs stuck in initial state after the archive timeout period. Since they have timed
+    out they can be marked as deleted so they can be purged in PURGE_DELTA days.
+    """
+    for reg in Registration.find_failed_registrations():
+        reg.delete_registration_tree(save=True)
+        for file in reg.files.all():
+            if not dry_run:
+                file.delete()
+
+
+def purge_deleted_failed_registration_files(dry_run=False):
+    deleted_file_ids_on_failed_registration = Registration.find_failed_registrations(include_deleted=True).filter(
+        files__deleted__lte=timezone.now() - PURGE_DELTA
+    ).values_list('files__id', flat=True).distinct()
+
+    creds = Credentials.from_service_account_file(GCS_CREDS)
+    client = Client(credentials=creds)
+    for file in TrashedFileNode.objects.filter(id__in=deleted_file_ids_on_failed_registration):
         if not dry_run:
             file._purge(client=client)
 
@@ -46,9 +70,13 @@ def main(dry_run=False):
     if dry_run:
         logger.info('This is a dry run; no files will be purged or marked as deleted.')
 
+    # Withdrawn files
     mark_withdrawn_files_as_deleted(dry_run)
     purge_deleted_withdrawn_files(dry_run)
 
+    # Failed Registration files
+    mark_failed_registration_files_as_deleted(dry_run)
+    purge_deleted_failed_registration_files(dry_run)
 
 class Command(BaseCommand):
     help = '''

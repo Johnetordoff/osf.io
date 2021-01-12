@@ -125,11 +125,15 @@ class Registration(AbstractNode):
     )
 
     @staticmethod
-    def find_failed_registrations():
+    def find_failed_registrations(include_deleted=False):
         expired_if_before = timezone.now() - settings.ARCHIVE_TIMEOUT_TIMEDELTA
         node_id_list = ArchiveJob.objects.filter(sent=False, datetime_initiated__lt=expired_if_before, status=ARCHIVER_INITIATED).values_list('dst_node', flat=True)
         root_nodes_id = AbstractNode.objects.filter(id__in=node_id_list).values_list('root', flat=True).distinct()
-        stuck_regs = AbstractNode.objects.filter(id__in=root_nodes_id, is_deleted=False)
+        stuck_regs = AbstractNode.objects.filter(id__in=root_nodes_id)
+
+        if not include_deleted:
+            stuck_regs = stuck_regs.filter(is_deleted=False)
+
         return stuck_regs
 
     @property
