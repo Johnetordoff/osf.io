@@ -3,8 +3,6 @@ import logging
 from django.utils import timezone
 
 from framework.celery_tasks import app as celery_app
-from website.app import setup_django
-setup_django()
 from osf.models import Registration
 from addons.osfstorage.models import TrashedFileNode
 from django.core.management.base import BaseCommand
@@ -12,6 +10,8 @@ from osf.utils.workflows import RegistrationModerationStates
 from website.settings import GCS_CREDS, PURGE_DELTA
 from google.cloud.storage.client import Client
 from google.oauth2.service_account import Credentials
+from website.app import setup_django
+setup_django()
 
 
 logger = logging.getLogger(__name__)

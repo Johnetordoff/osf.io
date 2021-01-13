@@ -132,7 +132,7 @@ class Registration(AbstractNode):
         stuck_regs = AbstractNode.objects.filter(id__in=root_nodes_id)
 
         if not include_deleted:
-            stuck_regs = stuck_regs.filter(is_deleted=False)
+            stuck_regs = stuck_regs.filter(deleted__isnull=True)
 
         return stuck_regs
 
