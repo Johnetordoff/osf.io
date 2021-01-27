@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+import json
 import requests
 
 from django.apps import apps
 from django.contrib.postgres import fields
 from django.core.exceptions import ValidationError
+
 from typedmodels.models import TypedModel
 from api.taxonomies.utils import optimize_subject_query
 from django.db import models
@@ -18,6 +20,7 @@ from osf.models.licenses import NodeLicense
 from osf.models.mixins import ReviewProviderMixin
 from osf.models.storage import ProviderAssetFile
 from osf.models.subject import Subject
+from osf.models.brand import Brand
 from osf.utils.datetime_aware_jsonfield import DateTimeAwareJSONField
 from osf.utils.workflows import RegistrationModerationStates
 from osf.utils.fields import EncryptedTextField
@@ -26,7 +29,6 @@ from website import settings
 from website.util import api_v2_url
 from functools import reduce
 from osf.models.notifications import NotificationSubscription
-
 
 class AbstractProvider(TypedModel, TypedObjectIDMixin, ReviewProviderMixin, DirtyFieldsMixin, BaseModel):
     class Meta:
@@ -45,6 +47,65 @@ class AbstractProvider(TypedModel, TypedObjectIDMixin, ReviewProviderMixin, Dirt
     @classmethod
     def get_default(cls):
         return cls.objects.get(_id=cls.default__id)
+
+    @classmethod
+    def update_or_create_from_json(cls, provider_data, user):
+        licenses = [
+            NodeLicense.objects.get(license_id=license_id) for license_id in
+            provider_data.pop('licenses_acceptable', [])
+        ]
+        default_license = provider_data.pop('default_license', False)
+        provider_data.pop('additional_providers', False)
+        subject_data = provider_data.pop('subjects', False)
+
+        brand = None
+        if provider_data.get('brand'):
+            try:
+                brand = Brand.objects.get(id=provider_data.pop('brand'))
+            except Brand.DoesNotExist:  # JSON is old or imported from staging etc.
+                pass
+
+        if provider_data.get('id'):  # <- determines if creating new or updating
+            provider = cls.objects.get(id=provider_data.pop('id'))
+        else:
+            try:
+                provider = RegistrationProvider(**provider_data)
+                provider.save()
+            except ValidationError as e:
+                if 'Abstract provider with this  id and Type already exists.' in str(e):
+                    provider_data.pop('_id')  # these must be unique
+                    provider = RegistrationProvider(**provider_data)
+                    provider.save()
+            provider._creator = user
+
+        if brand:
+            provider.brand = brand
+        if licenses:
+            provider.licenses_acceptable.set(licenses)
+        if default_license:
+            provider.default_license = NodeLicense.objects.get(license_id=default_license)
+
+        # Only adds the JSON taxonomy if there is no existing taxonomy data
+        if subject_data and not provider.subjects.count():
+            # circular import
+            from osf.management.commands.populate_custom_taxonomies import migrate as add_subjects
+            add_subjects(
+                provider=provider._id,
+                data=subject_data if isinstance(subject_data, dict) else json.loads(subject_data),
+                dry_run=False
+            )
+
+        # Collections only code
+        primary_collection = provider_data.pop('primary_collection', None)
+        if primary_collection:
+            provider.primary_collection.collected_type_choices = primary_collection['fields']['collected_type_choices']
+            provider.primary_collection.status_choices = primary_collection['fields']['status_choices']
+            provider.primary_collection.issue_choices = primary_collection['fields']['issue_choices']
+            provider.primary_collection.volume_choices = primary_collection['fields']['volume_choices']
+            provider.primary_collection.program_area_choices = primary_collection['fields']['program_area_choices']
+            provider.primary_collection.save()
+
+        return provider
 
     primary_collection = models.ForeignKey('Collection', related_name='+',
                                            null=True, blank=True, on_delete=models.SET_NULL)
