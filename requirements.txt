@@ -76,7 +76,7 @@ pycparser==2.18
 pyjwe==1.0.0
 # Building wheel for cryptography 3.4.0 requires a Rust version incompatible with Docker base image.
 # Required by pyjwe and ndg-httpsclient
-cryptography==3.3.2
+cryptography==3.4.7
 jsonschema==2.6.0
 django-guardian==1.4.9
 
