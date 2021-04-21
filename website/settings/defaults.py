@@ -415,7 +415,8 @@ class CeleryConfig:
         'osf.management.commands.addon_deleted_date',
         'osf.management.commands.migrate_registration_responses',
         'osf.management.commands.sync_collection_provider_indices',
-        'osf.management.commands.update_institution_project_counts'
+        'osf.management.commands.update_institution_project_counts',
+        'osf.management.commands.populate_branched_from'
     }
 
     med_pri_modules = {
@@ -629,6 +630,10 @@ class CeleryConfig:
             #   'task': 'management.commands.addon_deleted_date',
             #   'schedule': crontab(minute=0, hour=3),  # Daily 11:00 p.m.
             # },
+            # 'populate_branched_from': {
+            #   'task': 'management.commands.populate_branched_from',
+            #   'schedule': crontab(minute=0, hour=3),
+            # },
             'generate_sitemap': {
                 'task': 'scripts.generate_sitemap',
                 'schedule': crontab(minute=0, hour=5),  # Daily 12:00 a.m.
@@ -818,6 +823,8 @@ BLACKLISTED_DOMAINS = [
     'bigstring.com',
     'binkmail.com',
     'bio-muesli.net',
+    'biojuris.com',
+    'biyac.com',
     'bladesmail.net',
     'bloatbox.com',
     'bobmail.info',
@@ -1110,6 +1117,7 @@ BLACKLISTED_DOMAINS = [
     'giantmail.de',
     'girlsundertheinfluence.com',
     'gishpuppy.com',
+    'gmailwe.com',
     'gmial.com',
     'goemailgo.com',
     'gorillaswithdirtyarmpits.com',
@@ -1235,6 +1243,7 @@ BLACKLISTED_DOMAINS = [
     'labetteraverouge.at',
     'lackmail.net',
     'lags.us',
+    'laldo.com',
     'landmail.co',
     'lastmail.co',
     'lawlita.com',
@@ -1256,6 +1265,7 @@ BLACKLISTED_DOMAINS = [
     'lookugly.com',
     'lopl.co.cc',
     'lortemail.dk',
+    'losbanosforeclosures.com',
     'lovemeleaveme.com',
     'lr78.com',
     'lroid.com',
@@ -1382,6 +1392,7 @@ BLACKLISTED_DOMAINS = [
     'monemail.fr.nf',
     'monmail.fr.nf',
     'monumentmail.com',
+    'moyencuen.buzz',
     'msa.minsmail.com',
     'mt2009.com',
     'mt2014.com',
@@ -1442,6 +1453,7 @@ BLACKLISTED_DOMAINS = [
     'nospamthanks.info',
     'notmailinator.com',
     'notsharingmy.info',
+    'notvn.com',
     'nowhere.org',
     'nowmymail.com',
     'nurfuerspam.de',
@@ -1528,6 +1540,7 @@ BLACKLISTED_DOMAINS = [
     'sayawaka-dea.info',
     'saynotospams.com',
     'scatmail.com',
+    'sciencejrq.com',
     'schafmail.de',
     'schrott-email.de',
     'secretemail.de',
@@ -1643,6 +1656,7 @@ BLACKLISTED_DOMAINS = [
     'spoofmail.de',
     'spybox.de',
     'squizzy.de',
+    'srcitation.com',
     'ssoia.com',
     'startkeys.com',
     'stexsy.com',
@@ -1811,6 +1825,7 @@ BLACKLISTED_DOMAINS = [
     'wem.com',
     'wetrainbayarea.com',
     'wetrainbayarea.org',
+    'wifimaple.com',
     'wh4f.org',
     'whatiaas.com',
     'whatpaas.com',
@@ -1830,6 +1845,7 @@ BLACKLISTED_DOMAINS = [
     'wwwnew.eu',
     'wzukltd.com',
     'xagloo.com',
+    'xakw1.com',
     'xemaps.com',
     'xents.com',
     'xmaily.com',
@@ -1892,6 +1908,7 @@ SPAM_ACCOUNT_SUSPENSION_ENABLED = False
 SPAM_ACCOUNT_SUSPENSION_THRESHOLD = timedelta(hours=24)
 SPAM_FLAGGED_MAKE_NODE_PRIVATE = False
 SPAM_FLAGGED_REMOVE_FROM_SEARCH = False
+SPAM_AUTOBAN_IP_BLOCK = True
 
 SHARE_API_TOKEN = None
 

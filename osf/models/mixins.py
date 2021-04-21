@@ -1071,7 +1071,6 @@ class TaxonomizableMixin(models.Model):
         Preprint = apps.get_model('osf.Preprint')
         CollectionSubmission = apps.get_model('osf.CollectionSubmission')
         DraftRegistration = apps.get_model('osf.DraftRegistration')
-        Node = apps.get_model('osf.Node')
 
         if isinstance(self, AbstractNode):
             if not self.has_permission(auth.user, ADMIN):
@@ -1079,9 +1078,6 @@ class TaxonomizableMixin(models.Model):
         elif isinstance(self, Preprint):
             if not self.has_permission(auth.user, WRITE):
                 raise PermissionsError('Must have admin or write permissions to change a preprint\'s subjects.')
-        if isinstance(self, DraftRegistration) and isinstance(self.branched_from, Node):
-            if not self.branched_from.has_permission(auth.user, WRITE):
-                raise PermissionsError('Must have admin on parent node to update draft registration\'s subjects.')
         elif isinstance(self, DraftRegistration):
             if not self.has_permission(auth.user, WRITE):
                 raise PermissionsError('Must have write permissions to change a draft registration\'s subjects.')
@@ -2106,32 +2102,37 @@ class SpamOverrideMixin(SpamMixin):
         if (
             settings.SPAM_ACCOUNT_SUSPENSION_ENABLED
             and (timezone.now() - user.date_confirmed) <= settings.SPAM_ACCOUNT_SUSPENSION_THRESHOLD
+        ) or (
+            settings.SPAM_AUTOBAN_IP_BLOCK and self.spam_data.get('oopspam_data', None)
+            and self.spam_data['oopspam_data']['Details']['isIPBlocked']
         ):
-            self.set_privacy('private', log=False, save=False)
+            self.suspend_spam_user(user)
 
-            # Suspend the flagged user for spam.
-            user.flag_spam()
-            if not user.is_disabled:
-                user.disable_account()
-                user.is_registered = False
-                mails.send_mail(
-                    to_addr=user.username,
-                    mail=mails.SPAM_USER_BANNED,
-                    user=user,
-                    osf_support_email=settings.OSF_SUPPORT_EMAIL,
-                    can_change_preferences=False,
-                )
-            user.save()
+    def suspend_spam_user(self, user):
+        self.set_privacy('private', log=False, save=False)
+        # Suspend the flagged user for spam.
+        user.flag_spam()
+        if not user.is_disabled:
+            user.disable_account()
+            user.is_registered = False
+            mails.send_mail(
+                to_addr=user.username,
+                mail=mails.SPAM_USER_BANNED,
+                user=user,
+                osf_support_email=settings.OSF_SUPPORT_EMAIL,
+                can_change_preferences=False,
+            )
+        user.save()
 
-            # Make public nodes private from this contributor
-            for node in user.all_nodes:
-                if self._id != node._id and len(node.contributors) == 1 and node.is_public and not node.is_quickfiles:
-                    node.set_privacy('private', log=False, save=True)
+        # Make public nodes private from this contributor
+        for node in user.all_nodes:
+            if self._id != node._id and len(node.contributors) == 1 and node.is_public and not node.is_quickfiles:
+                node.set_privacy('private', log=False, save=True)
 
-            # Make preprints private from this contributor
-            for preprint in user.preprints.all():
-                if self._id != preprint._id and len(preprint.contributors) == 1 and preprint.is_public:
-                    preprint.set_privacy('private', log=False, save=True)
+        # Make preprints private from this contributor
+        for preprint in user.preprints.all():
+            if self._id != preprint._id and len(preprint.contributors) == 1 and preprint.is_public:
+                preprint.set_privacy('private', log=False, save=True)
 
     def flag_spam(self):
         """ Overrides SpamMixin#flag_spam.
@@ -2233,7 +2234,7 @@ class EditableFieldsMixin(TitleMixin, DescriptionMixin, CategoryMixin, Contribut
         else:
             return []
 
-    def copy_editable_fields(self, resource, auth=None, alternative_resource=None, save=True, contributors=True):
+    def copy_editable_fields(self, resource, auth=None, alternative_resource=None, save=True):
         """
         Copy various editable fields from the 'resource' object to the current object.
         Includes, title, description, category, contributors, node_license, tags, subjects, and affiliated_institutions
@@ -2249,8 +2250,7 @@ class EditableFieldsMixin(TitleMixin, DescriptionMixin, CategoryMixin, Contribut
 
         # Contributors will always come from "resource", as contributor constraints
         # will require contributors to be present on the resource
-        if contributors:
-            self.copy_contributors_from(resource)
+        self.copy_contributors_from(resource)
         # Copy unclaimed records for unregistered users
         self.copy_unclaimed_records(resource)
 
