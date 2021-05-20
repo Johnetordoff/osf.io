@@ -16,5 +16,9 @@ DOI_FORMAT = "{prefix}/fk2osf.io/{guid}"
 OSF_COLLECTION_NAME = "cos-dev-sandbox"
 ID_VERSION = "local_v1"
 
+REG_ID_TEMPLATE = f"osf-registrations-{{guid}}-{ID_VERSION}"
+PROVIDER_ID_TEMPLATE = f"osf-registration-providers-{{provider_id}}-{ID_VERSION}"
+
+
 HOST = "0.0.0.0"
 PORT = 2020

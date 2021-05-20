@@ -122,7 +122,9 @@ async def get_metadata_for_ia_item(json_metadata):
 
     embeds = json_metadata["data"]["embeds"]
 
-    if not embeds["license"].get("errors"):  # Fix me
+    if not embeds["license"].get(
+        "errors"
+    ):  # The reported error here is just a 404, so ignore if no license
         relationship_data["license"] = embeds["license"]["data"]["attributes"]["url"]
 
     doi = next(
@@ -228,7 +230,7 @@ async def get_pages(url, page, result={}, parse_json=None):
     return result
 
 
-async def get_contributors(response):
+async def get_additional_contributor_info(response):
     contributor_data_list = []
     for contributor in response["data"]:
         contributor_data = {}
@@ -419,7 +421,7 @@ async def archive(guid):
                 f"?page[size]=100",
                 to_dir=temp_dir,
                 name="contributors.json",
-                parse_json=get_contributors,
+                parse_json=get_additional_contributor_info,
             ),
         ]
         # only download archived data if there are files
