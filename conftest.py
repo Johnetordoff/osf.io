@@ -3,6 +3,7 @@ import pytest
 import responses
 from osf_pigeon import settings
 
+
 @pytest.fixture
 def mock_datacite(guid):
     with mock.patch.object(settings, "DOI_FORMAT", "{prefix}/osf.io/{guid}"):

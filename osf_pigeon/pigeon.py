@@ -36,17 +36,20 @@ async def dump_json_to_dir(from_url, to_dir, name, parse_json=None):
 
 
 def create_zip(temp_dir):
-    with zipfile.ZipFile(os.path.join(temp_dir, "bag.zip"), "w") as fp:
-        for root, dirs, files in os.walk(temp_dir):
-            for file in files:
-                file_path = os.path.join(root, file)
-                file_name = re.sub(f"^{temp_dir}", "", file_path)
-                fp.write(file_path, arcname=file_name)
+    files_to_zip = []
+    for root, dirs, files in os.walk(temp_dir):
+        for file in files:
+            file_path = os.path.join(root, file)
+            file_name = re.sub(f"^{temp_dir}", "", file_path)
+            files_to_zip.append((file_path, file_name))
+
+    with zipfile.ZipFile(os.path.join(temp_dir, 'bag.zip'), "w") as fp:
+        for file_path, file_name in files_to_zip:
+            fp.write(file_path, arcname=file_name)
 
 
 async def get_relationship_attribute(key, url, func):
     data = await get_paginated_data(url)
-    print(url, "data" in data)
     if "data" in data:
         return {key: list(map(func, data["data"]))}
     return {key: list(map(func, data))}
@@ -59,9 +62,9 @@ async def get_metadata_for_ia_item(json_metadata):
     :param json_metadata: metadata from OSF registration view contains attributes and relationship
     urls.
 
-    Note: Internet Archive advises that all metadata that points to internal OSF features should have a specific `osf_`
-    prefix. Example: `registry` should be `osf_registry`, however metadata such as affiliated_institutions is
-    self-explanatory and doesn't need a prefix.
+    Note: Internet Archive advises that all metadata that points to internal OSF features should
+    have a specific `osf_` prefix. Example: `registry` should be `osf_registry`, however metadata
+    such as affiliated_institutions is self-explanatory and doesn't need a prefix.
 
     :return: ia_metadata the metadata for an IA bucket. Should include the following if they are
      not null:
@@ -86,7 +89,8 @@ async def get_metadata_for_ia_item(json_metadata):
     relationship_data = [
         get_relationship_attribute(
             "creator",
-            f'{settings.OSF_API_URL}v2/registrations/{json_metadata["data"]["id"]}/contributors/?filter[bibliographic]=true&',
+            f'{settings.OSF_API_URL}v2/registrations/{json_metadata["data"]["id"]}/contributors/'
+            f'?filter[bibliographic]=true&',
             lambda contrib: contrib["embeds"]["users"]["data"]["attributes"][
                 "full_name"
             ],
@@ -104,7 +108,8 @@ async def get_metadata_for_ia_item(json_metadata):
         get_relationship_attribute(
             "children",
             f'{settings.OSF_API_URL}v2/registrations/{json_metadata["data"]["id"]}/children/',
-            lambda child: f'https://archive.org/details/{settings.REG_ID_TEMPLATE.format(guid=child["id"])}',
+            lambda child: f'https://archive.org/details/'
+                          f'{settings.REG_ID_TEMPLATE.format(guid=child["id"])}',
         ),
     ]
 
@@ -164,7 +169,6 @@ async def get_metadata_for_ia_item(json_metadata):
 
 
 async def write_datacite_metadata(guid, temp_dir, metadata):
-
     try:
         doi = next(
             (
@@ -177,14 +181,12 @@ async def write_datacite_metadata(guid, temp_dir, metadata):
         raise DataCiteNotFoundError(
             f"Datacite DOI not found for registration {guid} on OSF server."
         )
-
     client = DataCiteMDSClient(
         url=settings.DATACITE_URL,
         username=settings.DATACITE_USERNAME,
         password=settings.DATACITE_PASSWORD,
         prefix=settings.DATACITE_PREFIX,
     )
-
     try:
         xml_metadata = client.metadata_get(doi)
     except DataCiteNotFoundError:
@@ -291,7 +293,7 @@ def get_ia_item(guid):
 
 def sync_metadata(guid, metadata):
     """
-    This is used to sync the metadata of archive.org items with OSF Registrations. The OSF metadata actively being
+    This is used to sync the metadata of archive.org items with OSF Registrations.
     synced is as follows:
         - title
         - description
@@ -303,7 +305,8 @@ def sync_metadata(guid, metadata):
         - license
         - article_doi
 
-    `moderation_state` is an allowable key, but only to determine a withdrawal status of a registration.
+    `moderation_state` is an allowable key, but only to determine a withdrawal status of a
+     registration.
     :param guid:
     :param metadata:
     :return:
@@ -322,7 +325,7 @@ def sync_metadata(guid, metadata):
         "osf_category",
         "osf_subjects",
         "osf_tags",
-        "osf_article_doi",
+        "article_doi",
         "affiliated_institutions",
         "license",
         "moderation_state",
@@ -363,7 +366,7 @@ async def upload(item_name, temp_dir, metadata):
     ia_metadata = await get_metadata_for_ia_item(metadata)
     provider_id = metadata["data"]["embeds"]["provider"]["data"]["id"]
     ia_item.upload(
-        os.path.join(temp_dir, "bag.zip"),
+        {'bag.zip': os.path.join(temp_dir, 'bag.zip')},
         metadata={
             "collection": settings.PROVIDER_ID_TEMPLATE.format(provider_id=provider_id),
             **ia_metadata,
@@ -431,13 +434,13 @@ async def archive(guid):
         if file_count:
             tasks.append(
                 stream_files_to_dir(
-                    from_url=f"{settings.OSF_FILES_URL}v1/resources/{guid}/providers/osfstorage/?zip=",
-                    to_dir=temp_dir,
-                    name="archived_files.zip",
+                    f"{settings.OSF_FILES_URL}v1/resources/{guid}/providers/osfstorage/?zip=",
+                    temp_dir,
+                    "archived_files.zip",
                 )
             )
 
-        await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
+        done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
 
         bagit.make_bag(temp_dir)
         bag = bagit.Bag(temp_dir)

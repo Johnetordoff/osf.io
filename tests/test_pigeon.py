@@ -37,7 +37,7 @@ class TestStreamFilesToDir:
             with aioresponses() as m:
                 m.get(
                     f"{settings.OSF_FILES_URL}v1/resources/{guid}/providers/osfstorage/?zip=",
-                    body=zip_data
+                    body=zip_data,
                 )
                 await stream_files_to_dir(
                     f"{settings.OSF_FILES_URL}v1/resources/{guid}/providers/osfstorage/?zip=",
@@ -67,10 +67,7 @@ class TestDumpJSONFilesToDir:
 
     async def test_dump_json_to_dir(self, guid, json_data, file_name):
         with aioresponses() as m:
-            m.get(
-                f"{settings.OSF_API_URL}v2/guids/{guid}",
-                body=json_data
-            )
+            m.get(f"{settings.OSF_API_URL}v2/guids/{guid}", body=json_data)
             with tempfile.TemporaryDirectory() as temp_dir:
                 await dump_json_to_dir(
                     f"{settings.OSF_API_URL}v2/guids/{guid}", temp_dir, file_name
@@ -111,7 +108,9 @@ class TestDumpJSONFilesToDirMultipage:
 
         return page1["data"] + page2["data"]
 
-    async def test_stream_files_to_dir(self, guid, page1, page2, file_name, expected_json):
+    async def test_stream_files_to_dir(
+        self, guid, page1, page2, file_name, expected_json
+    ):
         with aioresponses() as m:
             m.get(
                 f"{settings.OSF_API_URL}v2/registrations/{guid}/wikis/",
@@ -153,7 +152,9 @@ class TestContributors:
         with open(os.path.join(HERE, "fixtures/ft3ae-institutions.json"), "r") as fp:
             return fp.read()
 
-    async def test_stream_files_to_dir_with_contribs(self, guid, contributors_file, institutions_file, file_name):
+    async def test_stream_files_to_dir_with_contribs(
+        self, guid, contributors_file, institutions_file, file_name
+    ):
         with aioresponses() as m:
 
             m.get(
@@ -174,7 +175,9 @@ class TestContributors:
                 )
                 assert len(os.listdir(temp_dir)) == 1
                 assert os.listdir(temp_dir)[0] == file_name
-                info = json.loads(open(os.path.join(temp_dir, file_name)).read())["data"]
+                info = json.loads(open(os.path.join(temp_dir, file_name)).read())[
+                    "data"
+                ]
                 assert len(info) == 1
                 assert (
                     info[0]["embeds"]["users"]["data"]["attributes"]["social"]["orcid"]
@@ -306,7 +309,8 @@ class TestMetadata:
                 "osf_registration_schema": "Open-Ended Registration",
                 "source": "http://localhost:5000/g752b",
                 "affiliated_institutions": ["The Center For Open Science [Stage]"],
-                "parent": f"https://archive.org/details/osf-registrations-dgkjr-{settings.ID_VERSION}",
+                "parent": f"https://archive.org/details/osf-registrations-dgkjr-"
+                          f"{settings.ID_VERSION}",
             }
 
     def test_modify_metadata_only(self, mock_ia_client, guid):
@@ -317,7 +321,7 @@ class TestMetadata:
         }
         sync_metadata(guid, metadata)
         mock_ia_client.session.get_item.assert_called_with(
-            "osf-registrations-guid0-staging_v1"
+            f"osf-registrations-guid0-{settings.ID_VERSION}"
         )
         mock_ia_client.item.modify_metadata.assert_called_with(metadata)
 
@@ -330,7 +334,7 @@ class TestMetadata:
         }
         sync_metadata(guid, metadata)
         mock_ia_client.session.get_item.assert_called_with(
-            "osf-registrations-guid0-staging_v1"
+            f"osf-registrations-guid0-{settings.ID_VERSION}"
         )
 
         metadata["noindex"] = True
@@ -390,7 +394,7 @@ class TestUpload:
         metadata,
         institutions_json,
         subjects_json,
-        temp_dir
+        temp_dir,
     ):
         with aioresponses() as m:
             m.add(
@@ -418,7 +422,7 @@ class TestUpload:
 
             mock_ia_client.session.get_item.assert_called_with("guid0")
             mock_ia_client.item.upload.assert_called_with(
-                os.path.join(temp_dir, 'bag.zip'),
+                {'bag.zip': os.path.join(temp_dir, "bag.zip")},
                 metadata={
                     "collection": f"osf-registration-providers-osf-{settings.ID_VERSION}",
                     "publisher": "Center for Open Science",
@@ -436,10 +440,13 @@ class TestUpload:
                     "affiliated_institutions": ["The Center For Open Science [Stage]"],
                     "osf_subjects": ["Life Sciences"],
                     "children": [
-                        "https://archive.org/details/osf-registrations-hu68d-staging_v1",
-                        "https://archive.org/details/osf-registrations-puxmb-staging_v1",
+                        f"https://archive.org/details/"
+                        f"osf-registrations-hu68d-{settings.ID_VERSION}",
+                        f"https://archive.org/details/"
+                        f"osf-registrations-puxmb-{settings.ID_VERSION}",
                     ],
-                    "parent": "https://archive.org/details/osf-registrations-dgkjr-staging_v1",
+                    "parent": f"https://archive.org/details/"
+                              f"osf-registrations-dgkjr-{settings.ID_VERSION}",
                     "license": "https://creativecommons.org/publicdomain/zero/1.0/legalcode",
                 },
                 secret_key=settings.IA_SECRET_KEY,
@@ -486,7 +493,7 @@ class TestUpload:
             )
             mock_ia_client.session.get_item.assert_called_with("guid0")
             mock_ia_client.item.upload.assert_called_with(
-                mock.ANY,
+                {'bag.zip': os.path.join(temp_dir, "bag.zip")},
                 metadata={
                     "collection": f"osf-registration-providers-burds-{settings.ID_VERSION}",
                     "publisher": "Center for Open Science",
@@ -504,10 +511,13 @@ class TestUpload:
                     "affiliated_institutions": ["The Center For Open Science [Stage]"],
                     "osf_subjects": ["Life Sciences"],
                     "children": [
-                        "https://archive.org/details/osf-registrations-hu68d-staging_v1",
-                        "https://archive.org/details/osf-registrations-puxmb-staging_v1",
+                        f"https://archive.org/details/"
+                        f"osf-registrations-hu68d-{settings.ID_VERSION}",
+                        f"https://archive.org/details/"
+                        f"osf-registrations-puxmb-{settings.ID_VERSION}",
                     ],
-                    "parent": "https://archive.org/details/osf-registrations-dgkjr-staging_v1",
+                    "parent": f"https://archive.org/details/"
+                              f"osf-registrations-dgkjr-{settings.ID_VERSION}",
                     "license": "https://creativecommons.org/publicdomain/zero/1.0/legalcode",
                 },
                 secret_key=settings.IA_SECRET_KEY,
