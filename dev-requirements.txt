@@ -1,0 +1,9 @@
+-r requirements.txt
+
+pytest
+mock
+responses
+pytest-socket
+flake8
+black
+pre-commit
