@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Register</h2>
+  <form method="post">
+    <ul>
+      {% for reg in data %}
+        <li>
+          <a href="{{ reg.links.self }}"> {{ reg.id }} <a class="btn-default">Create Output</a></a>
+        </li>
+      {% endfor %}
+      {% csrf_token %}
+      {{ form.as_p }}
+    </ul>
+    <button type="submit">Register</button>
+  </form>
+{% endblock %}

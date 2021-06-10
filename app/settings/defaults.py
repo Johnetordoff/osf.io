@@ -25,7 +25,7 @@ SECRET_KEY = "=h_a#1+$^d)yao%fhw4=qr(u&l8z_m=+vttx=3oa&e@9&t@7*y"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["0.0.0.0", 'd6ddbdc4ba7b.ngrok.io']
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -146,7 +146,13 @@ LOGGING = {
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
 
+OSF_REDIRECT_URI = 'https://eager.ngrok.io/callback/'
+OSF_CAS_URL = 'https://accounts.staging.osf.io/'
+OSF_API_URL = 'https://api.staging.osf.io/'
+
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 ]
+
+AUTH_USER_MODEL = "web.User"

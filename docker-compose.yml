@@ -21,7 +21,7 @@
       command: python manage.py runserver 0.0.0.0:2021
       restart: unless-stopped
       ports:
-        - "2020:2021"
+        - "2021:2021"
       depends_on:
         - db
       stdin_open: true
@@ -40,6 +40,7 @@
           cp -Rf -p /usr/local/lib/python3.9 /
       restart: 'no'
       environment:
+        PYTHONUNBUFFERED: 0 # This when set to 0 will allow print statements to be visible in the Docker logs
         DJANGO_SETTINGS_MODULE: api.base.settings
       volumes:
         - ./:/code:cached

@@ -14,12 +14,15 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from web.views.index_views import index, SignupView
+from web.views.index_views import index, SignupView, OSFOauthCallbackView, OSFOauthView, RegistrationView
 from django.conf.urls import url, include
 
 urlpatterns = [
     url(r"^$", index, name="home"),
     url("^", include("django.contrib.auth.urls")),
     url(r"^admin/", admin.site.urls),
-    url(r"^sign_up/", SignupView.as_view(), name="sign_up"),
+    url(r"^sign_up/$", SignupView.as_view(), name="sign_up"),
+    url(r"^osf_oauth/$", OSFOauthView.as_view(), name="osf_oauth"),
+    url(r"^callback/$", OSFOauthCallbackView.as_view(), name="callback"),
+    url(r"^register_page/$", RegistrationView.as_view(), name="register_page"),
 ]
