@@ -146,7 +146,9 @@ LOGGING = {
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
 
-OSF_REDIRECT_URI = 'https://eager.ngrok.io/callback/'
+
+
+OSF_REDIRECT_URI = 'https://emu.ngrok.io/callback/'
 OSF_CAS_URL = 'https://accounts.staging.osf.io/'
 OSF_API_URL = 'https://api.staging.osf.io/'
 

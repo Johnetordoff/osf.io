@@ -1,7 +1,8 @@
 from django.shortcuts import render, reverse, redirect, HttpResponse
+from django.http.response import JsonResponse
 from django.views import generic
 from web.forms import SignupForm
-from web.models import User
+from web.models.user import User, Schema
 from django.contrib.auth import authenticate, login
 from my_secrets.secrets import OSF_OAUTH_CLIENT_ID, OSF_OAUTH_SECRET_KEY
 import requests
@@ -20,11 +21,10 @@ class SignupView(generic.FormView):
 
     def form_valid(self, form):
         username = form.cleaned_data["username"]
-        password = form.cleaned_data["password"]
         user = User.objects.create_user(username=username)
-        user.set_password(password)
+        user.set_password('science')
         user.save()
-        user = authenticate(username=username, password=password)
+        user = authenticate(username=username, password='science')
         if user:
             login(self.request, user)
         return super().form_valid(form)
@@ -37,9 +37,13 @@ class RegistrationView(generic.TemplateView):
         user = request.user
         resp = requests.get(OSF_API_URL + 'v2/users/me/registrations/', headers={'Authorization': f'Bearer {user.token}'})
 
-        print(resp.json())
-
         return render(request, self.template_name, {'data': resp.json()['data']})
+
+
+class SchemaJSONView(generic.View):
+
+    def get(self, request, schema_id):
+        return JsonResponse(Schema.objects.get(id=schema_id).to_json)
 
 
 class OSFOauthView(generic.TemplateView):

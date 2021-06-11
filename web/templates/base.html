@@ -22,11 +22,9 @@ a                </div>
                         <form action="{% url 'login' %}"  method="post">
                             {% csrf_token %}
                             <ul class="nav navbar-nav pull-right">
+                                <!--
                                 <li>
                                     <a href="{% url 'sign_up' %}">Sign-up</a>
-                                </li>
-                                <li>
-                                    <a href="{% url 'osf_oauth' %}">Sign in as OSF</a>
                                 </li>
                                 <li>
                                     <input type="text" class="form-control" style="margin-top: 8px;"  name="username" placeholder="username">
@@ -37,12 +35,19 @@ a                </div>
                                 <li>
                                     <button class="btn btn-default" style="margin-top: 8px; margin-left: 10px;" type="submit">Login</button>
                                 </li>
+                                </!-->
+                                <li>
+                                    <a href="{% url 'osf_oauth' %}">Sign in as OSF</a>
+                                </li>
                             </ul>
                         </form>
                     {% else %}
                         <ul class="nav navbar-nav pull-right">
                             <li>
                                 <a href="{% url 'logout' %}">Log out</a>
+                            </li>
+                            <li>
+                                <a href="{% url 'admin:index' %}">Schema Editor</a>
                             </li>
                         </ul>
                     {% endif %}
