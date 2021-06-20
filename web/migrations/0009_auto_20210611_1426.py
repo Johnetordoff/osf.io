@@ -12,11 +12,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterField(
             model_name='question',
-            name='description',
-            field=models.CharField(blank=True, help_text='AKA instruction_text', max_length=5000, null=True),
-        ),
-        migrations.AlterField(
-            model_name='question',
             name='help',
             field=models.CharField(blank=True, help_text='AKA help_text', max_length=5000, null=True),
         ),

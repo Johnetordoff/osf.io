@@ -50,6 +50,7 @@ class Schema(models.Model):
     name = models.CharField(max_length=500, blank=True, null=True)
     version = models.PositiveIntegerField()
     description = models.CharField(max_length=5000, blank=True, null=True)
+    csv = models.FileField(null=True, blank=True)
 
     user = models.ForeignKey('web.User', on_delete=models.SET_NULL, null=True, related_name='schemas')
 
@@ -61,6 +62,14 @@ class Schema(models.Model):
         return 'https://emu.ngrok.io' + reverse('schema_json', args=(self.id, ))
 
     @property
+    def import_link(self):
+        return 'https://emu.ngrok.io' + reverse('import')
+
+    @property
+    def simple_schema_link(self):
+        return 'https://emu.ngrok.io' + reverse('simple_schema', args=(self.id, ))
+
+    @property
     def to_json(self):
         data = {
             'name': self.name,
@@ -68,7 +77,7 @@ class Schema(models.Model):
             'description': self.description,
             'pages': []
         }
-        pages = self.pages.all().order_by('number')
+        pages = self.pages.all().order_by('-number')
 
         for page in pages:
             data['pages'].append(page.to_json)
@@ -76,34 +85,58 @@ class Schema(models.Model):
         return data
 
 
+    def populate(self):
+        print(self.csv)
+
+    @property
+    def to_simple_schema(self):
+
+        question_ids = self.pages.all().values_list('questions__id').distinct()
+
+        return {
+            'simpleschema': True,
+            'name': self.name,
+            'version': self.version,
+            'description': self.description,
+            'blocks': [block.to_simple_schema_block for block in Question.objects.filter(id__in=question_ids).order_by('page__number', 'number')]
+        }
+
+
+
 class Page(models.Model):
-    title = models.CharField(max_length=500)
-    description = models.CharField(max_length=5000, null=True, blank=True)
     number = models.PositiveIntegerField()
     schema = models.ForeignKey('web.Schema', on_delete=models.SET_NULL, null=True, related_name='pages')
 
+    # constraint to page header
     def __str__(self):
         return f'Page {self.number} of {self.schema.name}'
 
     @property
     def to_json(self):
-        data = {
+        page_headers = self.questions.order_by('number')[0]
+        page_data = {
             'id': f'page{self.number}',
-            'title': self.title,
-            'questions': [],
+            'type': 'textarea',
+            'title': page_headers.display_text,
+            'description': page_headers.help_text,
+            'questions': [{}],
         }
-        if self.description:
-            data['description'] = self.description
 
-        questions = self.questions.order_by('number')
+        questions = self.questions.order_by('number')[1:]
         for question in questions:
-            data['questions'].append(question.to_json)
+            if question.format == 'section-heading':
+                page_data['questions'][0]['properties'] = [question.to_json]
 
-        return data
+            page_data['questions'].append(question.to_json)
+
+
+        return page_data
 
     class Meta:
         unique_together = ('schema', 'number',)
 
+from django.db import models
+from django.db.models import CheckConstraint, Q, F, Case
 
 
 class Question(models.Model):
@@ -126,101 +159,100 @@ class Question(models.Model):
         ('singleselect', 'Single select')
     ]
     SCHEMABLOCKS = [
-        ('page-heading', 'page-heading'),
-        ('section-heading', 'section-heading'),
-        ('subsection-heading', 'subsection-heading'),
-        ('paragraph', 'paragraph'),
-        ('question-label', 'question-label'),
-        ('short-text-input', 'short-text-input'),
-        ('long-text-input', 'long-text-input'),
-        ('file-input', 'file-input'),
-        ('contributors-input', 'contributors-input'),
-        ('single-select-input', 'single-select-input'),
-        ('multi-select-input', 'multi-select-input'),
-        ('select-input-option', 'select-input-option'),
-        ('select-other-option', 'select-other-option'),
+        ('page-heading', 'Page Heading'),
+        ('section-heading', 'Section Heading'),
+        ('subsection-heading', 'Subsection Heading'),
+        ('paragraph', 'Paragraph'),
+        ('question-label', 'Question Label'),
+        ('short-text-input', 'Short Text Input'),
+        ('long-text-input', 'Long Text Input'),
+        ('file-input', 'File Input'),
+        ('contributors-input', 'Contributors Input'),
+        ('single-select-input', 'Single Select Input'),
+        ('multi-select-input', 'Multi-select Input'),
+        ('select-input-option', 'Select Input Option'),
+        ('select-other-option', 'Select Other Option'),
     ]
 
     nav = models.CharField(max_length=5000, null=True, blank=True)
-    help = models.CharField(max_length=5000, null=True, blank=True, help_text='AKA help_text')
-    title = models.CharField(max_length=5000, null=True, blank=True, help_text='AKA Display_text')
-    header = models.CharField(max_length=5000, null=True, blank=True)
-    description = models.CharField(max_length=5000, null=True, blank=True, help_text='AKA instruction_text')
-    format = models.CharField(choices=WIDGET_CHOICES, max_length=50000, null=True, blank=True)
+    help_text = models.CharField(max_length=5000, null=True, blank=True, help_text='AKA help')
+    display_text = models.CharField(max_length=5000, null=True, blank=True, help_text='AKA title')
+    example_text = models.CharField(max_length=5000, null=True, blank=True, help_text='AKA example')
+    format = models.CharField(choices=SCHEMABLOCKS, max_length=50000, null=True, blank=True)
     page = models.ForeignKey('web.Page', on_delete=models.SET_NULL, null=True, blank=True, related_name='questions')
-    options = ArrayField(models.CharField(max_length=100), null=True, blank=True, help_text='Enter as comma seperated list')
+    options = ArrayField(models.CharField(max_length=100), null=True, blank=True, help_text='Enter as comma separated list')
     required = models.BooleanField(null=True)
     add_textarea_to_uploader = models.BooleanField(null=True, help_text='This only does something in you are using a file uploader')
     number = models.PositiveIntegerField(null=True, blank=True)
 
     def __str__(self):
-        return f'Question #{self.number} of {self.page}'
+        return f'#{self.number} of {self.page} - {self.format}'
 
     class Meta:
         unique_together = ('page', 'number',)
 
+        constraints = [
+            CheckConstraint(
+                check=~Q(format='page-heading') | Q(format='page-heading', help_text__isnull=True, example_text__isnull=True),
+                name='check_page_heading',
+            ),
+            CheckConstraint(
+                check=~Q(format='section-heading') | Q(format='section-heading', help_text__isnull=True, example_text__isnull=True),
+                name='check_section_heading',
+            ),
+            CheckConstraint(
+                check=~Q(format='file-input') | Q(
+                    format='file-input',
+                    display_text__isnull=True,
+                    help_text__isnull=True,
+                    example_text__isnull=True
+                ),
+                name='check_file_input',
+            ),
+        ]
+
+    FORMAT_TYPE_TO_TYPE_MAP = {
+        ('multiselect', 'choose'): 'multi-select-input',
+        (None, 'multiselect'): 'multi-select-input',
+        (None, 'choose'): 'single-select-input',
+        ('osf-upload-open', 'osf-upload'): 'file-input',
+        ('osf-upload-toggle', 'osf-upload'): 'file-input',
+        ('singleselect', 'choose'): 'single-select-input',
+        ('text', 'string'): 'short-text-input',
+        ('textarea', 'osf-author-import'): 'contributors-input',
+        ('textarea', None): 'long-text-input',
+        ('textarea', 'string'): 'long-text-input',
+        ('textarea-lg', None): 'long-text-input',
+        ('textarea-lg', 'string'): 'long-text-input',
+        ('textarea-xl', 'string'): 'long-text-input',
+    }
+    FORMAT_TYPE_TO_TYPE_MAP = {
+        'multi-select-input': 'choose',
+        'single-select-input': 'choose',
+        'file-input': 'osf-upload',
+        'short-text-input': ('text', 'string'),
+        'contributors-input': ('textarea', 'osf-author-import'),
+        'long-text-input': ('textarea', 'string'),
+    }
 
     @property
-    def to_json(self):
-        if self.header:
-            data = {
-                "qid": f"q{self.page.number}-{self.number}",
-                "type": "object",
-                "title": self.header
-            }
-            if self.nav:
-                data['nav'] = self.nav
+    def to_atomic_schema_block(self):
+        return {
+             'help_text': self.help_text,
+             'block_type': self.format,
+             'display_text': self.display_text,
+             'example_text': self.example_text,
+             'required': bool(self.required),
+        }
 
-            data["properties"] = {
-                "id": f"prop{self.number}",
-                "type": self.WIDGET_TYPES[self.format],
-                "format": self.format,
-                "required": self.required,
-                "title": self.title
-            }
-
-            if self.description:
-                data['properties'] = {'description': self.description}
-
-
-            if self.WIDGET_TYPES[self.format] == 'choose':
-                data["properties"]['options'] = self.options
-            else:
-                data["properties"]['format'] = self.format
-                data["properties"]['type'] = self.WIDGET_TYPES[self.format]
-        else:
-            data = {
-                "qid": f"q{self.number}",
-                'help': self.help,
-                'required': self.required,
-                'title': self.title
-            }
-            if self.nav:
-                data['nav'] = self.nav
-
-            if self.description:
-                data['description'] = self.description
-
-            if self.WIDGET_TYPES[self.format] == 'choose':
-                data['options'] = self.options
-                data['format'] = self.format
-                data['type'] = self.WIDGET_TYPES[self.format]
-            elif self.WIDGET_TYPES[self.format] == 'osf-upload':
-                data["properties"] = [
-                    {
-                    "id": "uploader",
-                    "type": self.WIDGET_TYPES[self.format],
-                    "format": self.format
-                }]
-                if self.format == "osf-upload-with-textarea" or self.add_textarea_to_uploader:
-                    data["properties"].insert(0, {
-                        "id": "question",
-                        "type": "string",
-                        "format": "textarea",
-                        "required": self.required
-                    })
-            else:
-                data['format'] = self.format
-                data['type'] = self.WIDGET_TYPES[self.format]
-
-        return data
+    @property
+    def to_block(self):
+        return {
+             'schema_id': self.page.schema.id,
+             'help_text': self.help_text,
+             'example_text': self.example_text,
+             'registration_response_key': f'q{self.page.number}-{self.number}',
+             'block_type': self.format,
+             'display_text': self.display_text,
+             'required': self.required,
+        }

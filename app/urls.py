@@ -14,7 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from web.views.index_views import index, SignupView, OSFOauthCallbackView, OSFOauthView, RegistrationView, SchemaJSONView
+from web.views.index_views import index, SignupView, OSFOauthCallbackView, OSFOauthView, SimpleSchemaJSONView, SchemaJSONView, ImportView
 from django.conf.urls import url, include
 
 urlpatterns = [
@@ -25,4 +25,6 @@ urlpatterns = [
     url(r"^osf_oauth/$", OSFOauthView.as_view(), name="osf_oauth"),
     url(r"^callback/$", OSFOauthCallbackView.as_view(), name="callback"),
     url(r"^(?P<schema_id>\w+)/json/$", SchemaJSONView.as_view(), name="schema_json"),
+    url(r"^(?P<schema_id>\w+)/json/simpleschema/$", SimpleSchemaJSONView.as_view(), name="simple_schema"),
+    url(r"^import/$", ImportView.as_view(), name="import"),
 ]

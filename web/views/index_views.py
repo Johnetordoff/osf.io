@@ -2,7 +2,7 @@ from django.shortcuts import render, reverse, redirect, HttpResponse
 from django.http.response import JsonResponse
 from django.views import generic
 from web.forms import SignupForm
-from web.models.user import User, Schema
+from web.models.user import User, Schema, Question
 from django.contrib.auth import authenticate, login
 from my_secrets.secrets import OSF_OAUTH_CLIENT_ID, OSF_OAUTH_SECRET_KEY
 import requests
@@ -39,11 +39,34 @@ class RegistrationView(generic.TemplateView):
 
         return render(request, self.template_name, {'data': resp.json()['data']})
 
-
 class SchemaJSONView(generic.View):
 
     def get(self, request, schema_id):
         return JsonResponse(Schema.objects.get(id=schema_id).to_json)
+
+
+class SimpleSchemaJSONView(generic.View):
+
+    def get(self, request, schema_id):
+        return JsonResponse(Schema.objects.get(id=schema_id).to_simple_schema)
+
+
+class ImportView(generic.View):
+
+    def get(self, request):
+        CSVs = [schema.csv for schema in Schema.objects.all() if schema.csv]
+        import csv
+        for csv_file in CSVs:
+            with open(csv_file.path, 'r') as csvfile:
+                data = csvfile.read()
+                raise Exception(csvfile.read())
+                data = csv.reader(csvfile.read(), delimiter=",")
+                Question.objects.create(
+                    **data
+                )
+
+
+        return JsonResponse(Schema.objects.get(id=schema_id).to_simple_schema)
 
 
 class OSFOauthView(generic.TemplateView):
