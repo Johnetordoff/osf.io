@@ -5,7 +5,7 @@
         <script src="{% static 'js/bootstrap.js' %}"></script>
         <link rel="stylesheet" href="{% static 'css/bootstrap.css' %}"></script>
         <link rel="stylesheet" href="{% static 'css/style.css' %}"></script>
-        <title></title>
+        <title>🐦 Emu</title>
    </head>
    <body>
         <div class="metanav">
@@ -46,29 +46,31 @@ a                </div>
                             <li>
                                 <a href="{% url 'logout' %}">Log out</a>
                             </li>
+                        </ul>
+                    <ul class="nav navbar-nav pull-left">
                             <li>
-                                <a href="{% url 'admin:index' %}">Schema Editor</a>
+                                <a href="{% url 'schema_editor' %}">Schema Editor</a>
                             </li>
                         </ul>
                     {% endif %}
                 </div>
             </nav>
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-12">
-                        {% if messages %}
-                        <ul class="messages">
-                            {% for message in messages %}
-                            <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                            {% endfor %}
-                        </ul>
-                        {% endif %}
-                    </div>
-                </div>
-                <div style="position: fixed; top: 50px;">
-                    {% block content %}{% endblock %}
+        </div>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    {% if messages %}
+                    <ul class="messages">
+                        {% for message in messages %}
+                        <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
                 </div>
             </div>
+            <div style="padding: 50px;">
+                {% block content %}{% endblock %}
+            </div>
         </div>
-    </body>
+   </body>
 </html>

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Block Editor</h2>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-default">
+                <div class="panel panel-heading">
+                    <h2>{{ schema.name }}  v{{ schema.version }}</h2>
+                    <a href="{% url 'atomic_schema' schema_id=schema.id %}">View Schema</a>
+                </div>
+                <div class="panel panel-body">
+                    <form  enctype="multipart/form-data" class="form-inline" method="post" action="{% url 'schema-update' schema_id=schema.id %}">
+                        {% csrf_token %}
+                         <div class="form-group col-md-5">
+                            <label for="name">Schema name</label>
+                            <input type="text" class="form-control" id="name" name="name" aria-describedby="name" value="{{schema.name}}" placeholder="Schema Name">
+                         </div>
+                         <div class="form-group col-md-5">
+                            <label for="version">Schema Version</label>
+                            <input type="number" class="form-control" id="version" name="version" aria-describedby="version" value="{{schema.version}}" placeholder="Schema Version">
+                         </div>
+                          <button type="submit" class="btn btn-primary form-control  col-md-2">Update</button>
+                    </form>
+                </div>
+                <div class="panel-body">
+                    <ul class="list-group">
+                        {% for block in blocks %}
+                            <a href="{% url 'block-update' block_id=block.id schema_id=schema.id %}" class="list-group-item list-group-item-action flex-column align-items-start">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h2 class="mb-1">{{ block.block_type }}</h2>
+                                    <small>required: {{ block.required }}</small>
+                                    <br>
+                                    <b>{{ block.display_text }} </b>
+                                    <form  action="{% url 'block-delete' block_id=block.id schema_id=schema.id %}" method="post">
+                                        {% csrf_token %}
+                                        <button type="submit">Delete</button>
+                                    </form>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="panel-footer" style="text-align: center;">
+                    <form class="form-inline" action="{% url 'block-add' schema_id=schema.id %}" method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="block_type">Block Type: </label>
+                            <select class="form-control" id="block_type" name="block_type" required>
+                                {% for block_type in block_types %}
+                                     <option>{{block_type}}</option>
+                                {% endfor %}
+
+                            </select>
+                            <button class="form-control" type="submit">Create New</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}

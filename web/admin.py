@@ -3,13 +3,13 @@
 # Register your models here.
 
 from django.contrib import admin
-from web.models.user import Page, Question, Schema
+from web.models.user import Block, Schema
 from django import forms
 from django.utils.html import format_html
 from django.db import models
 
 class AdminSchema(admin.ModelAdmin):
-    readonly_fields = ('link', 'simple_schema_link', 'import_link')
+    readonly_fields = ('link', 'atomic_schema_link', 'import_link')
 
     def link(self, obj):
         return format_html(f'<a href="{obj.link}">Schema JSON</a>')
@@ -31,18 +31,17 @@ class AdminPage(admin.ModelAdmin):
 
 
 
-class AdminQuestion(admin.ModelAdmin):
-    ordering = ('page__number', 'number')
+class AdminBlock(admin.ModelAdmin):
+    ordering = ('index',)
 
 
     class QuestionForm(forms.ModelForm):
-        format = forms.ChoiceField(choices=Question.SCHEMABLOCKS)
+        block_type = forms.ChoiceField(choices=Block.SCHEMABLOCKS)
         help = forms.CharField(widget=forms.Textarea(attrs={'rows': 5, 'cols': 100}), required=False, help_text='AKA help_text')
 
     form = QuestionForm
 
 
 
-admin.site.register(Page, AdminPage)
-admin.site.register(Question, AdminQuestion)
+admin.site.register(Block, AdminBlock)
 admin.site.register(Schema, AdminSchema)

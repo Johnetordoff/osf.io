@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Block Editor</h2>
+<div class="panel panel-default">
+    <div class="panel panel-body">
+        <form action="{% url 'block-update' block_id=block_id schema_id=schema_id %}" method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Update</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

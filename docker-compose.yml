@@ -13,9 +13,9 @@
         - POSTGRES_DB=postgres
         - POSTGRES_USER=postgres
         - POSTGRES_PASSWORD=postgres
+      ports:
+        - "5432:5432"
       stdin_open: true
-      volumes:
-        - postgres_data_vol:/var/lib/postgresql/data/
     web:
       build: .
       command: python manage.py runserver 0.0.0.0:2021
