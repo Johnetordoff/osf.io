@@ -10,8 +10,10 @@ from django.db.models import CheckConstraint, Q, F, Case
 
 
 class User(AbstractUser):
+    guid = models.CharField(null=True, blank=True, max_length=500)
     token = models.CharField(null=True, blank=True, max_length=500)
     admin = models.BooleanField(null=True, blank=True)
+    bulk_contributors_csv = models.FileField(null=True, blank=True, upload_to='csv/bulk_contributors/')
 
     @classmethod
     def from_osf_login(cls, code):
@@ -27,15 +29,16 @@ class User(AbstractUser):
         url = f'{settings.OSF_CAS_URL}oauth2/token?'
         url += query_params
         resp = requests.post(url)
-        print(resp.__dict__)
         token = resp.json()['access_token']
 
         resp = requests.get(settings.OSF_API_URL + 'v2/', headers={'Authorization': f'Bearer {token}'})
         user_data = resp.json()
         fullname = user_data['meta']['current_user']['data']['attributes']['full_name']
+        guid = user_data['meta']['current_user']['data']['id']
 
         user, created = cls.objects.get_or_create(username=fullname)
         user.token = token
+        user.guid = guid
         user.set_password('science')
 
         user.is_superuser = True
@@ -43,7 +46,6 @@ class User(AbstractUser):
 
         if created:
             user.save()
-
 
         return user
 

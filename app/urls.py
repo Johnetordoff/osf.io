@@ -34,6 +34,9 @@ from web.views.schema_editor import (
     BlockDeleteView,
     BlockUpdateView
 )
+from web.views.bulk_upload_contributors import (
+    BulkUploadContributors
+)
 from django.conf.urls import url, include
 from django.urls import path
 
@@ -56,4 +59,5 @@ urlpatterns = [
     path('schema/<int:schema_id>/blocks/<int:block_id>/', BlockUpdateView.as_view(), name='block-update'),
     path('schema/<int:schema_id>/blocks/add/', BlockCreateView.as_view(), name='block-add'),
     path('schema/<int:schema_id>/blocks/<int:block_id>/delete/', BlockDeleteView.as_view(), name='block-delete'),
+    url(r"^bulk_upload_contributors/$", BulkUploadContributors.as_view(), name="bulk_upload_contributors"),
 ]

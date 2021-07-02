@@ -52,7 +52,8 @@ class SchemaUpdateView(UpdateView):
 
 class SchemaDeleteView(DeleteView):
     model = Schema
-    success_url = reverse_lazy('schema-list')
+    success_url = reverse_lazy('schema_editor')
+    pk_url_kwarg = 'schema_id'
 
 
 class BlockCreateView(CreateView):

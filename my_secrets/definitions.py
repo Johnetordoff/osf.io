@@ -10,4 +10,9 @@ SECRET_KEYS = [
     "SECRET_KEY",
     "OSF_OAUTH_CLIENT_ID",
     "OSF_OAUTH_SECRET_KEY",
+    "DB_HOST",
+    "DB_PASSWORD",
+    "DB_USER",
+    "DB_NAME",
+
 ]

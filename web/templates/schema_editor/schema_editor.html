@@ -1,33 +1,42 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Schema Editor</h2>
-<div class="panel panel-default">
-  <div class="panel panel-body">
-    <ul class="list-group">
-      {% for schema in schemas %}
-        <li class="list-group-item">{{ schema.name }}
-          <a href="{% url 'block_editor' schema_id=schema.id %}" class="pull-right" style="margin-left: 20px;">Edit</a>
-          <a href="{% url 'atomic_schema' schema_id=schema.id %}" class="pull-right" style="margin-left: 20px;">View Schema</a>
-          <a href="{% url 'schema-delete' schema_id=schema.id %}" class="pull-right" style="margin-left: 20px;">Delete</a>
-        </li>
-      {% endfor %}
-    </ul>
-  </div>
-  <div class="panel panel-footer">
-    <form action="{% url 'schema_add' %}" method="post">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <div class="form-group">
-        <label for="name">Schema name: </label>
-        <input id="name" class="form-control" type="text" name="name" maxlength="100" required>
-      </div>
-      <div class="form-group">
-        <label for="version">Versions: </label>
-        <input id="version" class="form-control" type="number" name="version" required>
-      </div>
-      <button type="submit"  class="btn btn-success btn-block" >Create New Schema</button>
-      </div>
-    </form>
-  </div>
-</div>
+    <div class="panel panel-default">
+        <div class="panel panel-heading">
+            <div class="panel-title">
+                Schema Editor
+            </div>
+        </div>
+        {% if schemas %}
+            <div class="panel-body">
+                <label for="schemas">Schemas</label>
+                <ul class="list-group">
+                    {% for schema in schemas %}
+                        <li class="list-group-item">{{ schema.name }}
+                            <a href="{% url 'block_editor' schema_id=schema.id %}" class="pull-right"
+                               style="margin-left: 20px;">Edit</a>
+                            <a href="{% url 'atomic_schema' schema_id=schema.id %}" class="pull-right"
+                               style="margin-left: 20px;">View Schema</a>
+                            <a href="{% url 'schema-delete' schema_id=schema.id %}" class="pull-right"
+                               style="margin-left: 20px;">Delete</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        <div class="panel-footer">
+            <form action="{% url 'schema_add' %}" method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <div class="form-group">
+                    <label for="name">Schema name: </label>
+                    <input id="name" class="form-control" type="text" name="name" maxlength="100" required>
+                </div>
+                <div class="form-group">
+                    <label for="version">Version: </label>
+                    <input id="version" class="form-control" type="number" name="version" required>
+                </div>
+                <button type="submit" class="btn btn-success btn-block">Create New Schema</button>
+            </form>
+        </div>
+    </div>
 {% endblock %}

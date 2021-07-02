@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Bulk Upload Contributors</h2>
+<div class="panel panel-default">
+    <div class="panel panel-body">
+        <form action="{% url 'bulk_upload_contributors' %}" id="bulk_upload_contributors" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Select</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+    <script src="https://cdn.rawgit.com/xcash/bootstrap-autocomplete/3de7ad37/dist/latest/bootstrap-autocomplete.js"></script>
+    <script>
+        $('.basicAutoComplete').autoComplete(
+            {minLength: 1}
+        );
+        $('.dropdown-menu').css({'top': 'auto', 'left': 'auto'})
+
+    </script>
+{% endblock %}

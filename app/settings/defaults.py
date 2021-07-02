@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+from my_secrets import secrets
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -78,10 +79,10 @@ WSGI_APPLICATION = "app.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "postgres",
-        "USER": "postgres",
-        "PASSWORD": "postgres",
-        "HOST": "db",
+        "NAME": secrets.DB_NAME,
+        "USER": secrets.DB_USER,
+        "PASSWORD": secrets.DB_PASSWORD,
+        "HOST": secrets.DB_HOST,
         "PORT": 5432,
     }
 }
@@ -151,6 +152,7 @@ LOGOUT_REDIRECT_URL = "home"
 OSF_REDIRECT_URI = 'https://emu.ngrok.io/callback/'
 OSF_CAS_URL = 'https://accounts.staging.osf.io/'
 OSF_API_URL = 'https://api.staging.osf.io/'
+
 
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
