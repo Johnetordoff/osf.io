@@ -64,17 +64,6 @@ a                </div>
         </div>
         <div style="padding: 50px;" class="container">
             <div class="row">
-                <div class="col-md-12">
-                    {% if messages %}
-                    <ul class="messages">
-                        {% for message in messages %}
-                        <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                        {% endfor %}
-                    </ul>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="row">
                 <div class="col-md-12" style="padding: 20px;">
                     {% block content %}{% endblock %}
                 </div>

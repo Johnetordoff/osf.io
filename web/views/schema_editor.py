@@ -1,10 +1,14 @@
-from django.urls import reverse_lazy
+import requests
 from django.views.generic.edit import CreateView, DeleteView, UpdateView, FormView
+from django.views.generic import TemplateView
 from web.models.user import Schema, Block
 from django.shortcuts import render, reverse, redirect
 from web.forms.schema_editor import SchemaForm, BlockForm
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse_lazy
+from app import settings
 
-class SchemaCreateView(CreateView):
+class SchemaCreateView(LoginRequiredMixin, CreateView):
     model = Schema
     fields = ['name', 'version']
 
@@ -20,7 +24,7 @@ class SchemaCreateView(CreateView):
         return redirect(reverse('schema_editor'))
 
 
-class SchemaUpdateView(UpdateView):
+class SchemaUpdateView(LoginRequiredMixin, UpdateView):
     pk_url_kwarg = 'schema_id'
 
     model = Schema
@@ -44,19 +48,18 @@ class SchemaUpdateView(UpdateView):
         with open(file.name, 'r') as fp:
             spamreader = csv.reader(fp, delimiter=',')
             for row in spamreader:
-                print(row)
+                data = row[0]
 
 
 
 
-
-class SchemaDeleteView(DeleteView):
+class SchemaDeleteView(LoginRequiredMixin, DeleteView):
     model = Schema
     success_url = reverse_lazy('schema_editor')
     pk_url_kwarg = 'schema_id'
 
 
-class BlockCreateView(CreateView):
+class BlockCreateView(LoginRequiredMixin, CreateView):
     model = Block
     fields = ['display_text', 'block_type']
 
@@ -74,7 +77,7 @@ class BlockCreateView(CreateView):
         return redirect(reverse('block_editor', kwargs={'schema_id': self.kwargs['schema_id']}))
 
 
-class BlockUpdateView(UpdateView, FormView):
+class BlockUpdateView(LoginRequiredMixin, UpdateView, FormView):
     model = Block
     success_url = reverse_lazy('block_editor')
     pk_url_kwarg = 'block_id'
@@ -105,9 +108,24 @@ class BlockUpdateView(UpdateView, FormView):
 
 
 
-class BlockDeleteView(DeleteView):
+class BlockDeleteView(LoginRequiredMixin, DeleteView):
     model = Block
     pk_url_kwarg = 'block_id'
 
     def get_success_url(self):
         return reverse('block_editor', kwargs={'schema_id': self.kwargs['schema_id']})
+
+
+
+class SchemaEditorView(LoginRequiredMixin, TemplateView, FormView):
+    template_name = "schema_editor/schema_editor.html"
+    form_class = SchemaForm
+    login_url = reverse_lazy('osf_oauth')
+
+    def get_context_data(self, *args, **kwargs):
+        return {'schemas': Schema.objects.filter(user=self.request.user) }
+
+    def get_success_url(self):
+        return reverse('schema_editor')
+
+

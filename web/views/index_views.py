@@ -31,28 +31,6 @@ class SignupView(generic.FormView):
         return super().form_valid(form)
 
 
-class RegistrationView(generic.TemplateView):
-    template_name = "registrations/register.html"
-
-    def get(self, request):
-        user = request.user
-        resp = requests.get(OSF_API_URL + 'v2/users/me/registrations/', headers={'Authorization': f'Bearer {user.token}'})
-
-        return render(request, self.template_name, {'data': resp.json()['data']})
-
-
-
-class SchemaEditorView(generic.TemplateView, generic.FormView):
-    template_name = "schema_editor/schema_editor.html"
-    form_class = SchemaForm
-
-    def get_context_data(self, *args, **kwargs):
-        return {'schemas': Schema.objects.filter(user=self.request.user) }
-
-    def get_success_url(self):
-        return reverse('schema_editor')
-
-
 class BlockEditorView(generic.TemplateView, generic.FormView):
     template_name = "schema_editor/block_editor.html"
     form_class = BlockForm
@@ -107,7 +85,7 @@ class OSFOauthView(generic.TemplateView):
         return redirect(
             f"{OSF_CAS_URL}oauth2/authorize/?client_id={OSF_OAUTH_CLIENT_ID}"
             f"&redirect_uri={OSF_REDIRECT_URI}"
-            f"&scope=osf.full_read"
+            f"&scope=osf.full_write"
             f"&response_type=code"
         )
 

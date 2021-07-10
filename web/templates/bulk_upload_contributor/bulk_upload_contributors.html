@@ -2,6 +2,18 @@
 
 {% block content %}
 <h2>Bulk Upload Contributors</h2>
+<div class="row">
+    <div class="col-md-12">
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+</div>
+
 <div class="panel panel-default">
     <div class="panel panel-body">
         <form action="{% url 'bulk_upload_contributors' %}" id="bulk_upload_contributors" method="post" enctype="multipart/form-data">

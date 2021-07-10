@@ -22,7 +22,6 @@ from web.views.index_views import (
     SimpleSchemaJSONView,
     SchemaJSONView,
     ImportView,
-    SchemaEditorView,
     BlockEditorView,
 )
 
@@ -31,6 +30,7 @@ from web.views.schema_editor import (
     SchemaDeleteView,
     SchemaUpdateView,
     BlockCreateView,
+    SchemaEditorView,
     BlockDeleteView,
     BlockUpdateView
 )

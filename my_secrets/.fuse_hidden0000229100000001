@@ -1,4 +1,0 @@
-#  coding=utf-8
-SECRET_KEY = "yo protect yo neck3"
-OSF_OAUTH_CLIENT_ID = "8655b12f68474fabafe4855035ab19cb"
-OSF_OAUTH_SECRET_KEY = "YejKXpmlkX3tCF5oa62pbkMGAA7YaCGc8eWq0X0h"
