@@ -6,20 +6,20 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('web', '0002_auto_20210620_1956'),
+        ("web", "0002_auto_20210620_1956"),
     ]
 
     operations = [
         migrations.RemoveConstraint(
-            model_name='block',
-            name='check_page_heading',
+            model_name="block",
+            name="check_page_heading",
         ),
         migrations.RemoveConstraint(
-            model_name='block',
-            name='check_section_heading',
+            model_name="block",
+            name="check_section_heading",
         ),
         migrations.RemoveConstraint(
-            model_name='block',
-            name='check_file_input',
+            model_name="block",
+            name="check_file_input",
         ),
     ]

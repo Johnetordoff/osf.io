@@ -6,17 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('web', '0008_auto_20210621_1516'),
+        ("web", "0008_auto_20210621_1516"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='block',
-            name='csv',
+            model_name="block",
+            name="csv",
         ),
         migrations.AlterField(
-            model_name='schema',
-            name='csv',
-            field=models.FileField(null=True, upload_to='csv/'),
+            model_name="schema",
+            name="csv",
+            field=models.FileField(null=True, upload_to="csv/"),
         ),
     ]

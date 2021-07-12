@@ -46,4 +46,3 @@ async def get_paginated_data(token, url):
         return pages_as_list
     else:
         return data
-

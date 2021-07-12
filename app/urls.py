@@ -32,11 +32,9 @@ from web.views.schema_editor import (
     BlockCreateView,
     SchemaEditorView,
     BlockDeleteView,
-    BlockUpdateView
+    BlockUpdateView,
 )
-from web.views.bulk_upload_contributors import (
-    BulkUploadContributors
-)
+from web.views.bulk_upload_contributors import BulkUploadContributors
 from django.conf.urls import url, include
 from django.urls import path
 
@@ -49,15 +47,43 @@ urlpatterns = [
     url(r"^osf_oauth/$", OSFOauthView.as_view(), name="osf_oauth"),
     url(r"^callback/$", OSFOauthCallbackView.as_view(), name="callback"),
     url(r"^(?P<schema_id>\w+)/json/$", SchemaJSONView.as_view(), name="schema_json"),
-    url(r"^(?P<schema_id>\w+)/json/atomicschema/$", SimpleSchemaJSONView.as_view(), name="atomic_schema"),
+    url(
+        r"^(?P<schema_id>\w+)/json/atomicschema/$",
+        SimpleSchemaJSONView.as_view(),
+        name="atomic_schema",
+    ),
     url(r"^'schema/(?P<schema_id>\w+)/import/$", ImportView.as_view(), name="import"),
     url(r"^schema_editor/", SchemaEditorView.as_view(), name="schema_editor"),
-    path('schema/<int:schema_id>/', SchemaUpdateView.as_view(), name='schema-update'),
-    path('schema/add/', SchemaCreateView.as_view(), name='schema_add'),
-    path('schema/<int:schema_id>/delete/', SchemaDeleteView.as_view(), name='schema-delete'),
-    path('schema/<int:schema_id>/block_editor/', BlockEditorView.as_view(), name='block_editor'),
-    path('schema/<int:schema_id>/blocks/<int:block_id>/', BlockUpdateView.as_view(), name='block-update'),
-    path('schema/<int:schema_id>/blocks/add/', BlockCreateView.as_view(), name='block-add'),
-    path('schema/<int:schema_id>/blocks/<int:block_id>/delete/', BlockDeleteView.as_view(), name='block-delete'),
-    url(r"^bulk_upload_contributors/$", BulkUploadContributors.as_view(), name="bulk_upload_contributors"),
+    path("schema/<int:schema_id>/", SchemaUpdateView.as_view(), name="schema-update"),
+    path("schema/add/", SchemaCreateView.as_view(), name="schema_add"),
+    path(
+        "schema/<int:schema_id>/delete/",
+        SchemaDeleteView.as_view(),
+        name="schema-delete",
+    ),
+    path(
+        "schema/<int:schema_id>/block_editor/",
+        BlockEditorView.as_view(),
+        name="block_editor",
+    ),
+    path(
+        "schema/<int:schema_id>/blocks/<int:block_id>/",
+        BlockUpdateView.as_view(),
+        name="block-update",
+    ),
+    path(
+        "schema/<int:schema_id>/blocks/add/",
+        BlockCreateView.as_view(),
+        name="block-add",
+    ),
+    path(
+        "schema/<int:schema_id>/blocks/<int:block_id>/delete/",
+        BlockDeleteView.as_view(),
+        name="block-delete",
+    ),
+    url(
+        r"^bulk_upload_contributors/$",
+        BulkUploadContributors.as_view(),
+        name="bulk_upload_contributors",
+    ),
 ]

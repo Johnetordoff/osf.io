@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('web', '0005_block_csv'),
+        ("web", "0005_block_csv"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='block',
-            name='csv',
-            field=models.FileField(null=True, upload_to='csv/'),
+            model_name="block",
+            name="csv",
+            field=models.FileField(null=True, upload_to="csv/"),
         ),
     ]

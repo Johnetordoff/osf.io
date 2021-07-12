@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('web', '0003_auto_20210620_1957'),
+        ("web", "0003_auto_20210620_1957"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='block',
-            name='index',
+            model_name="block",
+            name="index",
             field=models.PositiveIntegerField(null=True),
         ),
     ]

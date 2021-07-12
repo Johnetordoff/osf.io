@@ -2,6 +2,7 @@ from django.forms import ModelForm, Form
 from web.models import User
 from django import forms
 
+
 class SignupForm(ModelForm):
     class Meta:
         model = User

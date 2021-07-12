@@ -14,5 +14,4 @@ SECRET_KEYS = [
     "DB_PASSWORD",
     "DB_USER",
     "DB_NAME",
-
 ]
