@@ -140,6 +140,20 @@ class CrossRefClient(AbstractIdentifierClient):
             element.doi(doi),
             element.resource(settings.DOMAIN + preprint._id)
         ]
+
+        posted_content.append(
+            [
+                element.institution(
+                    element.institution_name('Open Science Framework'),
+                    element.institution_id(
+                        'ror',
+                        f'https://ror.org/{settings.OSF_ROR_ID}'
+                    ),
+                    element.institution_acronym('COS'),
+                    element.institution_place('210 Ridge McIntire Rd STE 500, Charlottesville, VA 22903'),
+                )
+            ]
+        )
         posted_content.append(element.doi_data(*doi_data))
 
         return posted_content

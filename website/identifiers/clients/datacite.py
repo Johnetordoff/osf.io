@@ -44,6 +44,12 @@ class DataCiteClient(AbstractIdentifierClient):
                 {'title': node.title}
             ],
             'publisher': 'Open Science Framework',
+            'affiliation': {
+                'affiliation': 'Open Science Framework',
+                'affiliationIdentifier': f'https://ror.org/{settings.OSF_ROR_ID}',
+                'affiliationIdentifierSchema': 'ROR',
+                'SchemeURI': 'https://ror.org/',
+            },
             'publicationYear': str(datetime.datetime.now().year),
             'resourceType': {
                 'resourceType': 'Pre-registration' if node.type == 'osf.registration' else 'Project',
