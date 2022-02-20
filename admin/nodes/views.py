@@ -612,10 +612,9 @@ class NodeMakePublic(NodeMixin, View):
         return redirect(self.get_success_url())
 
 
-class RestartStuckRegistrationsView(NodeMixin, TemplateView):
+class RestartStuckRegistrationsView(NodeMixin, View):
     """ Allows an authorized user to restart a registrations archive process.
     """
-    template_name = 'nodes/restart_registrations_modal.html'
     permission_required = ('osf.view_node', 'osf.change_node')
 
     def post(self, request, *args, **kwargs):
@@ -636,10 +635,9 @@ class RestartStuckRegistrationsView(NodeMixin, TemplateView):
         return redirect(self.get_success_url())
 
 
-class RemoveStuckRegistrationsView(NodeMixin, TemplateView):
+class RemoveStuckRegistrationsView(NodeMixin, View):
     """ Allows an authorized user to remove a registrations if it's stuck in the archiving process.
     """
-    template_name = 'nodes/remove_registrations_modal.html'
     permission_required = ('osf.view_node', 'osf.change_node')
 
     def post(self, request, *args, **kwargs):
