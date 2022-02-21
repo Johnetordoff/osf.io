@@ -47,6 +47,7 @@
         <thead>
             <tr>
                 <th>GUID</th>
+                <th>Type</th>
                 <th>Name</th>
                 <th>Public</th>
                 <th># of Contributors</th>
@@ -68,6 +69,7 @@
                         </a>
                     {% endif %}
                 </td>
+                <td>{{ item.type |cut:'osf.'|title  }}</td>
                 <td>{{ item.title | truncatechars:20 }}</td>
                 <td>{{ item.is_public }}</td>
                 <td>{{ item.contributors|length }}</td>
