@@ -13,6 +13,7 @@ from osf.models.quickfiles import get_quickfiles_project_title
 
 from addons.osfstorage.models import OsfStorageFile
 from website import mails, settings
+from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator
 from tqdm import tqdm
 
