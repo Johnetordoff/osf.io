@@ -69,7 +69,7 @@ def remove_quickfiles(dry_run=False):
         logger.info(f'{quick_files_nodes.count()} quickfiles nodes were projectified.')
 
         paginated_progressbar(QuickFilesNode.objects.all(), lambda item: item.delete(), dry_run=dry_run)
-        logger.info(f'All Quickfiles deleted 🎉')
+        logger.info(f'All Quickfiles deleted')
 
     if not dry_run:
         paginated_progressbar(
