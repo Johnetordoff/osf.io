@@ -40,7 +40,8 @@ def paginated_progressbar(queryset, function, page_size=100, dry_run=False):
 def remove_quickfiles(dry_run=False):
     quick_files_ids = QuickFilesNode.objects.values_list('id', flat=True)
     quick_files_node_with_files_ids = OsfStorageFile.objects.filter(
-        target_object_id__in=quick_files_ids
+        target_object_id__in=quick_files_ids,
+        target_content_type=ContentType.objects.get_for_model(QuickFilesNode)
     ).values_list(
         'target_object_id',
         flat=True
