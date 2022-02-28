@@ -1,3 +1,8 @@
+import csv
+import re
+import codecs
+from website import settings
+
 from django.views.generic import TemplateView, View
 from django.contrib import messages
 from django.http import HttpResponse
@@ -8,7 +13,7 @@ from osf.management.commands.update_registration_schemas import update_registrat
 from scripts.find_spammy_content import manage_spammy_content
 from django.core.urlresolvers import reverse
 from django.shortcuts import redirect
-from osf.models import Preprint, Node, Registration
+from osf.models import Preprint, Node, Registration, OSFUser
 
 
 class ManagementCommands(TemplateView):
@@ -63,6 +68,7 @@ class GetSpamDataCSV(ManagementCommandPermissionView):
         response['Content-Disposition'] = f'attachment; filename={filename}'
         return response
 
+
 class BanSpamByRegex(ManagementCommandPermissionView):
 
     def post(self, request, *args, **kwargs):
@@ -86,4 +92,21 @@ class BanSpamByRegex(ManagementCommandPermissionView):
             return redirect(reverse('management:commands'))
         spam_ban_count = manage_spammy_content(regex, days, models, ban=True)
         messages.success(request, f'{spam_ban_count} users have been banned')
+        return redirect(reverse('management:commands'))
+
+
+class BulkBanUsers(ManagementCommandPermissionView):
+
+    def post(self, request, *args, **kwargs):
+        csv_file = request.FILES['csv']
+        for row in csv.DictReader(codecs.iterdecode(csv_file.file, 'utf-8-sig'), delimiter=","):
+            guid = re.search(r'\/([a-zA-Z0-9]{5,})', list(row.values())[0]).groups()[0]
+            try:
+                user = OSFUser.objects.get(guids___id=guid)
+                user.confirm_spam()
+            except OSFUser.DoesNotExist:
+                messages.error(request, f'OSFUser {guid} cannot be found')
+            except Exception as e:
+                messages.error(request, e)
+
         return redirect(reverse('management:commands'))

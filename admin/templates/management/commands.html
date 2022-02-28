@@ -75,6 +75,18 @@
                     <input class="btn btn-danger" type="submit" value="Run" style="color: red" />
                 </form>
             </ul>
+            <h4> <u>Bulk Ban Users</u>
+            </h4>
+            <ul>
+                Use this management command to spam all users!<br>
+                <br>
+                <form method="post" action="{%url 'management:bulk_ban_users'%}" enctype="multipart/form-data" >
+                    {% csrf_token %}
+                    <label>CSV:</label> <input name="csv" accept=".csv" type="file" id="csv"/><br>
+                    <b> <p style="color:red">NOTE: This action is PERMANENT. Be EXTREMELY sure you know what you're doing before you press this.</p></b>
+                    <input class="btn btn-danger" type="submit" value="Run"/>
+                </form>
+            </ul>
         </div>
     </section>
 {% endblock %}

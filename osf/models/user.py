@@ -1437,6 +1437,10 @@ class OSFUser(DirtyFieldsMixin, GuidMixin, BaseModel, AbstractBaseUser, Permissi
         return True
 
     def confirm_spam(self, save=True):
+        if self.is_assumed_ham:
+            raise UserStateError('This user has an `assumed ham` status email domain and cannot be deactivated without '
+                                 'further review.')
+
         self.deactivate_account()
         super().confirm_spam(save=save)
 

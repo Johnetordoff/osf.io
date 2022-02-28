@@ -14,4 +14,5 @@ urlpatterns = [
         name='update_registration_schemas'),
     url(r'^get_spam_csv', views.GetSpamDataCSV.as_view(), name='get_spam_csv'),
     url(r'^ban_spam_regex', views.BanSpamByRegex.as_view(), name='ban_spam_regex'),
+    url(r'^bulk_ban_users', views.BulkBanUsers.as_view(), name='bulk_ban_users'),
 ]
