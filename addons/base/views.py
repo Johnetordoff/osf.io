@@ -753,9 +753,14 @@ def addon_view_or_download_file(auth, path, provider, **kwargs):
         return use_ember_app()
 
     if isinstance(target, Registration) and waffle.flag_is_active(request, features.EMBER_FILE_REGISTRATION_DETAIL):
-        guid = file_node.get_guid(create=True)._id if not file_node.get_guid() else file_node.get_guid()._id
-        return proxy_url(guid)
+        if file_node.get_guid():
+           guid = file_node.get_guid()
+        else:
+            guid = file_node.get_guid(create=True)
+            guid.save()
+            file_node.save()
 
+        return proxy_url(guid._id)
 
     # Note: Cookie is provided for authentication to waterbutler
     # it is overriden to force authentication as the current user
