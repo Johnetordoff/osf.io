@@ -49,7 +49,8 @@ def turn_quickfiles_into_projects(page):
     for node in page:
         node.type = 'osf.node'
         node.description = QUICKFILES_DESC
-        node.recast(Node)
+        node.recast(Node._typedmodels_type)
+        node.save()
         node.guids.all().delete()  # remove legacy guid
         node.save()
 
