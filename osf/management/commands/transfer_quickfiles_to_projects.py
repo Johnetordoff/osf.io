@@ -4,7 +4,6 @@ import logging
 import datetime
 
 from django.db import transaction
-from django.utils import timezone
 from django.core.management.base import BaseCommand
 
 from osf.models import (
@@ -50,15 +49,13 @@ def turn_quickfiles_into_projects(page):
         node.type = 'osf.node'
         node.description = QUICKFILES_DESC
         node.recast(Node._typedmodels_type)
-        node.save()
         node.guids.all().delete()  # remove legacy guid
-        node.save()
+        node.get_guid(create=True).save()
 
-
-def delete_fileless_quickfiles_nodes(page):
-    for node in page:
-        node.is_deleted = True
-        node.deleted = timezone.now()
+        # update guid in logs
+        for log in node.logs.all():
+            log.params['node'] = node._id
+            log.save()
         node.save()
 
 
@@ -114,14 +111,6 @@ def remove_quickfiles(dry_run=False, page_size=1000):
         if not dry_run:
             NodeLog.objects.bulk_create(node_logs)
             logger.info(f'{len(node_logs)} node logs were added.')
-
-        paginated_progressbar(
-            QuickFilesNode.objects.all(),
-            lambda page: delete_fileless_quickfiles_nodes(page),
-            page_size=page_size,
-            dry_run=dry_run
-        )
-        logger.info(f'All Quickfiles deleted')
 
         if not dry_run:
             paginated_progressbar(
