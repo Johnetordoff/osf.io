@@ -34,7 +34,7 @@ def turn_quickfiles_into_projects(page):
         node.description = QUICKFILES_DESC
         node.recast(Node._typedmodels_type)
         node.guids.all().delete()  # remove legacy guid
-
+        node.save()
         Guid.objects.create(
             object_id=node.pk,
             content_type_id=ContentType.objects.get_for_model(node).pk
@@ -61,6 +61,7 @@ def turn_quickfiles_into_projects(page):
             node=node,
             user=node.creator,
             original_node=node,
+            params={'node': node._id},
             action=NodeLog.MIGRATED_QUICK_FILES
         ).save()
 
