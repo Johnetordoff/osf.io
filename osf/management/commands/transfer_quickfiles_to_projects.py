@@ -32,7 +32,7 @@ QUICKFILES_DESC = 'The Quick Files feature was discontinued and it’s files wer
 def turn_quickfiles_into_projects(page):
     for node in page:
         node.description = QUICKFILES_DESC
-        node.recast(Node._typedmodels_type)
+        node.type = 'osf.node'
         node.guids.all().delete()  # remove legacy guid
         node.save()
         Guid.objects.create(
@@ -114,7 +114,9 @@ def reverse_remove_quickfiles(dry_run=False, page_size=1000):
             logs__action=NodeLog.MIGRATED_QUICK_FILES
         )
         quickfiles_nodes_with_files.update(
-            type='osf.quickfilesnode'
+            type='osf.quickfilesnode',
+            is_deleted=False,
+            deleted=None,
         )
 
         for node in quickfiles_nodes_with_files:
