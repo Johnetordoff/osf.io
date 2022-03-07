@@ -8,6 +8,7 @@ PAGE_SIZE = 100
 from tqdm import tqdm
 from api.share.utils import update_share
 
+
 def paginated_progressbar(queryset, page_size, function, dry_run=False):
     paginator = Paginator(queryset, page_size)
     progress_bar = tqdm(total=queryset.count())
