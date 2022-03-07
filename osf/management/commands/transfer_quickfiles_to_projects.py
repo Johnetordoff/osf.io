@@ -1,5 +1,4 @@
 import pytz
-import math
 import logging
 import datetime
 
@@ -11,7 +10,8 @@ from osf.models import (
     QuickFilesNode,
     NodeLog,
     AbstractNode,
-    Guid
+    Guid,
+    Node
 )
 
 from osf.models.base import generate_guid
@@ -27,7 +27,6 @@ QUICKFILES_DESC = 'The Quick Files feature was discontinued and it’s files wer
                   ' 11, 2022. The file URL’s will still resolve properly, and the Quick Files logs are available in' \
                   ' the Project’s Recent Activity.'
 QUICKFILES_DATE = datetime.datetime(2022, 3, 11, tzinfo=pytz.utc)
-GUID_BATCH_SIZE = 750
 
 
 def remove_quickfiles(dry_run=False, page_size=1000):
