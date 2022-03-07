@@ -22,12 +22,12 @@ from website import mails, settings
 from django.contrib.contenttypes.models import ContentType
 from tqdm import tqdm
 
-
 logger = logging.getLogger(__name__)
 QUICKFILES_DESC = 'The Quick Files feature was discontinued and it’s files were migrated into this Project on March' \
                   ' 11, 2022. The file URL’s will still resolve properly, and the Quick Files logs are available in' \
                   ' the Project’s Recent Activity.'
 QUICKFILES_DATE = datetime.datetime(2022, 3, 11, tzinfo=pytz.utc)
+GUID_BATCH_SIZE = 750
 
 
 def paginated_progressbar(queryset, function, page_size=100, dry_run=False):
@@ -73,7 +73,11 @@ def remove_quickfiles(dry_run=False, page_size=1000):
                 content_type=ContentType.objects.get_for_model(Node)
             ) for node in quick_files_node_with_files_ids
         ]
-        Guid.objects.bulk_create(guids)
+
+        # paginate guid creation batches to avoid collisions
+        guids = [guids[i:i + GUID_BATCH_SIZE] for i in range(0, len(guids), GUID_BATCH_SIZE)]
+        for guid_page in guids:
+            Guid.objects.bulk_create(guid_page)
 
         node_logs = [
             NodeLog(
