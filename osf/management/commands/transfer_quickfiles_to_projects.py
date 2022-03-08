@@ -13,7 +13,6 @@ from osf.models import (
     NodeLog,
     AbstractNode,
     Guid,
-    Node
 )
 from osf.models.base import generate_guid
 from osf.models.quickfiles import get_quickfiles_project_title
@@ -26,6 +25,8 @@ from django.contrib.contenttypes.models import ContentType
 
 logger = logging.getLogger(__name__)
 QUICKFILES_DESC = 'The Quick Files feature was discontinued and it’s files were migrated into this Project on March' \
+                  ' 11, 2022. The file URL’s will still resolve properly, and the Quick Files logs are available in' \
+                  ' the Project’s Recent Activity.'
 QUICKFILES_DATE = datetime.datetime(2022, 3, 11, tzinfo=pytz.utc)
 
 
