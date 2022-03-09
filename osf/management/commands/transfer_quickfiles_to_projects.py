@@ -46,7 +46,7 @@ def remove_quickfiles():
     ).delete()
     logger.info(f'Deleted guids: {_}')
 
-    # generate unique guids prior to record creation to avoid collisions.
+    # generate unique guids prior to record creation to avoid collisions, set object ensures all guids are unique
     guids = set([])
     while len(guids) < target_count:
         guids.add(generate_guid())
