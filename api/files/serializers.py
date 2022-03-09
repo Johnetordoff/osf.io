@@ -47,6 +47,7 @@ class CheckoutField(ser.HyperlinkedRelatedField):
     def __init__(self, **kwargs):
         kwargs['queryset'] = True
         kwargs['read_only'] = False
+        kwargs['required'] = False
         kwargs['allow_null'] = True
         kwargs['lookup_field'] = '_id'
         kwargs['lookup_url_kwarg'] = 'user_id'
