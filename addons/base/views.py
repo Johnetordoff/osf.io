@@ -754,7 +754,7 @@ def addon_view_or_download_file(auth, path, provider, **kwargs):
 
     if isinstance(target, Registration) and waffle.flag_is_active(request, features.EMBER_FILE_REGISTRATION_DETAIL):
         if file_node.get_guid():
-           guid = file_node.get_guid()
+            guid = file_node.get_guid()
         else:
             guid = file_node.get_guid(create=True)
             guid.save()
