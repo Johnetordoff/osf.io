@@ -516,6 +516,7 @@ class CeleryConfig:
         'osf.management.commands.populate_initial_schema_responses',
         'osf.management.commands.approve_pending_schema_responses',
         'osf.management.commands.delete_legacy_quickfiles_nodes',
+        'osf.management.commands.fix_quickfiles_waterbulter_logs',
         'api.providers.tasks'
     )
 
