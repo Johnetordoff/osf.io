@@ -95,9 +95,10 @@ def fix_quickfiles_waterbutler_logs(dry_run=False):
     ).filter(
         logs__action__in=affected_log_actions
     ).distinct('pk')
+    logger.info(f'{nodes.count()} Quickfiles nodes with bugged logs found.')
 
     for node in nodes:
-        logger.debug(f'{node._id} Quickfiles logs fixing started')
+        logger.info(f'{node._id} Quickfiles logs fixing started')
         enqueue_task(fix_logs.s(node._id, dry_run=dry_run))
 
 
