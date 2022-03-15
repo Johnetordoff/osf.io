@@ -57,7 +57,7 @@ def fix_logs(node_id, dry_run=False):
         node = Node.load(node_id)
         for log in node.logs.filter(action__in=error_causing_log_actions):
             log.params['params_node'] = {
-                'id': node._id,
+                '_id': node._id,
                 'title': node.title
             }
 
@@ -71,7 +71,7 @@ def fix_logs(node_id, dry_run=False):
 
         for log in node.logs.filter(action__in=dead_links_actions):
             log.params['params_node'] = {
-                'id': node._id,
+                '_id': node._id,
                 'title': node.title
             }
 
