@@ -6,7 +6,6 @@ logger = logging.getLogger(__file__)
 from osf.models import RegistrationSchema
 from osf.utils.migrations import ensure_schemas
 from website.project.metadata.schemas import ensure_schema_structure, from_json
-from osf.utils.migrations import UpdateRegistrationSchemasAndSchemaBlocks
 
 
 def add_invisible_schemas(apps, schema_editor):
@@ -28,6 +27,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        UpdateRegistrationSchemasAndSchemaBlocks(),
-        migrations.RunPython(add_invisible_schemas, ensure_schemas),
     ]
