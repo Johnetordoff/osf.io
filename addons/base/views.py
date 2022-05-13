@@ -726,8 +726,7 @@ def addon_view_or_download_file(auth, path, provider, **kwargs):
             })
 
     savepoint_id = transaction.savepoint()
-    file_node = BaseFileNode.resolve_class(provider, BaseFileNode.FILE).get_or_create(target, path)
-
+    file_node = BaseFileNode.resolve_class(provider, BaseFileNode.FILE).get(target, path)
     # There's no download action redirect to the Ember front-end file view and create guid.
     if action != 'download':
         if isinstance(target, Node) and waffle.flag_is_active(request, features.EMBER_FILE_PROJECT_DETAIL):
