@@ -726,7 +726,7 @@ def addon_view_or_download_file(auth, path, provider, **kwargs):
             })
 
     savepoint_id = transaction.savepoint()
-    file_node = BaseFileNode.resolve_class(provider, BaseFileNode.FILE).get_or_create(target, path)
+    file_node = BaseFileNode.resolve_class(provider, BaseFileNode.FILE).get_or_create(target, path, request)
 
     # Note: Cookie is provided for authentication to waterbutler
     # it is overridden to force authentication as the current user

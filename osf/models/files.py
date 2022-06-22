@@ -191,13 +191,42 @@ class BaseFileNode(TypedModel, CommentableMixin, OptionalGuidMixin, Taggable, Ob
         return cls(**kwargs)
 
     @classmethod
-    def get_or_create(cls, target, path):
+    def get_or_create(cls, target, path, request=None):
         content_type = ContentType.objects.get_for_model(target)
+        from django.core.exceptions import MultipleObjectsReturned
+        path = '/' + path.lstrip('/')
         try:
-            obj = cls.objects.get(target_object_id=target.id, target_content_type=content_type, _path='/' + path.lstrip('/'))
+            return cls.objects.get(
+                target_object_id=target.id,
+                target_content_type=content_type,
+                _path=path
+            )
         except cls.DoesNotExist:
-            obj = cls(target_object_id=target.id, target_content_type=content_type, _path='/' + path.lstrip('/'))
-        return obj
+            return cls(
+                target_object_id=target.id,
+                target_content_type=content_type,
+                _path=path
+            )
+        except MultipleObjectsReturned as e:
+            # Get correct DV version or most recent
+            if str(e) == 'get() returned more than one DataverseFile -- it returned 2!':
+                if request:
+                    dataset_version = request.args.to_dict().get('version')
+                    if dataset_version:
+                        return cls.objects.get(
+                            target_object_id=target.id,
+                            target_content_type=content_type,
+                            _path=path,
+                            _history__0__extra__datasetVersion=request.args.to_dict().get('version')
+                        )
+                    else:
+                        return cls.objects.filter(
+                            target_object_id=target.id,
+                            target_content_type=content_type,
+                            _path=path,
+                        ).order_by('created').first()
+            else:
+                raise e
 
     @classmethod
     def get_file_guids(cls, materialized_path, provider, target):
