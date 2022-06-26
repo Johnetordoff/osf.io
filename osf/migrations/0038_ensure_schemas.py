@@ -18,5 +18,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(ensure_schemas, remove_schemas),
     ]
