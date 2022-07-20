@@ -207,6 +207,7 @@ REST_FRAMEWORK = {
 # CORS plugin only matches based on "netloc" part of URL, so as workaround we add that to the list
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = (urlparse(osf_settings.DOMAIN).netloc,)
+CORS_ALLOWED_ORIGINS = (osf_settings.DOMAIN.rstrip('/'),)
 # This needs to remain True to allow cross origin requests that are in CORS_ALLOWED_ORIGINS to
 # use cookies.
 CORS_ALLOW_CREDENTIALS = True
@@ -355,3 +356,5 @@ DEFAULT_ES_NULL_VALUE = 'N/A'
 TRAVIS_ENV = False
 
 CITATION_STYLES_REPO_URL = 'https://github.com/CenterForOpenScience/styles/archive/88e6ed31a91e9f5a480b486029cda97b535935d4.zip'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'

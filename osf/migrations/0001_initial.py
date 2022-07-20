@@ -299,7 +299,6 @@ class Migration(migrations.Migration):
                 ('reports', osf.utils.datetime_aware_jsonfield.DateTimeAwareJSONField(blank=True, default=dict, validators=[osf.models.spam._validate_reports])),
                 ('date_created', osf.utils.fields.NonNaiveDateTimeField(default=django.utils.timezone.now)),
                 ('date_modified', osf.utils.fields.NonNaiveDateTimeField(default=django.utils.timezone.now)),
-                ('modified', models.BooleanField(default=False)),
                 ('is_deleted', models.BooleanField(default=False)),
                 ('page', models.CharField(blank=True, max_length=255)),
                 ('content', models.TextField(validators=[osf.models.validators.CommentMaxLength(500), osf.models.validators.string_required])),
