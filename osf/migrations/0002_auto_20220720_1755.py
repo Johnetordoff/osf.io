@@ -2488,11 +2488,6 @@ class Migration(migrations.Migration):
             field=models.ManyToManyField(to='osf.RegistrationSchema'),
         ),
         migrations.AlterField(
-            model_name='basefilenode',
-            name='versions',
-            field=models.ManyToManyField(through='osf.BaseFileVersionsThrough', to='osf.FileVersion'),
-        ),
-        migrations.AlterField(
             model_name='draftregistration',
             name='registration_schema',
             field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='osf.registrationschema'),
