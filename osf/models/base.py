@@ -13,6 +13,7 @@ from django.db.models.query import QuerySet
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django_extensions.db.models import TimeStampedModel
+from include import IncludeQuerySet
 from past.builtins import basestring
 
 from osf.utils.caching import cached_property
@@ -280,13 +281,15 @@ class OptionalGuidMixin(BaseIDMixin):
         abstract = True
 
 
-class GuidMixinQuerySet(QuerySet):
+class GuidMixinQuerySet(IncludeQuerySet):
 
     def all(self):
         if self._fields:
             return super(GuidMixinQuerySet, self).all()
         return super(GuidMixinQuerySet, self).all()
 
+    def count(self):
+        return super(GuidMixinQuerySet, self.include(None)).count()
 
 class GuidMixin(BaseIDMixin):
     __guid_min_length__ = 5

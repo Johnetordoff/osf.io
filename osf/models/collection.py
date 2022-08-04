@@ -9,6 +9,7 @@ from django.db import IntegrityError, models
 from django.utils.functional import cached_property
 from django.utils import timezone
 from guardian.models import GroupObjectPermissionBase, UserObjectPermissionBase
+from include import IncludeManager
 from framework.celery_tasks.handlers import enqueue_task
 
 from osf.models.base import BaseModel, GuidMixin
@@ -87,6 +88,8 @@ class CollectionSubmission(TaxonomizableMixin, BaseModel):
         return ret
 
 class Collection(DirtyFieldsMixin, GuidMixin, BaseModel, GuardianMixin):
+    objects = IncludeManager()
+
     groups = {
         'read': ('read_collection', ),
         'write': ('read_collection', 'write_collection', ),

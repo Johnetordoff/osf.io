@@ -25,6 +25,7 @@ from django.utils.functional import cached_property
 from keen import scoped_keys
 from psycopg2._psycopg import AsIs
 from typedmodels.models import TypedModel, TypedModelManager
+from include import IncludeManager
 from guardian.models import (
     GroupObjectPermissionBase,
     UserObjectPermissionBase,
@@ -177,7 +178,7 @@ class AbstractNodeQuerySet(GuidMixinQuerySet):
         return qs.filter(is_deleted=False)
 
 
-class AbstractNodeManager(TypedModelManager):
+class AbstractNodeManager(TypedModelManager, IncludeManager):
 
     def get_queryset(self):
         qs = AbstractNodeQuerySet(self.model, using=self._db)

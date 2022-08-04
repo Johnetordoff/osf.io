@@ -92,6 +92,7 @@ transitions==0.8.2
 # identifiers
 datacite==1.1.2
 
+git+https://github.com/Johnetordoff/django-include.git@django-3
 
 # Metrics
 git+https://github.com/Johnetordoff/django-elasticsearch-metrics.git@update-django-3
