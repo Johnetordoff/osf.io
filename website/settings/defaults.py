@@ -750,6 +750,13 @@ EXTERNAL_IDENTITY_PROFILE = {
     'OrcidProfile': 'ORCID',
 }
 
+ORCID_PUBLIC_API_ACCESS_TOKEN = None
+ORCID_PUBLIC_API_V3_URL = 'https://pub.orcid.org/v3.0/'
+ORCID_PUBLIC_API_REQUEST_TIMEOUT = None
+ORCID_RECORD_ACCEPT_TYPE = 'application/vnd.orcid+xml'
+ORCID_RECORD_EMPLOYMENT_PATH = '/employments'
+ORCID_RECORD_EDUCATION_PATH = '/educations'
+
 # Source: https://github.com/maxd/fake_email_validator/blob/master/config/fake_domains.list
 BLACKLISTED_DOMAINS = [
     '0-mail.com',
@@ -2101,3 +2108,5 @@ PRODUCT_OWNER_EMAIL_ADDRESS = {}
 CAS_LOG_LEVEL = 3  # ERROR
 
 PREPRINT_METRICS_START_DATE = datetime.datetime(2019, 1, 1)
+
+WAFFLE_VALUES_YAML = 'osf/features.yaml'

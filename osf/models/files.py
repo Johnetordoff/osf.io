@@ -89,10 +89,10 @@ class BaseFileNode(TypedModel, CommentableMixin, OptionalGuidMixin, Taggable, Ob
     # Add regardless it can be pinned to a version or not
     _history = DateTimeAwareJSONField(default=list, blank=True)
     # A concrete version of a FileNode, must have an identifier
-    versions = models.ManyToManyField('FileVersion', through='BaseFileVersionsThrough')
+    versions = models.ManyToManyField('FileVersion', through='osf.BaseFileVersionsThrough')
 
-    target_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    target_object_id = models.PositiveIntegerField()
+    target_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, blank=True, null=True, default=None)
+    target_object_id = models.PositiveIntegerField(blank=True, null=True, default=None)
     target = GenericForeignKey('target_content_type', 'target_object_id')
 
     parent = models.ForeignKey('self', blank=True, null=True, default=None, related_name='_children', on_delete=models.CASCADE)
@@ -191,10 +191,14 @@ class BaseFileNode(TypedModel, CommentableMixin, OptionalGuidMixin, Taggable, Ob
         return cls(**kwargs)
 
     @classmethod
-    def get_or_create(cls, target, path):
+    def get_or_create(cls, target, path, **unused_query_params):
         content_type = ContentType.objects.get_for_model(target)
         try:
-            obj = cls.objects.get(target_object_id=target.id, target_content_type=content_type, _path='/' + path.lstrip('/'))
+            obj = cls.objects.get(
+                target_object_id=target.id,
+                target_content_type=content_type,
+                _path='/' + path.lstrip('/'),
+            )
         except cls.DoesNotExist:
             obj = cls(target_object_id=target.id, target_content_type=content_type, _path='/' + path.lstrip('/'))
         return obj

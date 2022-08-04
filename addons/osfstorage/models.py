@@ -85,7 +85,7 @@ class OsfStorageFileNode(BaseFileNode):
         return cls.objects.get(_id=_id, target_object_id=target.id, target_content_type=ContentType.objects.get_for_model(target))
 
     @classmethod
-    def get_or_create(cls, target, path):
+    def get_or_create(cls, target, path, **unused_query_params):
         """Override get or create for osfstorage
         Path is always the _id of the osfstorage filenode.
         Use load here as its way faster than find.
@@ -304,7 +304,13 @@ class OsfStorageFile(OsfStorageFileNode, File):
         if metadata:
             version.update_metadata(metadata, save=False)
 
-        version.region = self.target.osfstorage_region
+        from addons.osfstorage.models import Region
+        if getattr(self.target, '_settings_model', None):
+            osfs_settings = self.target._settings_model('osfstorage')
+            region_subquery = osfs_settings.objects.filter(owner=self.target.id).values_list('region_id', flat=True)[0]
+            version.region = Region.objects.get(id=region_subquery)
+        else:
+            version.region = self.target.region
         version._find_matching_archive(save=False)
 
         version.save()
@@ -408,7 +414,7 @@ class OsfStorageFile(OsfStorageFileNode, File):
 
 class OsfStorageFolder(OsfStorageFileNode, Folder):
 
-    is_root = models.NullBooleanField()
+    is_root = models.BooleanField(null=True, blank=True)
 
     objects = OsfStorageFolderManager()
 

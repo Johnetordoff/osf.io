@@ -1,7 +1,7 @@
 from datetime import datetime
 from collections import OrderedDict
 
-from django.core.urlresolvers import resolve, reverse
+from django.urls import resolve, reverse
 from django.core.exceptions import ValidationError
 
 import furl
@@ -266,9 +266,12 @@ class BaseFileSerializer(JSONAPISerializer):
 
     def absolute_url(self, obj):
         if obj.is_file:
-            return furl.furl(settings.DOMAIN).set(
+            url = furl.furl(settings.DOMAIN).set(
                 path=(obj.target._id, 'files', obj.provider, obj.path.lstrip('/')),
-            ).url
+            )
+            if obj.provider == 'dataverse':
+                url.add(query_params={'version': obj.history[-1]['extra']['datasetVersion']})
+            return url.url
 
     def get_download_link(self, obj):
         if obj.is_file:

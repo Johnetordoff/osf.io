@@ -330,7 +330,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
     is_fork = models.BooleanField(default=False, db_index=True)
     is_public = models.BooleanField(default=False, db_index=True)
     is_deleted = models.BooleanField(default=False, db_index=True)
-    access_requests_enabled = models.NullBooleanField(default=True, db_index=True)
+    access_requests_enabled = models.BooleanField(default=True, null=True, db_index=True)
 
     custom_citation = models.TextField(blank=True, null=True)
 
@@ -376,11 +376,37 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         base_manager_name = 'objects'
         index_together = (('is_public', 'is_deleted', 'type'))
         permissions = (
-            ('view_node', 'Can view node details'),
             ('read_node', 'Can read the node'),
             ('write_node', 'Can edit the node'),
             ('admin_node', 'Can manage the node'),
         )
+        indexes = [
+            models.Index(
+                name='registered_date_index',
+                fields=['-registered_date'],
+            ),
+            models.Index(
+                fields=['is_public', 'is_deleted', 'type'],
+                condition=(
+                    Q(is_public=True) & Q(is_deleted=False) & Q(type='osf.registration')
+                ),
+                name='reg_pub_del_type_index'
+            ),
+            models.Index(
+                fields=['is_public', 'is_deleted', 'type'],
+                condition=(
+                    Q(is_public=True) & Q(is_deleted=False) & Q(type='osf.node')
+                ),
+                name='node_pub_del_type_index'
+            ),
+            models.Index(
+                fields=['is_public', 'is_deleted', 'type'],
+                condition=(
+                    Q(is_public=True) & Q(is_deleted=False) & Q(type='osf.collection')
+                ),
+                name='collection_pub_del_type_index'
+            ),
+        ]
 
     objects = AbstractNodeManager()
 
@@ -830,9 +856,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         return NodeLog.objects.filter(
             node_id=self.id,
             should_hide=False
-        ).order_by('-date').include(
-            'node__guids', 'user__guids', 'original_node__guids', limit_includes=10
-        )
+        ).order_by('-date')
 
     def get_absolute_url(self):
         return self.absolute_api_v2_url
@@ -981,7 +1005,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
     def osfstorage_region(self):
         from addons.osfstorage.models import Region
         osfs_settings = self._settings_model('osfstorage')
-        region_subquery = osfs_settings.objects.filter(owner=self.id).values('region_id')
+        region_subquery = osfs_settings.objects.filter(owner=self.id).values_list('region_id', flat=True)[0]
         return Region.objects.get(id=region_subquery)
 
     @property

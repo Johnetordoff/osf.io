@@ -675,10 +675,7 @@ class ProviderListViewTestBaseMixin(ProviderMixinBase):
         res = app.get('{}?filter[{}]={}'.format(
             url, filter_type, filter_value))
         assert res.status_code == 200
-        if isinstance(provider_one, RegistrationProvider) and filter_type == 'allow_submissions':
-            assert len(res.json['data']) == 2  # 1 test provider +1 for default provider
-        else:
-            assert len(res.json['data']) == 1
+        assert len(res.json['data']) == 1
 
 class ProviderDetailViewTestBaseMixin(ProviderExistsMixin):
 
