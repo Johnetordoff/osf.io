@@ -2,6 +2,61 @@
 
 We follow the CalVer (https://calver.org/) versioning scheme: YY.MINOR.MICRO.
 
+22.09.0 (2022-09-15)
+====================
+- Add metric classes for storing analytic data
+- Refactor existing Keen analytic scripts
+
+22.08.0 (2022-08-18)
+====================
+- API support and remaining model work for associating Resources with Registrations
+- Updates to DOI metadata to include relatedIdentifiers on Registrations
+- Updates to SHARE integration to publish `osf_related_resource_types` for Registrations
+
+22.07.0 (2022-08-18)
+====================
+- Migrations in support of Registration Resources
+- Fix for Admin App colorpicker
+- Management command to sync all DOIs for OSF resources
+- Change "revision_justification" to TextField to alleviate max length concerns
+
+22.06.0 (2022-06-23)
+====================
+- Fix support for Dataverse files
+- Match Legacy behavior with new `show_as_unviewed` File field
+- Other assorted fixes for new Files page
+
+22.05.0 (2022-06-09)
+====================
+- Add institutional affiliations via ROR to minted DOIs
+- Improve file sorting by `date_modified`
+- Update help links
+- Add ability to create RegistrationSchemas via the Admin App
+- Update files page routing for upcoming FE release
+
+22.04.0 (2022-03-31)
+====================
+- Update JS and Python dependencies
+- Remove unused "PreReg Challenge" code paths
+- Remove SLOAN study code paths now that the "experiment" is always on
+- Improve A11y on the legacy FE
+- Update post-archival workflow for registrations to parse schema structure from SchemaBlocks
+
+22.03.0 (2022-03-31)
+====================
+- Add waffle flags for registration files
+- Enable writeable tags on registration files
+- Allow embedding of target on files
+- Fix serialization of files
+
+22.02.0 (2022-3-10)
+====================
+- Stop creating Quickfiles for new users
+- Stop surfacing a user's Quickfiles through the API
+- Script for migrating existing Quickfiles to projects
+- Script for deleting unused Quickfiles nodes
+
+
 22.01.0 (2022-2-02)
 ====================
 - Improve Admin App functionality

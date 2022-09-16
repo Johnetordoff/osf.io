@@ -18,7 +18,7 @@ from osf.models.action import RegistrationAction
 from api.base.exceptions import InvalidFilterValue, InvalidFilterOperator, Conflict
 from api.base.filters import PreprintFilterMixin, ListFilterMixin
 from api.base.views import JSONAPIBaseView, DeprecatedView
-from api.base.metrics import MetricsViewMixin
+from api.base.metrics import PreprintMetricsViewMixin
 from api.base.pagination import MaxSizePagination, IncreasedPageSizePagination
 from api.base.utils import get_object_or_error, get_user_auth, is_truthy
 from api.licenses.views import LicenseList
@@ -37,6 +37,7 @@ from api.providers.serializers import (
 from api.registrations import annotations as registration_annotations
 from api.registrations.serializers import RegistrationSerializer
 from api.requests.serializers import PreprintRequestSerializer, RegistrationRequestSerializer
+from api.resources import annotations as resource_annotations
 from api.schemas.serializers import RegistrationSchemaSerializer
 from api.subjects.views import SubjectList
 from api.subjects.serializers import SubjectSerializer
@@ -131,7 +132,7 @@ class RegistrationProviderList(GenericProviderList):
     view_name = 'registration-providers-list'
 
 
-class PreprintProviderList(MetricsViewMixin, GenericProviderList):
+class PreprintProviderList(PreprintMetricsViewMixin, GenericProviderList):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/preprint_provider_list).
     """
 
@@ -144,7 +145,7 @@ class PreprintProviderList(MetricsViewMixin, GenericProviderList):
         'views': PreprintView,
     }
 
-    # overrides MetricsViewMixin
+    # overrides PreprintMetricsViewMixin
     def get_annotated_queryset_with_metrics(self, queryset, metric_class, metric_name, after):
         return metric_class.get_top_by_count(
             qs=queryset,
@@ -742,6 +743,7 @@ class RegistrationProviderRegistrationList(JSONAPIBaseView, generics.ListAPIView
             provider=provider,
         ).annotate(
             revision_state=registration_annotations.REVISION_STATE,
+            **resource_annotations.make_open_practice_badge_annotations(),
         )
 
     # overrides ListAPIView

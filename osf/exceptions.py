@@ -223,3 +223,50 @@ class SchemaResponseUpdateError(SchemaResponseError):
         )
 
         super().__init__(error_message)
+
+
+class IdentifierHasReferencesError(OSFError):
+    pass
+
+
+class NoSuchPIDValidatorError(OSFError):
+    pass
+
+
+class InvalidPIDError(OSFError):
+
+    ERROR_MESSAGE = 'Invalid PID of type {category} with value {value}'
+
+    def __init__(self, pid_value, pid_category):
+        self.message = self.ERROR_MESSAGE.format(value=pid_value, category=pid_category.upper())
+
+
+class NoPIDError(InvalidPIDError):
+
+    def __init__(self, message):
+        self.message = message
+
+
+class InvalidPIDFormatError(InvalidPIDError):
+    ERROR_MESSAGE = '{value} does not follow the proper formatting for a PID of type {category}'
+
+
+class NoSuchPIDError(InvalidPIDError):
+    ERROR_MESSAGE = 'Could not find any record of PID with type {category} and value {value}'
+
+
+class IsPrimaryArtifactPIDError(InvalidPIDError):
+    ERROR_MESSAGE = 'Cannot assign {value} as a Resource {category}, as it represents the Registration itself'
+
+class UnsupportedArtifactTypeError(OSFError):
+    pass
+
+
+class CannotFinalizeArtifactError(OSFError):
+
+    def __init__(self, artifact, incomplete_fields):
+        self.incomplete_fields = incomplete_fields
+        self.message = (
+            f'Could not set `finalized=True` for OutcomeArtifact with id [{artifact._id}]. '
+            f'The following required fields are not set: {incomplete_fields}'
+        )

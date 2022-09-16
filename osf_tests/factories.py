@@ -253,6 +253,8 @@ class InstitutionFactory(DjangoModelFactory):
     domains = FakeList('url', n=3)
     email_domains = FakeList('domain_name', n=1)
     logo_name = factory.Faker('file_name')
+    orcid_record_verified_source = ''
+    delegation_protocol = ''
 
     class Meta:
         model = models.Institution
@@ -390,7 +392,7 @@ class RegistrationFactory(BaseNodeFactory):
     def _create(cls, target_class, project=None, is_public=False,
                 schema=None, draft_registration=None,
                 archive=False, embargo=None, registration_approval=None, retraction=None,
-                provider=None,
+                provider=None, has_doi=False,
                 *args, **kwargs):
         user = None
         if project:
@@ -466,6 +468,10 @@ class RegistrationFactory(BaseNodeFactory):
         draft_registration.registered_node = reg
         draft_registration.save()
         reg.save()
+
+        if has_doi:
+            IdentifierFactory(referent=reg, category='doi')
+
         return reg
 
 

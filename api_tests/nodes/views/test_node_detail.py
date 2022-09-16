@@ -631,6 +631,16 @@ class TestNodeDetail:
         assert res.json['data']['attributes']['current_user_is_contributor_or_group_member'] is False
         assert res.json['data']['attributes']['current_user_is_contributor'] is False
 
+    def test_current_user_permissions_vol(self, app, user, url_public, project_public):
+        '''
+        User's including view only link query params should get ONLY read permissions even if they are admins etc.
+        '''
+        private_link = PrivateLinkFactory(anonymous=False)
+        private_link.nodes.add(project_public)
+        private_link.save()
+        res = app.get(f'{url_public}?view_only={private_link.key}', auth=user.auth)
+        assert [permissions.READ] == res.json['data']['attributes']['current_user_permissions']
+
 
 @pytest.mark.django_db
 class NodeCRUDTestCase:
@@ -1411,7 +1421,7 @@ class TestNodeUpdate(NodeCRUDTestCase):
         )
         assert res.status_code == 200
 
-    @mock.patch('website.identifiers.tasks.update_doi_metadata_on_change.s')
+    @mock.patch('osf.models.node.update_doi_metadata_on_change')
     def test_set_node_private_updates_doi(
             self, mock_update_doi_metadata, app, user, project_public,
             url_public, make_node_payload):
@@ -1583,7 +1593,7 @@ class TestNodeDelete(NodeCRUDTestCase):
         # Bookmark collections are collections, so a 404 is returned
         assert res.status_code == 404
 
-    @mock.patch('website.identifiers.tasks.update_doi_metadata_on_change.s')
+    @mock.patch('website.identifiers.tasks.update_doi_metadata_on_change')
     def test_delete_node_with_preprint_calls_preprint_update_status(
             self, mock_update_doi_metadata_on_change, app, user,
             project_public, url_public):
@@ -1593,7 +1603,7 @@ class TestNodeDelete(NodeCRUDTestCase):
 
         assert not mock_update_doi_metadata_on_change.called
 
-    @mock.patch('website.identifiers.tasks.update_doi_metadata_on_change.s')
+    @mock.patch('website.identifiers.tasks.update_doi_metadata_on_change')
     def test_delete_node_with_identifier_calls_preprint_update_status(
             self, mock_update_doi_metadata_on_change, app, user,
             project_public, url_public):

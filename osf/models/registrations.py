@@ -14,21 +14,17 @@ from guardian.models import (
 )
 from dirtyfields import DirtyFieldsMixin
 
+from api.share.utils import update_share
 from framework.auth import Auth
 from framework.exceptions import PermissionsError
 from osf.utils.fields import NonNaiveDateTimeField
 from osf.utils.permissions import ADMIN, READ, WRITE
 from osf.exceptions import NodeStateError, DraftRegistrationStateError
-from website.util import api_v2_url
-from website import settings
-from website.archiver import ARCHIVER_INITIATED
-from website.project import signals
-
+from osf.external.internet_archive.tasks import archive_to_ia, update_ia_metadata
 from osf.metrics import RegistriesModerationMetrics
 from osf.models import (
     Embargo,
     EmbargoTerminationApproval,
-    DraftRegistrationApproval,
     DraftRegistrationContributor,
     Node,
     OSFUser,
@@ -36,35 +32,35 @@ from osf.models import (
     RegistrationSchema,
     Retraction,
 )
-
 from osf.models.action import RegistrationAction
 from osf.models.archive import ArchiveJob
 from osf.models.base import BaseModel, ObjectIDMixin
 from osf.models.draft_node import DraftNode
-from osf.models.node import AbstractNode
+from osf.models.licenses import NodeLicenseRecord
 from osf.models.mixins import (
     EditableFieldsMixin,
     Loggable,
     GuardianMixin,
+    RegistrationResponseMixin,
 )
+from osf.models.node import AbstractNode
 from osf.models.nodelog import NodeLog
 from osf.models.provider import RegistrationProvider
-from osf.models.mixins import RegistrationResponseMixin
 from osf.models.tag import Tag
-from osf.models.licenses import NodeLicenseRecord
 from osf.models.validators import validate_title
 from osf.utils.datetime_aware_jsonfield import DateTimeAwareJSONField
+from osf.utils import notifications as notify
 from osf.utils.workflows import (
     RegistrationModerationStates,
     RegistrationModerationTriggers,
     ApprovalStates,
     SanctionTypes
 )
-
-from osf.external.internet_archive.tasks import archive_to_ia, update_ia_metadata
-
-import osf.utils.notifications as notify
-from api.share.utils import update_share
+from website import settings
+from website.archiver import ARCHIVER_INITIATED
+from website.identifiers.tasks import update_doi_metadata_on_change
+from website.project import signals
+from website.util import api_v2_url
 
 
 logger = logging.getLogger(__name__)
@@ -663,11 +659,6 @@ class Registration(AbstractNode):
         logger.debug('Marking registration {} as deleted'.format(self._id))
         self.is_deleted = True
         self.deleted = timezone.now()
-        for draft_registration in DraftRegistration.objects.filter(registered_node=self):
-            # Allow draft registration to be submitted
-            if draft_registration.approval:
-                draft_registration.approval = None
-                draft_registration.save()
         if not getattr(self.embargo, 'for_existing_registration', False):
             self.registered_from = None
         if save:
@@ -872,6 +863,22 @@ class Registration(AbstractNode):
         for children in Registration.objects.get_children(self, active=True, include_root=True):
             archive_to_ia(children)
 
+    def related_resource_updated(self, log_action=None, api_request=None, **log_params):
+        if settings.SHARE_ENABLED:
+            update_share(self)
+        if not log_action:
+            return
+
+        if api_request:  # Only log user-initiated changes
+            self.add_log(
+                action=log_action,
+                params=log_params,
+                auth=None,  # Grabbed from request
+                request=api_request,
+            )
+
+        update_doi_metadata_on_change(target_guid=self._id)
+
     class Meta:
         # custom permissions for use in the OSF Admin App
         permissions = (
@@ -991,8 +998,6 @@ class DraftRegistration(ObjectIDMixin, RegistrationResponseMixin, DirtyFieldsMix
     registered_node = models.ForeignKey('Registration', null=True, blank=True,
                                         related_name='draft_registration', on_delete=models.CASCADE)
 
-    approval = models.ForeignKey('DraftRegistrationApproval', null=True, blank=True, on_delete=models.CASCADE)
-
     # Dictionary field mapping extra fields defined in the RegistrationSchema.schema to their
     # values. Defaults should be provided in the schema (e.g. 'paymentSent': false),
     # and these values are added to the DraftRegistration
@@ -1098,34 +1103,6 @@ class DraftRegistration(ObjectIDMixin, RegistrationResponseMixin, DirtyFieldsMix
     # used by django and DRF
     def get_absolute_url(self):
         return self.absolute_api_v2_url
-
-    @property
-    def requires_approval(self):
-        return self.registration_schema.requires_approval
-
-    @property
-    def is_pending_review(self):
-        return self.approval.is_pending_approval if (self.requires_approval and self.approval) else False
-
-    @property
-    def is_approved(self):
-        if self.requires_approval:
-            if not self.approval:
-                return bool(self.registered_node)
-            else:
-                return self.approval.is_approved
-        else:
-            return False
-
-    @property
-    def is_rejected(self):
-        if self.requires_approval:
-            if not self.approval:
-                return False
-            else:
-                return self.approval.is_rejected
-        else:
-            return False
 
     @property
     def status_logs(self):
@@ -1352,35 +1329,12 @@ class DraftRegistration(ObjectIDMixin, RegistrationResponseMixin, DirtyFieldsMix
         DraftRegistrationContributor.objects.bulk_create(contribs)
 
     def update_metadata(self, metadata):
-        changes = []
         # Prevent comments on approved drafts
-        if not self.is_approved:
-            for question_id, value in metadata.items():
-                old_value = self.registration_metadata.get(question_id)
-                if old_value:
-                    old_comments = {
-                        comment['created']: comment
-                        for comment in old_value.get('comments', [])
-                    }
-                    new_comments = {
-                        comment['created']: comment
-                        for comment in value.get('comments', [])
-                    }
-                    old_comments.update(new_comments)
-                    metadata[question_id]['comments'] = sorted(
-                        old_comments.values(),
-                        key=lambda c: c['created']
-                    )
-                    if old_value.get('value') != value.get('value'):
-                        changes.append(question_id)
-                else:
-                    changes.append(question_id)
         self.registration_metadata.update(metadata)
 
         # Write to registration_responses also (new workflow)
         registration_responses = self.flatten_registration_metadata()
         self.registration_responses.update(registration_responses)
-        return changes
 
     def update_registration_responses(self, registration_responses):
         """
@@ -1399,16 +1353,6 @@ class DraftRegistration(ObjectIDMixin, RegistrationResponseMixin, DirtyFieldsMix
             for upload in registration_responses.get('uploader', []):
                 upload['file_name'] = html.unescape(upload['file_name'])
         return registration_responses
-
-    def submit_for_review(self, initiated_by, meta, save=False):
-        approval = DraftRegistrationApproval(
-            meta=meta
-        )
-        approval.save()
-        self.approval = approval
-        self.add_status_log(initiated_by, DraftRegistrationLog.SUBMITTED)
-        if save:
-            self.save()
 
     def register(self, auth, save=False, child_ids=None):
         node = self.branched_from

@@ -5,7 +5,9 @@ import logging
 from osf.models.node import (
     AbstractNode,
     AbstractNodeManager,
+    Node
 )
+from osf.models.nodelog import NodeLog
 
 from osf.exceptions import NodeStateError
 

@@ -664,6 +664,13 @@ class OSFUser(DirtyFieldsMixin, GuidMixin, BaseModel, AbstractBaseUser, Permissi
     def __str__(self):
         return self.get_short_name()
 
+    def get_verified_external_id(self, external_service, verified_only=False):
+        identifier_info = self.external_identity.get(external_service, {})
+        for external_id, status in identifier_info.items():
+            if status and status == 'VERIFIED' or not verified_only:
+                return external_id
+        return None
+
     @property
     def contributed(self):
         return self.nodes.all()
@@ -894,9 +901,10 @@ class OSFUser(DirtyFieldsMixin, GuidMixin, BaseModel, AbstractBaseUser, Permissi
         """
         Active draft registrations attached to a user (user is a contributor)
         """
+
         return self.draft_registrations.filter(
-            models.Q(registered_node__isnull=True) |
-            models.Q(registered_node__is_deleted=True),
+            (models.Q(registered_node__isnull=True) | models.Q(registered_node__deleted__isnull=False)),
+            branched_from__deleted__isnull=True,
             deleted__isnull=True,
         )
 
@@ -1887,18 +1895,15 @@ class OSFUser(DirtyFieldsMixin, GuidMixin, BaseModel, AbstractBaseUser, Permissi
         If a user only has no resources or only deleted resources this will return false and they can safely be deactivated
         otherwise they must delete or transfer their outstanding resources.
 
-        :return bool: does the user have any active node, preprints, groups, quickfiles etc?
+        :return bool: does the user have any active node, preprints, groups, etc?
         """
         from osf.models import Preprint
 
-        # TODO: Update once quickfolders in merged
-
-        nodes = self.nodes.exclude(type='osf.quickfilesnode').exclude(is_deleted=True).exists()
-        quickfiles = self.nodes.get(type='osf.quickfilesnode').files.exists()
+        nodes = self.nodes.filter(deleted__isnull=True).exists()
         groups = self.osf_groups.exists()
         preprints = Preprint.objects.filter(_contributors=self, ever_public=True, deleted__isnull=True).exists()
 
-        return groups or nodes or quickfiles or preprints
+        return groups or nodes or preprints
 
     class Meta:
         # custom permissions for use in the OSF Admin App

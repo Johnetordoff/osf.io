@@ -320,6 +320,11 @@ WATERBUTLER_INTERNAL_URL = WATERBUTLER_URL
 ####################
 #   Identifiers   #
 ###################
+PID_VALIDATION_ENABLED = False
+PID_VALIDATION_ENDPOINTS = {
+    'doi': 'https://doi.org/ra/'
+}
+
 DOI_URL_PREFIX = 'https://doi.org/'
 
 # General Format for DOIs
@@ -340,6 +345,10 @@ CROSSREF_DEPOSITOR_EMAIL = 'None'  # This email will receive confirmation/error 
 
 ECSARXIV_CROSSREF_USERNAME = None
 ECSARXIV_CROSSREF_PASSWORD = None
+
+# ror
+OSF_ROR_ID = '05d5mza29'
+OSF_GRID_ID = 'grid.466501.0'
 
 # if our DOIs cannot be confirmed after X amount of days email the admin
 DAYS_CROSSREF_DOIS_MUST_BE_STUCK_BEFORE_EMAIL = 2
@@ -401,14 +410,10 @@ class CeleryConfig:
         'framework.celery_tasks',
         'scripts.osfstorage.usage_audit',
         'scripts.stuck_registration_audit',
-        'scripts.analytics.tasks',
         'scripts.populate_new_and_noteworthy_projects',
         'scripts.populate_popular_projects_and_registrations',
         'website.search.elastic_search',
         'scripts.generate_sitemap',
-        'scripts.analytics.run_keen_summaries',
-        'scripts.analytics.run_keen_snapshots',
-        'scripts.analytics.run_keen_events',
         'scripts.clear_sessions',
         'osf.management.commands.delete_withdrawn_or_failed_registration_files',
         'osf.management.commands.check_crossref_dois',
@@ -418,10 +423,13 @@ class CeleryConfig:
         'osf.management.commands.addon_deleted_date',
         'osf.management.commands.migrate_registration_responses',
         'osf.management.commands.archive_registrations_on_IA'
+        'osf.management.commands.sync_doi_metadata',
         'osf.management.commands.sync_collection_provider_indices',
         'osf.management.commands.sync_datacite_doi_metadata',
         'osf.management.commands.update_institution_project_counts',
-        'osf.management.commands.populate_branched_from'
+        'osf.management.commands.populate_branched_from',
+        'osf.management.commands.cumulative_plos_metrics',
+        'osf.management.commands.daily_reporters_go',
     }
 
     med_pri_modules = {
@@ -446,6 +454,7 @@ class CeleryConfig:
         'website.archiver.tasks',
         'scripts.add_missing_identifiers_to_preprints',
         'osf.management.commands.approve_pending_schema_response',
+        'osf.management.commands.fix_quickfiles_waterbutler_logs'
     }
 
     try:
@@ -499,9 +508,6 @@ class CeleryConfig:
         'scripts.triggered_mails',
         'scripts.clear_sessions',
         'scripts.send_queued_mails',
-        'scripts.analytics.run_keen_summaries',
-        'scripts.analytics.run_keen_snapshots',
-        'scripts.analytics.run_keen_events',
         'scripts.generate_sitemap',
         'scripts.premigrate_created_modified',
         'scripts.add_missing_identifiers_to_preprints',
@@ -516,7 +522,11 @@ class CeleryConfig:
         'osf.management.commands.populate_initial_schema_responses',
         'osf.management.commands.approve_pending_schema_responses',
         'osf.management.commands.delete_legacy_quickfiles_nodes',
-        'api.providers.tasks'
+        'osf.management.commands.fix_quickfiles_waterbutler_logs',
+        'osf.management.commands.sync_doi_metadata',
+        'osf.management.commands.cumulative_plos_metrics',
+        'api.providers.tasks',
+        'osf.management.commands.daily_reporters_go',
     )
 
     # Modules that need metrics and release requirements
@@ -610,19 +620,10 @@ class CeleryConfig:
                 'schedule': crontab(minute=45, hour=7, day_of_month=3),  # Third day of month 2:45 a.m.
                 'kwargs': {'dry_run': False}
             },
-            'run_keen_summaries': {
-                'task': 'scripts.analytics.run_keen_summaries',
+            'daily_reporters_go': {
+                'task': 'management.commands.daily_reporters_go',
                 'schedule': crontab(minute=0, hour=6),  # Daily 1:00 a.m.
-                'kwargs': {'yesterday': True}
-            },
-            # 'run_keen_snapshots': {
-            #     'task': 'scripts.analytics.run_keen_snapshots',
-            #     'schedule': crontab(minute=0, hour=8),  # Daily 3:00 a.m.
-            # },
-            'run_keen_events': {
-                'task': 'scripts.analytics.run_keen_events',
-                'schedule': crontab(minute=0, hour=9),  # Daily 4:00 a.m.
-                'kwargs': {'yesterday': True}
+                'kwargs': {'also_send_to_keen': True},
             },
             # 'data_storage_usage': {
             #   'task': 'management.commands.data_storage_usage',
@@ -706,6 +707,11 @@ class CeleryConfig:
         #         'schedule': crontab(minute=0, hour=11),  # Daily 6 a.m
         #         'kwargs': {},
         #     },
+        #     'cumulative_plos_metrics': {
+        #         'task': 'osf.management.commands.cumulative_plos_metrics',
+        #         'schedule': crontab(day_of_month=1, minute=30, hour=9),  # First of the month at 4:30 a.m.
+        #         'kwargs': {},
+        #     },
         # })
 
 
@@ -743,6 +749,13 @@ RUNNING_MIGRATION = False
 EXTERNAL_IDENTITY_PROFILE = {
     'OrcidProfile': 'ORCID',
 }
+
+ORCID_PUBLIC_API_ACCESS_TOKEN = None
+ORCID_PUBLIC_API_V3_URL = 'https://pub.orcid.org/v3.0/'
+ORCID_PUBLIC_API_REQUEST_TIMEOUT = None
+ORCID_RECORD_ACCEPT_TYPE = 'application/vnd.orcid+xml'
+ORCID_RECORD_EMPLOYMENT_PATH = '/employments'
+ORCID_RECORD_EDUCATION_PATH = '/educations'
 
 # Source: https://github.com/maxd/fake_email_validator/blob/master/config/fake_domains.list
 BLACKLISTED_DOMAINS = [
@@ -2036,6 +2049,9 @@ DS_METRICS_OSF_TOKEN = None
 DS_METRICS_BASE_FOLDER = None
 REG_METRICS_OSF_TOKEN = None
 REG_METRICS_BASE_FOLDER = None
+PLOS_METRICS_BASE_FOLDER = None
+PLOS_METRICS_INITIAL_FILE_DOWNLOAD_URL = None
+PLOS_METRICS_OSF_TOKEN = None
 
 STORAGE_WARNING_THRESHOLD = .9  # percent of maximum storage used before users get a warning message
 STORAGE_LIMIT_PUBLIC = 50
@@ -2093,3 +2109,5 @@ PIGEON_CALLBACK_BEARER_TOKEN = os.getenv('PIGEON_CALLBACK_BEARER_TOKEN')
 PRODUCT_OWNER_EMAIL_ADDRESS = {}
 
 CAS_LOG_LEVEL = 3  # ERROR
+
+PREPRINT_METRICS_START_DATE = datetime.datetime(2019, 1, 1)

@@ -672,7 +672,7 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         return DraftRegistration.objects.filter(
             models.Q(branched_from=self) &
             models.Q(deleted__isnull=True) &
-            (models.Q(registered_node=None) | models.Q(registered_node__is_deleted=True))
+            (models.Q(registered_node=None) | models.Q(registered_node__deleted__isnull=False)),
         )
 
     @property
@@ -1255,8 +1255,8 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
                     status.push_status_message(message, kind='info', trust=False)
 
         # Update existing identifiers
-        if self.get_identifier('doi'):
-            enqueue_task(update_doi_metadata_on_change.s(self._id))
+        if self.get_identifier_value('doi'):
+            update_doi_metadata_on_change(self._id)
         elif self.is_registration:
             doi = self.request_identifier('doi')['doi']
             self.set_identifier_value('doi', doi)
@@ -2394,7 +2394,6 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         source_tag = self.all_tags.filter(
             system=True,
             name__in=[
-                CampaignSourceTags.Prereg.value,
                 CampaignSourceTags.OsfRegisteredReports.value,
                 CampaignSourceTags.Osf4m.value
             ]

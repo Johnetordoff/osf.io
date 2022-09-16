@@ -1,7 +1,3 @@
-import pytz
-import functools
-
-from dateutil.parser import parse as parse_date
 from django.apps import apps
 from django.utils import timezone
 from django.conf import settings
@@ -621,6 +617,11 @@ class Embargo(SanctionCallbackMixin, EmailApprovableSanction):
                 'embargo_id': self._id,
             },
             auth=Auth(self.initiated_by), )
+
+        # Make placeholder identifiers for all Registrations to allow resources to be added
+        # This Identifier will be grabbed and populated when the Registration is made public
+        for registration in parent_registration.node_and_primary_descendants():
+            registration.set_identifier_value(category='doi', value=None)
         self.save()
 
     def approve_embargo(self, user, token):
@@ -902,70 +903,6 @@ class RegistrationApproval(SanctionCallbackMixin, EmailApprovableSanction):
             },
             auth=Auth(user),
         )
-
-
-class DraftRegistrationApproval(Sanction):
-
-    SANCTION_TYPE = SanctionTypes.DRAFT_REGISTRATION_APPROVAL
-    mode = Sanction.ANY
-
-    # Since draft registrations that require approval are not immediately registered,
-    # meta stores registration_choice and embargo_end_date (when applicable)
-    meta = DateTimeAwareJSONField(default=dict, blank=True)
-
-    def _send_rejection_email(self, user, draft):
-        mails.send_mail(
-            to_addr=user.username,
-            mail=mails.DRAFT_REGISTRATION_REJECTED,
-            user=user,
-            osf_url=osf_settings.DOMAIN,
-            provider=draft.provider,
-            can_change_preferences=False,
-        )
-
-    def approve(self, user):
-        self.state = Sanction.APPROVED
-        self._on_complete(user)
-
-    def reject(self, user):
-        self.state = Sanction.REJECTED
-        self._on_reject(user)
-
-    def _on_complete(self, user):
-        DraftRegistration = apps.get_model('osf.DraftRegistration')
-
-        draft = DraftRegistration.objects.get(approval=self)
-
-        initiator = draft.initiator.merged_by or draft.initiator
-        auth = Auth(initiator)
-        registration = draft.register(auth=auth, save=True)
-        registration_choice = self.meta['registration_choice']
-
-        if registration_choice == 'immediate':
-            sanction = functools.partial(registration.require_approval, initiator)
-        elif registration_choice == 'embargo':
-            embargo_end_date = parse_date(self.meta.get('embargo_end_date'))
-            if not embargo_end_date.tzinfo:
-                embargo_end_date = embargo_end_date.replace(tzinfo=pytz.UTC)
-            sanction = functools.partial(
-                registration.embargo_registration,
-                initiator,
-                embargo_end_date
-            )
-        else:
-            raise ValueError("'registration_choice' must be either 'embargo' or 'immediate'")
-        sanction(notify_initiator_on_complete=True)
-
-    def _on_reject(self, user, *args, **kwargs):
-        DraftRegistration = apps.get_model('osf.DraftRegistration')
-
-        # clear out previous registration options
-        self.meta = {}
-        self.save()
-
-        draft = DraftRegistration.objects.get(approval=self)
-        initiator = draft.initiator.merged_by or draft.initiator
-        self._send_rejection_email(initiator, draft)
 
 
 class EmbargoTerminationApproval(EmailApprovableSanction):
