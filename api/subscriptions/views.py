@@ -8,7 +8,12 @@ from framework.auth.oauth_scopes import CoreScopes
 from api.base.views import JSONAPIBaseView
 from api.base.filters import ListFilterMixin
 from api.base import permissions as base_permissions
-from api.subscriptions.serializers import SubscriptionSerializer
+from api.subscriptions.serializers import (
+    SubscriptionSerializer,
+    RegistrationSubscriptionSerializer,
+    CollectionSubscriptionSerializer,
+    PreprintSubscriptionSerializer,
+)
 from api.subscriptions.permissions import IsSubscriptionOwner
 from osf.models import (
     NotificationSubscription,
@@ -17,6 +22,7 @@ from osf.models import (
     PreprintProvider,
     AbstractProvider,
 )
+
 
 class SubscriptionList(JSONAPIBaseView, generics.ListAPIView, ListFilterMixin):
     view_name = 'notification-subscription-list'
@@ -110,3 +116,15 @@ class PreprintProviderSubscriptionDetail(AbstractProviderSubscriptionDetail):
 
 class RegistrationProviderSubscriptionDetail(AbstractProviderSubscriptionDetail):
     provider_class = RegistrationProvider
+
+
+class CollectionProviderSubscriptionList(SubscriptionList):
+    serializer_class = CollectionSubscriptionSerializer
+
+
+class PreprintProviderSubscriptionList(SubscriptionList):
+    serializer_class = PreprintSubscriptionSerializer
+
+
+class RegistrationProviderSubscriptionList(SubscriptionList):
+    serializer_class = RegistrationSubscriptionSerializer
