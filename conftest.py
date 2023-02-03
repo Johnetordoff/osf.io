@@ -74,10 +74,6 @@ _MOCKS = {
         'mark': 'enable_enqueue_task',
         'replacement': lambda *args, **kwargs: None,
     },
-    'osf.models.base.BaseModel.full_clean': {
-        'mark': 'enable_implicit_clean',
-        'replacement': lambda *args, **kwargs: None,
-    },
     'osf.models.base._check_blacklist': {
         'mark': 'enable_blacklist_check',
         'replacement': lambda *args, **kwargs: False,

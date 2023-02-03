@@ -1412,6 +1412,10 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         registered.registered_date = timezone.now()
         registered.registered_user = auth.user
         registered.registered_from = original
+
+        if not provider:
+            from osf.models.provider import RegistrationProvider
+            provider = RegistrationProvider.get_default()
         registered.provider = provider
         if not registered.registered_meta:
             registered.registered_meta = {}

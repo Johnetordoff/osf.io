@@ -87,7 +87,7 @@ class TestPreprintShare:
     def test_save_unpublished_called_forced(self, mock_on_preprint_updated, auth, preprint):
         preprint.set_published(True, auth=auth, save=True)
         preprint.is_published = False
-        preprint.save(**{'force_update': True})
+        preprint.save(clean=False)
         assert mock_on_preprint_updated.call_count == 2
 
     @mock.patch('osf.models.preprint.update_or_enqueue_on_preprint_updated')

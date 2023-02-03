@@ -202,6 +202,8 @@ class TestChronosSubmissionAutomaticUpdate:
                 raw_response='', publication_id='fake-publication-id-stale',
             )
             submission.modified = timezone.now() - settings.CHRONOS_SUBMISSION_UPDATE_TIME - timedelta(days=1)
+            submission.raw_response = timezone.now()
+            submission.submission_url = 'http://test.com'
             submission.save()
             return submission
 
