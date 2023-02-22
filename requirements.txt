@@ -7,7 +7,7 @@
 
 future==0.18.3
 invoke==0.15.0
-Werkzeug==2.2.3
+Werkzeug>=2.2.3
 Flask==1.0
 gevent==1.2.2
 Mako==1.2.2
