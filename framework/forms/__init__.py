@@ -10,9 +10,6 @@ from wtforms.validators import ValidationError
 from osf.utils.sanitize import strip_html
 
 
-validators = validators
-
-
 class BootstrapTextInput(TextInput):
     '''Custom TextInput that sets a field's class to 'form-control'.'''
     def __call__(self, field, **kwargs):
