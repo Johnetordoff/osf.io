@@ -5,6 +5,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, models
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 from django.utils import timezone
 from guardian.models import GroupObjectPermissionBase, UserObjectPermissionBase
 from framework.celery_tasks.handlers import enqueue_task
@@ -18,6 +20,7 @@ from osf.utils.permissions import ADMIN
 from osf.utils.workflows import CollectionSubmissionStates
 from osf.exceptions import NodeStateError
 from website.util import api_v2_url
+from api.collections.tasks import update_share_collection
 from transitions.core import MachineError
 
 logger = logging.getLogger(__name__)
@@ -117,14 +120,6 @@ class Collection(DirtyFieldsMixin, GuidMixin, BaseModel, GuardianMixin):
     def linked_registrations_related_url(self):
         return '{}linked_registrations/'.format(self.absolute_api_v2_url)
 
-    @classmethod
-    def bulk_update_search(cls, collection_submissions, op='update', index=None):
-        from website import search
-        try:
-            search.search.bulk_update_collection_submissions(collection_submissions, op=op, index=index)
-        except search.exceptions.SearchUnavailableError as e:
-            logger.exception(e)
-
     def save(self, *args, **kwargs):
         first_save = self.id is None
         if self.is_bookmark_collection:
@@ -133,8 +128,7 @@ class Collection(DirtyFieldsMixin, GuidMixin, BaseModel, GuardianMixin):
             if self.title != 'Bookmarks':
                 # Bookmark collections are always named 'Bookmarks'
                 self.title = 'Bookmarks'
-        saved_fields = self.get_dirty_fields() or []
-        ret = super(Collection, self).save(*args, **kwargs)
+        ret = super().save(*args, **kwargs)
 
         if first_save:
             # Set defaults for M2M
@@ -142,16 +136,10 @@ class Collection(DirtyFieldsMixin, GuidMixin, BaseModel, GuardianMixin):
                 app_label='osf',
                 model__in=['abstractnode', 'collection', 'preprint']
             )
-
             self.collected_types.add(*content_type)
-
-        # Set up initial permissions
+            # Set up initial permissions
             self.update_group_permissions()
             self.get_group(ADMIN).user_set.add(self.creator)
-
-        elif 'is_public' in saved_fields:
-            from website.collections.tasks import on_collection_updated
-            enqueue_task(on_collection_updated.s(self._id))
 
         return ret
 
@@ -280,7 +268,7 @@ class Collection(DirtyFieldsMixin, GuidMixin, BaseModel, GuardianMixin):
         self.deleted = timezone.now()
 
         if self.is_public:
-            self.bulk_update_search(list(self.collectionsubmission_set.all()), op='delete')
+            enqueue_task(update_share_collection.s(self._id))
 
         self.save()
 
@@ -291,3 +279,10 @@ class CollectionUserObjectPermission(UserObjectPermissionBase):
 
 class CollectionGroupObjectPermission(GroupObjectPermissionBase):
     content_object = models.ForeignKey(Collection, on_delete=models.CASCADE)
+
+
+@receiver(pre_save, sender=Collection)
+def update_share_collection_submissions(sender, instance, **kwargs):
+    dirty_fields = instance.get_dirty_fields()
+    if 'is_public' in dirty_fields or 'deleted' in dirty_fields:
+        enqueue_task(update_share_collection.s(instance._id))
