@@ -46,7 +46,7 @@ from osf.models.admin_log_entry import (
 )
 from osf.utils.permissions import ADMIN
 
-from website import settings, search
+from website import settings
 
 
 class NodeMixin(PermissionRequiredMixin):
@@ -528,7 +528,6 @@ class NodeReindexElastic(NodeMixin, View):
 
     def post(self, request, *args, **kwargs):
         node = self.get_object()
-        search.search.update_node(node, bulk=False, async_update=False)
 
         update_admin_log(
             user_id=self.request.user.id,

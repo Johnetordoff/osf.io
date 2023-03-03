@@ -26,8 +26,6 @@ from osf.models.spam import SpamStatus
 from framework.auth import get_user
 from framework.auth.core import generate_verification_key
 
-from website import search
-
 from osf.models.admin_log_entry import (
     update_admin_log,
     USER_2_FACTOR,
@@ -537,7 +535,6 @@ class UserReindexElastic(UserMixin, View):
 
     def post(self, request, *args, **kwargs):
         user = self.get_object()
-        search.search.update_user(user, async_update=False)
         update_admin_log(
             user_id=self.request.user.id,
             object_id=user._id,

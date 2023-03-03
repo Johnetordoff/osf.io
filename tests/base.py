@@ -64,8 +64,6 @@ SILENT_LOGGERS = [
     'website.archiver.tasks',
     'website.mails',
     'website.notifications.listeners',
-    'website.search.elastic_search',
-    'website.search_migration.migrate',
     'website.util.paths',
     'requests_oauthlib.oauth2_session',
     'raven.base.Client',
@@ -150,24 +148,7 @@ class ApiAppTestCase(unittest.TestCase):
 
 
 class SearchTestCase(unittest.TestCase):
-
-    def setUp(self):
-        settings.ELASTIC_INDEX = uuid.uuid1().hex
-        settings.ELASTIC_TIMEOUT = 60
-
-        from website.search import elastic_search
-        elastic_search.INDEX = settings.ELASTIC_INDEX
-        elastic_search.create_index(settings.ELASTIC_INDEX)
-
-        # NOTE: Super is called last to ensure the ES connection can be established before
-        #       the responses module patches the socket.
-        super(SearchTestCase, self).setUp()
-
-    def tearDown(self):
-        super(SearchTestCase, self).tearDown()
-
-        from website.search import elastic_search
-        elastic_search.delete_index(settings.ELASTIC_INDEX)
+    pass
 
 
 
@@ -297,19 +278,14 @@ class ApiWikiTestCase(ApiTestCase):
 
     def _add_project_wiki_page(self, node, user):
         from addons.wiki.tests.factories import WikiFactory, WikiVersionFactory
-        # Mock out update_search. TODO: Remove when StoredFileNode is implemented
-        with mock.patch('osf.models.AbstractNode.update_search'):
-            wiki_page = WikiFactory(node=node, user=user)
-            wiki_version = WikiVersionFactory(wiki_page=wiki_page)
-            return wiki_page
+        wiki_page = WikiFactory(node=node, user=user)
+        return wiki_page
 
     def _add_project_wiki_version(self, node, user):
         from addons.wiki.tests.factories import WikiFactory, WikiVersionFactory
-        # Mock out update_search. TODO: Remove when StoredFileNode is implemented
-        with mock.patch('osf.models.AbstractNode.update_search'):
-            wiki_page = WikiFactory(node=node, user=user)
-            wiki_version = WikiVersionFactory(wiki_page=wiki_page, user=user)
-            return wiki_version
+        wiki_page = WikiFactory(node=node, user=user)
+        wiki_version = WikiVersionFactory(wiki_page=wiki_page, user=user)
+        return wiki_version
 
 # From Flask-Security: https://github.com/mattupstate/flask-security/blob/develop/flask_security/utils.py
 class CaptureSignals(object):

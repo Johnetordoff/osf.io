@@ -2691,8 +2691,7 @@ class TestClaimViews(OsfTestCase):
         res = self.app.get(url, expect_errors=True).maybe_follow()
         assert_equal(res.status_code, 400)
 
-    @mock.patch('osf.models.OSFUser.update_search_nodes')
-    def test_posting_to_claim_form_with_valid_data(self, mock_update_search_nodes):
+    def test_posting_to_claim_form_with_valid_data(self):
         url = self.user.get_claim_url(self.project._primary_key)
         res = self.app.post(url, {
             'username': self.user.username,
@@ -2712,8 +2711,7 @@ class TestClaimViews(OsfTestCase):
         assert_true(self.user.is_active)
         assert_not_in(self.project._primary_key, self.user.unclaimed_records)
 
-    @mock.patch('osf.models.OSFUser.update_search_nodes')
-    def test_posting_to_claim_form_removes_all_unclaimed_data(self, mock_update_search_nodes):
+    def test_posting_to_claim_form_removes_all_unclaimed_data(self,):
         # user has multiple unclaimed records
         p2 = ProjectFactory(creator=self.referrer)
         self.user.add_unclaimed_record(p2, referrer=self.referrer,
@@ -2729,8 +2727,7 @@ class TestClaimViews(OsfTestCase):
         self.user.reload()
         assert_equal(self.user.unclaimed_records, {})
 
-    @mock.patch('osf.models.OSFUser.update_search_nodes')
-    def test_posting_to_claim_form_sets_fullname_to_given_name(self, mock_update_search_nodes):
+    def test_posting_to_claim_form_sets_fullname_to_given_name(self):
         # User is created with a full name
         original_name = fake.name()
         unreg = UnregUserFactory(fullname=original_name)
@@ -3202,13 +3199,6 @@ class TestPointerViews(OsfTestCase):
         assert_not_in(project2, template.linked_nodes)
 
 
-class TestPublicViews(OsfTestCase):
-
-    def test_explore(self):
-        res = self.app.get('/explore/').maybe_follow()
-        assert_equal(res.status_code, 200)
-
-
 class TestAuthViews(OsfTestCase):
 
     def setUp(self):
@@ -3422,8 +3412,7 @@ class TestAuthViews(OsfTestCase):
             )
             assert_equal(resp.status_code, http_status.HTTP_400_BAD_REQUEST)
 
-    @mock.patch('osf.models.OSFUser.update_search_nodes')
-    def test_register_after_being_invited_as_unreg_contributor(self, mock_update_search_nodes):
+    def test_register_after_being_invited_as_unreg_contributor(self):
         # Regression test for:
         #    https://github.com/CenterForOpenScience/openscienceframework.org/issues/861
         #    https://github.com/CenterForOpenScience/openscienceframework.org/issues/1021

@@ -9,7 +9,7 @@ from osf.models.base import BaseModel
 from osf.models.mixins import TaxonomizableMixin
 from osf.utils.permissions import ADMIN
 from website.util import api_v2_url
-from website.search.exceptions import SearchUnavailableError
+# from website.search.exceptions import SearchUnavailableError
 from osf.utils.workflows import CollectionSubmissionsTriggers, CollectionSubmissionStates
 from website.filters import profile_image_url
 
@@ -51,6 +51,10 @@ class CollectionSubmission(TaxonomizableMixin, BaseModel):
             active_state=self.state,
             state_property_name='state'
         )
+
+    @property
+    def index_in_search(self):
+        return self.state == CollectionSubmissionStates.ACCEPTED and getattr(self.guid.referent, 'is_public', False)
 
     @property
     def state(self):
@@ -326,9 +330,6 @@ class CollectionSubmission(TaxonomizableMixin, BaseModel):
         if not self.guid.referent.is_public:
             self.guid.referent.set_privacy('public')
 
-    def _remove_from_search(self, event_data):
-        self.remove_from_index()
-
     def _save_transition(self, event_data):
         '''Save changes here and write the action.'''
         self.save()
@@ -372,25 +373,9 @@ class CollectionSubmission(TaxonomizableMixin, BaseModel):
         path = '/collections/{}/collection_submissions/{}/'.format(self.collection._id, self.guid._id)
         return api_v2_url(path)
 
-    def update_index(self):
-        if self.collection.is_public:
-            from website.search.search import update_collected_metadata
-            try:
-                update_collected_metadata(self.guid._id, collection_id=self.collection.id)
-            except SearchUnavailableError as e:
-                logger.exception(e)
-
-    def remove_from_index(self):
-        from website.search.search import update_collected_metadata
-        try:
-            update_collected_metadata(self.guid._id, collection_id=self.collection.id, op='delete')
-        except SearchUnavailableError as e:
-            logger.exception(e)
-
     def save(self, *args, **kwargs):
         kwargs.pop('old_subjects', None)  # Not indexing this, trash it
         ret = super(CollectionSubmission, self).save(*args, **kwargs)
-        self.update_index()
         return ret
 
 

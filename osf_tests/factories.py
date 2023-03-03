@@ -488,8 +488,7 @@ class WithdrawnRegistrationFactory(BaseNodeFactory):
         registration.retract_registration(user)
         withdrawal = registration.retraction
         token = list(withdrawal.approval_state.values())[0]['approval_token']
-        with patch('osf.models.AbstractNode.update_search'):
-            withdrawal.approve_retraction(user, token)
+        withdrawal.approve_retraction(user, token)
         withdrawal.save()
 
         return withdrawal

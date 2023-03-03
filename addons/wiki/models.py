@@ -170,8 +170,6 @@ class WikiVersion(ObjectIDMixin, BaseModel):
 
     def save(self, *args, **kwargs):
         rv = super(WikiVersion, self).save(*args, **kwargs)
-        if self.wiki_page.node:
-            self.wiki_page.node.update_search()
         self.wiki_page.modified = self.created
         self.wiki_page.save()
         self.check_spam()
@@ -274,12 +272,6 @@ class WikiPage(GuidMixin, BaseModel):
         indexes = [
             models.Index(fields=['page_name', 'node'])
         ]
-
-    def save(self, *args, **kwargs):
-        rv = super(WikiPage, self).save(*args, **kwargs)
-        if self.node and self.node.is_public:
-            self.node.update_search()
-        return rv
 
     def update(self, user, content):
         """

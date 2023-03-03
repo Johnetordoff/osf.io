@@ -16,8 +16,6 @@ class TestSearchViews(OsfTestCase):
 
     def setUp(self):
         super(TestSearchViews, self).setUp()
-        import website.search.search as search
-        search.delete_all()
 
         robbie = factories.UserFactory(fullname='Robbie Williams')
         self.project = factories.ProjectFactory(creator=robbie)
@@ -31,11 +29,6 @@ class TestSearchViews(OsfTestCase):
         self.project_private_user_two = factories.ProjectFactory(title='aaa', creator=self.user_two, is_public=False)
         self.project_public_user_one = factories.ProjectFactory(title='aaa', creator=self.user_one, is_public=True)
         self.project_public_user_two = factories.ProjectFactory(title='aaa', creator=self.user_two, is_public=True)
-
-    def tearDown(self):
-        super(TestSearchViews, self).tearDown()
-        import website.search.search as search
-        search.delete_all()
 
     def test_search_views(self):
         #Test search contributor

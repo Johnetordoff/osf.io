@@ -9,7 +9,6 @@ from website.app import init_app
 from django.db.models import Q
 from osf.models import AbstractNode
 from api.share.utils import update_share
-from website.search.elastic_search import update_node
 from website.settings import DO_NOT_INDEX_LIST
 from framework.database import paginated
 
@@ -34,7 +33,6 @@ def remove_search_index(dry_run=True):
             logger.info('Removing {} with title \'{}\' from search index and SHARE.'.format(node._id, node.title))
     else:
         for node in nodes:
-            update_node(node, bulk=False, async=True)
             update_share(node)
 
 if __name__ == '__main__':

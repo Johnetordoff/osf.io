@@ -294,9 +294,8 @@ class TestNodeDetail:
         res = app.get('{}?related_counts=True'.format(url_private), auth=user.auth)
         assert res.json['data']['relationships']['wikis']['links']['related']['meta']['count'] == 0
 
-        with mock.patch('osf.models.AbstractNode.update_search'):
-            wiki_page = WikiFactory(node=project_private, user=user)
-            WikiVersionFactory(wiki_page=wiki_page)
+        wiki_page = WikiFactory(node=project_private, user=user)
+        WikiVersionFactory(wiki_page=wiki_page)
 
         res = app.get('{}?related_counts=True'.format(url_private), auth=user.auth)
         assert res.json['data']['relationships']['wikis']['links']['related']['meta']['count'] == 1
@@ -714,9 +713,8 @@ class NodeCRUDTestCase:
 
     @pytest.fixture()
     def wiki_private(self, user, project_private):
-        with mock.patch('osf.models.AbstractNode.update_search'):
-            wiki_page = WikiFactory(page_name='foo', node=project_private, user=user)
-            WikiVersionFactory(wiki_page=wiki_page)
+        wiki_page = WikiFactory(page_name='foo', node=project_private, user=user)
+        WikiVersionFactory(wiki_page=wiki_page)
         return wiki_page
 
     @pytest.fixture()

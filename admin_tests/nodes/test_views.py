@@ -292,24 +292,20 @@ class TestNodeReindex(AdminTestCase):
                                if graph['@type'] == self.registration.provider.share_publish_type.lower())
                     nt.assert_equal(AdminLogEntry.objects.count(), count + 1)
 
-    @mock.patch('website.search.search.update_node')
-    def test_reindex_node_elastic(self, mock_update_node):
+    def test_reindex_node_elastic(self):
         count = AdminLogEntry.objects.count()
         view = NodeReindexElastic()
         view = setup_log_view(view, self.request, guid=self.node._id)
         view.post(self.request)
 
-        nt.assert_true(mock_update_node.called)
         nt.assert_equal(AdminLogEntry.objects.count(), count + 1)
 
-    @mock.patch('website.search.search.update_node')
-    def test_reindex_registration_elastic(self, mock_update_node):
+    def test_reindex_registration_elastic(self):
         count = AdminLogEntry.objects.count()
         view = NodeReindexElastic()
         view = setup_log_view(view, self.request, guid=self.registration._id)
         view.post(self.request)
 
-        nt.assert_true(mock_update_node.called)
         nt.assert_equal(AdminLogEntry.objects.count(), count + 1)
 
 class TestNodeConfirmHamView(AdminTestCase):

@@ -844,12 +844,6 @@ class TestTagging:
         node.add_system_tag('systag')
         assert 'systag' not in node.tags.values_list('name', flat=True)
 
-class TestSearch:
-
-    @mock.patch('website.search.search.update_node')
-    def test_update_search(self, mock_update_node, node):
-        node.update_search()
-        assert mock_update_node.called
 
 class TestNodeCreation:
 
@@ -2762,21 +2756,17 @@ class TestNodeTraversals:
         assert len(descendants[0][1]) == 1  # only one visible child of comp1
         assert len(descendants[1][1]) == 0  # don't auto-include comp2's children
 
-    @mock.patch('osf.models.node.AbstractNode.update_search')
-    def test_delete_registration_tree(self, mock_update_search):
+    def test_delete_registration_tree(self):
         proj = NodeFactory()
         NodeFactory(parent=proj)
         comp2 = NodeFactory(parent=proj)
         NodeFactory(parent=comp2)
         reg = RegistrationFactory(project=proj)
         reg_ids = [reg._id] + [r._id for r in reg.get_descendants_recursive()]
-        orig_call_count = mock_update_search.call_count
         reg.delete_registration_tree(save=True)
         assert Node.objects.filter(guids___id__in=reg_ids, is_deleted=False).count() == 0
-        assert mock_update_search.call_count == orig_call_count + len(reg_ids)
 
-    @mock.patch('osf.models.node.AbstractNode.update_search')
-    def test_delete_registration_tree_deletes_backrefs(self, mock_update_search):
+    def test_delete_registration_tree_deletes_backrefs(self):
         proj = NodeFactory()
         NodeFactory(parent=proj)
         comp2 = NodeFactory(parent=proj)
@@ -3131,8 +3121,7 @@ class TestForkNode:
         fork_date = timezone.now()
 
         # Fork node
-        with mock.patch.object(Node, 'bulk_update_search'):
-            fork = project.fork_node(auth=auth)
+        fork = project.fork_node(auth=auth)
 
         # Compare fork to original
         self._cmp_fork_original(user, fork_date, fork, project)
@@ -3268,15 +3257,12 @@ class TestForkNode:
     def test_forking_clones_project_wiki_pages(self, user, auth):
         project = ProjectFactory(creator=user, is_public=True)
         # TODO: Unmock when StoredFileNode is implemented
-        with mock.patch('osf.models.AbstractNode.update_search'):
-            wiki_page = WikiFactory(
-                user=user,
-                node=project,
-            )
-            wiki = WikiVersionFactory(
-                wiki_page=wiki_page,
-            )
-            current_wiki = WikiVersionFactory(wiki_page=wiki_page, identifier=2)
+        wiki_page = WikiFactory(
+            user=user,
+            node=project,
+        )
+        wiki = WikiVersionFactory(wiki_page=wiki_page,)
+        current_wiki = WikiVersionFactory(wiki_page=wiki_page, identifier=2)
         fork = project.fork_node(auth)
         assert fork.wiki_private_uuids == {}
 
@@ -3847,14 +3833,11 @@ class TestOnNodeUpdate:
         assert 'node_license' in task.kwargs['saved_fields']
 
     @responses.activate
-    @mock.patch('website.search.search.update_collected_metadata')
-    def test_update_collection_elasticsearch_make_private(self, mock_update_collected_metadata, node_in_collection, collection, user):
+    def test_update_collection_elasticsearch_make_private(self, node_in_collection, collection, user):
         node_in_collection.is_public = False
         node_in_collection.save()
 
         on_node_updated(node_in_collection._id, user._id, False, {'is_public'})
-
-        mock_update_collected_metadata.assert_called_with(node_in_collection._id, op='delete')
 
 
 # copied from tests/test_models.py

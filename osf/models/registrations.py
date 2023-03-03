@@ -661,7 +661,6 @@ class Registration(AbstractNode):
             self.registered_from = None
         if save:
             self.save()
-        self.update_search()
         for child in self.nodes_primary:
             child.delete_registration_tree(save=save)
 
@@ -827,11 +826,9 @@ class Registration(AbstractNode):
         # to disapprove the retraction by this point)
         for node in self.get_descendants_recursive(primary_only=True):
             node.set_privacy('public', auth=None, log=False)
-            node.update_search()
 
         # force a save before sending data to share or retraction will not be updated
         self.set_privacy('public', auth=None, log=False)
-        self.update_search()
         self.save()
 
         if settings.SHARE_ENABLED:
@@ -1195,10 +1192,6 @@ class DraftRegistration(ObjectIDMixin, RegistrationResponseMixin, DirtyFieldsMix
         # For NodeInstitutionsRelationshipSerializer
         path = '/draft_registrations/{}/relationships/institutions/'.format(self._id)
         return api_v2_url(path)
-
-    def update_search(self):
-        # Override for AffiliatedInstitutionMixin, not sending DraftRegs to search
-        pass
 
     def can_view(self, auth):
         """Does the user have permission to view the draft registration?

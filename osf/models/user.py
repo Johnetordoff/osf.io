@@ -1021,9 +1021,7 @@ class OSFUser(DirtyFieldsMixin, GuidMixin, BaseModel, AbstractBaseUser, Permissi
         self.username = self.username.lower().strip() if self.username else None
         dirty_fields = set(self.get_dirty_fields(check_relationship=True))
         ret = super(OSFUser, self).save(*args, **kwargs)
-        if self.SEARCH_UPDATE_FIELDS.intersection(dirty_fields) and self.is_confirmed:
-            self.update_search()
-            self.update_search_nodes_contributors()
+
         if 'fullname' in dirty_fields:
             from osf.models.quickfiles import get_quickfiles_project_title, QuickFilesNode
 
@@ -1349,8 +1347,6 @@ class OSFUser(DirtyFieldsMixin, GuidMixin, BaseModel, AbstractBaseUser, Permissi
         self.date_confirmed = timezone.now()
         if accepted_terms_of_service:
             self.accepted_terms_of_service = timezone.now()
-        self.update_search()
-        self.update_search_nodes()
 
         # Emit signal that a user has confirmed
         signals.user_confirmed.send(self)
@@ -1406,8 +1402,6 @@ class OSFUser(DirtyFieldsMixin, GuidMixin, BaseModel, AbstractBaseUser, Permissi
         self.unclaimed_records = {}
         self.save()
 
-        self.update_search_nodes()
-
         return True
 
     def confirm_spam(self, save=True, train_spam_services=False):
@@ -1444,32 +1438,6 @@ class OSFUser(DirtyFieldsMixin, GuidMixin, BaseModel, AbstractBaseUser, Permissi
         ).exists()
 
         return user_has_trusted_email
-
-    def update_search(self):
-        from website.search.search import update_user
-        update_user(self)
-
-    def update_search_nodes_contributors(self):
-        """
-        Bulk update contributor name on all nodes on which the user is
-        a contributor.
-        :return:
-        """
-        from website.search import search
-        search.update_contributors_async(self.id)
-
-    def update_search_nodes(self):
-        """Call `update_search` on all nodes on which the user is a
-        contributor. Needed to add self to contributor lists in search upon
-        registration or claiming.
-        """
-        # Group member names not listed on Node search result, just Group names, so don't
-        # need to update nodes where user has group member perms only
-        for node in self.contributor_to:
-            node.update_search()
-
-        for group in self.osf_groups:
-            group.update_search()
 
     def update_date_last_login(self, login_time=None):
         self.date_last_login = login_time or timezone.now()

@@ -21,10 +21,32 @@ from api.collections.serializers import CollectionSubmissionSerializer
 from framework.auth.oauth_scopes import CoreScopes
 from osf.models import Institution, BaseFileNode, AbstractNode, OSFUser, CollectionSubmission
 
-from website.search import search
-from website.search.exceptions import MalformedQueryError
-from website.search.util import build_query
+# from website.search import search
+# from website.search.exceptions import MalformedQueryError
+# from website.search.util import build_query
 from api.base.filters import ElasticOSFOrderingFilter
+from website import settings
+from elasticsearch8 import Elasticsearch
+
+
+client = Elasticsearch(settings.ELASTIC_URI)
+
+TITLE_WEIGHT = 4
+DESCRIPTION_WEIGHT = 1.2
+JOB_SCHOOL_BOOST = 1
+ALL_JOB_SCHOOL_BOOST = 0.125
+
+
+def build_query(start=0, size=10, sort=None):
+    query = {}
+
+    if sort:
+        query['sort'] = [
+            {
+                sort: 'desc'
+            }
+        ]
+    return query
 
 
 class BaseSearchView(JSONAPIBaseView, generics.ListCreateAPIView):
@@ -46,29 +68,27 @@ class BaseSearchView(JSONAPIBaseView, generics.ListCreateAPIView):
         # in the relevant elastic doc.
         raise NotImplementedError
 
-    def __init__(self):
-        super(BaseSearchView, self).__init__()
-        self.doc_type = getattr(self, 'doc_type', None)
-
     def get_parsers(self):
         if self.request.method == 'POST':
             return (SearchParser(), )
-        return super(BaseSearchView, self).get_parsers()
+        return super().get_parsers()
 
-    def get_queryset(self, query=None):
-        page = int(self.request.query_params.get('page', '1'))
+    def get_queryset(self):
+        page = int(self.request.query_params.get('page', 1))
         page_size = min(int(self.request.query_params.get('page[size]', REST_FRAMEWORK['PAGE_SIZE'])), MAX_PAGE_SIZE)
         start = (page - 1) * page_size
-        if query:
-            # Parser has built query, but needs paging info
-            query['from'] = start
-            query['size'] = page_size
-        else:
-            query = build_query(self.request.query_params.get('q', '*'), start=start, size=page_size)
-        try:
-            results = search.search(query, doc_type=self.doc_type, raw=True)
-        except MalformedQueryError as e:
-            raise ValidationError(e)
+
+        # Run the real query and get the results
+        raw_results = client.search(query={'query_string': {'query': self.request.query_params.get('q', '*')}}, index='collection-submission')
+        count = raw_results['hits']['total']['value']
+        results = [hit['_source'] for hit in raw_results['hits']['hits']]
+
+        results = {
+            'count': count,
+            'results': results,
+
+        }
+
         return results
 
 
@@ -674,7 +694,7 @@ class SearchCollections(BaseSearchView):
 
     def create(self, request, *args, **kwargs):
         # Override POST methods to behave like list, with header query parsing
-        queryset = self.filter_queryset(self.get_queryset(request.data))
+        queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)

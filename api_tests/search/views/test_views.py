@@ -1,5 +1,4 @@
 import pytest
-import uuid
 
 from api.base.settings.defaults import API_BASE
 from api_tests import utils
@@ -16,9 +15,6 @@ from osf_tests.factories import (
     RegistrationProviderFactory,
 )
 from osf_tests.utils import mock_archive
-from website import settings
-from website.search import elastic_search
-from website.search import search
 
 SCHEMA_VERSION = 2
 
@@ -27,15 +23,6 @@ SCHEMA_VERSION = 2
 @pytest.mark.enable_search
 @pytest.mark.enable_enqueue_task
 class ApiSearchTestCase:
-
-    @pytest.fixture(autouse=True)
-    def index(self):
-        settings.ELASTIC_INDEX = uuid.uuid4().hex
-        elastic_search.INDEX = settings.ELASTIC_INDEX
-
-        search.create_index(elastic_search.INDEX)
-        yield
-        search.delete_index(elastic_search.INDEX)
 
     @pytest.fixture()
     def user(self):
@@ -84,7 +71,6 @@ class ApiSearchTestCase:
             title='Graduation',
             creator=user_one,
             is_public=True)
-        project.update_search()
         return project
 
     @pytest.fixture()
@@ -560,14 +546,14 @@ class TestSearchRegistrations(ApiSearchTestCase):
         with mock_archive(project_private, autocomplete=True, autoapprove=True, schema=schema) as registration_private:
             registration_private.is_public = False
             registration_private.save()
-            # TODO: This shouldn't be necessary, but tests fail if we don't do
-            # this. Investigate further.
-            registration_private.update_search()
             return registration_private
 
     def test_search_registrations(
             self, app, url_registration_search, user, user_one, user_two,
             registration, registration_public, registration_private):
+
+        from osf.management.commands.reindex_search import reindex_collections
+        reindex_collections()
 
         # test_search_public_registration_no_auth
         res = app.get(url_registration_search)
@@ -786,22 +772,22 @@ class TestSearchInstitutions(ApiSearchTestCase):
         assert total == 1
         assert institution.name == res.json['data'][0]['attributes']['name']
 
-class TestSearchCollections(ApiSearchTestCase):
+
+class TestSearchCollections:
 
     def get_ids(self, data):
         return [s['id'] for s in data]
 
-    def post_payload(self, *args, **kwargs):
-        return {
-            'data': {
-                'attributes': kwargs
-            },
-            'type': 'search'
-        }
+    @pytest.fixture(autouse=True)
+    def search(self):
+        from osf.management.commands import reindex_search
+        reindex_search()
+
+        return f'/{API_BASE}search/collections/'
 
     @pytest.fixture()
     def url_collection_search(self):
-        return '/{}search/collections/'.format(API_BASE)
+        return f'/{API_BASE}search/collections/'
 
     @pytest.fixture()
     def node_one(self, user):
@@ -892,6 +878,7 @@ class TestSearchCollections(ApiSearchTestCase):
         assert res.status_code == 200
         total = res.json['links']['meta']['total']
         assert node_with_abstract.description == reg_with_abstract.description == res.json['data'][0]['embeds']['guid']['data']['attributes']['description']
+        assert reg_with_abstract.description == res.json['data'][0]['embeds']['guid']['data']['attributes']['description']
         assert total == 2
 
         # test_search_collections_no_results:
@@ -900,103 +887,3 @@ class TestSearchCollections(ApiSearchTestCase):
         assert res.status_code == 200
         total = res.json['links']['meta']['total']
         assert total == 0
-
-    def test_POST_search_collections(
-            self, app, url_collection_search, user, node_one, node_two, collection_public,
-            node_with_abstract, node_private, registration_collection, registration_one,
-            registration_two, registration_private, reg_with_abstract):
-        collection_public.collect_object(node_one, user, status='asdf', issue='0', volume='1', program_area='asdf')
-        collection_public.collect_object(node_two, user, collected_type='asdf', status='lkjh')
-        collection_public.collect_object(node_with_abstract, user, status='asdf')
-        collection_public.collect_object(node_private, user, status='asdf', collected_type='asdf')
-
-        registration_collection.collect_object(registration_one, user, status='asdf')
-        registration_collection.collect_object(registration_two, user, collected_type='asdf', status='lkjh')
-        registration_collection.collect_object(reg_with_abstract, user, status='asdf')
-        registration_collection.collect_object(registration_private, user, status='asdf', collected_type='asdf')
-
-        # test_search_empty
-        payload = self.post_payload()
-        res = app.post_json_api(url_collection_search, payload)
-        assert res.status_code == 200
-        assert res.json['links']['meta']['total'] == 6
-        assert len(res.json['data']) == 6
-        actual_ids = self.get_ids(res.json['data'])
-        assert registration_private._id not in actual_ids
-        assert node_private._id not in actual_ids
-
-        # test_search_title_keyword
-        payload = self.post_payload(q='Ismael')
-        res = app.post_json_api(url_collection_search, payload)
-        assert res.status_code == 200
-        assert res.json['links']['meta']['total'] == 2
-        assert len(res.json['data']) == 2
-        actual_ids = self.get_ids(res.json['data'])
-        assert registration_private._id not in actual_ids
-        assert node_private._id not in actual_ids
-
-        # test_search_abstract_keyword
-        payload = self.post_payload(q='Khadja')
-        res = app.post_json_api(url_collection_search, payload)
-        assert res.status_code == 200
-        assert res.json['links']['meta']['total'] == 2
-        assert len(res.json['data']) == 2
-        actual_ids = self.get_ids(res.json['data'])
-        assert node_with_abstract._id in actual_ids
-        assert reg_with_abstract._id in actual_ids
-
-        # test_search_filter
-        payload = self.post_payload(status='asdf')
-        res = app.post_json_api(url_collection_search, payload)
-        assert res.status_code == 200
-        assert res.json['links']['meta']['total'] == 4
-        assert len(res.json['data']) == 4
-        actual_ids = self.get_ids(res.json['data'])
-        assert registration_private._id not in actual_ids
-        assert node_private._id not in actual_ids
-
-        payload = self.post_payload(status=['asdf', 'lkjh'])
-        res = app.post_json_api(url_collection_search, payload)
-        assert res.status_code == 200
-        assert res.json['links']['meta']['total'] == 6
-        assert len(res.json['data']) == 6
-        actual_ids = self.get_ids(res.json['data'])
-        assert registration_private._id not in actual_ids
-        assert node_private._id not in actual_ids
-
-        payload = self.post_payload(collectedType='asdf')
-        res = app.post_json_api(url_collection_search, payload)
-
-        assert res.status_code == 200
-        assert res.json['links']['meta']['total'] == 2
-        assert len(res.json['data']) == 2
-        actual_ids = self.get_ids(res.json['data'])
-        assert node_two._id in actual_ids
-        assert registration_two._id in actual_ids
-
-        payload = self.post_payload(status='asdf', issue='0', volume='1', programArea='asdf', collectedType='')
-        res = app.post_json_api(url_collection_search, payload)
-
-        assert res.status_code == 200
-        assert res.json['links']['meta']['total'] == 1
-        assert len(res.json['data']) == 1
-        actual_ids = self.get_ids(res.json['data'])
-        assert node_one._id in actual_ids
-
-        # test_search_abstract_keyword_and_filter
-        payload = self.post_payload(q='Khadja', status='asdf')
-        res = app.post_json_api(url_collection_search, payload)
-        assert res.status_code == 200
-        assert res.json['links']['meta']['total'] == 2
-        assert len(res.json['data']) == 2
-        actual_ids = self.get_ids(res.json['data'])
-        assert node_with_abstract._id in actual_ids
-        assert reg_with_abstract._id in actual_ids
-
-        # test_search_abstract_keyword_and_filter_provider
-        payload = self.post_payload(q='Khadja', status='asdf', provider=collection_public.provider._id)
-        res = app.post_json_api(url_collection_search, payload)
-        assert res.status_code == 200
-        assert res.json['links']['meta']['total'] == 1
-        assert len(res.json['data']) == 1
-        assert res.json['data'][0]['id'] == node_with_abstract._id

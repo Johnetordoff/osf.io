@@ -106,12 +106,6 @@
 
     `$ cp ./docker-compose-dist-arm64.override.yml ./docker-compose.override.yml`
 
-    - In `webite/settings/local.py`, disable `SEARCH_ENGINE`
-    ```python
-      # SEARCH_ENGINE = 'elastic'
-      SEARCH_ENGINE = None
-    ```
-
   - Building the Docker image
 
     - If you wish to use an OSF image other than the latest `develop-arm64`:

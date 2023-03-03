@@ -94,7 +94,7 @@ class NodeCommentsListMixin(object):
         assert registration_dict['comment']._id in comment_ids
 
     def test_return_both_deleted_and_undeleted_comments(
-            self, app, user, project_private_dict, mock_update_search=None):
+            self, app, user, project_private_dict):
         deleted_comment = CommentFactory(
             node=project_private_dict['project'], user=user,
             target=project_private_dict['comment'].target,
@@ -277,7 +277,7 @@ class TestNodeCommentsListWiki(NodeCommentsListMixin):
             'url': url_registration
         }
 
-    def test_comments_on_deleted_wikis_are_not_returned(self, app, user, project_private_dict, mock_update_search=None):
+    def test_comments_on_deleted_wikis_are_not_returned(self, app, user, project_private_dict):
         # Delete wiki
         project_private_dict['wiki'].delete(core.Auth(user))
         res = app.get(project_private_dict['url'], auth=user.auth)

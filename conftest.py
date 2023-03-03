@@ -29,8 +29,6 @@ SILENT_LOGGERS = [
     'website.archiver.tasks',
     'website.mails',
     'website.notifications.listeners',
-    'website.search.elastic_search',
-    'website.search_migration.migrate',
     'website.util.paths',
     'requests_oauthlib.oauth2_session',
     'raven.base.Client',
@@ -82,14 +80,6 @@ _MOCKS = {
         'mark': 'enable_blacklist_check',
         'replacement': lambda *args, **kwargs: False,
     },
-    'website.search.search.search_engine': {
-        'mark': 'enable_search',
-        'replacement': mock.MagicMock()
-    },
-    'website.search.elastic_search': {
-        'mark': 'enable_search',
-        'replacement': mock.MagicMock()
-    }
 }
 
 @pytest.fixture(autouse=True, scope='session')

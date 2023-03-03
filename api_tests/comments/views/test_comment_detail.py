@@ -1,4 +1,3 @@
-import mock
 import pytest
 from future.moves.urllib.parse import urlparse
 
@@ -879,13 +878,12 @@ class TestWikiCommentDetailView(CommentDetailMixin):
 
     @pytest.fixture()
     def wiki(self, user, private_project):
-        with mock.patch('osf.models.AbstractNode.update_search'):
-            wiki = WikiFactory(
-                user=user,
-                node=private_project,
-                page_name='not home'
-            )
-            return wiki
+        wiki = WikiFactory(
+            user=user,
+            node=private_project,
+            page_name='not home'
+        )
+        return wiki
 
     @pytest.fixture()
     def comment(self, user, private_project, wiki):
@@ -913,11 +911,10 @@ class TestWikiCommentDetailView(CommentDetailMixin):
 
     @pytest.fixture()
     def public_wiki(self, user, public_project):
-        with mock.patch('osf.models.AbstractNode.update_search'):
-            return WikiFactory(
-                user=user,
-                node=public_project,
-            )
+        return WikiFactory(
+            user=user,
+            node=public_project,
+        )
 
     @pytest.fixture()
     def public_comment(self, user, public_project, public_wiki):
@@ -950,11 +947,10 @@ class TestWikiCommentDetailView(CommentDetailMixin):
 
     @pytest.fixture()
     def registration_wiki(self, registration, user):
-        with mock.patch('osf.models.AbstractNode.update_search'):
-            return WikiFactory(
-                user=user,
-                node=registration,
-            )
+        return WikiFactory(
+            user=user,
+            node=registration,
+        )
 
     @pytest.fixture()
     def registration_comment(self, user, registration, registration_wiki):

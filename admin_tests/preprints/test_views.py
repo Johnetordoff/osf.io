@@ -351,14 +351,12 @@ class TestPreprintReindex:
                     assert data['data']['type'] == 'NormalizedData'
                     assert AdminLogEntry.objects.count() == count + 1
 
-    @mock.patch('website.search.search.update_preprint')
-    def test_reindex_preprint_elastic(self, mock_update_search, preprint, req):
+    def test_reindex_preprint_elastic(self, preprint, req):
         count = AdminLogEntry.objects.count()
         view = views.PreprintReindexElastic()
         view = setup_log_view(view, req, guid=preprint._id)
         view.post(req)
 
-        assert mock_update_search.called
         assert AdminLogEntry.objects.count() == count + 1
 
 

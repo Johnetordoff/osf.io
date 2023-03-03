@@ -391,20 +391,6 @@ class OsfStorageFile(OsfStorageFileNode, File):
         for tag in tags:
             self.remove_tag(tag, auth, save)
 
-    def delete(self, user=None, **kwargs):
-        from website.search import search
-
-        search.update_file(self, delete=True)
-        return super().delete(user, **kwargs)
-
-    def save(self, skip_search=False, *args, **kwargs):
-        from website.search import search
-
-        ret = super(OsfStorageFile, self).save()
-        if not skip_search:
-            search.update_file(self)
-        return ret
-
 
 class OsfStorageFolder(OsfStorageFileNode, Folder):
 

@@ -490,8 +490,7 @@ class TestNodeApprovalStates:
         registration = Registration.objects.get(retraction=retraction)
         assert registration.is_retracted
 
-    @mock.patch('osf.models.node.AbstractNode.update_search')
-    def test_is_retracted_searches_parents(self, mock_update_search):
+    def test_is_retracted_searches_parents(self):
         user = factories.UserFactory()
         node = factories.ProjectFactory(creator=user)
         child = factories.NodeFactory(creator=user, parent=node)
@@ -506,8 +505,7 @@ class TestNodeApprovalStates:
         assert retraction.is_pending_approval is True
         assert registration.is_pending_retraction is True
 
-    @mock.patch('osf.models.node.AbstractNode.update_search')
-    def test_is_pending_retraction_searches_parents(self, mock_update_search):
+    def test_is_pending_retraction_searches_parents(self):
         user = factories.UserFactory()
         node = factories.ProjectFactory(creator=user)
         child = factories.NodeFactory(creator=user, parent=node)

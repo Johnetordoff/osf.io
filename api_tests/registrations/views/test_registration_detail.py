@@ -71,9 +71,8 @@ class TestRegistrationDetail:
 
     @pytest.fixture()
     def private_wiki(self, user, private_project):
-        with mock.patch('osf.models.AbstractNode.update_search'):
-            wiki_page = WikiFactory(node=private_project, user=user)
-            WikiVersionFactory(wiki_page=wiki_page)
+        wiki_page = WikiFactory(node=private_project, user=user)
+        WikiVersionFactory(wiki_page=wiki_page)
         return wiki_page
 
     @pytest.fixture()

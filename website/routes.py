@@ -47,7 +47,6 @@ from website import maintenance
 from website import landing_pages as landing_page_views
 from website import views as website_views
 from website.citations import views as citation_views
-from website.search import views as search_views
 from website.oauth import views as oauth_views
 from addons.osfstorage import views as osfstorage_views
 from website.profile.utils import get_profile_image_url
@@ -1083,23 +1082,23 @@ def make_url_map(app):
 
     process_rules(app, [
 
-        Rule(
-            '/search/',
-            'get',
-            search_views.search_view,
-            OsfWebRenderer('search.mako', trust=False)
-        ),
-        Rule(
-            '/share/registration/',
-            'get',
-            {'register': settings.SHARE_REGISTRATION_URL},
-            json_renderer
-        ),
-        Rule(
-            '/api/v1/user/search/',
-            'get', search_views.search_contributor,
-            json_renderer
-        ),
+        # Rule(
+        #     '/search/',
+        #     'get',
+        #     search_views.search_view,
+        #     OsfWebRenderer('search.mako', trust=False)
+        # ),
+        # Rule(
+        #     '/share/registration/',
+        #     'get',
+        #     {'register': settings.SHARE_REGISTRATION_URL},
+        #     json_renderer
+        # ),
+        # Rule(
+        #     '/api/v1/user/search/',
+        #     'get', search_views.search_contributor,
+        #     json_renderer
+        # ),
         Rule(
             '/api/v1/search/node/',
             'post',
@@ -1113,8 +1112,8 @@ def make_url_map(app):
 
     process_rules(app, [
 
-        Rule(['/search/', '/search/<type>/'], ['get', 'post'], search_views.search_search, json_renderer),
-        Rule('/search/projects/', 'get', search_views.search_projects_by_title, json_renderer),
+        # Rule(['/search/', '/search/<type>/'], ['get', 'post'], search_views.search_search, json_renderer),
+        # Rule('/search/projects/', 'get', search_views.search_projects_by_title, json_renderer),
         Rule('/share/search/', 'get', website_views.legacy_share_v1_search, json_renderer),
 
     ], prefix='/api/v1')

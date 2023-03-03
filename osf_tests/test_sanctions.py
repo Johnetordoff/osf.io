@@ -18,8 +18,7 @@ from osf.utils import permissions
 class TestRegistrationApprovalHooks:
 
     # Regression test for https://openscience.atlassian.net/browse/OSF-4940
-    @mock.patch('osf.models.node.AbstractNode.update_search')
-    def test_unmoderated_accept_sets_state_to_approved(self, mock_update_search):
+    def test_unmoderated_accept_sets_state_to_approved(self):
         user = factories.UserFactory()
         registration = factories.RegistrationFactory(creator=user)
         registration.require_approval(user)
@@ -216,8 +215,7 @@ class TestDOICreation:
 
         # Moderator approval
 
-        with mock.patch('osf.models.node.AbstractNode.update_search'):
-            registration.sanction.accept(user=moderator)
+        registration.sanction.accept(user=moderator)
         assert registration.get_identifier(category='doi')
         # No value should be set if the registration was embargoed
         assert bool(registration.get_identifier_value(category='doi')) != embargoed
