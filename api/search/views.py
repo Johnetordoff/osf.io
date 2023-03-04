@@ -21,10 +21,185 @@ from api.collections.serializers import CollectionSubmissionSerializer
 from framework.auth.oauth_scopes import CoreScopes
 from osf.models import Institution, BaseFileNode, AbstractNode, OSFUser, CollectionSubmission
 
-from website.search import search
-from website.search.exceptions import MalformedQueryError
 from website.search.util import build_query
 from api.base.filters import ElasticOSFOrderingFilter
+from website import settings
+
+TITLE_WEIGHT = 4
+DESCRIPTION_WEIGHT = 1.2
+JOB_SCHOOL_BOOST = 1
+ALL_JOB_SCHOOL_BOOST = 0.125
+
+DOC_TYPE_TO_MODEL = {
+    'component': AbstractNode,
+    'project': AbstractNode,
+    'registration': AbstractNode,
+    'user': OSFUser,
+    'file': BaseFileNode,
+    'institution': Institution,
+    'preprint': Preprint,
+    'collectionSubmission': CollectionSubmission,
+}
+
+
+ALIASES = {
+    'project': 'Projects',
+    'component': 'Components',
+    'registration': 'Registrations',
+    'user': 'Users',
+    'total': 'All OSF Results',
+    'file': 'Files',
+    'institution': 'Institutions',
+    'preprint': 'Preprints',
+    'group': 'Groups',
+}
+
+
+def build_query(qs='*', start=0, size=10, sort=None):
+    query = {
+        'query': build_query_string(qs),
+        'from': start,
+        'size': size,
+    }
+
+    if sort:
+        query['sort'] = [
+            {
+                sort: 'desc'
+            }
+        ]
+    return query
+
+
+# Match queryObject in search.js
+def build_query_string(qs):
+    field_boosts = {
+        'title': TITLE_WEIGHT,
+        'description': DESCRIPTION_WEIGHT,
+        'job': JOB_SCHOOL_BOOST,
+        'school': JOB_SCHOOL_BOOST,
+        'all_jobs': ALL_JOB_SCHOOL_BOOST,
+        'all_schools': ALL_JOB_SCHOOL_BOOST,
+        '_all': 1,
+
+    }
+
+    fields = ['{}^{}'.format(k, v) for k, v in field_boosts.items()]
+    return {
+        'query_string': {
+            'default_field': '_all',
+            'fields': fields,
+            'query': qs,
+            'analyze_wildcard': True,
+            'lenient': True  # TODO, may not want to do this
+        }
+    }
+
+def get_aggregations(query, doc_type):
+    query['aggregations'] = {
+        'licenses': {
+            'terms': {
+                'field': 'license.id'
+            }
+        }
+    }
+
+    res = client().search(index=settings.ELASTIC_INDEX, doc_type=doc_type, search_type='count', body=query)
+    ret = {
+        doc_type: {
+            item['key']: item['doc_count']
+            for item in agg['buckets']
+        }
+        for doc_type, agg in res['aggregations'].items()
+    }
+    ret['total'] = res['hits']['total']
+    return ret
+
+
+def get_counts(count_query, clean=True):
+    count_query['aggregations'] = {
+        'counts': {
+            'terms': {
+                'field': '_type',
+            }
+        }
+    }
+
+    res = client().search(index=settings.ELASTIC_INDEX, doc_type=None, search_type='count', body=count_query)
+    counts = {x['key']: x['doc_count'] for x in res['aggregations']['counts']['buckets'] if x['key'] in ALIASES.keys()}
+
+    counts['total'] = sum([val for val in counts.values()])
+    return counts
+
+
+def get_tags(query, index):
+    query['aggregations'] = {
+        'tag_cloud': {
+            'terms': {'field': 'tags'}
+        }
+    }
+
+    results = client().search(index=settings.ELASTIC_INDEX, doc_type=None, body=query)
+    tags = results['aggregations']['tag_cloud']['buckets']
+
+    return tags
+
+
+def clean_splitters(text):
+    new_text = text.replace('_', ' ').replace('-', ' ').replace('.', ' ')
+    if new_text == text:
+        return ''
+    return new_text
+
+def format_results(results):
+    ret = []
+    for result in results:
+        if result.get('category') == 'user':
+            result['url'] = '/profile/' + result['id']
+        elif result.get('category') == 'file':
+            #parent_info = load_parent(result.get('parent_id'))
+            #result['parent_url'] = parent_info.get('url') if parent_info else None
+            #result['parent_title'] = parent_info.get('title') if parent_info else None
+        elif result.get('category') in {'project', 'component', 'registration'}:
+            result = format_result(result, result.get('parent_id'))
+        elif result.get('category') in {'preprint'}:
+            #result = format_preprint_result(result)
+        elif result.get('category') == 'collectionSubmission':
+            continue
+        elif not result.get('category'):
+            continue
+
+        ret.append(result)
+    return ret
+
+def format_result(result, parent_id=None):
+    formatted_result = {
+        'contributors': result['contributors'],
+        'groups': result.get('groups'),
+        'wiki_link': result['url'] + 'wiki/',
+        # TODO: Remove unescape_entities when mako html safe comes in
+        #'title': unescape_entities(result['title']),
+        'url': result['url'],
+        #'is_component': False if parent_info is None else True,
+        #'parent_title': unescape_entities(parent_info.get('title')) if parent_info else None,
+        #'parent_url': parent_info.get('url') if parent_info is not None else None,
+        'tags': result['tags'],
+        #'is_registration': (result['is_registration'] if parent_info is None
+        #                                                else parent_info.get('is_registration')),
+        'is_retracted': result['is_retracted'],
+        'is_pending_retraction': result['is_pending_retraction'],
+        'embargo_end_date': result['embargo_end_date'],
+        'is_pending_embargo': result['is_pending_embargo'],
+        #'description': unescape_entities(result['description']),
+        'category': result.get('category'),
+        'date_created': result.get('date_created'),
+        'date_registered': result.get('registered_date'),
+        'n_wikis': len(result['wikis'] or []),
+        'license': result.get('license'),
+        'affiliated_institutions': result.get('affiliated_institutions'),
+    }
+
+    return formatted_result
 
 
 class BaseSearchView(JSONAPIBaseView, generics.ListCreateAPIView):
@@ -66,8 +241,40 @@ class BaseSearchView(JSONAPIBaseView, generics.ListCreateAPIView):
         else:
             query = build_query(self.request.query_params.get('q', '*'), start=start, size=page_size)
         try:
-            results = search.search(query, doc_type=self.doc_type, raw=True)
-        except MalformedQueryError as e:
+            import copy
+            tag_query = copy.deepcopy(query)
+            aggs_query = copy.deepcopy(query)
+            count_query = copy.deepcopy(query)
+
+            for key in ['from', 'size', 'sort']:
+                try:
+                    del tag_query[key]
+                    del aggs_query[key]
+                    del count_query[key]
+                except KeyError:
+                    pass
+
+            tags = get_tags(tag_query, settings.ELASTIC_INDEX)
+            try:
+                del aggs_query['query']['filtered']['filter']
+                del count_query['query']['filtered']['filter']
+            except KeyError:
+                pass
+            aggregations = get_aggregations(aggs_query, doc_type=doc_type)
+            counts = get_counts(count_query, settings.ELASTIC_INDEX)
+
+            # Run the real query and get the results
+            raw_results = client().search(index=settings.ELASTIC_INDEX, doc_type=doc_type, body=query)
+            results = [hit['_source'] for hit in raw_results['hits']['hits']]
+
+            results = {
+                'results': raw_results['hits']['hits'] if raw else format_results(results),
+                'counts': counts,
+                'aggs': aggregations,
+                'tags': tags,
+                'typeAliases': ALIASES
+            }
+        except Exception as e:
             raise ValidationError(e)
         return results
 

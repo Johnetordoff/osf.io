@@ -50,7 +50,7 @@ services:
 
   elasticsearch:
     platform: linux/amd64
-    image: elasticsearch:2
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.6.1
     ports:
       - 9200:9200
     volumes:
