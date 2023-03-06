@@ -882,7 +882,6 @@ class RegistrationApproval(SanctionCallbackMixin, EmailApprovableSanction):
         )
         for node in registration.root.node_and_primary_descendants():
             self._add_success_logs(node, user)
-            node.update_search()  # update search if public
 
         self.save()
 

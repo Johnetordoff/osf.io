@@ -1,5 +1,4 @@
 from past.builtins import basestring
-import functools
 import itertools
 import logging
 import re
@@ -35,7 +34,6 @@ from framework import status
 from framework.auth import oauth_scopes
 from framework.celery_tasks.handlers import enqueue_task, get_task_from_queue
 from framework.exceptions import PermissionsError, HTTPError
-from framework.sentry import log_exception
 from osf.exceptions import (InvalidTagError, NodeStateError,
                             TagNotFoundError)
 from osf.models.contributor import Contributor
@@ -709,35 +707,6 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         return not self.all_tags.filter(name='qatest').exists()
 
     @classmethod
-    def bulk_update_search(cls, nodes, index=None):
-        from website import search
-        try:
-            serialize = functools.partial(search.search.update_node, index=index, bulk=True, async_update=False)
-            search.search.bulk_update_nodes(serialize, nodes, index=index)
-        except search.exceptions.SearchUnavailableError as e:
-            logger.exception(e)
-            log_exception()
-
-    def update_search(self):
-        from website import search
-
-        try:
-            search.search.update_node(self, bulk=False, async_update=True)
-            if self.collection_submissions.exists() and self.is_public:
-                search.search.update_collected_metadata(self._id)
-        except search.exceptions.SearchUnavailableError as e:
-            logger.exception(e)
-            log_exception()
-
-    def delete_search_entry(self):
-        from website import search
-        try:
-            search.search.delete_node(self)
-        except search.exceptions.SearchUnavailableError as e:
-            logger.exception(e)
-            log_exception()
-
-    @classmethod
     def find_by_institutions(cls, inst, query=None):
         return inst.nodes.filter(query) if query else inst.nodes.all()
 
@@ -1037,7 +1006,6 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
 
     # Override Taggable
     def on_tag_added(self, tag):
-        self.update_search()
         if settings.SHARE_ENABLED:
             update_share(self)
 
@@ -1061,7 +1029,6 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
             )
             if save:
                 self.save()
-            self.update_search()
             if settings.SHARE_ENABLED:
                 update_share(self)
 
@@ -1073,7 +1040,6 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         tags are already present on the node.
         """
         super(AbstractNode, self).remove_tags(tags, auth, save)
-        self.update_search()
         if settings.SHARE_ENABLED:
             update_share(self)
 
@@ -1933,13 +1899,6 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
         if saved_fields:
             self.on_update(first_save, saved_fields)
 
-        if 'node_license' in saved_fields:
-            children = list(self.descendants.filter(node_license=None, is_public=True, is_deleted=False))
-            while len(children):
-                batch = children[:99]
-                self.bulk_update_search(batch)
-                children = children[99:]
-
         if first_save:
             self.update_group_permissions()
             if not isinstance(self, Registration):
@@ -2236,9 +2195,6 @@ class AbstractNode(DirtyFieldsMixin, TypedModel, AddonModelMixin, IdentifierMixi
             node._remove_from_associated_collections(auth)
 
         bulk_update(hierarchy, update_fields=['is_deleted', 'deleted_date', 'deleted'])
-
-        if len(hierarchy.filter(is_public=True)):
-            AbstractNode.bulk_update_search(hierarchy.filter(is_public=True))
 
         return True
 

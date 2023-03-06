@@ -30,13 +30,6 @@ class DraftNode(AbstractNode):
     def clone(self):
         raise NodeStateError('A DraftNode may not be forked, used as a template, or registered.')
 
-    # Overrides AbstractNode.update_search
-    def update_search(self):
-        """
-        In the off-chance a DraftNode gets turned public, ensure it doesn't get sent to search
-        """
-        return
-
     def convert_draft_node_to_node(self, auth):
         self.recast('osf.node')
         self.save()

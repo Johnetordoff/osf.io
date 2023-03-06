@@ -451,7 +451,7 @@ COLLECTION_SUBMISSION_TRANSITIONS = [
         'source': [CollectionSubmissionStates.ACCEPTED],
         'dest': CollectionSubmissionStates.REMOVED,
         'before': ['_validate_remove'],
-        'after': ['_remove_from_search', '_notify_removed'],
+        'after': ['_notify_removed'],
         'unless': ['is_hybrid_moderated', 'is_moderated'],
     },
     {
@@ -459,7 +459,7 @@ COLLECTION_SUBMISSION_TRANSITIONS = [
         'source': [CollectionSubmissionStates.ACCEPTED],
         'dest': CollectionSubmissionStates.REMOVED,
         'before': ['_validate_remove'],
-        'after': ['_remove_from_search', '_notify_removed'],
+        'after': ['_notify_removed'],
         'conditions': ['is_hybrid_moderated'],
     },
     {
@@ -467,7 +467,7 @@ COLLECTION_SUBMISSION_TRANSITIONS = [
         'source': [CollectionSubmissionStates.ACCEPTED],
         'dest': CollectionSubmissionStates.REMOVED,
         'before': ['_validate_remove'],
-        'after': ['_remove_from_search', '_notify_removed'],
+        'after': ['_notify_removed'],
         'conditions': ['is_moderated'],
     },
     {

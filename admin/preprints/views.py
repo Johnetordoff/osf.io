@@ -42,7 +42,7 @@ from osf.models.admin_log_entry import (
     UNFLAG_SPAM,
 )
 
-from website import search, settings
+from website import settings
 
 
 class PreprintMixin(PermissionRequiredMixin):
@@ -160,7 +160,6 @@ class PreprintReindexElastic(PreprintMixin, View):
 
     def post(self, request, *args, **kwargs):
         preprint = self.get_object()
-        search.search.update_preprint(preprint, bulk=False, async_update=False)
         update_admin_log(
             user_id=self.request.user.id,
             object_id=preprint._id,

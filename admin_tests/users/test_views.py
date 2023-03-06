@@ -555,14 +555,12 @@ class TestUserReindex(AdminTestCase):
 
         self.user = AuthUserFactory()
 
-    @mock.patch('website.search.search.update_user')
-    def test_reindex_user_elastic(self, mock_reindex_elastic):
+    def test_reindex_user_elastic(self):
         count = AdminLogEntry.objects.count()
         view = views.UserReindexElastic()
         view = setup_log_view(view, self.request, guid=self.user._id)
         view.post(self.request)
 
-        nt.assert_true(mock_reindex_elastic.called)
         nt.assert_equal(AdminLogEntry.objects.count(), count + 1)
 
 

@@ -171,18 +171,14 @@ class TestOSFUser:
         parsed = impute_names_model(name)
         assert u.given_name == parsed['given_name']
 
-    @mock.patch('osf.models.user.OSFUser.update_search')
-    def test_search_not_updated_for_unreg_users(self, update_search):
+    def test_search_not_updated_for_unreg_users(self):
         u = OSFUser.create_unregistered(fullname=fake.name(), email=fake_email())
         # TODO: Remove post-migration
         u.date_registered = timezone.now()
         u.save()
-        assert not update_search.called
 
-    @mock.patch('osf.models.OSFUser.update_search')
-    def test_search_updated_for_registered_users(self, update_search):
+    def test_search_updated_for_registered_users(self):
         UserFactory(is_registered=True)
-        assert update_search.called
 
     def test_create_unregistered_raises_error_if_already_in_db(self):
         u = UnregUserFactory()
@@ -1240,9 +1236,7 @@ class TestUnregisteredUser:
             unreg_user.save()
         assert str(e.value) == 'Referrer does not have permission to add a moderator to provider {}'.format(provider._id)
 
-    @mock.patch('osf.models.OSFUser.update_search_nodes')
-    @mock.patch('osf.models.OSFUser.update_search')
-    def test_register(self, mock_search, mock_search_nodes):
+    def test_register(self):
         user = UnregUserFactory()
         assert user.is_registered is False  # sanity check
         email = fake_email()
@@ -1252,9 +1246,7 @@ class TestUnregisteredUser:
         assert user.check_password('killerqueen') is True
         assert user.username == email
 
-    @mock.patch('osf.models.OSFUser.update_search_nodes')
-    @mock.patch('osf.models.OSFUser.update_search')
-    def test_registering_with_a_different_email_adds_to_emails_list(self, mock_search, mock_search_nodes):
+    def test_registering_with_a_different_email_adds_to_emails_list(self):
         user = UnregUserFactory()
         assert user.has_usable_password() is False  # sanity check
         email = fake_email()

@@ -1,4 +1,3 @@
-import mock
 import pytest
 
 from rest_framework import exceptions
@@ -40,10 +39,9 @@ class TestNodeWikiList:
     @pytest.fixture()
     def add_project_wiki_page(self):
         def add_page(node, user):
-            with mock.patch('osf.models.AbstractNode.update_search'):
-                wiki_page = WikiFactory(node=node, user=user)
-                WikiVersionFactory(wiki_page=wiki_page)
-                return wiki_page
+            wiki_page = WikiFactory(node=node, user=user)
+            WikiVersionFactory(wiki_page=wiki_page)
+            return wiki_page
         return add_page
 
     @pytest.fixture()
@@ -169,10 +167,8 @@ class TestNodeWikiList:
         withdrawal = private_registration.retract_registration(
             user=user, save=True)
         token = list(withdrawal.approval_state.values())[0]['approval_token']
-        # TODO: Remove mocking when StoredFileNode is implemented
-        with mock.patch('osf.models.AbstractNode.update_search'):
-            withdrawal.approve_retraction(user, token)
-            withdrawal.save()
+        withdrawal.approve_retraction(user, token)
+        withdrawal.save()
         res = app.get(
             private_registration_url,
             auth=user.auth,
@@ -273,10 +269,9 @@ class TestFilterNodeWikiList:
 
     @pytest.fixture()
     def wiki(self, user, private_project):
-        with mock.patch('osf.models.AbstractNode.update_search'):
-            wiki_page = WikiFactory(node=private_project, user=user)
-            WikiVersionFactory(wiki_page=wiki_page)
-            return wiki_page
+        wiki_page = WikiFactory(node=private_project, user=user)
+        WikiVersionFactory(wiki_page=wiki_page)
+        return wiki_page
 
     @pytest.fixture()
     def date(self, wiki):

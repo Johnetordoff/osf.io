@@ -19,10 +19,6 @@ def on_preprint_updated(preprint_id, old_subjects=None, saved_fields=None):
     preprint = Preprint.load(preprint_id)
     if old_subjects is None:
         old_subjects = []
-    need_update = bool(preprint.SEARCH_UPDATE_FIELDS.intersection(saved_fields or {}))
-
-    if need_update:
-        preprint.update_search()
 
     if should_update_preprint_identifiers(preprint, old_subjects, saved_fields):
         update_or_create_preprint_identifiers(preprint)

@@ -79,8 +79,7 @@ class TestDataStorageUsage(DbTestCase):
             registration.retract_registration(creator)
             withdrawal = registration.retraction
             token = list(withdrawal.approval_state.values())[0]['approval_token']
-            with mock.patch('osf.models.AbstractNode.update_search'):
-                withdrawal.approve_retraction(creator, token)
+            withdrawal.approve_retraction(creator, token)
             withdrawal.save()
 
         return registration

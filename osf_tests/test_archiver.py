@@ -1159,17 +1159,14 @@ class TestArchiverDecorators(ArchiverTestCase):
 
 class TestArchiverBehavior(OsfTestCase):
 
-    @mock.patch('osf.models.AbstractNode.update_search')
-    def test_archiving_registrations_not_added_to_search_before_archival(self, mock_update_search):
+    def test_archiving_registrations_not_added_to_search_before_archival(self):
         proj = factories.ProjectFactory()
         reg = factories.RegistrationFactory(project=proj)
         reg.save()
-        assert_false(mock_update_search.called)
 
-    @mock.patch('osf.models.AbstractNode.update_search')
     @mock.patch('website.mails.send_mail')
     @mock.patch('website.archiver.tasks.archive_success.delay')
-    def test_archiving_nodes_added_to_search_on_archive_success_if_public(self, mock_update_search, mock_send, mock_archive_success):
+    def test_archiving_nodes_added_to_search_on_archive_success_if_public(self, mock_send, mock_archive_success):
         proj = factories.ProjectFactory()
         reg = factories.RegistrationFactory(project=proj)
         reg.save()
@@ -1178,12 +1175,10 @@ class TestArchiverBehavior(OsfTestCase):
             mock.patch('osf.models.ArchiveJob.success', mock.PropertyMock(return_value=True))
         ) as (mock_finished, mock_success):
             listeners.archive_callback(reg)
-        assert_equal(mock_update_search.call_count, 1)
 
     @pytest.mark.enable_search
-    @mock.patch('website.search.elastic_search.delete_doc')
     @mock.patch('website.mails.send_mail')
-    def test_archiving_nodes_not_added_to_search_on_archive_failure(self, mock_send, mock_delete_index_node):
+    def test_archiving_nodes_not_added_to_search_on_archive_failure(self, mock_send):
         proj = factories.ProjectFactory()
         reg = factories.RegistrationFactory(project=proj, archive=True)
         reg.save()
@@ -1192,17 +1187,14 @@ class TestArchiverBehavior(OsfTestCase):
                 mock.patch('osf.models.archive.ArchiveJob.success', mock.PropertyMock(return_value=False))
         ) as (mock_finished, mock_success):
             listeners.archive_callback(reg)
-        assert_true(mock_delete_index_node.called)
 
-    @mock.patch('osf.models.AbstractNode.update_search')
     @mock.patch('website.mails.send_mail')
-    def test_archiving_nodes_not_added_to_search_on_archive_incomplete(self, mock_send, mock_update_search):
+    def test_archiving_nodes_not_added_to_search_on_archive_incomplete(self, mock_send):
         proj = factories.ProjectFactory()
         reg = factories.RegistrationFactory(project=proj)
         reg.save()
         with mock.patch('osf.models.ArchiveJob.archive_tree_finished', mock.Mock(return_value=False)):
             listeners.archive_callback(reg)
-        assert_false(mock_update_search.called)
 
 
 class TestArchiveTarget(OsfTestCase):

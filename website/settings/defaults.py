@@ -104,17 +104,9 @@ TEMPLATES_PATH = os.path.join(BASE_PATH, 'templates')
 CONFIRM_REGISTRATIONS_BY_EMAIL = True
 ALLOW_LOGIN = True
 
-SEARCH_ENGINE = 'elastic'  # Can be 'elastic', or None
-ELASTIC_URI = '127.0.0.1:9200'
+ELASTIC_URI = 'https://localhost:9200/'
 ELASTIC_TIMEOUT = 10
 ELASTIC_INDEX = 'website'
-ELASTIC_KWARGS = {
-    # 'use_ssl': False,
-    # 'verify_certs': True,
-    # 'ca_certs': None,
-    # 'client_cert': None,
-    # 'client_key': None
-}
 
 # Sessions
 COOKIE_NAME = 'osf'
@@ -412,7 +404,6 @@ class CeleryConfig:
         'scripts.stuck_registration_audit',
         'scripts.populate_new_and_noteworthy_projects',
         'scripts.populate_popular_projects_and_registrations',
-        'website.search.elastic_search',
         'scripts.generate_sitemap',
         'scripts.clear_sessions',
         'osf.management.commands.delete_withdrawn_or_failed_registration_files',
@@ -498,7 +489,6 @@ class CeleryConfig:
         'website.mailchimp_utils',
         'website.notifications.tasks',
         'website.archiver.tasks',
-        'website.search.search',
         'website.project.tasks',
         'scripts.populate_new_and_noteworthy_projects',
         'scripts.populate_popular_projects_and_registrations',

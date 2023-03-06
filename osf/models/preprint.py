@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import functools
 from future.moves.urllib.parse import urljoin
 import logging
 import re
@@ -45,7 +44,6 @@ from osf.models.identifiers import IdentifierMixin, Identifier
 from osf.models.mixins import TaxonomizableMixin, ContributorMixin, SpamOverrideMixin, TitleMixin, DescriptionMixin
 from addons.osfstorage.models import OsfStorageFolder, Region, BaseFileNode, OsfStorageFile
 
-from framework.sentry import log_exception
 from osf.exceptions import (
     PreprintStateError,
     InvalidTagError,
@@ -897,24 +895,6 @@ class Preprint(DirtyFieldsMixin, GuidMixin, IdentifierMixin, ReviewableMixin, Ba
     def set_contributor_order(self, contributor_ids):
         # Method needed for ContributorMixin
         return self.set_preprintcontributor_order(contributor_ids)
-
-    @classmethod
-    def bulk_update_search(cls, preprints, index=None):
-        from website import search
-        try:
-            serialize = functools.partial(search.search.update_preprint, index=index, bulk=True, async_update=False)
-            search.search.bulk_update_nodes(serialize, preprints, index=index)
-        except search.exceptions.SearchUnavailableError as e:
-            logger.exception(e)
-            log_exception()
-
-    def update_search(self):
-        from website import search
-        try:
-            search.search.update_preprint(self, bulk=False, async_update=True)
-        except search.exceptions.SearchUnavailableError as e:
-            logger.exception(e)
-            log_exception()
 
     def serialize_waterbutler_settings(self, provider_name=None):
         """

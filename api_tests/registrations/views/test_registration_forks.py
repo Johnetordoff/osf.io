@@ -1,5 +1,4 @@
 import pytest
-import mock
 
 from framework.auth.core import Auth
 from api.base.settings.defaults import API_BASE
@@ -411,9 +410,7 @@ class TestRegistrationForkCreate:
 
     def test_cannot_fork_retractions(
             self, app, user, private_registration, fork_data):
-        with mock.patch('osf.models.AbstractNode.update_search'):
-            WithdrawnRegistrationFactory(
-                registration=private_registration, user=user)
+        WithdrawnRegistrationFactory(registration=private_registration, user=user)
         url = '/{}registrations/{}/forks/{}'.format(
             API_BASE, private_registration._id, '?embed=forked_from')
 

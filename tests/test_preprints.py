@@ -262,14 +262,6 @@ class TestTagging:
         assert 'bAr' not in preprint.system_tags
 
 
-class TestSearch:
-
-    @mock.patch('website.search.search.update_preprint')
-    def test_update_search(self, mock_update_preprint, preprint):
-        preprint.update_search()
-        assert mock_update_preprint.called
-
-
 class TestPreprintCreation:
 
     def test_creator_is_added_as_contributor(self, fake):

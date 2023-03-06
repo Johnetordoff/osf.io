@@ -1,4 +1,3 @@
-import mock
 import pytest
 import furl
 import pytz
@@ -149,9 +148,8 @@ class TestWikiDetailView(ApiWikiTestCase):
         project_options = project_options or {}
         self.public_project = ProjectFactory(is_public=True, creator=self.user, **project_options)
         from addons.wiki.tests.factories import WikiFactory, WikiVersionFactory
-        with mock.patch('osf.models.AbstractNode.update_search'):
-            self.public_wiki_page = WikiFactory(node=self.public_project, user=self.user)
-            self.public_wiki = WikiVersionFactory(wiki_page=self.public_wiki_page, user=self.user)
+        self.public_wiki_page = WikiFactory(node=self.public_project, user=self.user)
+        self.public_wiki = WikiVersionFactory(wiki_page=self.public_wiki_page, user=self.user)
         self.public_url = '/{}wikis/{}/'.format(API_BASE, self.public_wiki_page._id)
         return self.public_wiki_page
 
@@ -273,12 +271,10 @@ class TestWikiDetailView(ApiWikiTestCase):
     def test_user_cannot_view_withdrawn_registration_wikis(self):
         self._set_up_public_registration_with_wiki_page()
         # TODO: Remove mocking when StoredFileNode is implemented
-        with mock.patch('osf.models.AbstractNode.update_search'):
-            withdrawal = self.public_registration.retract_registration(
-                user=self.user, save=True)
-            token = list(withdrawal.approval_state.values())[0]['approval_token']
-            withdrawal.approve_retraction(self.user, token)
-            withdrawal.save()
+        withdrawal = self.public_registration.retract_registration(user=self.user, save=True)
+        token = list(withdrawal.approval_state.values())[0]['approval_token']
+        withdrawal.approve_retraction(self.user, token)
+        withdrawal.save()
         res = self.app.get(
             self.public_registration_url,
             auth=self.user.auth,

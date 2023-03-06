@@ -302,7 +302,6 @@ class AffiliatedInstitutionMixin(models.Model):
             raise UserNotAffiliatedError('User is not affiliated with {}'.format(inst.name))
         if not self.is_affiliated_with_institution(inst):
             self.affiliated_institutions.add(inst)
-            self.update_search()
         if log:
             params = self.log_params
             params['institution'] = {
@@ -331,7 +330,6 @@ class AffiliatedInstitutionMixin(models.Model):
                 )
             if save:
                 self.save()
-            self.update_search()
             return True
         return False
 
@@ -2000,7 +1998,6 @@ class SpamOverrideMixin(SpamMixin):
 
             self.is_deleted = False
             self.deleted = None
-            self.update_search()
 
         if save:
             self.save()

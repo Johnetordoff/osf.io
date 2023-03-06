@@ -49,10 +49,14 @@ services:
   ###################
 
   elasticsearch:
-    platform: linux/amd64
-    image: elasticsearch:2
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.6.1
     ports:
       - 9200:9200
+    environment:
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      node.name: elastic8
+      cluster.initial_master_nodes: elastic8
+      xpack.security.enabled: false  # not good for deployment
     volumes:
       - elasticsearch_data_vol:/usr/share/elasticsearch/data
     stdin_open: true

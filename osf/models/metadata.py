@@ -129,8 +129,6 @@ class GuidMetadataRecord(ObjectIDMixin, BaseModel):
             setattr(self, field_name, new_value)
         self.save()
         self._log_update(auth, updated_fields)
-        if hasattr(self.guid.referent, 'update_search'):
-            self.guid.referent.update_search()
 
     def _log_update(self, auth, updated_fields):
         from osf.models.files import BaseFileNode

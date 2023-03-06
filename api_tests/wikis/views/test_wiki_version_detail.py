@@ -1,4 +1,3 @@
-import mock
 import furl
 import datetime
 import pytz
@@ -20,9 +19,8 @@ class TestWikiVersionDetailView(ApiWikiTestCase):
         project_options = project_options or {}
         self.public_project = ProjectFactory(is_public=True, creator=self.user, **project_options)
         from addons.wiki.tests.factories import WikiFactory, WikiVersionFactory
-        with mock.patch('osf.models.AbstractNode.update_search'):
-            self.public_wiki_page = WikiFactory(node=self.public_project, user=self.user)
-            self.public_wiki_version = WikiVersionFactory(wiki_page=self.public_wiki_page, user=self.user)
+        self.public_wiki_page = WikiFactory(node=self.public_project, user=self.user)
+        self.public_wiki_version = WikiVersionFactory(wiki_page=self.public_wiki_page, user=self.user)
         self.public_url = '/{}wikis/{}/versions/{}/'.format(API_BASE, self.public_wiki_page._id, str(self.public_wiki_version.identifier))
         return self.public_wiki_version
 
@@ -122,11 +120,10 @@ class TestWikiVersionDetailView(ApiWikiTestCase):
     def test_user_cannot_view_withdrawn_registration_wiki_versions(self):
         self._set_up_public_registration_with_wiki_page()
         # TODO: Remove mocking when StoredFileNode is implemented
-        with mock.patch('osf.models.AbstractNode.update_search'):
-            withdrawal = self.public_registration.retract_registration(user=self.user, save=True)
-            token = list(withdrawal.approval_state.values())[0]['approval_token']
-            withdrawal.approve_retraction(self.user, token)
-            withdrawal.save()
+        withdrawal = self.public_registration.retract_registration(user=self.user, save=True)
+        token = list(withdrawal.approval_state.values())[0]['approval_token']
+        withdrawal.approve_retraction(self.user, token)
+        withdrawal.save()
         res = self.app.get(self.public_registration_url, auth=self.user.auth, expect_errors=True)
         assert_equal(res.status_code, 403)
         assert_equal(res.json['errors'][0]['detail'], 'You do not have permission to perform this action.')

@@ -28,23 +28,23 @@ class SearchSerializer(JSONAPISerializer):
             serializer = NodeSerializer(data, context=self.context)
             return NodeSerializer.to_representation(serializer, data)
 
-        if isinstance(data, OSFUser):
+        elif isinstance(data, OSFUser):
             serializer = UserSerializer(data, context=self.context)
             return UserSerializer.to_representation(serializer, data)
 
-        if isinstance(data, BaseFileNode):
+        elif isinstance(data, BaseFileNode):
             serializer = FileSerializer(data, context=self.context)
             return FileSerializer.to_representation(serializer, data)
 
-        if isinstance(data, Institution):
+        elif isinstance(data, Institution):
             serializer = InstitutionSerializer(data, context=self.context)
             return InstitutionSerializer.to_representation(serializer, data)
 
-        if isinstance(data, CollectionSubmission):
+        elif isinstance(data, CollectionSubmission):
             serializer = CollectionSubmissionSerializer(data, context=self.context)
             return CollectionSubmissionSerializer.to_representation(serializer, data)
-
-        return None
+        else:
+            raise NotImplementedError()
 
     def get_absolute_url(self, obj):
         return absolute_reverse(

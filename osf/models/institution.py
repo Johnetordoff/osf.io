@@ -180,27 +180,6 @@ class Institution(DirtyFieldsMixin, Loggable, base.ObjectIDMixin, base.BaseModel
         except InstitutionAssetFile.DoesNotExist:
             return '/static/img/institutions/banners/placeholder-banner.png'
 
-    def update_search(self):
-        from website.search.search import update_institution, update_node
-        from website.search.exceptions import SearchUnavailableError
-
-        try:
-            update_institution(self)
-        except SearchUnavailableError as e:
-            logger.exception(e)
-
-        for node in self.nodes.filter(is_deleted=False):
-            try:
-                update_node(node, async_update=False)
-            except SearchUnavailableError as e:
-                logger.exception(e)
-
-    def save(self, *args, **kwargs):
-        saved_fields = self.get_dirty_fields()
-        super(Institution, self).save(*args, **kwargs)
-        if saved_fields:
-            self.update_search()
-
     def _send_deactivation_email(self):
         """Send notification emails to all users affiliated with the deactivated institution.
         """

@@ -14,8 +14,8 @@ from api.base.serializers import is_anonymized
 from api.base.settings import MAX_PAGE_SIZE
 from api.base.utils import absolute_reverse
 
-from osf.models import AbstractNode, Comment, Preprint, Guid, DraftRegistration
-from website.search.elastic_search import DOC_TYPE_TO_MODEL
+from osf.models import AbstractNode, Comment, Preprint, Guid, DraftRegistration, CollectionSubmission
+# from website.search.elastic_search import DOC_TYPE_TO_MODEL
 
 
 class JSONAPIPagination(pagination.PageNumberPagination):
@@ -245,23 +245,22 @@ class DraftRegistrationContributorPagination(NodeContributorPagination):
 
 class SearchPaginator(DjangoPaginator):
 
+    DOC_TYPE_TO_MODEL = {
+        'collectionSubmission': CollectionSubmission
+    }
+
     def __init__(self, object_list, per_page):
         super(SearchPaginator, self).__init__(object_list, per_page)
 
     def search_type_to_model(self, obj_id, obj_type):
-        model = DOC_TYPE_TO_MODEL[obj_type]
+        model = self.DOC_TYPE_TO_MODEL[obj_type]
         return model.load(obj_id)
-
-    def _get_count(self):
-        self._count = self.object_list['aggs']['total']
-        return self._count
-    count = property(_get_count)
 
     def page(self, number):
         number = self.validate_number(number)
         results = self.object_list['results']
         items = [
-            self.search_type_to_model(result.get('_id'), result.get('_type'))
+            self.search_type_to_model(result.get('load_pagination_id'), result.get('_type'))
             for result in results
         ]
         return self._get_page(items, number, self)
@@ -273,11 +272,17 @@ class SearchModelPaginator(SearchPaginator):
         super(SearchModelPaginator, self).__init__(object_list, per_page)
         self.model = model
 
+    def _get_count(self):
+        self._count = self.object_list['count']
+        return self._count
+
+    count = property(_get_count)
+
     def page(self, number):
         number = self.validate_number(number)
         results = self.object_list['results']
         items = [
-            self.model.load(result.get('_id'))
+            self.model.load(result.get('load_pagination_id'))
             for result in results
         ]
         return self._get_page(items, number, self)
