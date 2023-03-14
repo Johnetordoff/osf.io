@@ -22,7 +22,7 @@ from waffle.models import Flag, Sample, Switch
 from website.notifications.constants import NOTIFICATION_TYPES
 from osf.utils import permissions
 from website.archiver import ARCHIVER_SUCCESS
-from website.settings import FAKE_EMAIL_NAME, FAKE_EMAIL_DOMAIN
+from website.settings import FAKE_EMAIL_NAME, FAKE_EMAIL_DOMAIN, WATERBUTLER_JWE_SECRET
 from framework.auth.core import Auth
 
 from osf import models
@@ -343,7 +343,7 @@ class RegistrationProviderFactory(DjangoModelFactory):
     name = factory.Faker('company')
     description = factory.Faker('bs')
     external_url = factory.Faker('url')
-    access_token = factory.Faker('bs')
+    access_token = WATERBUTLER_JWE_SECRET
     share_source = factory.Sequence(lambda n: 'share source #{0}'.format(n))
 
     class Meta:

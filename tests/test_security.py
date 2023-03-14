@@ -2,7 +2,7 @@
 from past.builtins import basestring
 from nose.tools import *
 
-from framework.encryption import encrypt, decrypt
+from osf.utils.cryptography import encrypt, decrypt
 from website import security
 
 

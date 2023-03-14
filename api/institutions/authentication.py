@@ -2,7 +2,6 @@ import json
 import uuid
 import logging
 
-import jwe
 import jwt
 import waffle
 
@@ -19,6 +18,7 @@ from osf import features
 from osf.exceptions import InstitutionAffiliationStateError
 from osf.models import Institution
 from osf.models.institution import SharedSsoAffiliationFilterCriteriaAction
+from osf.utils import cryptography, fields
 
 from website.mails import send_mail, WELCOME_OSF4I, DUPLICATE_ACCOUNTS_OSF4I, ADD_SSO_EMAIL_OSF4I
 from website.settings import OSF_SUPPORT_EMAIL, DOMAIN
@@ -110,15 +110,23 @@ class InstitutionAuthentication(BaseAuthentication):
         :raises: AuthenticationFailed or PermissionDenied if authentication fails
         """
 
+        try:
+            decrypted_data = cryptography.decrypt(
+                fields.ensure_bytes(request.body),
+                fields.ensure_bytes(settings.JWE_SECRET),
+            )
+        except cryptography.MalformedData:
+            raise AuthenticationFailed(detail='InstitutionSsoRequestNotAuthorized')
+
         # Verify / decrypt / decode the payload
         try:
             payload = jwt.decode(
-                jwe.decrypt(request.body, settings.JWE_SECRET),
+                decrypted_data,
                 settings.JWT_SECRET,
                 options={'verify_exp': False},
                 algorithm='HS256',
             )
-        except (jwt.InvalidTokenError, TypeError, jwe.exceptions.MalformedData):
+        except (jwt.InvalidTokenError, TypeError):
             raise AuthenticationFailed(detail='InstitutionSsoRequestNotAuthorized')
 
         # Load institution and user data

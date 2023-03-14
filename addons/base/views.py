@@ -9,7 +9,6 @@ from django.utils import timezone
 from flask import make_response
 from flask import request
 import furl
-import jwe
 import jwt
 import waffle
 from django.db import transaction
@@ -56,7 +55,7 @@ from osf.models import (
     FileVersion
 )
 from osf.metrics import PreprintView, PreprintDownload
-from osf.utils import permissions
+from osf.utils import permissions, cryptography, fields
 from website.profile.utils import get_profile_image_url
 from website.project import decorators
 from website.project.decorators import must_be_contributor_or_public, must_be_valid_project, check_contributor_auth
@@ -115,7 +114,10 @@ You may wish to verify this through {provider}'s website.
 <div class="alert alert-info" role="alert">
 This content has been removed."""}
 
-WATERBUTLER_JWE_KEY = jwe.kdf(settings.WATERBUTLER_JWE_SECRET.encode('utf-8'), settings.WATERBUTLER_JWE_SALT.encode('utf-8'))
+WATERBUTLER_JWE_KEY = cryptography.kdf(
+    fields.ensure_bytes(settings.WATERBUTLER_JWE_SECRET),
+    fields.ensure_bytes(settings.WATERBUTLER_JWE_SALT)
+)
 
 
 @decorators.must_have_permission(permissions.WRITE)
@@ -271,8 +273,17 @@ def get_auth(auth, **kwargs):
             auth.user = OSFUser.load(cas_resp.user)
 
     try:
+        decrypted_data = cryptography.decrypt(
+            fields.ensure_bytes(request.args.get('payload', b'')),
+            fields.ensure_bytes(WATERBUTLER_JWE_KEY)
+        )
+    except cryptography.MalformedData as err:
+        sentry.log_message(str(err))
+        raise HTTPError(http_status.HTTP_403_FORBIDDEN)
+
+    try:
         data = jwt.decode(
-            jwe.decrypt(request.args.get('payload', '').encode('utf-8'), WATERBUTLER_JWE_KEY),
+            decrypted_data,
             settings.WATERBUTLER_JWT_SECRET,
             options={'require_exp': True},
             algorithm=settings.WATERBUTLER_JWT_ALGORITHM
@@ -362,19 +373,32 @@ def get_auth(auth, **kwargs):
     if isinstance(credentials.get('token'), bytes):
         credentials['token'] = credentials.get('token').decode()
 
-    return {'payload': jwe.encrypt(jwt.encode({
-        'exp': timezone.now() + datetime.timedelta(seconds=settings.WATERBUTLER_JWT_EXPIRATION),
-        'data': {
-            'auth': make_auth(auth.user),  # A waterbutler auth dict not an Auth object
-            'credentials': credentials,
-            'settings': waterbutler_settings,
-            'callback_url': node.api_url_for(
-                ('create_waterbutler_log' if not getattr(node, 'is_registration', False) else 'registration_callbacks'),
-                _absolute=True,
-                _internal=True
-            )
-        }
-    }, settings.WATERBUTLER_JWT_SECRET, algorithm=settings.WATERBUTLER_JWT_ALGORITHM), WATERBUTLER_JWE_KEY).decode()}
+    callback_url = node.api_url_for(
+        'create_waterbutler_log' if not getattr(node, 'is_registration', False) else 'registration_callbacks',
+        _absolute=True,
+        _internal=True
+    )
+
+    return {
+        'payload': cryptography.encrypt(
+            jwt.encode(
+                {
+                    'exp': timezone.now() + datetime.timedelta(
+                        seconds=settings.WATERBUTLER_JWT_EXPIRATION
+                    ),
+                    'data': {
+                        'auth': make_auth(auth.user),  # A waterbutler auth dict not an Auth object
+                        'credentials': credentials,
+                        'settings': waterbutler_settings,
+                        'callback_url': callback_url,
+                    }
+                },
+                settings.WATERBUTLER_JWT_SECRET,
+                algorithm=settings.WATERBUTLER_JWT_ALGORITHM
+            ),
+            WATERBUTLER_JWE_KEY
+        ).decode()
+    }
 
 
 LOG_ACTION_MAP = {
