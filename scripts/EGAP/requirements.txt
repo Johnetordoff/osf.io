@@ -56,7 +56,7 @@ pyzmq==18.1.0
 qtconsole==4.5.5
 Send2Trash==1.5.0
 six==1.12.0
-sqlparse==0.3.0
+sqlparse==0.4.4
 terminado==0.8.2
 testpath==0.4.2
 tornado==6.0.3
