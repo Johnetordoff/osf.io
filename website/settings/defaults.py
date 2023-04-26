@@ -449,12 +449,12 @@ class CeleryConfig:
     high_pri_modules = {
         'scripts.approve_embargo_terminations',
         'scripts.approve_registrations',
-        'scripts.embargo_registrations',
         'scripts.premigrate_created_modified',
         'scripts.refresh_addon_tokens',
         'scripts.retract_registrations',
         'website.archiver.tasks',
         'scripts.add_missing_identifiers_to_preprints',
+        'osf.management.commands.check_embargoed_registrations',
         'osf.management.commands.approve_pending_schema_response',
         'osf.management.commands.fix_quickfiles_waterbutler_logs'
     }
@@ -527,6 +527,7 @@ class CeleryConfig:
         'osf.management.commands.fix_quickfiles_waterbutler_logs',
         'osf.management.commands.sync_doi_metadata',
         'osf.management.commands.cumulative_plos_metrics',
+        'osf.management.commands.check_embargoed_registrations',
         'api.providers.tasks',
         'osf.management.commands.daily_reporters_go',
         'osf.management.commands.monthly_reporters_go',
