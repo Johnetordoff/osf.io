@@ -74,13 +74,18 @@ def main():
             request.accept()
             registration.reload()
             embargo_termination_state = registration.embargo_termination_approval.approval_stage
-            assert registration.embargo_termination_approval.state == models.Sanction.APPROVED
+            assert embargo_termination_state == models.Sanction.APPROVED
             assert registration.is_embargoed is False
             assert registration.is_public is True
 
     logger.info('Auto-approved {0} of {1} embargo termination requests'.format(count, len(pending_embargo_termination_requests)))
 
-@celery_app.task(name='scripts.approve_embargo_terminations')
+@celery_app.task(
+    name='scripts.approve_embargo_terminations',
+    ignore_results=False,
+    max_retries=5,
+    default_retry_delay=60
+)
 def run_main(dry_run=True):
     if not dry_run:
         scripts_utils.add_file_logger(logger, __file__)

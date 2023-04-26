@@ -91,7 +91,12 @@ def should_be_embargoed(embargo):
     return (timezone.now() - embargo.initiation_date) >= settings.EMBARGO_PENDING_TIME and not embargo.is_deleted
 
 
-@celery_app.task(name='scripts.embargo_registrations')
+@celery_app.task(
+    name='scripts.embargo_registrations',
+    ignore_results=False,
+    max_retries=5,
+    default_retry_delay=60
+)
 def run_main(dry_run=True):
     init_app(routes=False)
     if not dry_run:

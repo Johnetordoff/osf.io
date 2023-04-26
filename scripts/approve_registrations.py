@@ -64,7 +64,12 @@ def main(dry_run=True):
                     logger.exception(err)
 
 
-@celery_app.task(name='scripts.approve_registrations')
+@celery_app.task(
+    name='scripts.approve_registrations',
+    ignore_results=False,
+    max_retries=5,
+    default_retry_delay=60
+)
 def run_main(dry_run=True):
     init_app(routes=False)
     if not dry_run:
