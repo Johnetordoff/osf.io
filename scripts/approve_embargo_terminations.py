@@ -85,10 +85,9 @@ def run_main(dry_run=True):
     if not dry_run:
         scripts_utils.add_file_logger(logger, __file__)
     init_app(routes=False)
-    with transaction.atomic():
-        main()
-        if dry_run:
-            raise RuntimeError('Dry run, rolling back transaction')
+    main()
+    if dry_run:
+        raise RuntimeError('Dry run, rolling back transaction')
 
 if __name__ == '__main__':
     run_main(dry_run='--dry' in sys.argv)
