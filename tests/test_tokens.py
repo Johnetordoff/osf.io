@@ -2,7 +2,6 @@ import jwt
 from rest_framework import status as http_status
 
 import mock
-from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from nose.tools import *  # noqa
 
@@ -19,7 +18,8 @@ from osf.models import (
     RegistrationApproval,
     Retraction,
     Sanction,
-    Registration
+    Registration,
+    NodeLog
 )
 from osf.utils.tokens import decode, encode, TokenHandler
 from osf.exceptions import TokenHandlerNotFound
@@ -206,4 +206,6 @@ class TestEmbargoModerationWorkflow(OsfTestCase):
         assert registration.embargo.state == Embargo.COMPLETED
         assert registration.is_public
         # Assert False here to see the other errors in state transition
-        assert registration.registration_approval.state == RegistrationApproval.UNAPPROVED
+        assert registration.registration_approval.state == RegistrationApproval.APPROVED
+
+        assert registration.registered_from.logs.filter(action=NodeLog.REGISTRATION_APPROVAL_APPROVED)
