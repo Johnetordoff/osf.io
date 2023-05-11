@@ -223,7 +223,7 @@ class TestEmbargoModerationWorkflow(OsfTestCase):
         registration.reload()
         assert registration.embargo.state == Embargo.COMPLETED
         assert registration.is_public
-        # Assert False here to see the other errors in state transition
-        assert registration.registration_approval.state == RegistrationApproval.APPROVED
 
+        # Due to bug must check for state changed and log entry
+        assert registration.registration_approval.state == RegistrationApproval.APPROVED
         assert registration.registered_from.logs.filter(action=NodeLog.REGISTRATION_APPROVAL_APPROVED)
