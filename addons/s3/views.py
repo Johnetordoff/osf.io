@@ -1,6 +1,6 @@
 from rest_framework import status as http_status
 
-from boto import exception
+from botocore.exceptions import NoCredentialsError, ClientError
 from django.core.exceptions import ValidationError
 from flask import request
 
@@ -72,7 +72,13 @@ def s3_add_user_account(auth, **kwargs):
             'message': 'All the fields above are required.'
         }, http_status.HTTP_400_BAD_REQUEST
 
-    user_info = utils.get_user_info(access_key, secret_key)
+    try:
+        user_info = utils.get_user_info(access_key, secret_key)
+    except NoCredentialsError:
+        return {
+            'message': 'Invalid AWS credentials.'
+        }, http_status.HTTP_400_BAD_REQUEST
+
     if not user_info:
         return {
             'message': ('Unable to access account.\n'
@@ -93,15 +99,15 @@ def s3_add_user_account(auth, **kwargs):
             provider_name=FULL_NAME,
             oauth_key=access_key,
             oauth_secret=secret_key,
-            provider_id=user_info.id,
-            display_name=user_info.display_name,
+            provider_id=user_info['UserId'],
+            display_name=user_info['Arn'],
         )
         account.save()
     except ValidationError:
         # ... or get the old one
         account = ExternalAccount.objects.get(
             provider=SHORT_NAME,
-            provider_id=user_info.id
+            provider_id=user_info['UserId']
         )
         if account.oauth_key != access_key or account.oauth_secret != secret_key:
             account.oauth_key = access_key
@@ -141,20 +147,22 @@ def create_bucket(auth, node_addon, **kwargs):
 
     try:
         utils.create_bucket(node_addon, bucket_name, bucket_location)
-    except exception.S3ResponseError as e:
-        return {
-            'message': e.message,
-            'title': 'Problem connecting to S3',
-        }, http_status.HTTP_400_BAD_REQUEST
-    except exception.S3CreateError as e:
-        return {
-            'message': e.message,
-            'title': "Problem creating bucket '{0}'".format(bucket_name),
-        }, http_status.HTTP_400_BAD_REQUEST
-    except exception.BotoClientError as e:  # Base class catchall
-        return {
-            'message': e.message,
-            'title': 'Error connecting to S3',
-        }, http_status.HTTP_400_BAD_REQUEST
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        if error_code == 'AccessDenied':
+            return {
+                'message': 'Access denied to create the bucket.',
+                'title': 'Access Denied',
+            }, http_status.HTTP_400_BAD_REQUEST
+        elif error_code == 'BucketAlreadyOwnedByYou':
+            return {
+                'message': 'You already own a bucket with that name.',
+                'title': 'Bucket Already Owned',
+            }, http_status.HTTP_400_BAD_REQUEST
+        else:
+            return {
+                'message': 'An error occurred while creating the bucket.',
+                'title': 'Error Creating Bucket',
+            }, http_status.HTTP_400_BAD_REQUEST
 
     return {}
