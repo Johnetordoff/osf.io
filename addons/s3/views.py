@@ -1,5 +1,6 @@
 from rest_framework import status as http_status
 
+from boto3 import exceptions
 from botocore.exceptions import NoCredentialsError, ClientError
 from django.core.exceptions import ValidationError
 from flask import request
@@ -164,5 +165,9 @@ def create_bucket(auth, node_addon, **kwargs):
                 'message': 'An error occurred while creating the bucket.',
                 'title': 'Error Creating Bucket',
             }, http_status.HTTP_400_BAD_REQUEST
-
+    except exceptions.Boto3Error as e:  # Base error class for all boto3 exceptions
+        return {
+            'message': e.message,
+            'title': 'Problem connecting to S3',
+        }, http_status.HTTP_400_BAD_REQUEST
     return {}
