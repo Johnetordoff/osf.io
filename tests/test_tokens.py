@@ -2,6 +2,7 @@ import jwt
 from rest_framework import status as http_status
 
 import mock
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from nose.tools import *  # noqa
 
@@ -12,13 +13,25 @@ from tests.utils import mock_auth
 from framework.exceptions import HTTPError
 
 from website import settings
-from osf.models import AbstractNode, Embargo, RegistrationApproval, Retraction, Sanction
+from osf.models import (
+    AbstractNode,
+    Embargo,
+    RegistrationApproval,
+    Retraction,
+    Sanction,
+    Registration,
+    NodeLog
+)
 from osf.utils.tokens import decode, encode, TokenHandler
 from osf.exceptions import TokenHandlerNotFound
+from scripts.embargo_registrations import main as embargo_registrations
+from scripts.approve_registrations import main as approve_registrations
+from django.utils import timezone
 
 NO_SANCTION_MSG = 'There is no {0} associated with this token.'
 APPROVED_MSG = 'This registration is not pending {0}.'
 REJECTED_MSG = 'This registration {0} has been rejected.'
+
 
 class TestTokenHandler(OsfTestCase):
 
@@ -71,50 +84,55 @@ class TestTokenHandler(OsfTestCase):
             )
         )
 
-class SanctionTokenHandlerBase(OsfTestCase):
+
+class SanctionTokenHandlerBase:
 
     kind = None
-    Model = None
-    Factory = None
+    model = None
+    factory = None
 
     def setUp(self, *args, **kwargs):
-        OsfTestCase.setUp(self, *args, **kwargs)
-        if not self.kind:
-            return
-        self.sanction = self.Factory()
-        self.reg = AbstractNode.objects.get(Q(**{self.Model.SHORT_NAME: self.sanction}))
+        super().setUp(*args, **kwargs)
+        self.sanction = self.factory()
+        self.reg = AbstractNode.objects.get(Q(**{self.model.SHORT_NAME: self.sanction}))
         self.user = self.reg.creator
 
     def test_sanction_handler(self):
-        if not self.kind:
-            return
         approval_token = self.sanction.approval_state[self.user._id]['approval_token']
         handler = TokenHandler.from_string(approval_token)
+
         with mock_auth(self.user):
-            with mock.patch('osf.utils.tokens.handlers.{0}_handler'.format(self.kind)) as mock_handler:
+            with mock.patch(f'osf.utils.tokens.handlers.{self.kind}_handler') as mock_handler:
                 handler.to_response()
                 mock_handler.assert_called_with('approve', self.reg, self.reg.registered_from)
 
+        self.sanction.reload()
+        assert self.sanction.state == Sanction.APPROVED
+        if self.reg.registration_approval:
+            assert self.reg.registration_approval.state == RegistrationApproval.APPROVED
+
     def test_sanction_handler_no_sanction(self):
-        if not self.kind:
-            return
+        assert self.sanction.state == Sanction.UNAPPROVED
         approval_token = self.sanction.approval_state[self.user._id]['approval_token']
         handler = TokenHandler.from_string(approval_token)
-        self.Model.delete(self.sanction)
+        self.model.delete(self.sanction)
         with mock_auth(self.user):
             try:
                 handler.to_response()
             except HTTPError as e:
                 assert_equal(e.code, http_status.HTTP_400_BAD_REQUEST)
-                assert_equal(e.data['message_long'], NO_SANCTION_MSG.format(self.Model.DISPLAY_NAME))
+                assert_equal(e.data['message_long'], NO_SANCTION_MSG.format(self.model.DISPLAY_NAME))
+
+        try:
+            self.sanction.reload()
+        except ObjectDoesNotExist:
+            # it should be deleted
+            pass
 
     def test_sanction_handler_sanction_approved(self):
-        if not self.kind:
-            return
+        assert self.sanction.state == Sanction.UNAPPROVED
         approval_token = self.sanction.approval_state[self.user._id]['approval_token']
         handler = TokenHandler.from_string(approval_token)
-        self.sanction.state = Sanction.APPROVED
-        self.sanction.save()
         with mock_auth(self.user):
             try:
                 handler.to_response()
@@ -122,13 +140,16 @@ class SanctionTokenHandlerBase(OsfTestCase):
                 assert_equal(e.code, http_status.HTTP_400_BAD_REQUEST if self.kind in ['embargo', 'registration_approval'] else http_status.HTTP_410_GONE)
                 assert_equal(e.data['message_long'], APPROVED_MSG.format(self.sanction.DISPLAY_NAME))
 
+        self.sanction.reload()
+        assert self.sanction.state == Sanction.APPROVED
+        if self.reg.registration_approval:
+            assert self.reg.registration_approval.state == RegistrationApproval.APPROVED
+
     def test_sanction_handler_sanction_rejected(self):
-        if not self.kind:
-            return
-        approval_token = self.sanction.approval_state[self.user._id]['approval_token']
+        assert self.sanction.state == Sanction.UNAPPROVED
+        approval_token = self.sanction.approval_state[self.user._id]['rejection_token']
         handler = TokenHandler.from_string(approval_token)
-        self.sanction.state = Sanction.REJECTED
-        self.sanction.save()
+
         with mock_auth(self.user):
             try:
                 handler.to_response()
@@ -136,20 +157,73 @@ class SanctionTokenHandlerBase(OsfTestCase):
                 assert_equal(e.code, http_status.HTTP_410_GONE if self.kind in ['embargo', 'registration_approval'] else http_status.HTTP_400_BAD_REQUEST)
                 assert_equal(e.data['message_long'], REJECTED_MSG.format(self.sanction.DISPLAY_NAME))
 
-class TestEmbargoTokenHandler(SanctionTokenHandlerBase):
+        self.sanction.reload()
+        assert self.sanction.state == Sanction.REJECTED
+        if self.reg.registration_approval:
+            assert self.reg.registration_approval.state == self.model.REJECTED
+
+
+class TestEmbargoTokenHandler(SanctionTokenHandlerBase, OsfTestCase):
 
     kind = 'embargo'
-    Model = Embargo
-    Factory = factories.EmbargoFactory
+    model = Embargo
+    factory = factories.EmbargoFactory
 
-class TestRegistrationApprovalTokenHandler(SanctionTokenHandlerBase):
+
+class TestRegistrationApprovalTokenHandler(SanctionTokenHandlerBase, OsfTestCase):
 
     kind = 'registration_approval'
-    Model = RegistrationApproval
-    Factory = factories.RegistrationApprovalFactory
+    model = RegistrationApproval
+    factory = factories.RegistrationApprovalFactory
 
-class TestRetractionTokenHandler(SanctionTokenHandlerBase):
+
+class TestRetractionTokenHandler(SanctionTokenHandlerBase, OsfTestCase):
 
     kind = 'retraction'
-    Model = Retraction
-    Factory = factories.RetractionFactory
+    model = Retraction
+    factory = factories.RetractionFactory
+
+
+class TestEmbargoModerationWorkflow(OsfTestCase):
+
+    def test_embargo_workflow(self):
+        embargo = factories.EmbargoFactory(end_date=timezone.now())
+        registration = Registration.objects.get(Q(**{'embargo': embargo}))
+        assert not registration.is_public
+        registration_approval = factories.RegistrationApprovalFactory(
+            target_item=registration,
+            initiated_by=registration.creator
+        )
+        assert not registration.is_embargoed
+        assert registration.registration_approval.state == RegistrationApproval.UNAPPROVED
+        assert registration.embargo.state == Embargo.UNAPPROVED
+
+        approval_token = embargo.approval_state[registration.creator._id]['approval_token']
+        handler = TokenHandler.from_string(approval_token)
+
+        with mock_auth(registration.creator):
+            with mock.patch(f'osf.utils.tokens.handlers.embargo_handler') as mock_handler:
+                handler.to_response()
+                mock_handler.assert_called_with('approve', registration, registration.registered_from)
+
+        registration.reload()
+        assert registration.is_embargoed
+        assert registration.registration_approval.state == RegistrationApproval.UNAPPROVED
+        registration_approval.initiation_date = timezone.now() - settings.REGISTRATION_APPROVAL_TIME
+        registration_approval.save()
+        registration.save()
+        approve_registrations(dry_run=False)
+
+        registration.reload()
+        assert registration.registration_approval.state == RegistrationApproval.APPROVED
+        assert not registration.is_public
+
+        embargo_registrations(dry_run=False)
+
+        registration.reload()
+        assert registration.embargo.state == Embargo.COMPLETED
+        assert registration.is_public
+
+        # Due to bug must check for state changed and log entry
+        assert registration.registration_approval.state == RegistrationApproval.APPROVED
+        assert registration.registered_from.logs.filter(action=NodeLog.REGISTRATION_APPROVAL_APPROVED)
