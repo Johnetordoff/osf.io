@@ -1,6 +1,8 @@
 from website.util import web_url_for
 from addons.base.serializer import StorageAddonSerializer
 from addons.s3 import utils
+import boto3
+
 
 class S3Serializer(StorageAddonSerializer):
     addon_short_name = 's3'
@@ -39,3 +41,36 @@ class S3Serializer(StorageAddonSerializer):
                 if utils.can_list(account.oauth_key, account.oauth_secret):
                     return True
         return False
+
+    def serialize_settings(self, node_settings, current_user, client=None):
+        result = super().serialize_settings(node_settings, current_user, client)
+        user_settings = node_settings.user_settings
+
+        if self.credentials_are_valid and user_settings:
+            aws_access_key_id = user_settings.external_accounts.first().oauth_key
+            aws_secret_key_id = user_settings.external_accounts.first().oauth_secret
+            session = boto3.Session(
+                aws_access_key_id=aws_access_key_id,
+                aws_secret_access_key=aws_secret_key_id
+            )
+
+            default_region_name = 'us-east-1'
+            ssm_client = boto3.client(
+                'ssm',
+                aws_access_key_id=aws_access_key_id,
+                aws_secret_access_key=aws_secret_key_id,
+                region_name=default_region_name
+            )
+
+            data = []
+            for location in session.get_available_regions('s3'):
+                item = {}
+                ssm_response = ssm_client.get_parameter(
+                    Name='/aws/service/global-infrastructure/regions/%s/longName' % location
+                )
+                item['region_name'] = ssm_response['Parameter']['Value']
+                item['region_id'] = location
+                data.append(item)
+
+            result['bucket_locations'] = data
+        return result

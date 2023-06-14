@@ -8,11 +8,13 @@ from osf.models.files import File, Folder, BaseFileNode
 from addons.base import exceptions
 from addons.s3.provider import S3Provider
 from addons.s3.serializer import S3Serializer
-from addons.s3.settings import (BUCKET_LOCATIONS,
-                                        ENCRYPT_UPLOADS_DEFAULT)
-from addons.s3.utils import (bucket_exists,
-                                     get_bucket_location_or_error,
-                                     get_bucket_names)
+from addons.s3.settings import ENCRYPT_UPLOADS_DEFAULT
+from addons.s3.utils import (
+    validate_bucket_location,
+    bucket_exists,
+    get_bucket_location_or_error,
+    get_bucket_names
+)
 
 class S3FileNode(BaseFileNode):
     _provider = 's3'
@@ -63,19 +65,25 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
 
         self.folder_id = str(folder_id)
 
+        access_key = self.external_account.oauth_key
+        secret_key = self.external_account.oauth_secret
+
         bucket_location = get_bucket_location_or_error(
-            self.external_account.oauth_key,
-            self.external_account.oauth_secret,
+            access_key,
+            secret_key,
             folder_id
         )
-        try:
-            bucket_location = BUCKET_LOCATIONS[bucket_location]
-        except KeyError:
-            # Unlisted location, S3 may have added it recently.
-            # Default to the key. When hit, add mapping to settings
-            pass
+        bucket_location = validate_bucket_location(
+            access_key,
+            secret_key,
+            bucket_location
+        )
 
-        self.folder_name = '{} ({})'.format(folder_id, bucket_location)
+        if bucket_location:  # None value defaults to us-east-1
+            self.folder_name = f'{folder_id} ({bucket_location})'
+        else:
+            self.folder_name = f'{folder_id} (us-east-1)'
+
         self.save()
 
         self.nodelogger.log(action='bucket_linked', extra={'bucket': str(folder_id)}, save=True)

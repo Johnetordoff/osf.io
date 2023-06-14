@@ -8,12 +8,11 @@ var Raven = require('raven-js');
 var $osf = require('js/osfHelpers');
 var oop = require('js/oop');
 
-var s3Settings = require('json-loader!./settings.json');
 
 var OauthAddonFolderPicker = require('js/oauthAddonNodeConfig')._OauthAddonNodeConfigViewModel;
 
 var s3FolderPickerViewModel = oop.extend(OauthAddonFolderPicker, {
-    bucketLocations: s3Settings.bucketLocations,
+    bucketLocations: null,
 
     constructor: function(addonName, url, selector, folderPicker, opts, tbOpts) {
         var self = this;
@@ -94,6 +93,42 @@ var s3FolderPickerViewModel = oop.extend(OauthAddonFolderPicker, {
                 }
             });
         });
+    },
+    updateFromData: function(data) {
+        var self = this;
+        var ret = $.Deferred();
+        var applySettings = function(settings){
+            self.ownerName(settings.ownerName);
+            self.nodeHasAuth(settings.nodeHasAuth);
+            self.userIsOwner(settings.userIsOwner);
+            self.userHasAuth(settings.userHasAuth);
+            self.bucketLocations = settings.bucket_locations;
+
+            self.folder(settings.folder || {
+                name: null,
+                path: null,
+                id: null
+            });
+            self.library(settings.library || {
+                name: null,
+                path: null,
+                id: null
+            });
+            self.urls(settings.urls);
+            self._updateCustomFields(settings);
+            self.afterUpdate();
+            ret.resolve();
+        };
+        if ((typeof data === 'undefined' || $.isEmptyObject(data))){
+            self.fetchFromServer()
+                .done(applySettings)
+                .fail(ret.reject);
+        }
+        else{
+            self.bucketLocations = data.bucket_locations;
+            applySettings(data);
+        }
+        return ret.promise();
     },
     /**
      * Tests if the given string is a valid Amazon S3 bucket name.  Supports two modes: strict and lax.
@@ -177,9 +212,7 @@ var s3FolderPickerViewModel = oop.extend(OauthAddonFolderPicker, {
         function generateBucketOptions(locations) {
             var options = '';
             for (var location in locations) {
-                if (self.bucketLocations.hasOwnProperty(location)) {
-                    options = options + ['<option value="', location, '">', $osf.htmlEscape(locations[location]), '</option>', '\n'].join('');
-                }
+                options = options + ['<option value="', self.bucketLocations[location].region_id, '">', $osf.htmlEscape(self.bucketLocations[location].region_name), '</option>', '\n'].join('');
             }
             return options;
         }
