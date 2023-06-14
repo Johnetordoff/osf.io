@@ -93,22 +93,21 @@ def s3_add_user_account(auth, **kwargs):
                 'Listing buckets is required permission that can be changed via IAM')
         }, http_status.HTTP_400_BAD_REQUEST
 
-    account = None
     try:
         account = ExternalAccount(
             provider=SHORT_NAME,
             provider_name=FULL_NAME,
             oauth_key=access_key,
             oauth_secret=secret_key,
-            provider_id=user_info['UserId'],
-            display_name=user_info['Arn'],
+            provider_id=user_info['id'],
+            display_name=user_info['display_name'],
         )
         account.save()
     except ValidationError:
         # ... or get the old one
         account = ExternalAccount.objects.get(
             provider=SHORT_NAME,
-            provider_id=user_info['UserId']
+            provider_id=user_info['id']
         )
         if account.oauth_key != access_key or account.oauth_secret != secret_key:
             account.oauth_key = access_key
