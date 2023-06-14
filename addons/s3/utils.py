@@ -5,7 +5,7 @@ import boto3
 from botocore.exceptions import NoCredentialsError, ClientError
 
 from framework.exceptions import HTTPError
-from addons.base.exceptions import InvalidAuthError, InvalidFolderError
+from addons.base.exceptions import InvalidFolderError
 
 
 def connect_s3(access_key=None, secret_key=None, node_settings=None):

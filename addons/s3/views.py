@@ -1,6 +1,5 @@
 from rest_framework import status as http_status
 
-import boto3
 from boto3 import exceptions
 from botocore.exceptions import NoCredentialsError, ClientError
 from django.core.exceptions import ValidationError
@@ -132,14 +131,16 @@ def s3_add_user_account(auth, **kwargs):
 def create_bucket(auth, node_addon, **kwargs):
     bucket_name = request.json.get('bucket_name', '')
     bucket_location = request.json.get('bucket_location', '')
-    access_key = node_addon.external_account.oauth_key
-    secret_key = node_addon.external_account.oauth_secret
     if not utils.validate_bucket_name(bucket_name):
         return {
             'message': 'That bucket name is not valid.',
             'title': 'Invalid bucket name',
         }, http_status.HTTP_400_BAD_REQUEST
     # Get location and verify it is valid
+
+    access_key = node_addon.external_account.oauth_key
+    secret_key = node_addon.external_account.oauth_secret
+
     if not utils.validate_bucket_location(access_key=access_key, secret_key=secret_key, location=bucket_location):
         return {
             'message': 'That bucket location is not valid.',
@@ -165,13 +166,12 @@ def create_bucket(auth, node_addon, **kwargs):
                 'title': 'Bucket Already Owned',
             }, http_status.HTTP_400_BAD_REQUEST
         elif error_code == 'InvalidLocationConstraint':
-            print(bucket_location)
-            print(bucket_location)
-            if bucket_location == 'us-east-1':  # they are ahead of the new default value
+            if bucket_location == 'us-east-1':  # if they are behind of the new default value
                 try:
+                    # to them it's still None, but for us it's now 'us-east-1'
                     utils.create_bucket(node_addon, bucket_name, None)
                     return {}
-                except:
+                except ClientError:  # pass-through to the regular if that doesn't work
                     pass
 
             return {
