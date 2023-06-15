@@ -41,7 +41,7 @@ def validate_bucket_location(access_key, secret_key, location):
     )
     if location in session.get_available_regions('s3'):
         return location
-
+    return False
 
 def validate_bucket_name(name):
     """Make sure the bucket name conforms to Amazon's expectations as described at:

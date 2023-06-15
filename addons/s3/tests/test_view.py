@@ -9,7 +9,7 @@ import pytest
 
 from framework.auth import Auth
 from tests.base import OsfTestCase, get_default_metaschema
-from osf_tests.factories import ProjectFactory, AuthUserFactory, DraftRegistrationFactory
+from osf_tests.factories import ProjectFactory, AuthUserFactory, DraftRegistrationFactory, ExternalAccountFactory
 
 from addons.base.tests.views import (
     OAuthAddonConfigViewsTestCaseMixin
@@ -25,6 +25,8 @@ class TestS3Views(S3AddonTestCase, OAuthAddonConfigViewsTestCaseMixin, OsfTestCa
         self.mock_can_list = mock.patch('addons.s3.views.utils.can_list')
         self.mock_can_list.return_value = True
         self.mock_can_list.start()
+        self.mock_client = mock.patch('addons.s3.serializer.boto3')
+        self.mock_client.start()
         self.mock_uid = mock.patch('addons.s3.views.utils.get_user_info')
         self.mock_uid.return_value = {'id': '1234567890', 'display_name': 's3.user'}
         self.mock_uid.start()
@@ -190,6 +192,13 @@ class TestCreateBucket(S3AddonTestCase, OsfTestCase):
         self.user_settings.save()
 
         self.node_settings = self.project.get_addon('s3')
+        self.node_settings.external_account = ExternalAccountFactory(
+            provider='s3',
+            provider_id='s3',
+            provider_name='s3',
+            oauth_key='oauth_key',
+            oauth_secret='oauth_secret',
+        )
         self.node_settings.bucket = 'Sheer-Heart-Attack'
         self.node_settings.user_settings = self.project.creator.get_addon('s3')
 
@@ -230,23 +239,30 @@ class TestCreateBucket(S3AddonTestCase, OsfTestCase):
         assert_true(validate_bucket_name('a' * 63))
 
     def test_bad_locations(self):
-        assert_false(validate_bucket_location('Venus'))
-        assert_false(validate_bucket_location('AlphaCentari'))
-        assert_false(validate_bucket_location('CostaRica'))
+        oauth_key = self.node_settings.external_account.oauth_key
+        oauth_secret = self.node_settings.external_account.oauth_secret
+
+        assert_false(validate_bucket_location(oauth_key, oauth_secret, 'Venus'))
+        assert_false(validate_bucket_location(oauth_key, oauth_secret,'AlphaCentari'))
+        assert_false(validate_bucket_location(oauth_key, oauth_secret,'CostaRica'))
 
     def test_locations(self):
-        assert_true(validate_bucket_location(''))
-        assert_true(validate_bucket_location('eu-central-1'))
-        assert_true(validate_bucket_location('ca-central-1'))
-        assert_true(validate_bucket_location('us-west-1'))
-        assert_true(validate_bucket_location('us-west-2'))
-        assert_true(validate_bucket_location('ap-northeast-1'))
-        assert_true(validate_bucket_location('ap-northeast-2'))
-        assert_true(validate_bucket_location('ap-southeast-1'))
-        assert_true(validate_bucket_location('ap-southeast-2'))
-        assert_true(validate_bucket_location('sa-east-1'))
-        assert_true(validate_bucket_location('eu-west-1'))
-        assert_true(validate_bucket_location('eu-west-2'))
+        oauth_key = self.node_settings.external_account.oauth_key
+        oauth_secret = self.node_settings.external_account.oauth_secret
+
+        assert_false(validate_bucket_location(oauth_key, oauth_secret, ''))
+        assert_true(validate_bucket_location(oauth_key, oauth_secret, 'eu-central-1'))
+        assert_true(validate_bucket_location(oauth_key, oauth_secret, 'ca-central-1'))
+        assert_true(validate_bucket_location(oauth_key, oauth_secret, 'us-east-1'))
+        assert_true(validate_bucket_location(oauth_key, oauth_secret, 'us-west-1'))
+        assert_true(validate_bucket_location(oauth_key, oauth_secret, 'us-west-2'))
+        assert_true(validate_bucket_location(oauth_key, oauth_secret, 'ap-northeast-1'))
+        assert_true(validate_bucket_location(oauth_key, oauth_secret, 'ap-northeast-2'))
+        assert_true(validate_bucket_location(oauth_key, oauth_secret, 'ap-southeast-1'))
+        assert_true(validate_bucket_location(oauth_key, oauth_secret, 'ap-southeast-2'))
+        assert_true(validate_bucket_location(oauth_key, oauth_secret, 'sa-east-1'))
+        assert_true(validate_bucket_location(oauth_key, oauth_secret, 'eu-west-1'))
+        assert_true(validate_bucket_location(oauth_key, oauth_secret, 'eu-west-2'))
 
     @mock.patch('addons.s3.views.utils.create_bucket')
     @mock.patch('addons.s3.views.utils.get_bucket_names')
@@ -262,7 +278,6 @@ class TestCreateBucket(S3AddonTestCase, OsfTestCase):
             url,
             {
                 'bucket_name': 'doesntevenmatter',
-                'bucket_location': '',
             },
             auth=self.user.auth
         )

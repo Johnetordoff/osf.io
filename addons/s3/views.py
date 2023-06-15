@@ -130,7 +130,7 @@ def s3_add_user_account(auth, **kwargs):
 @must_have_permission(WRITE)
 def create_bucket(auth, node_addon, **kwargs):
     bucket_name = request.json.get('bucket_name', '')
-    bucket_location = request.json.get('bucket_location', '')
+    bucket_location = request.json.get('bucket_location', 'us-east-1')
     if not utils.validate_bucket_name(bucket_name):
         return {
             'message': 'That bucket name is not valid.',
@@ -138,8 +138,12 @@ def create_bucket(auth, node_addon, **kwargs):
         }, http_status.HTTP_400_BAD_REQUEST
     # Get location and verify it is valid
 
-    access_key = node_addon.external_account.oauth_key
-    secret_key = node_addon.external_account.oauth_secret
+    if node_addon:
+        access_key = node_addon.external_account.oauth_key
+        secret_key = node_addon.external_account.oauth_secret
+    else:
+        access_key = None
+        secret_key = None
 
     if not utils.validate_bucket_location(access_key=access_key, secret_key=secret_key, location=bucket_location):
         return {
