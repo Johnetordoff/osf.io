@@ -232,28 +232,65 @@ class OsfStorageFile(OsfStorageFileNode, File):
 
     @property
     def _hashes(self):
-        last_version = self.versions.last()
-        if not last_version:
+        try:
+            latest_version = self.versions.latest('identifier')
+        except FileVersion.DoesNotExist:
             return None
         return {
-            'sha1': last_version.metadata.get('sha1', ''),
-            'sha256': last_version.metadata.get('sha256', ''),
-            'md5': last_version.metadata.get('md5', ''),
+            'sha1': latest_version.metadata.get('sha1', ''),
+            'sha256': latest_version.metadata.get('sha256', ''),
+            'md5': latest_version.metadata.get('md5', ''),
         }
 
     @property
     def last_known_metadata(self):
-        last_version = self.versions.last()
-        if not last_version:
+        try:
+            latest_version = self.versions.latest('identifier')
+        except FileVersion.DoesNotExist:
             size = None
         else:
-            size = last_version.size
+            size = latest_version.size
         return {
             'path': self.materialized_path,
             'hashes': self._hashes,
             'size': size,
             'last_seen': self.modified
         }
+
+    @property
+    def should_update_search(self):
+        target = self.target
+        qa_tags = set(website_settings.DO_NOT_INDEX_LIST['tags'])
+        if qa_tags.intersection(self.tags.all().values_list('name', flat=True)):
+            return False
+        if qa_tags.intersection(target.tags.all().values_list('name', flat=True)):
+            return False
+        if any(qa_substring in target.title for qa_substring in website_settings.DO_NOT_INDEX_LIST['titles']):
+            return False
+        if not self.name or self.is_deleted:
+            return False
+        if not self.versions.exists():
+            return False
+        spam_check_field = (
+            'is_spammy'
+            if website_settings.SPAM_FLAGGED_REMOVE_FROM_SEARCH
+            else 'is_spam'
+        )
+        target_check_fields = [
+            ('is_public', True),
+            ('deleted', None),
+            ('is_deleted', False),
+            ('is_retracted', False),
+            (spam_check_field, False),
+            ('archiving', False),
+            ('verified_publishable', True),
+            ('primary_file', self)
+        ]
+        for field_name, expected_value in target_check_fields:
+            if hasattr(target, field_name) and getattr(target, field_name, expected_value) != expected_value:
+                return False
+
+        return True
 
     def touch(self, bearer, version=None, revision=None, **kwargs):
         try:
@@ -392,17 +429,14 @@ class OsfStorageFile(OsfStorageFileNode, File):
             self.remove_tag(tag, auth, save)
 
     def delete(self, user=None, **kwargs):
-        from website.search import search
-
-        search.update_file(self, delete=True)
-        return super().delete(user, **kwargs)
+        ret = super().delete(user, **kwargs)
+        self.update_search()
+        return ret
 
     def save(self, skip_search=False, *args, **kwargs):
-        from website.search import search
-
         ret = super(OsfStorageFile, self).save()
         if not skip_search:
-            search.update_file(self)
+            self.update_search()
         return ret
 
 
