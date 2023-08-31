@@ -10,6 +10,7 @@ from api.collections_providers.fields import CollectionProviderRelationshipField
 from api.preprints.serializers import PreprintProviderRelationshipField
 from api.providers.workflows import Workflows
 from api.base.metrics import MetricsSerializerMixin
+from osf.models import CitationStyle
 from osf.models.user import Email, OSFUser
 from osf.models.validators import validate_email
 from osf.utils.permissions import REVIEW_GROUPS, ADMIN
@@ -227,6 +228,11 @@ class PreprintProviderSerializer(MetricsSerializerMixin, ProviderSerializer):
         related_view_kwargs={'provider_id': '<_id>'},
     )
 
+    citation_styles = RelationshipField(
+        related_view='providers:preprint-providers:preprint-provider-citation-styles',
+        related_view_kwargs={'provider_id': '<_id>'},
+    )
+
     moderators = RelationshipField(
         related_view='providers:preprint-providers:provider-moderator-list',
         related_view_kwargs={'provider_id': '<_id>'},
@@ -427,3 +433,13 @@ class CollectionsModeratorSerializer(ModeratorSerializer):
                 'version': self.context['request'].parser_context['kwargs']['version'],
             },
         )
+
+
+class CitationStyleSerializer(ser.ModelSerializer):
+    """
+    Serializer for CitationStyle model.
+    """
+
+    class Meta:
+        model = CitationStyle
+        fields = '__all__'  # Or specify the fields you want to serialize
