@@ -4,13 +4,13 @@ from django.apps import apps
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework import generics, permissions as drf_permissions
 
+from framework.auth import Auth
 from framework.auth.oauth_scopes import CoreScopes
 
 from api.addons.serializers import AddonSerializer
 from api.base.filters import ListFilterMixin
 from api.base.pagination import MaxSizePagination
 from api.base.permissions import TokenHasScope
-from api.base.settings import ADDONS_OAUTH
 from api.base.views import JSONAPIBaseView
 
 from website import settings as osf_settings
@@ -21,7 +21,7 @@ class AddonSettingsMixin(object):
     current URL. By default, fetches the settings based on the user or node available in self context.
     """
 
-    def get_addon_settings(self, provider=None, fail_if_absent=True, check_object_permissions=True):
+    def get_addon_settings(self, provider=None, check_object_permissions=True):
         owner = None
         provider = provider or self.kwargs['provider']
 
@@ -33,19 +33,18 @@ class AddonSettingsMixin(object):
             owner_type = 'node'
 
         try:
-            addon_module = apps.get_app_config('addons_{}'.format(provider))
+            addon_config = apps.get_app_config('addons_{}'.format(provider))
         except LookupError:
             raise NotFound('Requested addon unrecognized')
 
-        if not owner or provider not in ADDONS_OAUTH or owner_type not in addon_module.owners:
-            raise NotFound('Requested addon unavailable')
+        addon = owner._settings_model(provider, config=addon_config)
+        if not addon:
+            raise NotFound('Requested addon is mandatory and not configurable')
 
-        addon_settings = owner.get_addon(provider)
-        if not addon_settings and fail_if_absent:
-            raise NotFound('Requested addon not enabled')
+        addon_settings = owner.get_or_add_addon(provider, auth=Auth(self.request.user))
 
-        if not addon_settings or addon_settings.deleted:
-            return None
+        if addon_settings.deleted:
+            raise NotFound('Requested addon was deleted')
 
         if addon_settings and check_object_permissions:
             authorizer = None

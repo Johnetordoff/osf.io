@@ -1363,7 +1363,7 @@ class NodeAddonList(JSONAPIBaseView, generics.ListAPIView, ListFilterMixin, Node
     def get_default_queryset(self):
         qs = []
         for addon in ADDONS_OAUTH:
-            obj = self.get_addon_settings(provider=addon, fail_if_absent=False, check_object_permissions=False)
+            obj = self.get_addon_settings(provider=addon, check_object_permissions=False)
             if obj:
                 qs.append(obj)
         sorted(qs, key=lambda addon: addon.id, reverse=True)
@@ -1396,9 +1396,6 @@ class NodeAddonDetail(JSONAPIBaseView, generics.RetrieveUpdateDestroyAPIView, ge
 
     def perform_create(self, serializer):
         addon = self.kwargs['provider']
-        if addon not in ADDONS_OAUTH:
-            raise NotFound('Requested addon unavailable')
-
         node = self.get_node()
         if node.has_addon(addon):
             raise InvalidModelValueError(
