@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import abc
 from nose.tools import *  # noqa:
-import re
 import pytest
 
 from api.base.settings.defaults import API_BASE
@@ -144,9 +143,7 @@ class UserAddonDetailMixin(object):
                 'Requested addon not enabled',
                 res.json['errors'][0]['detail'])
         if wrong_type:
-            assert re.match(
-                r'Requested addon un(available|recognized)',
-                (res.json['errors'][0]['detail']))
+            assert 'Requested addon is mandatory and not configurable' == res.json['errors'][0]['detail']
 
     def test_settings_detail_raises_error_if_PUT(self):
         res = self.app.put_json_api(self.setting_detail_url, {
@@ -235,9 +232,7 @@ class UserAddonAccountListMixin(object):
                 'Requested addon not enabled',
                 res.json['errors'][0]['detail'])
         if wrong_type:
-            assert re.match(
-                r'Requested addon un(available|recognized)',
-                (res.json['errors'][0]['detail']))
+            assert 'Requested addon is mandatory and not configurable' == res.json['errors'][0]['detail']
 
     def test_account_list_raises_error_if_PUT(self):
         res = self.app.put_json_api(self.account_list_url, {
@@ -326,9 +321,7 @@ class UserAddonAccountDetailMixin(object):
                 'Requested addon not enabled',
                 res.json['errors'][0]['detail'])
         if wrong_type:
-            assert re.match(
-                r'Requested addon un(available|recognized)',
-                (res.json['errors'][0]['detail']))
+            assert 'Requested addon is mandatory and not configurable' == res.json['errors'][0]['detail']
 
     def test_account_detail_raises_error_if_PUT(self):
         res = self.app.put_json_api(self.account_detail_url, {
