@@ -24,14 +24,14 @@ from osf.exceptions import (
     InvalidTagError,
     BlockedEmailError,
 )
-from osf.models.node_relation import NodeRelation
-from osf.models.nodelog import NodeLog
-from osf.models.subject import Subject
-from osf.models.spam import SpamMixin, SpamStatus
-from osf.models.validators import validate_title
-from osf.models.tag import Tag
+from .node_relation import NodeRelation
+from .nodelog import NodeLog
+from .subject import Subject
+from .spam import SpamMixin, SpamStatus
+from .validators import validate_title
+from .tag import Tag
 from osf.utils import sanitize
-from osf.models.validators import validate_subject_hierarchy, validate_email, expand_subject_hierarchy
+from .validators import validate_subject_hierarchy, validate_email, expand_subject_hierarchy
 from osf.utils.fields import NonNaiveDateTimeField
 from osf.utils.datetime_aware_jsonfield import DateTimeAwareJSONField
 from osf.utils.machines import (
@@ -999,7 +999,7 @@ class ReviewProviderMixin(GuardianMixin):
 
     def get_request_state_counts(self):
         # import stuff here to get around circular imports
-        from osf.models import PreprintRequest
+        from . import PreprintRequest
         qs = PreprintRequest.objects.filter(
             target__provider__id=self.id,
             target__is_public=True,
@@ -2261,19 +2261,26 @@ class EditableFieldsMixin(TitleMixin, DescriptionMixin, CategoryMixin, Contribut
         else:
             return []
 
-    def copy_editable_fields(self, resource, auth=None, alternative_resource=None, include_contributors=True, save=True):
+    def copy_editable_fields(self, resource, alternative_resource=None, include_contributors=True, save=True, excluded_attributes=None):
         """
-        Copy various editable fields from the 'resource' object to the current object.
-        Includes, title, description, category, contributors, node_license, tags, subjects, and affiliated_institutions
-        The field on the resource will always supersede the field on the alternative_resource. For example,
-        copying fields from the draft_registration to the registration.  resource will be a DraftRegistration object,
-        but the alternative_resource will be a Node.  DraftRegistration fields will trump Node fields.
-        TODO, add optional logging parameter
+        This method copies various editable fields from the 'resource' object to the current object. Includes, title,
+        description, category, contributors, node_license, tags, subjects, and affiliated_institutions.
+        The field on the resource will always supersede the field on the alternative_resource. For example, copying
+        fields from the draft_registration to the registration.  resource will be a DraftRegistration object, but the
+        alternative_resource will be a Node. DraftRegistration fields will trump Node fields.
+
+        :param Object resource: Primary resource where you want to copy attributes
+        :param Object alternative_resource: Backup resource for copying attributes
+        :param Boolean include_contributors: represents whether to also copy the resource's contributors
+        :param Boolean save: represents whether to save the resources changes immediately
+        :param List: a list of strings representing attributes to exclude from copying
         """
-        self.set_editable_attribute('title', resource, alternative_resource)
-        self.set_editable_attribute('description', resource, alternative_resource)
-        self.set_editable_attribute('category', resource, alternative_resource)
-        self.set_editable_attribute('node_license', resource, alternative_resource)
+        if not excluded_attributes:
+            excluded_attributes = []
+
+        for attribute in ['title', 'description', 'category', 'node_license']:
+            if attribute not in excluded_attributes:
+                self.set_editable_attribute(attribute, resource, alternative_resource)
 
         if include_contributors:
             # Contributors will always come from "resource", as contributor constraints

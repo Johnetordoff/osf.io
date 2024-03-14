@@ -21,12 +21,11 @@ from framework.flask import redirect  # VOL-aware redirect
 from framework.forms import utils as form_utils
 from framework.routing import proxy_url
 from website import settings
-from website.institutions.views import serialize_institution
 
 from addons.osfstorage.models import Region, OsfStorageFile
 
 from osf import features, exceptions
-from osf.models import Guid, Institution, Preprint, AbstractNode, Node, DraftNode, Registration, BaseFileNode
+from osf.models import Guid, Preprint, AbstractNode, Node, DraftNode, Registration, BaseFileNode
 
 from website.settings import EXTERNAL_EMBER_APPS, PROXY_EMBER_APPS, EXTERNAL_EMBER_SERVER_TIMEOUT, DOMAIN
 from website.ember_osf_web.decorators import ember_flag_is_active
@@ -154,17 +153,7 @@ def serialize_node_summary(node, auth, primary=True, show_path=False):
     return summary
 
 def index():
-    # Check if we're on an institution landing page
-    institution = Institution.objects.filter(domains__icontains=request.host, is_deleted=False)
-    if institution.exists():
-        institution = institution.get()
-        inst_dict = serialize_institution(institution)
-        inst_dict.update({
-            'redirect_url': '{}institutions/{}/'.format(DOMAIN, institution._id),
-        })
-        return inst_dict
-    else:
-        return use_ember_app()
+    return use_ember_app()
 
 def find_bookmark_collection(user):
     Collection = apps.get_model('osf.Collection')
@@ -173,7 +162,6 @@ def find_bookmark_collection(user):
 @must_be_logged_in
 def dashboard(auth):
     return use_ember_app()
-
 
 @must_be_logged_in
 @ember_flag_is_active(features.EMBER_MY_PROJECTS)
@@ -344,15 +332,23 @@ def resolve_guid(guid, suffix=None):
     if isinstance(resource, Preprint):
         if resource.provider.domain_redirect_enabled:
             return redirect(resource.absolute_url, http_status.HTTP_301_MOVED_PERMANENTLY)
-        return stream_emberapp(EXTERNAL_EMBER_APPS['preprints']['server'], preprints_dir)
+        if clean_suffix.endswith('edit'):
+            return stream_emberapp(EXTERNAL_EMBER_APPS['preprints']['server'], preprints_dir)
+        return use_ember_app()
 
     elif isinstance(resource, Registration) and (clean_suffix in ('', 'comments', 'links', 'components', 'resources',)) and waffle.flag_is_active(request, features.EMBER_REGISTRIES_DETAIL_PAGE):
+        return use_ember_app()
+
+    elif isinstance(resource, Registration) and clean_suffix and clean_suffix.startswith('metadata') and waffle.flag_is_active(request, features.EMBER_REGISTRIES_DETAIL_PAGE):
         return use_ember_app()
 
     elif isinstance(resource, Registration) and (clean_suffix in ('files', 'files/osfstorage')) and waffle.flag_is_active(request, features.EMBER_REGISTRATION_FILES):
         return use_ember_app()
 
     elif isinstance(resource, Node) and clean_suffix and any(path.startswith(clean_suffix) for path in addon_paths) and waffle.flag_is_active(request, features.EMBER_PROJECT_FILES):
+        return use_ember_app()
+
+    elif isinstance(resource, Node) and clean_suffix and clean_suffix.startswith('metadata'):
         return use_ember_app()
 
     elif isinstance(resource, BaseFileNode) and resource.is_file and not isinstance(resource.target, Preprint):

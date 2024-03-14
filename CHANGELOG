@@ -2,6 +2,37 @@
 
 We follow the CalVer (https://calver.org/) versioning scheme: YY.MINOR.MICRO.
 
+24.01.0 (2024-02-26)
+====================
+- Support CEDAR Embeddable Editor
+- Support Datacite Schema 4.5
+- Expose Node-Subject relationship in API
+- Bug fix: Docker build
+- Bug fix: File navigation
+- Bug fix: Funder Metadata
+
+23.16.0 (2023-11-10)
+====================
+- Boa Addon
+- Remove default title of "Untitled" from Drafts
+
+23.15.0 (2023-10-10)
+====================
+- Update routing for Institutions, Preprints Discover pages
+- Fix tag-based search navigation
+
+23.14.0 (2023-10-5)
+===================
+- Update metadata gathering for improved deduplication, type inference, withdrawal metadata
+- Add Institution and Provider IRIs to API
+- Add Institution banners to API
+- Decongest metadata recataloguing
+
+23.13.0 (2023-9-15)
+===================
+- PreprintProvider default CitationStyles
+- PreprintProvider togglable author assertions
+
 23.12.0 (2023-8-22)
 ===================
 - Search Improvements

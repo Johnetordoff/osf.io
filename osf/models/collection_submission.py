@@ -5,8 +5,8 @@ from django.db import models
 from django.utils.functional import cached_property
 from framework.exceptions import PermissionsError
 
-from osf.models.base import BaseModel
-from osf.models.mixins import TaxonomizableMixin
+from .base import BaseModel
+from .mixins import TaxonomizableMixin
 from osf.utils.permissions import ADMIN
 from website.util import api_v2_url
 from website.search.exceptions import SearchUnavailableError
@@ -39,6 +39,16 @@ class CollectionSubmission(TaxonomizableMixin, BaseModel):
     program_area = models.CharField(blank=True, max_length=127)
     school_type = models.CharField(blank=True, max_length=127)
     study_design = models.CharField(blank=True, max_length=127)
+    disease = models.CharField(
+        help_text='This field was added for use by Inflammatory Bowel Disease Genetics Consortium',
+        blank=True,
+        max_length=127
+    )
+    data_type = models.CharField(
+        help_text='This field was added for use by Inflammatory Bowel Disease Genetics Consortium',
+        blank=True,
+        max_length=127
+    )
     machine_state = models.IntegerField(
         choices=CollectionSubmissionStates.int_field_choices(),
         default=CollectionSubmissionStates.IN_PROGRESS,
@@ -121,7 +131,7 @@ class CollectionSubmission(TaxonomizableMixin, BaseModel):
             'allow_submissions': True,
         }
 
-        from osf.models import NotificationSubscription
+        from .notifications import NotificationSubscription
         from website.notifications.emails import store_emails
 
         provider_subscription, created = NotificationSubscription.objects.get_or_create(

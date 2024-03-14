@@ -12,6 +12,7 @@ OSF = rdflib.Namespace('https://osf.io/vocab/2022/')  # TODO: publish something 
 OSFIO = rdflib.Namespace(website_settings.DOMAIN)
 # external pid namespaces:
 DOI = rdflib.Namespace('https://doi.org/')
+DxDOI = rdflib.Namespace('http://dx.doi.org/')  # "earlier but no longer preferred" DOI namespace
 ORCID = rdflib.Namespace('https://orcid.org/')
 ROR = rdflib.Namespace('https://ror.org/')
 # external terminology namespaces:
@@ -23,7 +24,7 @@ RDF = rdflib.Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#')   # "resou
 SKOS = rdflib.Namespace('http://www.w3.org/2004/02/skos/core#')         # "simple knowledge organization system"
 DCAT = rdflib.Namespace('http://www.w3.org/ns/dcat#')                   # "data catalog (vocabulary)"
 # non-standard namespace for datacite terms (resolves to datacite docs)
-DATACITE = rdflib.Namespace('https://schema.datacite.org/meta/kernel-4.4/#')
+DATACITE = rdflib.Namespace('https://schema.datacite.org/meta/kernel-4/#')
 
 
 # namespace prefixes that will be shortened by default

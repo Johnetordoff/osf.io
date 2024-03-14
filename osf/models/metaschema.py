@@ -5,8 +5,8 @@ import jsonschema
 
 from website.util import api_v2_url
 
-from osf.models.base import BaseModel, ObjectIDMixin
-from osf.models.validators import RegistrationResponsesValidator
+from .base import BaseModel, ObjectIDMixin
+from .validators import RegistrationResponsesValidator
 from osf.utils.datetime_aware_jsonfield import DateTimeAwareJSONField
 from osf.exceptions import ValidationValueError, ValidationError
 
@@ -44,15 +44,23 @@ class AbstractSchemaManager(models.Manager):
 
     def get_latest_version(self, name):
         """
-        Return the latest version of the given schema
-        :param str only_active: Only returns the latest active schema
-        :return schema
+        Return the latest version of the named schema
+        :param str name: unique name of a schema
+        :return: schema
         """
         return self.filter(name=name).order_by('schema_version').last()
 
+    def get_earliest_version(self, name):
+        """
+        Return the earliest version of the named schema
+        :param str name: unique name of a schema
+        :return: schema
+        """
+        return self.filter(name=name).order_by('schema_version').first()
+
     def get_latest_versions(self, request=None, invisible=False):
         """
-        Return the latest version of the given schema
+        Returns a queryset of the latest version of each schema
 
         :param request: the request object needed for waffling
         :return: queryset

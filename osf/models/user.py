@@ -38,16 +38,16 @@ from framework.sessions.utils import remove_sessions_for_user
 from api.share.utils import update_share
 from osf.utils.requests import get_current_request
 from osf.exceptions import reraise_django_validation_errors, UserStateError
-from osf.models.base import BaseModel, GuidMixin, GuidMixinQuerySet
-from osf.models.notable_domain import NotableDomain
-from osf.models.contributor import Contributor, RecentlyAddedContributor
-from osf.models.institution import Institution
-from osf.models.institution_affiliation import InstitutionAffiliation
-from osf.models.mixins import AddonModelMixin
-from osf.models.spam import SpamMixin
-from osf.models.session import UserSessionMap
-from osf.models.tag import Tag
-from osf.models.validators import validate_email, validate_social, validate_history_item
+from .base import BaseModel, GuidMixin, GuidMixinQuerySet
+from .notable_domain import NotableDomain
+from .contributor import Contributor, RecentlyAddedContributor
+from .institution import Institution
+from .institution_affiliation import InstitutionAffiliation
+from .mixins import AddonModelMixin
+from .spam import SpamMixin
+from .session import UserSessionMap
+from .tag import Tag
+from .validators import validate_email, validate_social, validate_history_item
 from osf.utils.datetime_aware_jsonfield import DateTimeAwareJSONField
 from osf.utils.fields import NonNaiveDateTimeField, LowercaseEmailField, ensure_str
 from osf.utils.names import impute_names
@@ -58,6 +58,7 @@ from website import filters, mails
 from website.project import new_bookmark_collection
 from website.util.metrics import OsfSourceTags
 from importlib import import_module
+from osf.utils.requests import get_headers_from_request
 
 SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
 
@@ -832,8 +833,8 @@ class OSFUser(DirtyFieldsMixin, GuidMixin, BaseModel, AbstractBaseUser, Permissi
         # Skip bookmark collections
         user.collection_set.exclude(is_bookmark_collection=True).update(creator=self)
 
-        from osf.models import QuickFilesNode
-        from osf.models import BaseFileNode
+        from .files import BaseFileNode
+        from .quickfiles import QuickFilesNode
 
         # - projects where the user was the creator
         user.nodes_created.exclude(type=QuickFilesNode._typedmodels_type).update(creator=self)
@@ -878,7 +879,7 @@ class OSFUser(DirtyFieldsMixin, GuidMixin, BaseModel, AbstractBaseUser, Permissi
         Permissions are stored on guardian tables.  PreprintContributor information needs to be transferred
         from user -> self, and preprint permissions need to be transferred from user -> self.
         """
-        from osf.models.preprint import PreprintContributor
+        from .preprint import PreprintContributor
 
         # Loop through `user`'s preprints
         for preprint in user.preprints.all():
@@ -1025,13 +1026,19 @@ class OSFUser(DirtyFieldsMixin, GuidMixin, BaseModel, AbstractBaseUser, Permissi
 
         self.update_is_active()
         self.username = self.username.lower().strip() if self.username else None
-        dirty_fields = set(self.get_dirty_fields(check_relationship=True))
-        ret = super(OSFUser, self).save(*args, **kwargs)
+        dirty_fields = self.get_dirty_fields(check_relationship=True)
+        ret = super(OSFUser, self).save(*args, **kwargs)  # must save BEFORE spam check, as user needs guid.
+        if set(self.SPAM_USER_PROFILE_FIELDS.keys()).intersection(dirty_fields):
+            request = get_current_request()
+            headers = get_headers_from_request(request)
+            self.check_spam(dirty_fields, request_headers=headers)
+
+        dirty_fields = set(dirty_fields)
         if self.SEARCH_UPDATE_FIELDS.intersection(dirty_fields) and self.is_confirmed:
             self.update_search()
             self.update_search_nodes_contributors()
         if 'fullname' in dirty_fields:
-            from osf.models.quickfiles import get_quickfiles_project_title, QuickFilesNode
+            from .quickfiles import get_quickfiles_project_title, QuickFilesNode
 
             quickfiles = QuickFilesNode.objects.filter(creator=self).first()
             if quickfiles:
@@ -1622,8 +1629,8 @@ class OSFUser(DirtyFieldsMixin, GuidMixin, BaseModel, AbstractBaseUser, Permissi
         :returns: The added record
         """
 
-        from osf.models.provider import AbstractProvider
-        from osf.models.osf_group import OSFGroup
+        from .provider import AbstractProvider
+        from .osf_group import OSFGroup
 
         if isinstance(claim_origin, AbstractProvider):
             if not bool(get_perms(referrer, claim_origin)):
@@ -1859,28 +1866,37 @@ class OSFUser(DirtyFieldsMixin, GuidMixin, BaseModel, AbstractBaseUser, Permissi
         return self.comments_viewed_timestamp.get(target_id, default_timestamp)
 
     def _get_spam_content(self, saved_fields=None, **unused_kwargs):
-        spam_check_fields = set(self.SPAM_USER_PROFILE_FIELDS.keys())
-        spam_check_source = {}
-        if saved_fields:
-            spam_check_source = saved_fields
-            spam_check_fields = spam_check_fields.intersection(set(saved_fields.keys()))
-        else:
-            spam_check_source = {field: getattr(self, field) for field in spam_check_fields}
+        """
+        Retrieves content for spam checking from specified fields.
+        Sometimes from validated serializer data, sometimes from
+        dirty_fields.
 
-        spam_check_contents = []
-        for spam_field in spam_check_fields:
-            spam_field_content = spam_check_source[spam_field]
-            if not spam_field_content:
-                continue
-            if spam_field in ['schools', 'jobs']:
-                spam_check_contents.extend(
-                    _get_nested_spam_check_content(spam_check_source, spam_field)
-                )
-            else:  # Only other currently checked field is social['profileWebsites']
-                spam_check_contents.extend(
-                    spam_check_source.get('social', dict()).get('profileWebsites', list())
-                )
-        return ' '.join(spam_check_contents).strip()
+        Parameters:
+        - saved_fields (dict): Fields that have been saved and their values.
+        - unused_kwargs: Ignored additional keyword arguments.
+
+        Returns:
+        - str: A string containing the spam check contents, joined by spaces.
+        """
+        # Determine which fields to check for spam, preferring saved_fields if provided.
+        spam_check_fields = set(self.SPAM_USER_PROFILE_FIELDS)
+        if saved_fields:
+            spam_check_fields = set(saved_fields).intersection(spam_check_fields)
+
+        spam_check_source = {field: getattr(self, field) for field in spam_check_fields}
+
+        spam_contents = []
+        for field in spam_check_fields:
+            validated_data_from_serializer = spam_check_source.get(field)
+            # Validated fields aren't from dirty_fields, they have values.
+            if validated_data_from_serializer:
+                spam_contents.extend(_get_nested_spam_check_content(spam_check_source, field))
+            else:
+                # these are the changed fields from dirty_fields, they have need current model values before saving.
+                value = getattr(self, field, {})
+                spam_contents.extend(_get_nested_spam_check_content(value, field))
+
+        return ' '.join(spam_contents).strip()
 
     def check_spam(self, saved_fields, request_headers):
         is_spam = False
@@ -1896,68 +1912,137 @@ class OSFUser(DirtyFieldsMixin, GuidMixin, BaseModel, AbstractBaseUser, Permissi
 
         return is_spam
 
+    def _validate_admin_status_for_gdpr_delete(self, resource):
+        """
+        Ensure that deleting the user won't leave the node without an admin.
+
+        Args:
+        - resource: An instance of a resource, probably AbstractNode or DraftRegistration.
+        """
+        alternate_admins = OSFUser.objects.filter(
+            groups__name=resource.format_group(ADMIN),
+            is_active=True
+        ).exclude(id=self.id).exists()
+
+        if not alternate_admins:
+            raise UserStateError(
+                f'You cannot delete {resource.__class__.__name__} {resource._id} because it would be '
+                f'a {resource.__class__.__name__} with contributors, but with no admin.'
+            )
+
+    def _validate_addons_for_gdpr_delete(self, resource):
+        """
+        Ensure that the user's external accounts on the node won't cause issues upon deletion.
+
+        Args:
+        - resource: An instance of a resource, probably AbstractNode or DraftRegistration.
+        """
+        for addon in resource.get_addons():
+            if addon.short_name not in ('osfstorage', 'wiki') and \
+                    addon.user_settings and addon.user_settings.owner.id == self.id:
+                raise UserStateError(
+                    f'You cannot delete this user because they have an external account for {addon.short_name} '
+                    f'attached to {resource.__class__.__name__} {resource._id}, which has other contributors.'
+                )
+
     def gdpr_delete(self):
         """
-        This function does not remove the user object reference from our database, but it does disable the account and
-        remove identifying in a manner compliant with GDPR guidelines.
-
-        Follows the protocol described in
-        https://openscience.atlassian.net/wiki/spaces/PRODUC/pages/482803755/GDPR-Related+protocols
-
+        Complies with GDPR guidelines by disabling the account and removing identifying information.
         """
-        from osf.models import Preprint, AbstractNode
 
-        user_nodes = self.nodes.exclude(is_deleted=True)
-        #  Validates the user isn't trying to delete things they deliberately made public.
-        if user_nodes.filter(type='osf.registration').exists():
+        # Check if user has something intentionally public, like preprints or registrations
+        self._validate_no_public_entities()
+
+        # Check if user has any non-registration AbstractNodes or DraftRegistrations that they might still share with
+        # other contributors
+        self._validate_and_remove_resource_for_gdpr_delete(
+            self.nodes.exclude(type='osf.registration'),  # Includes DraftNodes and other typed nodes
+            hard_delete=False
+        )
+        self._validate_and_remove_resource_for_gdpr_delete(
+            self.draft_registrations.all(),
+            hard_delete=True
+        )
+
+        # A Potentially out of date check that user isn't a member of a OSFGroup
+        self._validate_osf_groups()
+
+        # Finally delete the user's info.
+        self._clear_identifying_information()
+
+    def _validate_no_public_entities(self):
+        """
+        Ensure that the user doesn't have any public facing resources like Registrations or Preprints
+        """
+        from osf.models import Preprint
+
+        if self.nodes.filter(deleted__isnull=True, type='osf.registration').exists():
             raise UserStateError('You cannot delete this user because they have one or more registrations.')
 
         if Preprint.objects.filter(_contributors=self, ever_public=True, deleted__isnull=True).exists():
             raise UserStateError('You cannot delete this user because they have one or more preprints.')
 
-        # Validates that the user isn't trying to delete things nodes they are the only admin on.
-        personal_nodes = (
-            AbstractNode.objects.annotate(contrib_count=Count('_contributors'))
-            .filter(contrib_count__lte=1)
-            .filter(contributor__user=self)
-            .exclude(is_deleted=True)
+    def _validate_and_remove_resource_for_gdpr_delete(self, resources, hard_delete):
+        """
+        This method ensures a user's resources are properly deleted of using during GDPR delete request.
+
+        Args:
+        - resources: A queryset of resources probably of AbstractNode or DraftRegistration.
+        - hard_delete: A boolean indicating whether the resource should be permentently deleted or just marked as such.
+        """
+        model = resources.query.model
+
+        filter_deleted = {}
+        if not hard_delete:
+            filter_deleted = {'deleted__isnull': True}
+
+        personal_resources = model.objects.annotate(
+            contrib_count=Count('_contributors')
+        ).filter(
+            contrib_count__lte=1,
+            _contributors=self
+        ).filter(
+            **filter_deleted
         )
-        shared_nodes = user_nodes.exclude(id__in=personal_nodes.values_list('id'))
 
-        for node in shared_nodes.exclude(type__in=['osf.quickfilesnode', 'osf.draftnode']):
-            alternate_admins = OSFUser.objects.filter(groups__name=node.format_group(ADMIN)).filter(is_active=True).exclude(id=self.id)
-            if not alternate_admins:
+        shared_resources = resources.exclude(id__in=personal_resources.values_list('id'))
+        for node in shared_resources:
+            self._validate_admin_status_for_gdpr_delete(node)
+            self._validate_addons_for_gdpr_delete(node)
+
+        for resource in shared_resources.all():
+            logger.info(f'Removing {self._id} as a contributor to {resource.__class__.__name__} (pk:{resource.pk})...')
+            resource.remove_contributor(self, auth=Auth(self), log=False)
+
+        # Delete all personal entities
+        for entity in personal_resources.all():
+            if hard_delete:
+                logger.info(f'Hard-deleting {entity.__class__.__name__} (pk: {entity.pk})...')
+                entity.delete()
+            else:
+                logger.info(f'Soft-deleting {entity.__class__.__name__} (pk: {entity.pk})...')
+                entity.remove_node(auth=Auth(self))
+
+    def _validate_osf_groups(self):
+        """
+        This method ensures a user isn't in an OSFGroup before deleting them..
+        """
+        for group in self.osf_groups:
+            if not group.managers.exclude(id=self.id).filter(is_registered=True).exists() and group.members.exclude(
+                    id=self.id).exists():
                 raise UserStateError(
-                    'You cannot delete node {} because it would be a node with contributors, but with no admin.'.format(
-                        node._id))
-
-            for addon in node.get_addons():
-                if addon.short_name not in ('osfstorage', 'wiki') and addon.user_settings and addon.user_settings.owner.id == self.id:
-                    raise UserStateError('You cannot delete this user because they '
-                                         'have an external account for {} attached to Node {}, '
-                                         'which has other contributors.'.format(addon.short_name, node._id))
-
-        for group in self.osf_groups:
-            if not group.managers.exclude(id=self.id).filter(is_registered=True).exists() and group.members.exclude(id=self.id).exists():
-                raise UserStateError('You cannot delete this user because they are the only registered manager of OSFGroup {} that contains other members.'.format(group._id))
-
-        for node in shared_nodes.all():
-            logger.info('Removing {self._id} as a contributor to node (pk:{node_id})...'.format(self=self, node_id=node.pk))
-            node.remove_contributor(self, auth=Auth(self), log=False)
-
-        # This is doesn't to remove identifying info, but ensures other users can't see the deleted user's profile etc.
-        self.deactivate_account()
-
-        # delete all personal nodes (one contributor), bookmarks, quickfiles etc.
-        for node in personal_nodes.all():
-            logger.info('Soft-deleting node (pk: {node_id})...'.format(node_id=node.pk))
-            node.remove_node(auth=Auth(self))
-
-        for group in self.osf_groups:
-            if len(group.managers) == 1 and group.managers[0] == self:
+                    f'You cannot delete this user because they are the only registered manager of OSFGroup {group._id} that contains other members.')
+            elif len(group.managers) == 1 and group.managers[0] == self:
                 group.remove_group()
             else:
                 group.remove_member(self)
+
+    def _clear_identifying_information(self):
+        '''
+        This method ensures a user's info is deleted during a GDPR delete
+        '''
+        # This doesn't remove identifying info, but ensures other users can't see the deleted user's profile etc.
+        self.deactivate_account()
 
         logger.info('Clearing identifying information...')
         # This removes identifying info
@@ -2032,11 +2117,30 @@ def create_bookmark_collection(sender, instance, created, **kwargs):
 
 
 def _get_nested_spam_check_content(spam_check_source, field_name):
-    spam_check_data = spam_check_source[field_name]
+    """
+    Social fields are formatted differently when coming from the serializer or save
+    """
+    if spam_check_source:
+        if field_name == 'social':
+            # Attempt to extract from the nested 'social' field first, then fall back to 'profileWebsites'.
+            data = spam_check_source.get('profileWebsites', [])
+            return spam_check_source.get('social', {}).get('profileWebsites', []) or data
+
     spam_check_content = []
-    for entry in spam_check_data:
-        for spam_check_subfield in OSFUser.SPAM_USER_PROFILE_FIELDS[field_name]:
-            subfield_content = entry.get(spam_check_subfield)
-            if subfield_content:
-                spam_check_content.append(subfield_content)
+    if spam_check_source and isinstance(spam_check_source, dict):
+        # Ensure spam_check_source[field_name] is always a list for uniform processing
+        source_data = spam_check_source.get(field_name, [])
+        if not isinstance(source_data, list):
+            source_data = [source_data]
+    elif spam_check_source and not isinstance(spam_check_source, dict):
+        source_data = spam_check_source
+    else:
+        return spam_check_content
+
+    keys = OSFUser.SPAM_USER_PROFILE_FIELDS.get(field_name, [])
+    for data in source_data:
+        for key in keys:
+            if data.get(key):
+                spam_check_content.append(data[key])
+
     return spam_check_content

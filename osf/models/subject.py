@@ -7,8 +7,8 @@ from django.utils.functional import cached_property
 
 from website.util import api_v2_url
 
-from osf.models.base import BaseModel, ObjectIDMixin
-from osf.models.validators import validate_subject_hierarchy_length, validate_subject_highlighted_count
+from .base import BaseModel, ObjectIDMixin
+from .validators import validate_subject_hierarchy_length, validate_subject_highlighted_count
 
 class SubjectQuerySet(QuerySet):
     def include_children(self):
@@ -53,6 +53,14 @@ class Subject(ObjectIDMixin, BaseModel, DirtyFieldsMixin):
 
     def get_absolute_url(self):
         return self.absolute_api_v2_url
+
+    def get_semantic_iri(self) -> str:
+        _identified_subject = (
+            self.bepress_subject
+            if self.bepress_subject and (self.text == self.bepress_subject.text)
+            else self
+        )
+        return _identified_subject.absolute_api_v2_subject_url.rstrip('/')
 
     @cached_property
     def path(self):
