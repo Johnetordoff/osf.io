@@ -41,12 +41,12 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Degree</label>
+                        <label for="Degree">Degree</label>
                         <input class="form-control" data-bind="value: degree" />
                     </div>
 
                     <div class="form-group">
-                        <label>Start date</label>
+                        <label for="Start date">Start date</label>
                         <div class="row">
                             <div class ="col-md-3">
                                 <select class="form-control" data-bind="options: months,
@@ -61,7 +61,7 @@
                     </div>
 
                     <div class="form-group" data-bind="ifnot: ongoing">
-                        <label>End date</label>
+                        <label for="End date">End date</label>
                             <div class="row">
                                 <div class ="col-md-3">
                                     <select class="form-control" data-bind="options: months,
@@ -77,7 +77,7 @@
 
 
                     <div class="form-group">
-                        <label>Ongoing</label>
+                        <label for="Ongoing">Ongoing</label>
                         <input type="checkbox" data-bind="checked: ongoing, click: clearEnd"/>
                     </div>
 

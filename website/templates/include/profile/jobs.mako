@@ -27,7 +27,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Institution / Employer</label>
+                        <label for="Institution / Employer">Institution / Employer</label>
                         <input class="form-control" data-bind="value: institution"
                             placeholder="Required"/>
                         <div data-bind="visible: $parent.showMessages, css:'text-danger'">
@@ -36,17 +36,17 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Department / Institute</label>
+                        <label for="Department / Institute">Department / Institute</label>
                         <input class="form-control" data-bind="value: department" />
                     </div>
 
                     <div class="form-group">
-                        <label>Job title</label>
+                        <label for="Job title">Job title</label>
                         <input class="form-control" data-bind="value: title" />
                     </div>
 
                     <div class="form-group">
-                        <label>Start date</label>
+                        <label for="Start date">Start date</label>
                         <div class="row">
                             <div class ="col-md-3">
                                 <select class="form-control" data-bind="options: months,
@@ -61,7 +61,7 @@
                     </div>
 
                     <div class="form-group" data-bind="ifnot: ongoing">
-                        <label>End date</label>
+                        <label for="End date">End date</label>
                             <div class="row">
                                 <div class ="col-md-3">
                                     <select class="form-control" data-bind="options: months,
@@ -77,7 +77,7 @@
 
 
                     <div class="form-group">
-                        <label>Ongoing</label>
+                        <label for="Ongoing">Ongoing</label>
                         <input type="checkbox" data-bind="checked: ongoing, click: clearEnd"/>
                     </div>
 

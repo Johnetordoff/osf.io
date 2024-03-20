@@ -7,7 +7,7 @@
 
         <form role="form" data-bind="submit: submit">
 
-            <label>Your websites</label>
+            <label for="Personal Website">Your websites</label>
             <div data-bind="sortable: {
                         data: profileWebsites,
                         options: {
@@ -36,7 +36,7 @@
             </div>
 
             <div class="form-group">
-                <label>ORCID</label>
+                <label for="ORCID">ORCID</label>
                 <div class="input-group">
                 <span class="input-group-addon">http://orcid.org/</span>
                 <input class="form-control" data-bind="value: orcid" placeholder="xxxx-xxxx-xxxx-xxxx" aria-label="ORCID input" />
@@ -44,7 +44,7 @@
             </div>
 
             <div class="form-group">
-                <label>ResearcherID</label>
+                <label for="ResearcherID">ResearcherID</label>
                 <div class="input-group">
                 <span class="input-group-addon">http://researcherid.com/rid/</span>
                 <input class="form-control" data-bind="value: researcherId" placeholder="x-xxxx-xxxx" aria-label="ResearcherID username input" />
@@ -52,7 +52,7 @@
             </div>
 
             <div class="form-group">
-                <label>Twitter</label>
+                <label for="Twitter">Twitter</label>
                 <div class="input-group">
                 <span class="input-group-addon">@</span>
                 <input class="form-control" data-bind="value: twitter" placeholder="twitterhandle" aria-label="Twitter username input" />
@@ -60,7 +60,7 @@
             </div>
 
             <div class="form-group">
-                <label>GitHub</label>
+                <label for="GitHub">GitHub</label>
                 <div class="input-group">
                     <span class="input-group-addon">https://github.com/</span>
                     <input class="form-control" data-bind="value: github" placeholder="username" aria-label="github username input" />
@@ -74,7 +74,7 @@
             </div>
 
             <div class="form-group">
-                <label>LinkedIn</label>
+                <label for="LinkedIn">LinkedIn</label>
                 <div class="input-group">
                 <span class="input-group-addon">https://www.linkedin.com/</span>
                 <input class="form-control" data-bind="value: linkedIn" placeholder="in/userID, profile/view?id=profileID, or pub/pubID" aria-label="LinkedIn input" />
@@ -82,7 +82,7 @@
             </div>
 
             <div class="form-group">
-                <label>ImpactStory</label>
+                <label for="ImpactStory">ImpactStory</label>
                 <div class="input-group">
                 <span class="input-group-addon">https://impactstory.org/u/</span>
                 <input class="form-control" data-bind="value: impactStory" placeholder="profileID" aria-label="ImpactStory input" />
@@ -106,7 +106,7 @@
             </div>
 
             <div class="form-group">
-                <label>Academia</label>
+                <label for="Academia">Academia</label>
                 <div class="input-group">
                 <span class="input-group-addon">https://</span>
                 <input class="form-control" data-bind="value: academiaInstitution" placeholder="institution" size="5"/>
@@ -116,7 +116,7 @@
             </div>
 
             <div class="form-group">
-                <label>Baidu Scholar</label>
+                <label for="Baidu Scholar">Baidu Scholar </label>
                 <div class="input-group">
                 <span class="input-group-addon">http://xueshu.baidu.com/scholarID/</span>
                 <input class="form-control" data-bind="value: baiduScholar" placeholder="profileID" aria-label="Baidu Scholar id input" />
@@ -124,7 +124,7 @@
             </div>
 
             <div class="form-group">
-                <label>SSRN</label>
+                <label for="SSRN">SSRN</label>
                 <div class="input-group">
                 <span class="input-group-addon">http://papers.ssrn.com/sol3/cf_dev/AbsByAuth.cfm?per_id=</span>
                 <input class="form-control" data-bind="value: ssrn" placeholder="profileID" aria-label="ssrn information input" />
