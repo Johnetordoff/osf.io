@@ -2,7 +2,7 @@ import pytest
 
 from osf.management.commands.populate_initial_schema_responses import populate_initial_schema_responses
 from osf.models import SchemaResponse, SchemaResponseBlock
-from osf.utils.workflows import ApprovalStates, RegistrationModerationStates as RegStates
+from osf.utils.workflows import SanctionsStates, RegistrationModerationStates as RegStates
 from osf_tests.factories import ProjectFactory, RegistrationFactory
 from osf_tests.utils import get_default_test_schema
 
@@ -52,16 +52,16 @@ class TestPopulateInitialSchemaResponses:
     @pytest.mark.parametrize(
         'registration_state, schema_response_state',
         [
-            (RegStates.INITIAL, ApprovalStates.UNAPPROVED),
-            (RegStates.PENDING, ApprovalStates.PENDING_MODERATION),
-            (RegStates.ACCEPTED, ApprovalStates.APPROVED),
-            (RegStates.EMBARGO, ApprovalStates.APPROVED),
-            (RegStates.PENDING_EMBARGO_TERMINATION, ApprovalStates.APPROVED),
-            (RegStates.PENDING_WITHDRAW_REQUEST, ApprovalStates.APPROVED),
-            (RegStates.PENDING_WITHDRAW, ApprovalStates.APPROVED),
-            (RegStates.WITHDRAWN, ApprovalStates.APPROVED),
-            (RegStates.REVERTED, ApprovalStates.UNAPPROVED),
-            (RegStates.REJECTED, ApprovalStates.PENDING_MODERATION),
+            (RegStates.INITIAL, SanctionsStates.UNAPPROVED),
+            (RegStates.PENDING, SanctionsStates.PENDING_MODERATION),
+            (RegStates.ACCEPTED, SanctionsStates.APPROVED),
+            (RegStates.EMBARGO, SanctionsStates.APPROVED),
+            (RegStates.PENDING_EMBARGO_TERMINATION, SanctionsStates.APPROVED),
+            (RegStates.PENDING_WITHDRAW_REQUEST, SanctionsStates.APPROVED),
+            (RegStates.PENDING_WITHDRAW, SanctionsStates.APPROVED),
+            (RegStates.WITHDRAWN, SanctionsStates.APPROVED),
+            (RegStates.REVERTED, SanctionsStates.UNAPPROVED),
+            (RegStates.REJECTED, SanctionsStates.PENDING_MODERATION),
         ]
     )
     def test_schema_response_state(

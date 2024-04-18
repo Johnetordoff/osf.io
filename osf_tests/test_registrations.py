@@ -30,7 +30,7 @@ from osf_tests.management_commands.test_migration_registration_responses import 
 from osf.utils.workflows import (
     RegistrationModerationStates,
     RegistrationModerationTriggers,
-    ApprovalStates
+    SanctionsStates
 )
 
 pytestmark = pytest.mark.django_db
@@ -877,7 +877,7 @@ class TestForcedWithdrawal:
 
         moderated_registration.refresh_from_db()
         assert moderated_registration.is_retracted
-        assert moderated_registration.retraction.approval_stage is ApprovalStates.APPROVED
+        assert moderated_registration.retraction.approval_stage is SanctionsStates.APPROVED
         assert moderated_registration.moderation_state == RegistrationModerationStates.WITHDRAWN.db_name
 
     def test_force_retraction_writes_action(self, moderated_registration, moderator):

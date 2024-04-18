@@ -7,7 +7,7 @@ from framework.celery_tasks import app as celery_app
 
 from osf.exceptions import PreviousSchemaResponseError, SchemaResponseUpdateError
 from osf.models import Registration, SchemaResponse
-from osf.utils.workflows import ApprovalStates, RegistrationModerationStates as RegStates
+from osf.utils.workflows import SanctionsStates, RegistrationModerationStates as RegStates
 
 logger = logging.getLogger(__name__)
 
@@ -21,11 +21,11 @@ def _update_schema_response_state(schema_response):
     '''Set the schema_response's state based on the current state of the parent rgistration.'''
     moderation_state = schema_response.parent.moderation_state
     if moderation_state in UNAPPROVED_STATES:
-        schema_response.state = ApprovalStates.UNAPPROVED
+        schema_response.state = SanctionsStates.UNAPPROVED
     elif moderation_state in PENDING_MODERATION_STATES:
-        schema_response.state = ApprovalStates.PENDING_MODERATION
+        schema_response.state = SanctionsStates.PENDING_MODERATION
     else:  # All remainint states imply initial responses were approved by users at some point
-        schema_response.state = ApprovalStates.APPROVED
+        schema_response.state = SanctionsStates.APPROVED
     schema_response.save()
 
 

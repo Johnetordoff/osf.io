@@ -52,7 +52,7 @@ from osf.utils import notifications as notify
 from osf.utils.workflows import (
     RegistrationModerationStates,
     RegistrationModerationTriggers,
-    ApprovalStates,
+    SanctionsStates,
     SanctionTypes
 )
 from website import settings
@@ -642,7 +642,7 @@ class Registration(AbstractNode):
 
         # Automatically accept moderator_initiated retractions
         if moderator_initiated:
-            self.retraction.approval_stage = ApprovalStates.PENDING_MODERATION
+            self.retraction.approval_stage = SanctionsStates.PENDING_MODERATION
             self.retraction.accept(user=user, comment=justification)
             self.refresh_from_db()  # grab updated state
 
@@ -682,7 +682,7 @@ class Registration(AbstractNode):
                 used in reporting Actions.
         '''
         if self.sanction.SANCTION_TYPE in [SanctionTypes.REGISTRATION_APPROVAL, SanctionTypes.EMBARGO]:
-            if not self.sanction.state == ApprovalStates.COMPLETED.db_name:  # no action needed when Embargo "completes"
+            if not self.sanction.state == SanctionsStates.COMPLETED.db_name:  # no action needed when Embargo "completes"
                 initial_response = self.schema_responses.last()
                 if initial_response:
                     initial_response.reviews_state = self.sanction.state
@@ -805,8 +805,8 @@ class Registration(AbstractNode):
             # Alter embargo state to make sure registration doesn't accidentally get published
             self.embargo.state = self.retraction.REJECTED
             self.embargo.approval_stage = (
-                ApprovalStates.MODERATOR_REJECTED if self.is_moderated
-                else ApprovalStates.REJECTED
+                SanctionsStates.MODERATOR_REJECTED if self.is_moderated
+                else SanctionsStates.REJECTED
             )
 
             self.registered_from.add_log(

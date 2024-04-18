@@ -39,7 +39,7 @@ def get_moderator(provider):
 def get_daily_moderator(provider):
     user = AuthUserFactory()
     provider.add_to_group(user, 'moderator')
-    for subscription_type in provider.DEFAULT_SUBSCRIPTIONS:
+    for subscription_type in provider.DEFAULT_EMAIL_SUBSCRIPTIONS:
         subscription = provider.notification_subscriptions.get(event_name=subscription_type)
         subscription.add_user_to_subscription(user, 'email_digest')
     return user
@@ -99,7 +99,7 @@ class TestRegistrationMachineNotification:
     def daily_moderator(self, provider):
         user = AuthUserFactory()
         provider.add_to_group(user, 'moderator')
-        for subscription_type in provider.DEFAULT_SUBSCRIPTIONS:
+        for subscription_type in provider.DEFAULT_EMAIL_SUBSCRIPTIONS:
             subscription = provider.notification_subscriptions.get(event_name=subscription_type)
             subscription.add_user_to_subscription(user, 'email_digest')
         return user

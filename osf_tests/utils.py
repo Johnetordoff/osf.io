@@ -228,7 +228,7 @@ def _ensure_subscriptions(provider):
     This has led to observed race conditions and probabalistic test failures.
     Avoid that.
     '''
-    for subscription in provider.DEFAULT_SUBSCRIPTIONS:
+    for subscription in provider.DEFAULT_EMAIL_SUBSCRIPTIONS:
         NotificationSubscription.objects.get_or_create(
             _id=f'{provider._id}_{subscription}',
             event_name=subscription,

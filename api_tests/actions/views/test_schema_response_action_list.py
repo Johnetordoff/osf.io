@@ -5,7 +5,7 @@ from django.utils import timezone
 from api.providers.workflows import Workflows as ModerationWorkflows
 
 from osf.models import OSFUser
-from osf.utils.workflows import ApprovalStates, SchemaResponseTriggers as Triggers
+from osf.utils.workflows import SanctionsStates, SchemaResponseTriggers as Triggers
 
 from osf_tests.factories import (
     AuthUserFactory,
@@ -17,11 +17,11 @@ from osf_tests.utils import get_default_test_schema
 
 USER_ROLES = ['read', 'write', 'admin', 'moderator', 'non-contributor', 'unauthenticated']
 UNAPPROVED_RESPONSE_STATES = [
-    state for state in ApprovalStates if state is not ApprovalStates.APPROVED
+    state for state in SanctionsStates if state is not SanctionsStates.APPROVED
 ]
 DEFAULT_SCHEMA_RESPONSES = {'q1': 'answer', 'q2': 'answer 2', 'q3': 'A', 'q4': ['D']}
 DEFAULT_REVIEWS_WORKFLOW = ModerationWorkflows.PRE_MODERATION.value
-DEFAULT_SCHEMA_RESPONSE_STATE = ApprovalStates.APPROVED
+DEFAULT_SCHEMA_RESPONSE_STATE = SanctionsStates.APPROVED
 DEFAULT_TRIGGER = Triggers.SUBMIT
 
 
@@ -64,12 +64,12 @@ def configure_test_preconditions(
     auth = configure_user_auth(registration, role)
 
     # Do this step after configuring auth to ensure any new admin user, gets added
-    if schema_response_state is ApprovalStates.UNAPPROVED:
+    if schema_response_state is SanctionsStates.UNAPPROVED:
         schema_response.pending_approvers.add(
             *[user for user, _ in registration.get_admin_contributors_recursive()]
         )
 
-    if schema_response_state is ApprovalStates.IN_PROGRESS:
+    if schema_response_state is SanctionsStates.IN_PROGRESS:
         # need valid changes for submission validations
         schema_response.update_responses({'q1': 'update for submission'})
         schema_response.revision_justification = 'has for valid revision_justification for submission'
@@ -137,7 +137,7 @@ class TestSchemaResponseActionListGETPermissions:
             return 403
 
         # All users can GET APPROVED responses on public registrations
-        if registration_status == 'public' and schema_response_state is ApprovalStates.APPROVED:
+        if registration_status == 'public' and schema_response_state is SanctionsStates.APPROVED:
             return 200
 
         # unauthenticated users and non-contributors cannot see any other responses
@@ -149,7 +149,7 @@ class TestSchemaResponseActionListGETPermissions:
         # Moderators can GET PENDING_MODERATION and APPROVED SchemaResponses on
         # public or private registrations that are part of a moderated registry
         if role == 'moderator':
-            moderator_visible_states = [ApprovalStates.PENDING_MODERATION, ApprovalStates.APPROVED]
+            moderator_visible_states = [SanctionsStates.PENDING_MODERATION, SanctionsStates.APPROVED]
             if schema_response_state in moderator_visible_states and reviews_workflow is not None:
                 return 200
             else:
@@ -163,7 +163,7 @@ class TestSchemaResponseActionListGETPermissions:
         raise ValueError(f'Unrecognized role {role}')
 
     @pytest.mark.parametrize('registration_status', ['public', 'private'])
-    @pytest.mark.parametrize('schema_response_state', ApprovalStates)
+    @pytest.mark.parametrize('schema_response_state', SanctionsStates)
     @pytest.mark.parametrize('role', ['read', 'write', 'admin', 'non-contributor', 'unauthenticated'])
     def test_GET_status_code__as_user(self, app, registration_status, schema_response_state, role):
         auth, schema_response, _, _ = configure_test_preconditions(
@@ -182,7 +182,7 @@ class TestSchemaResponseActionListGETPermissions:
         assert resp.status_code == expected_code
 
     @pytest.mark.parametrize('registration_status', ['public', 'private'])
-    @pytest.mark.parametrize('schema_response_state', ApprovalStates)
+    @pytest.mark.parametrize('schema_response_state', SanctionsStates)
     @pytest.mark.parametrize('reviews_workflow', [ModerationWorkflows.PRE_MODERATION.value, None])
     def test_GET_status_code__as_moderator(
             self, app, registration_status, schema_response_state, reviews_workflow):
@@ -238,7 +238,7 @@ class TestSchemaResponseActionListGETBehavior:
 
     def test_GET_schema_response_actions(self, app):
         auth, schema_response, _, _ = configure_test_preconditions(
-            schema_response_state=ApprovalStates.IN_PROGRESS, role='admin'
+            schema_response_state=SanctionsStates.IN_PROGRESS, role='admin'
         )
 
         user = get_user_for_auth(auth)
@@ -292,7 +292,7 @@ class TestSchemaResponseActionListPOSTPermissions:
     def test_POST_status_code__submit(self, app, registration_status, role):
         auth, schema_response, _, _ = configure_test_preconditions(
             registration_status=registration_status,
-            schema_response_state=ApprovalStates.IN_PROGRESS,
+            schema_response_state=SanctionsStates.IN_PROGRESS,
             role=role,
         )
         expected_status_code = self.get_status_code_for_preconditions(
@@ -313,7 +313,7 @@ class TestSchemaResponseActionListPOSTPermissions:
     def test_POST_status_code__approve(self, app, registration_status, role):
         auth, schema_response, _, _ = configure_test_preconditions(
             registration_status=registration_status,
-            schema_response_state=ApprovalStates.UNAPPROVED,
+            schema_response_state=SanctionsStates.UNAPPROVED,
             role=role,
         )
         expected_status_code = self.get_status_code_for_preconditions(
@@ -333,7 +333,7 @@ class TestSchemaResponseActionListPOSTPermissions:
     def test_POST_status_code__admin_reject(self, app, registration_status, role):
         auth, schema_response, _, _ = configure_test_preconditions(
             registration_status=registration_status,
-            schema_response_state=ApprovalStates.UNAPPROVED,
+            schema_response_state=SanctionsStates.UNAPPROVED,
             role=role,
         )
         expected_status_code = self.get_status_code_for_preconditions(
@@ -354,7 +354,7 @@ class TestSchemaResponseActionListPOSTPermissions:
         auth, schema_response, _, _ = configure_test_preconditions(
             registration_status=registration_status,
             reviews_workflow=ModerationWorkflows.PRE_MODERATION.value,
-            schema_response_state=ApprovalStates.PENDING_MODERATION,
+            schema_response_state=SanctionsStates.PENDING_MODERATION,
             role=role,
         )
         expected_status_code = self.get_status_code_for_preconditions(
@@ -375,7 +375,7 @@ class TestSchemaResponseActionListPOSTPermissions:
         auth, schema_response, _, _ = configure_test_preconditions(
             registration_status=registration_status,
             reviews_workflow=ModerationWorkflows.PRE_MODERATION.value,
-            schema_response_state=ApprovalStates.PENDING_MODERATION,
+            schema_response_state=SanctionsStates.PENDING_MODERATION,
             role=role,
         )
         expected_status_code = self.get_status_code_for_preconditions(
@@ -397,7 +397,7 @@ class TestSchemaResponseActionListPOSTBehavior:
 
     def test_POST_submit__denies_unchanged_submission(self, app):
         auth, schema_response, _, _ = configure_test_preconditions(
-            schema_response_state=ApprovalStates.IN_PROGRESS, role='admin'
+            schema_response_state=SanctionsStates.IN_PROGRESS, role='admin'
         )
         schema_response.updated_response_blocks.all().delete()
         assert schema_response.updated_response_keys == set()
@@ -410,7 +410,7 @@ class TestSchemaResponseActionListPOSTBehavior:
 
     def test_POST_submit__denies_submission_without_justification(self, app):
         auth, schema_response, _, _ = configure_test_preconditions(
-            schema_response_state=ApprovalStates.IN_PROGRESS, role='admin'
+            schema_response_state=SanctionsStates.IN_PROGRESS, role='admin'
         )
         schema_response.revision_justification = ''
         schema_response.save()
@@ -424,7 +424,7 @@ class TestSchemaResponseActionListPOSTBehavior:
 
     def test_POST_submit__writes_action_and_advances_state(self, app):
         auth, schema_response, _, _ = configure_test_preconditions(
-            schema_response_state=ApprovalStates.IN_PROGRESS, role='admin'
+            schema_response_state=SanctionsStates.IN_PROGRESS, role='admin'
         )
         assert not schema_response.actions.exists()
 
@@ -435,13 +435,13 @@ class TestSchemaResponseActionListPOSTBehavior:
         action = schema_response.actions.last()
         assert action.trigger == Triggers.SUBMIT.db_name
         assert action.creator == get_user_for_auth(auth)
-        assert action.from_state == ApprovalStates.IN_PROGRESS.db_name
-        assert action.to_state == ApprovalStates.UNAPPROVED.db_name
-        assert schema_response.state is ApprovalStates.UNAPPROVED
+        assert action.from_state == SanctionsStates.IN_PROGRESS.db_name
+        assert action.to_state == SanctionsStates.UNAPPROVED.db_name
+        assert schema_response.state is SanctionsStates.UNAPPROVED
 
     def test_POST_submit__assigns_pending_approvers(self, app):
         auth, schema_response, registration, _ = configure_test_preconditions(
-            schema_response_state=ApprovalStates.IN_PROGRESS, role='admin'
+            schema_response_state=SanctionsStates.IN_PROGRESS, role='admin'
         )
         payload = make_payload(schema_response, trigger=Triggers.SUBMIT)
         app.post_json_api(make_api_url(schema_response), payload, auth=auth)
@@ -452,7 +452,7 @@ class TestSchemaResponseActionListPOSTBehavior:
 
     @pytest.mark.parametrize(
         'schema_response_state',
-        [state for state in ApprovalStates if state is not ApprovalStates.IN_PROGRESS]
+        [state for state in SanctionsStates if state is not SanctionsStates.IN_PROGRESS]
     )
     def test_POST_submit__fails_with_invalid_schema_response_state(
             self, app, schema_response_state):
@@ -470,14 +470,14 @@ class TestSchemaResponseActionListPOSTBehavior:
     @pytest.mark.parametrize(
         'reviews_workflow, end_state',
         [
-            (ModerationWorkflows.PRE_MODERATION.value, ApprovalStates.PENDING_MODERATION),
-            (None, ApprovalStates.APPROVED)
+            (ModerationWorkflows.PRE_MODERATION.value, SanctionsStates.PENDING_MODERATION),
+            (None, SanctionsStates.APPROVED)
         ]
     )
     def test_POST_approve__writes_action_and_advances_state(self, app, reviews_workflow, end_state):
         auth, schema_response, registration, _ = configure_test_preconditions(
             reviews_workflow=reviews_workflow,
-            schema_response_state=ApprovalStates.UNAPPROVED,
+            schema_response_state=SanctionsStates.UNAPPROVED,
             role='admin'
         )
         assert not schema_response.actions.exists()
@@ -489,9 +489,9 @@ class TestSchemaResponseActionListPOSTBehavior:
         action = schema_response.actions.last()
         assert action.trigger == Triggers.APPROVE.db_name
         assert action.creator == get_user_for_auth(auth)
-        assert action.from_state == ApprovalStates.UNAPPROVED.db_name
-        assert action.to_state == ApprovalStates.UNAPPROVED.db_name
-        assert schema_response.state is ApprovalStates.UNAPPROVED
+        assert action.from_state == SanctionsStates.UNAPPROVED.db_name
+        assert action.to_state == SanctionsStates.UNAPPROVED.db_name
+        assert schema_response.state is SanctionsStates.UNAPPROVED
 
         app.post_json_api(make_api_url(schema_response), payload, auth=registration.creator.auth)
 
@@ -499,13 +499,13 @@ class TestSchemaResponseActionListPOSTBehavior:
         action = schema_response.actions.last()
         assert action.trigger == Triggers.APPROVE.db_name
         assert action.creator == registration.creator
-        assert action.from_state == ApprovalStates.UNAPPROVED.db_name
+        assert action.from_state == SanctionsStates.UNAPPROVED.db_name
         assert action.to_state == end_state.db_name
         assert schema_response.state is end_state
 
     @pytest.mark.parametrize(
         'schema_response_state',
-        [state for state in ApprovalStates if state is not ApprovalStates.UNAPPROVED]
+        [state for state in SanctionsStates if state is not SanctionsStates.UNAPPROVED]
     )
     def test_POST_approve__fails_with_invalid_schema_response_state(
             self, app, schema_response_state):
@@ -522,7 +522,7 @@ class TestSchemaResponseActionListPOSTBehavior:
 
     def test_POST_admin_reject__writes_action_and_advances_state(self, app):
         auth, schema_response, _, _ = configure_test_preconditions(
-            schema_response_state=ApprovalStates.UNAPPROVED, role='admin'
+            schema_response_state=SanctionsStates.UNAPPROVED, role='admin'
         )
         assert not schema_response.actions.exists()
 
@@ -533,13 +533,13 @@ class TestSchemaResponseActionListPOSTBehavior:
         action = schema_response.actions.last()
         assert action.trigger == Triggers.ADMIN_REJECT.db_name
         assert action.creator == get_user_for_auth(auth)
-        assert action.from_state == ApprovalStates.UNAPPROVED.db_name
-        assert action.to_state == ApprovalStates.IN_PROGRESS.db_name
-        assert schema_response.state is ApprovalStates.IN_PROGRESS
+        assert action.from_state == SanctionsStates.UNAPPROVED.db_name
+        assert action.to_state == SanctionsStates.IN_PROGRESS.db_name
+        assert schema_response.state is SanctionsStates.IN_PROGRESS
 
     @pytest.mark.parametrize(
         'schema_response_state',
-        [state for state in ApprovalStates if state is not ApprovalStates.UNAPPROVED]
+        [state for state in SanctionsStates if state is not SanctionsStates.UNAPPROVED]
     )
     def test_POST_admin_reject__fails_with_invalid_schema_response_state(
             self, app, schema_response_state):
@@ -554,12 +554,12 @@ class TestSchemaResponseActionListPOSTBehavior:
 
         # handle the weirdness of MODERATOR_REJECT and ADMIN_REJECT getting squashed down
         # to a single trigger on the model
-        expected_code = 403 if schema_response_state is ApprovalStates.PENDING_MODERATION else 409
+        expected_code = 403 if schema_response_state is SanctionsStates.PENDING_MODERATION else 409
         assert resp.status_code == expected_code
 
     def test_POST_accept__writes_action_and_advances_state(self, app):
         auth, schema_response, _, _ = configure_test_preconditions(
-            schema_response_state=ApprovalStates.PENDING_MODERATION, role='moderator'
+            schema_response_state=SanctionsStates.PENDING_MODERATION, role='moderator'
         )
         assert not schema_response.actions.exists()
 
@@ -570,13 +570,13 @@ class TestSchemaResponseActionListPOSTBehavior:
         action = schema_response.actions.last()
         assert action.trigger == Triggers.ACCEPT.db_name
         assert action.creator == get_user_for_auth(auth)
-        assert action.from_state == ApprovalStates.PENDING_MODERATION.db_name
-        assert action.to_state == ApprovalStates.APPROVED.db_name
-        assert schema_response.state is ApprovalStates.APPROVED
+        assert action.from_state == SanctionsStates.PENDING_MODERATION.db_name
+        assert action.to_state == SanctionsStates.APPROVED.db_name
+        assert schema_response.state is SanctionsStates.APPROVED
 
     @pytest.mark.parametrize(
         'schema_response_state',
-        [state for state in ApprovalStates if state is not ApprovalStates.PENDING_MODERATION]
+        [state for state in SanctionsStates if state is not SanctionsStates.PENDING_MODERATION]
     )
     def test_POST_accept__fails_with_invalid_schema_response_state(
             self, app, schema_response_state):
@@ -593,7 +593,7 @@ class TestSchemaResponseActionListPOSTBehavior:
 
     def test_POST_moderator_reject__writes_action_and_advances_state(self, app):
         auth, schema_response, _, _ = configure_test_preconditions(
-            schema_response_state=ApprovalStates.PENDING_MODERATION, role='moderator'
+            schema_response_state=SanctionsStates.PENDING_MODERATION, role='moderator'
         )
         assert not schema_response.actions.exists()
 
@@ -604,13 +604,13 @@ class TestSchemaResponseActionListPOSTBehavior:
         action = schema_response.actions.last()
         assert action.trigger == Triggers.MODERATOR_REJECT.db_name
         assert action.creator == get_user_for_auth(auth)
-        assert action.from_state == ApprovalStates.PENDING_MODERATION.db_name
-        assert action.to_state == ApprovalStates.IN_PROGRESS.db_name
-        assert schema_response.state is ApprovalStates.IN_PROGRESS
+        assert action.from_state == SanctionsStates.PENDING_MODERATION.db_name
+        assert action.to_state == SanctionsStates.IN_PROGRESS.db_name
+        assert schema_response.state is SanctionsStates.IN_PROGRESS
 
     @pytest.mark.parametrize(
         'schema_response_state',
-        [state for state in ApprovalStates if state is not ApprovalStates.PENDING_MODERATION]
+        [state for state in SanctionsStates if state is not SanctionsStates.PENDING_MODERATION]
     )
     def test_POST_moderator_reject__fails_with_invalid_schema_response_state(
             self, app, schema_response_state):
@@ -625,12 +625,12 @@ class TestSchemaResponseActionListPOSTBehavior:
 
         # handle the weirdness of MODERATOR_REJECT and ADMIN_REJECT getting squashed down
         # to a single trigger on the model
-        expected_code = 403 if schema_response_state is ApprovalStates.UNAPPROVED else 409
+        expected_code = 403 if schema_response_state is SanctionsStates.UNAPPROVED else 409
         assert resp.status_code == expected_code
 
     def test_POST__no_comment(self, app):
         auth, schema_response, _, _ = configure_test_preconditions(
-            schema_response_state=ApprovalStates.IN_PROGRESS
+            schema_response_state=SanctionsStates.IN_PROGRESS
         )
         payload = make_payload(schema_response, trigger=Triggers.SUBMIT)
         del(payload['data']['attributes']['comment'])
@@ -641,7 +641,7 @@ class TestSchemaResponseActionListPOSTBehavior:
 
     def test_POST__empty_comment(self, app):
         auth, schema_response, _, _ = configure_test_preconditions(
-            schema_response_state=ApprovalStates.IN_PROGRESS
+            schema_response_state=SanctionsStates.IN_PROGRESS
         )
         payload = make_payload(schema_response, trigger=Triggers.SUBMIT)
         payload['data']['attributes']['comment'] = ''
@@ -652,7 +652,7 @@ class TestSchemaResponseActionListPOSTBehavior:
 
     def test_POST__null_comment(self, app):
         auth, schema_response, _, _ = configure_test_preconditions(
-            schema_response_state=ApprovalStates.IN_PROGRESS
+            schema_response_state=SanctionsStates.IN_PROGRESS
         )
         payload = make_payload(schema_response, trigger=Triggers.SUBMIT)
         payload['data']['attributes']['comment'] = None

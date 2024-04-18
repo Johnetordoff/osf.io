@@ -1405,7 +1405,7 @@ class NodeStorageSerializer(JSONAPISerializer):
         )
 
 
-class NodeStorageProviderSerializer(JSONAPISerializer):
+class AddonStorageProviderSerializer(JSONAPISerializer):
     id = ser.SerializerMethodField(read_only=True)
     kind = ser.CharField(read_only=True)
     name = ser.CharField(read_only=True)

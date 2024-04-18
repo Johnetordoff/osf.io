@@ -30,7 +30,7 @@ from framework.auth.oauth_scopes import CoreScopes
 
 from osf.exceptions import SchemaResponseStateError
 from osf.models import SchemaResponse, SchemaResponseAction
-from osf.utils.workflows import ApprovalStates
+from osf.utils.workflows import SanctionsStates
 
 
 class SchemaResponseList(JSONAPIBaseView, ListFilterMixin, generics.ListCreateAPIView):
@@ -65,7 +65,7 @@ class SchemaResponseList(JSONAPIBaseView, ListFilterMixin, generics.ListCreateAP
             Q(parent_is_public__isnull=True),  # Withdrawn or deleted parent, always exclude
         ).filter(
             Q(user_is_contributor=True) |
-            (Q(parent_is_public=True) & Q(reviews_state=ApprovalStates.APPROVED.db_name)),
+            (Q(parent_is_public=True) & Q(reviews_state=SanctionsStates.APPROVED.db_name)),
         ).annotate(
             is_pending_current_user_approval=annotations.is_pending_current_user_approval(user),
             is_original_response=annotations.IS_ORIGINAL_RESPONSE,

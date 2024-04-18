@@ -16,7 +16,7 @@ from addons.osfstorage.models import OsfStorageFile
 from api.files.serializers import OsfStorageFileSerializer
 from api.nodes.serializers import (
     NodeSerializer,
-    NodeStorageProviderSerializer,
+    AddonStorageProviderSerializer,
     NodeLicenseRelationshipField,
     NodeLinksSerializer,
     update_institutions,
@@ -35,7 +35,7 @@ from framework.auth.core import Auth
 from osf.exceptions import NodeStateError
 from osf.models import Node
 from osf.utils.registrations import strip_registered_meta_comments
-from osf.utils.workflows import ApprovalStates
+from osf.utils.workflows import SanctionsStates
 
 
 class RegistrationSerializer(NodeSerializer):
@@ -434,7 +434,7 @@ class RegistrationSerializer(NodeSerializer):
 
     def get_registration_responses(self, obj):
         latest_approved_response = obj.root.schema_responses.filter(
-            reviews_state=ApprovalStates.APPROVED.db_name,
+            reviews_state=SanctionsStates.APPROVED.db_name,
         ).first()
         if latest_approved_response is not None:
             return self.anonymize_fields(obj, latest_approved_response.all_responses)
@@ -477,7 +477,7 @@ class RegistrationSerializer(NodeSerializer):
 
     def get_latest_response_id(self, obj):
         latest_approved = obj.root.schema_responses.filter(
-            reviews_state=ApprovalStates.APPROVED.db_name,
+            reviews_state=SanctionsStates.APPROVED.db_name,
         ).first()
         if latest_approved:
             return latest_approved._id
@@ -851,9 +851,9 @@ class RegistrationFileSerializer(OsfStorageFileSerializer):
         help_text='The registration that this file belongs to',
     )
 
-class RegistrationStorageProviderSerializer(NodeStorageProviderSerializer):
+class RegistrationStorageProviderSerializer(AddonStorageProviderSerializer):
     """
-    Overrides NodeStorageProviderSerializer to lead to correct registration file links
+    Overrides AddonStorageProviderSerializer to lead to correct registration file links
     """
     files = NodeFileHyperLinkField(
         related_view='registrations:registration-files',

@@ -7,7 +7,7 @@ from api.base.serializers import (
     NodeFileHyperLinkField,
 )
 from api.base.utils import absolute_reverse
-from api.nodes.serializers import NodeStorageProviderSerializer
+from api.nodes.serializers import AddonStorageProviderSerializer
 
 
 class DraftNodeSerializer(JSONAPISerializer):
@@ -45,7 +45,7 @@ class DraftNodeSerializer(JSONAPISerializer):
         type_ = 'draft-nodes'
 
 
-class DraftNodeStorageProviderSerializer(NodeStorageProviderSerializer):
+class DraftNodeStorageProviderSerializer(AddonStorageProviderSerializer):
     files = NodeFileHyperLinkField(
         related_view='draft_nodes:node-files',
         related_view_kwargs={'node_id': '<node._id>', 'path': '<path>', 'provider': '<provider>'},

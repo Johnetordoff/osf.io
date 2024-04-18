@@ -34,7 +34,7 @@ from osf.utils.names import impute_names_model
 from osf.utils.workflows import (
     DefaultStates,
     DefaultTriggers,
-    ApprovalStates,
+    SanctionsStates,
     SchemaResponseTriggers
 )
 from addons.osfstorage.models import OsfStorageFile, Region
@@ -955,7 +955,7 @@ class ArchiveJobFactory(DjangoModelFactory):
 
 class ReviewActionFactory(DjangoModelFactory):
     class Meta:
-        model = models.ReviewAction
+        model = models.PreprintStateAction
 
     trigger = FuzzyChoice(choices=DefaultTriggers.values())
     comment = factory.Faker('text')
@@ -1179,7 +1179,7 @@ class SchemaResponseFactory(DjangoModelFactory):
                 object_id=registration.id,
                 content_type_id=content_type
             ).get()
-            previous_schema_response.approvals_state_machine.set_state(ApprovalStates.APPROVED)
+            previous_schema_response.approvals_state_machine.set_state(SanctionsStates.APPROVED)
             previous_schema_response.save()
             return SchemaResponse.create_from_previous_response(initiator, previous_schema_response, justification)
 
@@ -1190,8 +1190,8 @@ class SchemaResponseActionFactory(DjangoModelFactory):
 
     trigger = FuzzyChoice(choices=SchemaResponseTriggers.char_field_choices())
     comment = factory.Faker('text')
-    from_state = FuzzyChoice(choices=ApprovalStates.char_field_choices())
-    to_state = FuzzyChoice(choices=ApprovalStates.char_field_choices())
+    from_state = FuzzyChoice(choices=SanctionsStates.char_field_choices())
+    to_state = FuzzyChoice(choices=SanctionsStates.char_field_choices())
 
     target = factory.SubFactory(SchemaResponseFactory)
     creator = factory.SubFactory(AuthUserFactory)

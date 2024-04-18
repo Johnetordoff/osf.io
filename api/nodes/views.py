@@ -99,7 +99,7 @@ from api.nodes.serializers import (
     NodeLinksSerializer,
     NodeForksSerializer,
     NodeDetailSerializer,
-    NodeStorageProviderSerializer,
+    AddonStorageProviderSerializer,
     DraftRegistrationLegacySerializer,
     DraftRegistrationDetailLegacySerializer,
     NodeContributorsSerializer,
@@ -1500,7 +1500,7 @@ class NodeStorageProvidersList(JSONAPIBaseView, generics.ListAPIView, NodeMixin)
     required_read_scopes = [CoreScopes.NODE_FILE_READ]
     required_write_scopes = [CoreScopes.NODE_FILE_WRITE]
 
-    serializer_class = NodeStorageProviderSerializer
+    serializer_class = AddonStorageProviderSerializer
     view_category = 'nodes'
     view_name = 'node-storage-providers'
 
@@ -1531,7 +1531,7 @@ class NodeStorageProviderDetail(JSONAPIBaseView, generics.RetrieveAPIView, NodeM
     required_read_scopes = [CoreScopes.NODE_FILE_READ]
     required_write_scopes = [CoreScopes.NODE_FILE_WRITE]
 
-    serializer_class = NodeStorageProviderSerializer
+    serializer_class = AddonStorageProviderSerializer
     view_category = 'nodes'
     view_name = 'node-storage-provider-detail'
 

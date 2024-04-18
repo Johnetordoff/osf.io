@@ -9,14 +9,14 @@ from osf_tests.factories import (
     RegistrationProviderFactory
 )
 from osf.models import SchemaResponse
-from osf.utils.workflows import ApprovalStates, RegistrationModerationStates
+from osf.utils.workflows import SanctionsStates, RegistrationModerationStates
 
 
 USER_ROLES = ['read', 'write', 'admin', 'moderator', 'non-contributor', 'unauthenticated']
 CONTRIBUTOR_ROLES = ['read', 'write', 'admin']
 
 UNAPPROVED_RESPONSE_STATES = [
-    state for state in ApprovalStates if state is not ApprovalStates.APPROVED
+    state for state in SanctionsStates if state is not SanctionsStates.APPROVED
 ]
 
 
@@ -79,7 +79,7 @@ class TestSchemaResponseListGETBehavior:
         '''A public SchemaResponse to ensure is present for all requests'''
         parent = RegistrationFactory(creator=admin_user, is_public=True)
         response = parent.schema_responses.last()
-        response.approvals_state_machine.set_state(ApprovalStates.APPROVED)
+        response.approvals_state_machine.set_state(SanctionsStates.APPROVED)
         response.save()
         return response
 
@@ -88,7 +88,7 @@ class TestSchemaResponseListGETBehavior:
         '''A SchemaResponse to configure per-test'''
         parent = RegistrationFactory(creator=admin_user, is_public=True)
         response = parent.schema_responses.last()
-        response.approvals_state_machine.set_state(ApprovalStates.APPROVED)
+        response.approvals_state_machine.set_state(SanctionsStates.APPROVED)
         response.save()
         return response
 
@@ -127,7 +127,7 @@ class TestSchemaResponseListGETBehavior:
     @pytest.mark.parametrize('is_public', [True, False])
     def test_GET__moderated_response_visibility(
             self, app, url, control_response, test_response, provider, is_public):
-        test_response.approvals_state_machine.set_state(ApprovalStates.PENDING_MODERATION)
+        test_response.approvals_state_machine.set_state(SanctionsStates.PENDING_MODERATION)
         test_response.save()
 
         test_registration = test_response.parent
@@ -274,7 +274,7 @@ class TestSchemaResponseListPOSTBehavior:
         response = SchemaResponse.create_initial_response(
             parent=registration, initiator=registration.creator
         )
-        response.approvals_state_machine.set_state(ApprovalStates.APPROVED)
+        response.approvals_state_machine.set_state(SanctionsStates.APPROVED)
         response.save()
         return response
 
@@ -330,7 +330,7 @@ class TestSchemaResponseListPOSTBehavior:
         assert created_response._id == resp.json['data']['id']
         assert created_response.parent == registration
         assert created_response.schema == registration.registration_schema
-        assert created_response.state is ApprovalStates.IN_PROGRESS
+        assert created_response.state is SanctionsStates.IN_PROGRESS
 
     def test_POST_with_previous_approved_response(
             self, app, url, registration, schema_response, payload, admin_user):

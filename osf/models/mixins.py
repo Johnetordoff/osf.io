@@ -35,7 +35,7 @@ from .validators import validate_subject_hierarchy, validate_email, expand_subje
 from osf.utils.fields import NonNaiveDateTimeField
 from osf.utils.datetime_aware_jsonfield import DateTimeAwareJSONField
 from osf.utils.machines import (
-    ReviewsMachine,
+    PreprintStateMachine,
     NodeRequestMachine,
     PreprintRequestMachine,
 )
@@ -45,8 +45,9 @@ from osf.utils.registrations import flatten_registration_metadata, expand_regist
 from osf.utils.workflows import (
     DefaultStates,
     DefaultTriggers,
-    ReviewStates,
-    ReviewTriggers,
+    PreprintStates,
+    PreprintTriggers,
+    AbstractProviderStates
 )
 
 from osf.utils.requests import get_request_and_user_id
@@ -871,17 +872,22 @@ class PreprintRequestableMixin(MachineableMixin):
     MachineClass = PreprintRequestMachine
 
 
-class ReviewableMixin(MachineableMixin):
+class PreprintStateMachineMixin(MachineableMixin):
     """Something that may be included in a reviewed collection and is subject to a reviews workflow.
     """
-    TriggersClass = ReviewTriggers
+    TriggersClass = PreprintTriggers
 
-    machine_state = models.CharField(max_length=15, db_index=True, choices=ReviewStates.choices(), default=ReviewStates.INITIAL.value)
+    machine_state = models.CharField(
+        max_length=15,
+        db_index=True,
+        choices=PreprintStates.choices(),
+        default=PreprintStates.INITIAL.value
+    )
 
     class Meta:
         abstract = True
 
-    MachineClass = ReviewsMachine
+    MachineClass = PreprintStateMachine
 
     @property
     def in_public_reviews_state(self):
@@ -955,12 +961,12 @@ class GuardianMixin(models.Model):
         return list(set(get_perms(user, self)) & set(self.perms_list))
 
 
-class ReviewProviderMixin(GuardianMixin):
+class ModerationProviderMixin(GuardianMixin):
     """A reviewed/moderated collection of objects.
     """
 
     REVIEWABLE_RELATION_NAME = None
-    REVIEW_STATES = ReviewStates
+    REVIEW_STATES = AbstractProviderStates
     STATE_FIELD_NAME = 'machine_state'
 
     groups = REVIEW_GROUPS
@@ -969,11 +975,16 @@ class ReviewProviderMixin(GuardianMixin):
     class Meta:
         abstract = True
 
-    reviews_workflow = models.CharField(null=True, blank=True, max_length=30, choices=Workflows.choices())
+    reviews_workflow = models.CharField(
+        null=True,
+        blank=True,
+        max_length=30,
+        choices=Workflows.choices()
+    )
     reviews_comments_private = models.BooleanField(null=True, blank=True)
     reviews_comments_anonymous = models.BooleanField(null=True, blank=True)
 
-    DEFAULT_SUBSCRIPTIONS = ['new_pending_submissions']
+    DEFAULT_EMAIL_SUBSCRIPTIONS = ['new_pending_submissions']
 
     @property
     def is_reviewed(self):
@@ -1012,7 +1023,7 @@ class ReviewProviderMixin(GuardianMixin):
 
     def add_to_group(self, user, group):
         # Add default notification subscription
-        for subscription in self.DEFAULT_SUBSCRIPTIONS:
+        for subscription in self.DEFAULT_EMAIL_SUBSCRIPTIONS:
             self.add_user_to_subscription(user, f'{self._id}_{subscription}')
 
         return self.get_group(group).user_set.add(user)
@@ -1024,7 +1035,7 @@ class ReviewProviderMixin(GuardianMixin):
                 raise ValueError('Cannot remove last admin.')
         if unsubscribe:
             # remove notification subscription
-            for subscription in self.DEFAULT_SUBSCRIPTIONS:
+            for subscription in self.DEFAULT_EMAIL_SUBSCRIPTIONS:
                 self.remove_user_from_subscription(user, f'{self._id}_{subscription}')
 
         return _group.user_set.remove(user)
