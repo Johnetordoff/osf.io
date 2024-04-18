@@ -6,7 +6,7 @@ from rest_framework import permissions as drf_permissions
 from api.base.utils import get_user_auth
 from osf.models import CollectionSubmissionAction
 from osf.models.action import BaseAction
-from osf.models.mixins import ReviewableMixin, ReviewProviderMixin
+from osf.models.mixins import PreprintStateMachineMixin, ModerationProviderMixin
 from osf.utils.workflows import ReviewTriggers
 from osf.utils import permissions as osf_permissions
 
@@ -30,10 +30,10 @@ class ReviewActionPermission(drf_permissions.BasePermission):
         if isinstance(obj, tuple(BaseAction.__subclasses__())):
             target = obj.target
             provider = target.provider
-        elif isinstance(obj, ReviewableMixin):
+        elif isinstance(obj, PreprintStateMachineMixin):
             target = obj
             provider = target.provider
-        elif isinstance(obj, ReviewProviderMixin):
+        elif isinstance(obj, ModerationProviderMixin):
             provider = obj
         elif isinstance(obj, CollectionSubmissionAction):
             provider = obj

@@ -28,7 +28,7 @@ from api.nodes.serializers import (
     NodeLicenseRelationshipField,
     NodeLicenseSerializer,
     NodeContributorsSerializer,
-    NodeStorageProviderSerializer,
+    AddonStorageProviderSerializer,
     NodeContributorsCreateSerializer,
     NodeContributorDetailSerializer,
     get_license_details,
@@ -480,7 +480,7 @@ class PreprintContributorDetailSerializer(NodeContributorDetailSerializer, Prepr
     index = ser.IntegerField(required=False, read_only=False, source='_order')
 
 
-class PreprintStorageProviderSerializer(NodeStorageProviderSerializer):
+class PreprintStorageProviderSerializer(AddonStorageProviderSerializer):
     node = HideIfPreprint(ser.CharField(source='node_id', read_only=True))
     preprint = ser.CharField(source='node_id', read_only=True)
 

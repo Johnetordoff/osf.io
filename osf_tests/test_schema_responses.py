@@ -8,7 +8,7 @@ from framework.exceptions import PermissionsError
 from osf.exceptions import PreviousSchemaResponseError, SchemaResponseStateError, SchemaResponseUpdateError
 from osf.models import RegistrationSchema, RegistrationSchemaBlock, SchemaResponseBlock
 from osf.models import schema_response  # import module for mocking purposes
-from osf.utils.workflows import ApprovalStates, SchemaResponseTriggers
+from osf.utils.workflows import SanctionsStates, SchemaResponseTriggers
 from osf_tests.factories import AuthUserFactory, ProjectFactory, RegistrationFactory, RegistrationProviderFactory
 from osf_tests.utils import get_default_test_schema, assert_notification_correctness, _ensure_subscriptions
 
@@ -78,7 +78,7 @@ def initial_response(registration):
         initiator=registration.creator,
         parent=registration
     )
-    response.approvals_state_machine.set_state(ApprovalStates.APPROVED)
+    response.approvals_state_machine.set_state(SanctionsStates.APPROVED)
     response.save()
     for block in response.response_blocks.all():
         block.response = INITIAL_SCHEMA_RESPONSES[block.schema_key]
@@ -270,13 +270,13 @@ class TestCreateSchemaResponse():
     @pytest.mark.parametrize(
         'invalid_response_state',
         [
-            ApprovalStates.IN_PROGRESS,
-            ApprovalStates.UNAPPROVED,
-            ApprovalStates.PENDING_MODERATION,
+            SanctionsStates.IN_PROGRESS,
+            SanctionsStates.UNAPPROVED,
+            SanctionsStates.PENDING_MODERATION,
             # The following states are, in-theory, unreachable, but check to be sure
-            ApprovalStates.REJECTED,
-            ApprovalStates.MODERATOR_REJECTED,
-            ApprovalStates.COMPLETED,
+            SanctionsStates.REJECTED,
+            SanctionsStates.MODERATOR_REJECTED,
+            SanctionsStates.COMPLETED,
         ]
     )
     def test_create_from_previous_response_fails_if_parent_has_unapproved_response(
@@ -288,7 +288,7 @@ class TestCreateSchemaResponse():
             initiator=initial_response.initiator,
             previous_response=initial_response
         )
-        intermediate_response.approvals_state_machine.set_state(ApprovalStates.APPROVED)
+        intermediate_response.approvals_state_machine.set_state(SanctionsStates.APPROVED)
         intermediate_response.save()
 
         initial_response.approvals_state_machine.set_state(invalid_response_state)
@@ -336,7 +336,7 @@ class TestUpdateSchemaResponses():
             'q5': 'Roonil Wazlib, et al',
             'q6': [{'file_id': '123456'}],
         }
-        initial_response.approvals_state_machine.set_state(ApprovalStates.IN_PROGRESS)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.IN_PROGRESS)
         initial_response.save()
         initial_response.update_responses(updated_responses)
 
@@ -349,7 +349,7 @@ class TestUpdateSchemaResponses():
         # Call set to force evaluation
         initial_block_ids = set(initial_response.response_blocks.values_list('id', flat=True))
 
-        initial_response.approvals_state_machine.set_state(ApprovalStates.IN_PROGRESS)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.IN_PROGRESS)
         initial_response.save()
         initial_response.update_responses(
             {
@@ -478,13 +478,13 @@ class TestUpdateSchemaResponses():
     @pytest.mark.parametrize(
         'invalid_response_state',
         [
-            ApprovalStates.UNAPPROVED,
-            ApprovalStates.PENDING_MODERATION,
-            ApprovalStates.APPROVED,
+            SanctionsStates.UNAPPROVED,
+            SanctionsStates.PENDING_MODERATION,
+            SanctionsStates.APPROVED,
             # The following states are, in-theory, unreachable, but check to be sure
-            ApprovalStates.REJECTED,
-            ApprovalStates.MODERATOR_REJECTED,
-            ApprovalStates.COMPLETED,
+            SanctionsStates.REJECTED,
+            SanctionsStates.MODERATOR_REJECTED,
+            SanctionsStates.COMPLETED,
         ]
     )
     def test_update_fails_if_state_is_invalid(self, invalid_response_state, initial_response):
@@ -508,7 +508,7 @@ class TestDeleteSchemaResponse():
     def test_delete_schema_response_deletes_schema_response_blocks(self, initial_response):
         # initial_response is the only current source of SchemaResponseBlocks,
         # so all should be deleted
-        initial_response.approvals_state_machine.set_state(ApprovalStates.IN_PROGRESS)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.IN_PROGRESS)
         initial_response.save()
         initial_response.delete()
         assert not SchemaResponseBlock.objects.exists()
@@ -532,13 +532,13 @@ class TestDeleteSchemaResponse():
     @pytest.mark.parametrize(
         'invalid_response_state',
         [
-            ApprovalStates.UNAPPROVED,
-            ApprovalStates.PENDING_MODERATION,
-            ApprovalStates.APPROVED,
+            SanctionsStates.UNAPPROVED,
+            SanctionsStates.PENDING_MODERATION,
+            SanctionsStates.APPROVED,
             # The following states are, in-theory, unreachable, but check to be sure
-            ApprovalStates.REJECTED,
-            ApprovalStates.MODERATOR_REJECTED,
-            ApprovalStates.COMPLETED,
+            SanctionsStates.REJECTED,
+            SanctionsStates.MODERATOR_REJECTED,
+            SanctionsStates.COMPLETED,
         ]
     )
     def test_delete_fails_if_state_is_invalid(self, invalid_response_state, initial_response):
@@ -553,19 +553,19 @@ class TestUnmoderatedSchemaResponseApprovalFlows():
 
     def test_submit_response_adds_pending_approvers(
             self, initial_response, admin_user, alternate_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.IN_PROGRESS)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.IN_PROGRESS)
         initial_response.update_responses({'q1': 'must change one response or can\'t submit'})
         initial_response.revision_justification = 'has for valid revision_justification for submission'
         initial_response.save()
 
         initial_response.submit(user=admin_user, required_approvers=[admin_user, alternate_user])
 
-        assert initial_response.state is ApprovalStates.UNAPPROVED
+        assert initial_response.state is SanctionsStates.UNAPPROVED
         for user in [admin_user, alternate_user]:
             assert user in initial_response.pending_approvers.all()
 
     def test_submit_response_writes_schema_response_action(self, initial_response, admin_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.IN_PROGRESS)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.IN_PROGRESS)
         initial_response.update_responses({'q1': 'must change one response or can\'t submit'})
         initial_response.revision_justification = 'has for valid revision_justification for submission'
         initial_response.save()
@@ -575,13 +575,13 @@ class TestUnmoderatedSchemaResponseApprovalFlows():
 
         new_action = initial_response.actions.last()
         assert new_action.creator == admin_user
-        assert new_action.from_state == ApprovalStates.IN_PROGRESS.db_name
-        assert new_action.to_state == ApprovalStates.UNAPPROVED.db_name
+        assert new_action.from_state == SanctionsStates.IN_PROGRESS.db_name
+        assert new_action.to_state == SanctionsStates.UNAPPROVED.db_name
         assert new_action.trigger == SchemaResponseTriggers.SUBMIT.db_name
 
     def test_submit_response_notification(
             self, revised_response, admin_user, notification_recipients):
-        revised_response.approvals_state_machine.set_state(ApprovalStates.IN_PROGRESS)
+        revised_response.approvals_state_machine.set_state(SanctionsStates.IN_PROGRESS)
         revised_response.update_responses({'q1': 'must change one response or can\'t submit'})
         revised_response.revision_justification = 'has for valid revision_justification for submission'
         revised_response.save()
@@ -596,7 +596,7 @@ class TestUnmoderatedSchemaResponseApprovalFlows():
         )
 
     def test_no_submit_notification_on_initial_response(self, initial_response, admin_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.IN_PROGRESS)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.IN_PROGRESS)
         initial_response.update_responses({'q1': 'must change one response or can\'t submit'})
         initial_response.revision_justification = 'has for valid revision_justification for submission'
         initial_response.save()
@@ -605,13 +605,13 @@ class TestUnmoderatedSchemaResponseApprovalFlows():
         assert not mock_send.called
 
     def test_submit_response_requires_user(self, initial_response, admin_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.IN_PROGRESS)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.IN_PROGRESS)
         initial_response.save()
         with assert_raises(PermissionsError):
             initial_response.submit(required_approvers=[admin_user])
 
     def test_submit_fails_with_invalid_response_value(self, initial_response, admin_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.IN_PROGRESS)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.IN_PROGRESS)
         initial_response.save()
         invalid_block = initial_response.response_blocks.get(schema_key='q1')
         invalid_block.response = 1
@@ -621,7 +621,7 @@ class TestUnmoderatedSchemaResponseApprovalFlows():
             initial_response.submit(user=admin_user, required_approvers=[admin_user])
 
     def test_submit_fails_with_missing_required_response(self, initial_response, admin_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.IN_PROGRESS)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.IN_PROGRESS)
         initial_response.save()
         invalid_block = initial_response.response_blocks.get(schema_key='q1')
         invalid_block.response = ''
@@ -631,32 +631,32 @@ class TestUnmoderatedSchemaResponseApprovalFlows():
             initial_response.submit(user=admin_user, required_approvers=[admin_user])
 
     def test_submit_response_requires_required_approvers(self, initial_response, admin_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.IN_PROGRESS)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.IN_PROGRESS)
         initial_response.save()
         with assert_raises(ValueError):
             initial_response.submit(user=admin_user)
 
     def test_non_parent_admin_cannot_submit_response(self, initial_response, alternate_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.IN_PROGRESS)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.IN_PROGRESS)
         initial_response.save()
         with assert_raises(PermissionsError):
             initial_response.submit(user=alternate_user)
 
     def test_approve_response_requires_all_approvers(
             self, initial_response, admin_user, alternate_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.UNAPPROVED)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.UNAPPROVED)
         initial_response.save()
         initial_response.pending_approvers.add(admin_user, alternate_user)
 
         initial_response.approve(user=admin_user)
-        assert initial_response.state is ApprovalStates.UNAPPROVED
+        assert initial_response.state is SanctionsStates.UNAPPROVED
 
         initial_response.approve(user=alternate_user)
-        assert initial_response.state is ApprovalStates.APPROVED
+        assert initial_response.state is SanctionsStates.APPROVED
 
     def test_approve_response_writes_schema_response_action(
             self, initial_response, admin_user, alternate_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.UNAPPROVED)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.UNAPPROVED)
         initial_response.save()
         initial_response.pending_approvers.add(admin_user, alternate_user)
 
@@ -665,8 +665,8 @@ class TestUnmoderatedSchemaResponseApprovalFlows():
         # Confirm that action for first "approve" still has to_state of UNAPPROVED
         new_action = initial_response.actions.last()
         assert new_action.creator == admin_user
-        assert new_action.from_state == ApprovalStates.UNAPPROVED.db_name
-        assert new_action.to_state == ApprovalStates.UNAPPROVED.db_name
+        assert new_action.from_state == SanctionsStates.UNAPPROVED.db_name
+        assert new_action.to_state == SanctionsStates.UNAPPROVED.db_name
         assert new_action.trigger == SchemaResponseTriggers.APPROVE.db_name
 
         initial_response.approve(user=alternate_user)
@@ -674,8 +674,8 @@ class TestUnmoderatedSchemaResponseApprovalFlows():
         # Confirm that action for final "approve" has to_state of APPROVED
         new_action = initial_response.actions.last()
         assert new_action.creator == alternate_user
-        assert new_action.from_state == ApprovalStates.UNAPPROVED.db_name
-        assert new_action.to_state == ApprovalStates.APPROVED.db_name
+        assert new_action.from_state == SanctionsStates.UNAPPROVED.db_name
+        assert new_action.to_state == SanctionsStates.APPROVED.db_name
         assert new_action.trigger == SchemaResponseTriggers.APPROVE.db_name
 
         # Confirm that final approval writes only one action
@@ -685,7 +685,7 @@ class TestUnmoderatedSchemaResponseApprovalFlows():
 
     def test_approve_response_notification(
             self, revised_response, admin_user, alternate_user, notification_recipients):
-        revised_response.approvals_state_machine.set_state(ApprovalStates.UNAPPROVED)
+        revised_response.approvals_state_machine.set_state(SanctionsStates.UNAPPROVED)
         revised_response.save()
         revised_response.pending_approvers.add(admin_user, alternate_user)
 
@@ -701,7 +701,7 @@ class TestUnmoderatedSchemaResponseApprovalFlows():
         )
 
     def test_no_approve_notification_on_initial_response(self, initial_response, admin_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.UNAPPROVED)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.UNAPPROVED)
         initial_response.save()
         initial_response.pending_approvers.add(admin_user)
 
@@ -710,7 +710,7 @@ class TestUnmoderatedSchemaResponseApprovalFlows():
         assert not mock_send.called
 
     def test_approve_response_requires_user(self, initial_response, admin_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.UNAPPROVED)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.UNAPPROVED)
         initial_response.save()
         initial_response.pending_approvers.add(admin_user)
         with assert_raises(PermissionsError):
@@ -718,7 +718,7 @@ class TestUnmoderatedSchemaResponseApprovalFlows():
 
     def test_non_approver_cannot_approve_response(
             self, initial_response, admin_user, alternate_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.UNAPPROVED)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.UNAPPROVED)
         initial_response.save()
         initial_response.pending_approvers.add(admin_user)
 
@@ -726,17 +726,17 @@ class TestUnmoderatedSchemaResponseApprovalFlows():
             initial_response.approve(user=alternate_user)
 
     def test_reject_response_moves_state_to_in_progress(self, initial_response, admin_user, alternate_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.UNAPPROVED)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.UNAPPROVED)
         initial_response.save()
         initial_response.pending_approvers.add(admin_user, alternate_user)
 
         # Implicitly confirm that only one reject call is needed to advance state
         initial_response.reject(user=admin_user)
-        assert initial_response.state is ApprovalStates.IN_PROGRESS
+        assert initial_response.state is SanctionsStates.IN_PROGRESS
 
     def test_reject_response_clears_pending_approvers(
             self, initial_response, admin_user, alternate_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.UNAPPROVED)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.UNAPPROVED)
         initial_response.save()
         initial_response.pending_approvers.add(admin_user, alternate_user)
 
@@ -745,7 +745,7 @@ class TestUnmoderatedSchemaResponseApprovalFlows():
         assert not initial_response.pending_approvers.exists()
 
     def test_reject_response_writes_schema_response_action(self, initial_response, admin_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.UNAPPROVED)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.UNAPPROVED)
         initial_response.pending_approvers.add(admin_user)
         initial_response.save()
 
@@ -753,13 +753,13 @@ class TestUnmoderatedSchemaResponseApprovalFlows():
 
         new_action = initial_response.actions.last()
         assert new_action.creator == admin_user
-        assert new_action.from_state == ApprovalStates.UNAPPROVED.db_name
-        assert new_action.to_state == ApprovalStates.IN_PROGRESS.db_name
+        assert new_action.from_state == SanctionsStates.UNAPPROVED.db_name
+        assert new_action.to_state == SanctionsStates.IN_PROGRESS.db_name
         assert new_action.trigger == SchemaResponseTriggers.ADMIN_REJECT.db_name
 
     def test_reject_response_notification(
             self, revised_response, admin_user, notification_recipients):
-        revised_response.approvals_state_machine.set_state(ApprovalStates.UNAPPROVED)
+        revised_response.approvals_state_machine.set_state(SanctionsStates.UNAPPROVED)
         revised_response.save()
         revised_response.pending_approvers.add(admin_user)
 
@@ -773,7 +773,7 @@ class TestUnmoderatedSchemaResponseApprovalFlows():
         )
 
     def test_no_reject_notification_on_initial_response(self, initial_response, admin_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.UNAPPROVED)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.UNAPPROVED)
         initial_response.save()
         initial_response.pending_approvers.add(admin_user)
 
@@ -782,7 +782,7 @@ class TestUnmoderatedSchemaResponseApprovalFlows():
         assert not mock_send.called
 
     def test_reject_response_requires_user(self, initial_response, admin_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.UNAPPROVED)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.UNAPPROVED)
         initial_response.save()
         initial_response.pending_approvers.add(admin_user)
 
@@ -791,7 +791,7 @@ class TestUnmoderatedSchemaResponseApprovalFlows():
 
     def test_non_approver_cannnot_reject_response(
             self, initial_response, admin_user, alternate_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.UNAPPROVED)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.UNAPPROVED)
         initial_response.save()
         initial_response.pending_approvers.add(admin_user)
 
@@ -799,7 +799,7 @@ class TestUnmoderatedSchemaResponseApprovalFlows():
             initial_response.reject(user=alternate_user)
 
     def test_approver_cannot_call_accept_directly(self, initial_response, admin_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.UNAPPROVED)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.UNAPPROVED)
         initial_response.save()
         initial_response.pending_approvers.add(admin_user)
 
@@ -807,16 +807,16 @@ class TestUnmoderatedSchemaResponseApprovalFlows():
             initial_response.accept(user=admin_user)
 
     def test_internal_accept_advances_state(self, initial_response, admin_user, alternate_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.UNAPPROVED)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.UNAPPROVED)
         initial_response.save()
         initial_response.pending_approvers.add(admin_user, alternate_user)
 
         initial_response.accept()
 
-        assert initial_response.state is ApprovalStates.APPROVED
+        assert initial_response.state is SanctionsStates.APPROVED
 
     def test_internal_accept_clears_pending_approvers(self, initial_response, admin_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.UNAPPROVED)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.UNAPPROVED)
         initial_response.save()
         initial_response.pending_approvers.add(admin_user)
 
@@ -850,17 +850,17 @@ class TestModeratedSchemaResponseApprovalFlows():
         return registration
 
     def test_moderated_response_requires_moderation(self, initial_response, admin_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.UNAPPROVED)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.UNAPPROVED)
         initial_response.save()
         initial_response.pending_approvers.add(admin_user)
 
         initial_response.approve(user=admin_user)
 
-        assert initial_response.state is ApprovalStates.PENDING_MODERATION
+        assert initial_response.state is SanctionsStates.PENDING_MODERATION
 
     def test_schema_response_action_to_state_following_moderated_approve_is_pending_moderation(
             self, initial_response, admin_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.UNAPPROVED)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.UNAPPROVED)
         initial_response.save()
         initial_response.pending_approvers.add(admin_user)
 
@@ -868,12 +868,12 @@ class TestModeratedSchemaResponseApprovalFlows():
 
         new_action = initial_response.actions.last()
         assert new_action.creator == admin_user
-        assert new_action.from_state == ApprovalStates.UNAPPROVED.db_name
-        assert new_action.to_state == ApprovalStates.PENDING_MODERATION.db_name
+        assert new_action.from_state == SanctionsStates.UNAPPROVED.db_name
+        assert new_action.to_state == SanctionsStates.PENDING_MODERATION.db_name
         assert new_action.trigger == SchemaResponseTriggers.APPROVE.db_name
 
     def test_accept_notification_sent_on_admin_approval(self, revised_response, admin_user):
-        revised_response.approvals_state_machine.set_state(ApprovalStates.UNAPPROVED)
+        revised_response.approvals_state_machine.set_state(SanctionsStates.UNAPPROVED)
         revised_response.save()
         revised_response.pending_approvers.add(admin_user)
 
@@ -884,7 +884,7 @@ class TestModeratedSchemaResponseApprovalFlows():
         assert mock_send.called
 
     def test_moderators_notified_on_admin_approval(self, revised_response, admin_user, moderator):
-        revised_response.approvals_state_machine.set_state(ApprovalStates.UNAPPROVED)
+        revised_response.approvals_state_machine.set_state(SanctionsStates.UNAPPROVED)
         revised_response.save()
         revised_response.pending_approvers.add(admin_user)
 
@@ -898,7 +898,7 @@ class TestModeratedSchemaResponseApprovalFlows():
 
     def test_no_moderator_notification_on_admin_approval_of_initial_response(
             self, initial_response, admin_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.UNAPPROVED)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.UNAPPROVED)
         initial_response.save()
         initial_response.pending_approvers.add(admin_user)
 
@@ -907,28 +907,28 @@ class TestModeratedSchemaResponseApprovalFlows():
         assert not mock_store.called
 
     def test_moderator_accept(self, initial_response, moderator):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.PENDING_MODERATION)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.PENDING_MODERATION)
         initial_response.save()
 
         initial_response.accept(user=moderator)
 
-        assert initial_response.state is ApprovalStates.APPROVED
+        assert initial_response.state is SanctionsStates.APPROVED
 
     def test_moderator_accept_writes_schema_response_action(self, initial_response, moderator):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.PENDING_MODERATION)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.PENDING_MODERATION)
         initial_response.save()
 
         initial_response.accept(user=moderator)
 
         new_action = initial_response.actions.last()
         assert new_action.creator == moderator
-        assert new_action.from_state == ApprovalStates.PENDING_MODERATION.db_name
-        assert new_action.to_state == ApprovalStates.APPROVED.db_name
+        assert new_action.from_state == SanctionsStates.PENDING_MODERATION.db_name
+        assert new_action.to_state == SanctionsStates.APPROVED.db_name
         assert new_action.trigger == SchemaResponseTriggers.ACCEPT.db_name
 
     def test_moderator_accept_notification(
             self, revised_response, moderator, notification_recipients):
-        revised_response.approvals_state_machine.set_state(ApprovalStates.PENDING_MODERATION)
+        revised_response.approvals_state_machine.set_state(SanctionsStates.PENDING_MODERATION)
         revised_response.save()
 
         send_mail = mails.send_mail
@@ -942,7 +942,7 @@ class TestModeratedSchemaResponseApprovalFlows():
 
     def test_no_moderator_accept_notification_on_initial_response(
             self, initial_response, moderator):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.PENDING_MODERATION)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.PENDING_MODERATION)
         initial_response.save()
 
         with mock.patch.object(schema_response.mails, 'send_mail', autospec=True) as mock_send:
@@ -950,29 +950,29 @@ class TestModeratedSchemaResponseApprovalFlows():
         assert not mock_send.called
 
     def test_moderator_reject(self, initial_response, admin_user, moderator):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.PENDING_MODERATION)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.PENDING_MODERATION)
         initial_response.save()
 
         initial_response.reject(user=moderator)
 
-        assert initial_response.state is ApprovalStates.IN_PROGRESS
+        assert initial_response.state is SanctionsStates.IN_PROGRESS
 
     def test_moderator_reject_writes_schema_response_action(
             self, initial_response, admin_user, moderator):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.PENDING_MODERATION)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.PENDING_MODERATION)
         initial_response.save()
 
         initial_response.reject(user=moderator)
 
         new_action = initial_response.actions.last()
         assert new_action.creator == moderator
-        assert new_action.from_state == ApprovalStates.PENDING_MODERATION.db_name
-        assert new_action.to_state == ApprovalStates.IN_PROGRESS.db_name
+        assert new_action.from_state == SanctionsStates.PENDING_MODERATION.db_name
+        assert new_action.to_state == SanctionsStates.IN_PROGRESS.db_name
         assert new_action.trigger == SchemaResponseTriggers.MODERATOR_REJECT.db_name
 
     def test_moderator_reject_notification(
             self, revised_response, moderator, notification_recipients):
-        revised_response.approvals_state_machine.set_state(ApprovalStates.PENDING_MODERATION)
+        revised_response.approvals_state_machine.set_state(SanctionsStates.PENDING_MODERATION)
         revised_response.save()
 
         send_mail = mails.send_mail
@@ -986,7 +986,7 @@ class TestModeratedSchemaResponseApprovalFlows():
 
     def test_no_moderator_reject_notification_on_initial_response(
             self, initial_response, moderator):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.PENDING_MODERATION)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.PENDING_MODERATION)
         initial_response.save()
 
         with mock.patch.object(schema_response.mails, 'send_mail', autospec=True) as mock_send:
@@ -994,7 +994,7 @@ class TestModeratedSchemaResponseApprovalFlows():
         assert not mock_send.called
 
     def test_moderator_cannot_submit(self, initial_response, moderator):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.IN_PROGRESS)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.IN_PROGRESS)
         initial_response.save()
 
         with assert_raises(PermissionsError):
@@ -1002,7 +1002,7 @@ class TestModeratedSchemaResponseApprovalFlows():
 
     def test_moderator_cannot_approve_in_unapproved_state(
             self, initial_response, admin_user, moderator):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.UNAPPROVED)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.UNAPPROVED)
         initial_response.save()
 
         with assert_raises(PermissionsError):
@@ -1010,28 +1010,28 @@ class TestModeratedSchemaResponseApprovalFlows():
 
     def test_moderator_cannot_reject_in_unapproved_state(
             self, initial_response, admin_user, moderator):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.UNAPPROVED)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.UNAPPROVED)
         initial_response.save()
 
         with assert_raises(PermissionsError):
             initial_response.reject(user=moderator)
 
     def test_admin_cannot_accept_in_pending_moderation(self, initial_response, admin_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.PENDING_MODERATION)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.PENDING_MODERATION)
         initial_response.save()
 
         with assert_raises(PermissionsError):
             initial_response.accept(user=admin_user)
 
     def test_admin_cannot_reject_in_pending_moderation(self, initial_response, admin_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.PENDING_MODERATION)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.PENDING_MODERATION)
         initial_response.save()
 
         with assert_raises(PermissionsError):
             initial_response.reject(user=admin_user)
 
     def test_user_required_to_accept_in_pending_moderation(self, initial_response, admin_user):
-        initial_response.approvals_state_machine.set_state(ApprovalStates.PENDING_MODERATION)
+        initial_response.approvals_state_machine.set_state(SanctionsStates.PENDING_MODERATION)
         initial_response.save()
 
         with assert_raises(PermissionsError):

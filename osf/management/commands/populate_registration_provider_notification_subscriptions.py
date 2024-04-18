@@ -16,7 +16,7 @@ def populate_registration_provider_notification_subscriptions():
             logger.warn('Unable to find groups for provider "{}", assuming there are no subscriptions to create.'.format(provider._id))
             continue
 
-        for subscription in provider.DEFAULT_SUBSCRIPTIONS:
+        for subscription in provider.DEFAULT_EMAIL_SUBSCRIPTIONS:
             instance, created = NotificationSubscription.objects.get_or_create(
                 _id=f'{provider._id}_{subscription}',
                 event_name=subscription,

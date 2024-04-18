@@ -7,7 +7,7 @@ from framework.celery_tasks import app as celery_app
 from transitions import MachineError
 
 from osf.models import SchemaResponse
-from osf.utils.workflows import ApprovalStates
+from osf.utils.workflows import SanctionsStates
 
 from website.settings import REGISTRATION_UPDATE_APPROVAL_TIME
 
@@ -27,7 +27,7 @@ def approve_pending_schema_responses(dry_run=False):
     # for longer than the environment's auto-approval threshold
     auto_approval_threshold = timezone.now() - REGISTRATION_UPDATE_APPROVAL_TIME
     pending_schema_responses = SchemaResponse.objects.filter(
-        reviews_state=ApprovalStates.UNAPPROVED.db_name,
+        reviews_state=SanctionsStates.UNAPPROVED.db_name,
         submitted_timestamp__lte=auto_approval_threshold,
         previous_response__isnull=False,
     )

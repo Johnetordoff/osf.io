@@ -5,7 +5,7 @@ from .action import (
     NodeRequestAction,
     PreprintRequestAction,
     RegistrationAction,
-    ReviewAction,
+    PreprintStateAction,
     SchemaResponseAction,
 )
 from .admin_log_entry import AdminLogEntry

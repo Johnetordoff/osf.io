@@ -3,7 +3,7 @@ import pytest
 from django.utils import timezone
 
 from api.providers.workflows import Workflows as ModerationWorkflows
-from osf.utils.workflows import ApprovalStates, SchemaResponseTriggers
+from osf.utils.workflows import SanctionsStates, SchemaResponseTriggers
 from osf_tests.factories import (
     AuthUserFactory,
     RegistrationFactory,
@@ -14,10 +14,10 @@ from osf_tests.utils import get_default_test_schema
 
 USER_ROLES = ['read', 'write', 'admin', 'moderator', 'non-contributor', 'unauthenticated']
 UNAPPROVED_RESPONSE_STATES = [
-    state for state in ApprovalStates if state is not ApprovalStates.APPROVED
+    state for state in SanctionsStates if state is not SanctionsStates.APPROVED
 ]
 DEFAULT_REVIEWS_WORKFLOW = ModerationWorkflows.PRE_MODERATION.value
-DEFAULT_SCHEMA_RESPONSE_STATE = ApprovalStates.APPROVED
+DEFAULT_SCHEMA_RESPONSE_STATE = SanctionsStates.APPROVED
 DEFAULT_TRIGGER = SchemaResponseTriggers.SUBMIT
 
 
@@ -101,7 +101,7 @@ class TestSchemaResponseActionDetailGETPermissions:
             return 403
 
         # All users can GET APPROVED responses on public registrations
-        if registration_status == 'public' and schema_response_state is ApprovalStates.APPROVED:
+        if registration_status == 'public' and schema_response_state is SanctionsStates.APPROVED:
             return 200
 
         # unauthenticated users and non-contributors cannot see any other responses
@@ -113,7 +113,7 @@ class TestSchemaResponseActionDetailGETPermissions:
         # Moderators can GET PENDING_MODERATION and APPROVED SchemaResponses on
         # public or private registrations that are part of a moderated registry
         if role == 'moderator':
-            moderator_visible_states = [ApprovalStates.PENDING_MODERATION, ApprovalStates.APPROVED]
+            moderator_visible_states = [SanctionsStates.PENDING_MODERATION, SanctionsStates.APPROVED]
             if schema_response_state in moderator_visible_states and reviews_workflow is not None:
                 return 200
             else:
@@ -127,7 +127,7 @@ class TestSchemaResponseActionDetailGETPermissions:
         raise ValueError(f'Unrecognized role {role}')
 
     @pytest.mark.parametrize('registration_status', ['public', 'private'])
-    @pytest.mark.parametrize('schema_response_state', ApprovalStates)
+    @pytest.mark.parametrize('schema_response_state', SanctionsStates)
     @pytest.mark.parametrize('role', ['read', 'write', 'admin', 'non-contributor', 'unauthenticated'])
     def test_GET_status_code__as_user(self, app, registration_status, schema_response_state, role):
         auth, schema_response, _, _ = configure_test_preconditions(
@@ -146,7 +146,7 @@ class TestSchemaResponseActionDetailGETPermissions:
         assert resp.status_code == expected_code
 
     @pytest.mark.parametrize('registration_status', ['public', 'private'])
-    @pytest.mark.parametrize('schema_response_state', ApprovalStates)
+    @pytest.mark.parametrize('schema_response_state', SanctionsStates)
     @pytest.mark.parametrize('reviews_workflow', [ModerationWorkflows.PRE_MODERATION.value, None])
     def test_GET_status_code__as_moderator(
             self, app, registration_status, schema_response_state, reviews_workflow):
@@ -217,8 +217,8 @@ class TestSchemaResponseActionDetailGETBehavior:
         return schema_response.actions.create(
             creator=schema_response.initiator,
             trigger=SchemaResponseTriggers.SUBMIT.db_name,
-            from_state=ApprovalStates.IN_PROGRESS.db_name,
-            to_state=ApprovalStates.UNAPPROVED.db_name
+            from_state=SanctionsStates.IN_PROGRESS.db_name,
+            to_state=SanctionsStates.UNAPPROVED.db_name
         )
 
     @pytest.fixture()
@@ -233,8 +233,8 @@ class TestSchemaResponseActionDetailGETBehavior:
         assert data['relationships']['creator']['data']['id'] == admin_user._id
         assert data['relationships']['target']['data']['id'] == schema_response._id
         assert data['attributes']['trigger'] == SchemaResponseTriggers.SUBMIT.db_name
-        assert data['attributes']['from_state'] == ApprovalStates.IN_PROGRESS.db_name
-        assert data['attributes']['to_state'] == ApprovalStates.UNAPPROVED.db_name
+        assert data['attributes']['from_state'] == SanctionsStates.IN_PROGRESS.db_name
+        assert data['attributes']['to_state'] == SanctionsStates.UNAPPROVED.db_name
 
 @pytest.mark.django_db
 class TestSchemaResponseActionDetailUnsupportedMethods:

@@ -22,7 +22,7 @@ from api.requests.permissions import NodeRequestPermission, PreprintRequestPermi
 from framework.auth.oauth_scopes import CoreScopes
 from osf.models import (
     PreprintProvider,
-    ReviewAction,
+    PreprintStateAction,
     NodeRequestAction,
     PreprintRequestAction,
     BaseAction,
@@ -31,7 +31,7 @@ from osf.models import (
 
 
 def get_review_actions_queryset():
-    return ReviewAction.objects.prefetch_related(
+    return PreprintStateAction.objects.prefetch_related(
         'creator__guids',
         'target__guids',
         'target__provider',
@@ -163,7 +163,7 @@ class ReviewActionListCreate(JSONAPIBaseView, generics.ListCreateAPIView, ListFi
 
     parser_classes = (JSONAPIMultipleRelationshipsParser, JSONAPIMultipleRelationshipsParserForRegularJSON,)
     serializer_class = ReviewActionSerializer
-    model_class = ReviewAction
+    model_class = PreprintStateAction
 
     ordering = ('-created',)
     view_category = 'actions'

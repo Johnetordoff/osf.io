@@ -11,7 +11,7 @@ def populate_collection_provider_notification_subscriptions():
         provider_admins = provider.get_group('admin').user_set.all()
         provider_moderators = provider.get_group('moderator').user_set.all()
 
-        for subscription in provider.DEFAULT_SUBSCRIPTIONS:
+        for subscription in provider.DEFAULT_EMAIL_SUBSCRIPTIONS:
             instance, created = NotificationSubscription.objects.get_or_create(
                 _id=f'{provider._id}_{subscription}',
                 event_name=subscription,

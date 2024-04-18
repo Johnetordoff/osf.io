@@ -6,17 +6,17 @@ from framework.auth import Auth
 
 from osf.exceptions import InvalidTransitionError
 from osf.models.preprintlog import PreprintLog
-from osf.models.action import ReviewAction, NodeRequestAction, PreprintRequestAction
+from osf.models.action import PreprintStateAction, NodeRequestAction, PreprintRequestAction
 
 from osf.utils import permissions
 from osf.utils.workflows import (
     DefaultStates,
     DefaultTriggers,
-    ReviewStates,
-    ApprovalStates,
+    PreprintStates,
+    SanctionsStates,
     DEFAULT_TRANSITIONS,
-    REVIEWABLE_TRANSITIONS,
-    APPROVAL_TRANSITIONS,
+    PREPRINT_TRANSITIONS,
+    SANCTION_TRANSITIONS,
     CollectionSubmissionStates,
     COLLECTION_SUBMISSION_TRANSITIONS,
 )
@@ -98,13 +98,26 @@ class BaseMachine(Machine):
         self.machineable.date_last_transitioned = now
 
 
-class ReviewsMachine(BaseMachine):
-    ActionClass = ReviewAction
-    States = ReviewStates
-    Transitions = REVIEWABLE_TRANSITIONS
+class PreprintStateMachine(BaseMachine):
+    ActionClass = PreprintStateAction
+    States = PreprintStates
+    Transitions = PREPRINT_TRANSITIONS
 
     def save_changes(self, ev):
         now = self.action.created if self.action is not None else timezone.now()
+        should_publish = self.machineable.in_public_reviews_state
+        if self.machineable.is_retracted:
+            pass  # Do not alter published state
+        elif should_publish and not self.machineable.is_published:
+            self.machineable.date_published = now
+            self.machineable.is_published = True
+            self.machineable.ever_public = True
+        elif not should_publish and self.machineable.is_published:
+            self.machineable.is_published = False
+
+        self.machineable.save()
+
+    def validate_changes(self, ev):
         should_publish = self.machineable.in_public_reviews_state
         if self.machineable.is_retracted:
             pass  # Do not alter published state
@@ -115,12 +128,6 @@ class ReviewsMachine(BaseMachine):
                 raise ValueError('Preprint provider not specified; cannot publish.')
             if not self.machineable.subjects.exists():
                 raise ValueError('Preprint must have at least one subject to be published.')
-            self.machineable.date_published = now
-            self.machineable.is_published = True
-            self.machineable.ever_public = True
-        elif not should_publish and self.machineable.is_published:
-            self.machineable.is_published = False
-        self.machineable.save()
 
     def resubmission_allowed(self, ev):
         return self.machineable.provider.reviews_workflow == Workflows.PRE_MODERATION.value
@@ -317,15 +324,15 @@ class PreprintRequestMachine(BaseMachine):
         }
 
 
-class ApprovalsMachine(Machine):
-    '''ApprovalsMachine manages state transitions for Sanction and SchemaResponses entities.
+class SanctionMachine(Machine):
+    '''SanctionMachine manages state transitions for Sanction and SchemaResponses entities.
 
-    The valid machine states for a Sanction object are defined in Workflows.ApprovalStates.
-    The valid transitions between these states are defined in Workflows.APPROVAL_TRANSITIONS.
+    The valid machine states for a Sanction object are defined in Workflows.SanctionsStates.
+    The valid transitions between these states are defined in Workflows.SANCTION_TRANSITIONS.
 
-    The ApprovaslMachine can be used by by instantiating an ApprovalsMachine and attaching the
+    The ApprovaslMachine can be used by by instantiating an SanctionMachine and attaching the
     desired model with the 'model' kwarg. Attached models will inherit the 'trigger' functions
-    named in the APPROVAL_TRANSITIONS dictionary (submit, approve, accept, and reject).
+    named in the SANCTION_TRANSITIONS dictionary (submit, approve, accept, and reject).
 
     These trigger functions will, in order,
     1) Call any 'prepare_event' functions defined on the StateMachine (see __init__)
@@ -343,7 +350,7 @@ class ApprovalsMachine(Machine):
     If any step fails, the whole transition will fail and the Sanction's
     approval_stage will be rolled back.
 
-    ApprovalsMachine also provides some extra functionality to  provide custom
+    SanctionMachine also provides some extra functionality to  provide custom
     error messages on certain unsupported state changes.
     '''
 
@@ -351,8 +358,8 @@ class ApprovalsMachine(Machine):
 
         super().__init__(
             model=model,
-            states=ApprovalStates,
-            transitions=APPROVAL_TRANSITIONS,
+            states=SanctionsStates,
+            transitions=SANCTION_TRANSITIONS,
             initial=active_state,
             model_attribute=state_property_name,
             after_state_change='_save_transition',
@@ -360,29 +367,6 @@ class ApprovalsMachine(Machine):
             queued=True,
         )
 
-    def get_current_state(self):
-        # ApprovalsMachine should never have more than one model
-        model = self.models[0]
-        return self.get_model_state(model)
-
-    def _process(self, *args, **kwargs):
-        '''Wrap superclass _process to handle expected MachineErrors.'''
-        try:
-            super()._process(*args, **kwargs)
-        except MachineError as e:
-            state = self.get_current_state()
-            if state in [ApprovalStates.REJECTED, ApprovalStates.MODERATOR_REJECTED]:
-                error_message = (
-                    'This {sanction} has already been rejected and cannot be approved'.format(
-                        sanction=self.DISPLAY_NAME))
-            elif state in [ApprovalStates.APPROVED, ApprovalStates.COMPLETED]:
-                error_message = (
-                    'This {sanction} has all required approvals and cannot be rejected'.format(
-                        sanction=self.DISPLAY_NAME))
-            else:
-                raise e
-
-            raise MachineError(error_message)
 
 
 class CollectionSubmissionMachine(Machine):

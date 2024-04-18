@@ -5,7 +5,7 @@ from django.utils import timezone
 from api.providers.workflows import Workflows as ModerationWorkflows
 
 from osf.models import SchemaResponse
-from osf.utils.workflows import ApprovalStates
+from osf.utils.workflows import SanctionsStates
 
 from osf_tests.factories import (
     AuthUserFactory,
@@ -16,7 +16,7 @@ from osf_tests.factories import (
 
 USER_ROLES = ['read', 'write', 'admin', 'moderator', 'non-contributor', 'unauthenticated']
 UNAPPROVED_RESPONSE_STATES = [
-    state for state in ApprovalStates if state is not ApprovalStates.APPROVED
+    state for state in SanctionsStates if state is not SanctionsStates.APPROVED
 ]
 DEFAULT_REVIEWS_WORKFLOW = ModerationWorkflows.PRE_MODERATION.value
 
@@ -51,7 +51,7 @@ def configure_test_preconditions(
     registration.save()
 
     initial_response = registration.schema_responses.last()
-    initial_response.approvals_state_machine.set_state(ApprovalStates.APPROVED)
+    initial_response.approvals_state_machine.set_state(SanctionsStates.APPROVED)
     initial_response.save()
 
     updated_response = None
@@ -213,7 +213,7 @@ class TestRegistrationSchemaResponseListGETBehavior:
     # Moderators tested elsehwere, and permissions tests confirm that unauthenticated users
     # and non-contributors cannot GET SchemaResponses for private registrations
     @pytest.mark.parametrize('role', ['read', 'write', 'admin'])
-    @pytest.mark.parametrize('response_state', ApprovalStates)
+    @pytest.mark.parametrize('response_state', SanctionsStates)
     def test_GET__private_registration_responses_as_contributor(self, app, role, response_state):
         auth, updated_response, registration, _ = configure_test_preconditions(
             registration_status='private',
@@ -227,7 +227,7 @@ class TestRegistrationSchemaResponseListGETBehavior:
         assert encountered_ids == expected_ids
 
     @pytest.mark.parametrize('registration_status', ['public', 'private'])
-    @pytest.mark.parametrize('response_state', ApprovalStates)
+    @pytest.mark.parametrize('response_state', SanctionsStates)
     def test_GET__moderated_registration_responses_as_moderator(
             self, app, registration_status, response_state):
         auth, updated_response, registration, _ = configure_test_preconditions(
@@ -240,7 +240,7 @@ class TestRegistrationSchemaResponseListGETBehavior:
 
         # Always expect the APPROVED response
         expected_ids = {updated_response.previous_response._id}
-        if response_state in [ApprovalStates.PENDING_MODERATION, ApprovalStates.APPROVED]:
+        if response_state in [SanctionsStates.PENDING_MODERATION, SanctionsStates.APPROVED]:
             expected_ids.add(updated_response._id)
         encountered_ids = set(entry['id'] for entry in resp.json['data'])
         assert encountered_ids == expected_ids

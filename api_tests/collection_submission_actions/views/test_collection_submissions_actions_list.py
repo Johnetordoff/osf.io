@@ -1,6 +1,6 @@
 import pytest
 from api_tests.utils import UserRoles
-from osf.utils.workflows import ApprovalStates
+from osf.utils.workflows import SanctionsStates
 from osf_tests.factories import AuthUserFactory
 from django.utils import timezone
 from osf_tests.factories import NodeFactory, CollectionFactory, CollectionProviderFactory
@@ -50,8 +50,8 @@ def collection_submission(node, collection):
 @pytest.fixture()
 def collection_submission_action(collection_submission):
     action = collection_submission.actions.create(
-        from_state=ApprovalStates.IN_PROGRESS,
-        to_state=ApprovalStates.UNAPPROVED,
+        from_state=SanctionsStates.IN_PROGRESS,
+        to_state=SanctionsStates.UNAPPROVED,
         trigger=CollectionSubmissionsTriggers.SUBMIT,
         creator=collection_submission.creator,
         comment='test comment'

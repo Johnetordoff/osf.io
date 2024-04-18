@@ -14,7 +14,7 @@ from osf.models import (
     Registration,
     SchemaResponse,
 )
-from osf.utils.workflows import ApprovalStates
+from osf.utils.workflows import SanctionsStates
 
 
 class RegistrationSchemaResponseSerializer(JSONAPISerializer):
@@ -138,11 +138,11 @@ class RegistrationSchemaResponseSerializer(JSONAPISerializer):
             raise Conflict(detail=str(exc))
 
     def update(self, schema_response, validated_data):
-        if schema_response.state is not ApprovalStates.IN_PROGRESS:
+        if schema_response.state is not SanctionsStates.IN_PROGRESS:
             raise Conflict(
                 detail=(
                     f'SchemaResponse has state `{schema_response.reviews_state}` '
-                    f'state must be {ApprovalStates.IN_PROGRESS.db_name}',
+                    f'state must be {SanctionsStates.IN_PROGRESS.db_name}',
                 ),
             )
 

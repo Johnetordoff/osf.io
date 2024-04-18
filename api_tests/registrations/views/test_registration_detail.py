@@ -9,7 +9,7 @@ from api.base.settings.defaults import API_BASE
 from api.taxonomies.serializers import subjects_as_relationships_version
 from api_tests.subjects.mixins import UpdateSubjectsMixin
 from osf.utils import permissions
-from osf.utils.workflows import ApprovalStates
+from osf.utils.workflows import SanctionsStates
 from osf.models import Registration, NodeLog, NodeLicense, SchemaResponse
 from framework.auth import Auth
 from website.project.signals import contributor_added
@@ -1495,9 +1495,9 @@ class TestRegistrationResponses:
     @pytest.fixture
     def approved_schema_response(self, registration):
         response = registration.schema_responses.last()
-        response.state = ApprovalStates.IN_PROGRESS
+        response.state = SanctionsStates.IN_PROGRESS
         response.update_responses(self.INITIAL_SCHEMA_RESPONSES)
-        response.state = ApprovalStates.APPROVED
+        response.state = SanctionsStates.APPROVED
         response.save()
         return response
 
@@ -1529,7 +1529,7 @@ class TestRegistrationResponses:
         assert responses == approved_schema_response.all_responses
         assert registration.registration_responses != approved_schema_response.all_responses
 
-        revised_schema_response.state = ApprovalStates.APPROVED
+        revised_schema_response.state = SanctionsStates.APPROVED
         revised_schema_response.save()
 
         resp = app.get(self.get_registration_detail_url(registration), auth=admin.auth)
@@ -1547,7 +1547,7 @@ class TestRegistrationResponses:
         assert responses == approved_schema_response.all_responses
         assert nested_registration.registration_responses != approved_schema_response.all_responses
 
-    @pytest.mark.parametrize('revision_state', ApprovalStates)
+    @pytest.mark.parametrize('revision_state', SanctionsStates)
     def test_nested_registration_surfaces_root_revision_state(
             self, app, nested_registration, approved_schema_response, revision_state):
         approved_schema_response.state = revision_state
@@ -1563,12 +1563,12 @@ class TestRegistrationResponses:
         original_response_id = resp.json['data']['relationships']['original_response']['data']['id']
         assert original_response_id == approved_schema_response._id
 
-    @pytest.mark.parametrize('revised_response_state', ApprovalStates)
+    @pytest.mark.parametrize('revised_response_state', SanctionsStates)
     def test_latest_response_relationship(
             self, app, registration, approved_schema_response, revised_schema_response, revised_response_state, admin):
         revised_schema_response.state = revised_response_state
         revised_schema_response.save()
-        if revised_response_state is ApprovalStates.APPROVED:
+        if revised_response_state is SanctionsStates.APPROVED:
             expected_id = revised_schema_response._id
         else:
             expected_id = approved_schema_response._id
@@ -1579,7 +1579,7 @@ class TestRegistrationResponses:
 
     def test_original_and_latest_response_relationship_on_nested_registration(
             self, app, nested_registration, approved_schema_response, revised_schema_response):
-        revised_schema_response.state = ApprovalStates.APPROVED
+        revised_schema_response.state = SanctionsStates.APPROVED
         revised_schema_response.save()
 
         resp = app.get(self.get_registration_detail_url(nested_registration))

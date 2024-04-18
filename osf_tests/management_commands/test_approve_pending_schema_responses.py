@@ -5,12 +5,12 @@ from unittest import mock
 
 from osf.management.commands.approve_pending_schema_responses import approve_pending_schema_responses
 from osf.models import SchemaResponse
-from osf.utils.workflows import ApprovalStates
+from osf.utils.workflows import SanctionsStates
 from osf_tests.factories import RegistrationFactory
 from website.settings import REGISTRATION_UPDATE_APPROVAL_TIME
 
 
-EXCLUDED_STATES = [state for state in ApprovalStates if state is not ApprovalStates.UNAPPROVED]
+EXCLUDED_STATES = [state for state in SanctionsStates if state is not SanctionsStates.UNAPPROVED]
 AUTO_APPROVE_TIMESTAMP = timezone.now() - REGISTRATION_UPDATE_APPROVAL_TIME
 
 
@@ -21,13 +21,13 @@ class TestApprovePendingSchemaResponses:
     def control_response(self):
         reg = RegistrationFactory()
         initial_response = reg.schema_responses.last()
-        initial_response.state = ApprovalStates.APPROVED
+        initial_response.state = SanctionsStates.APPROVED
         initial_response.save()
 
         revision = SchemaResponse.create_from_previous_response(
             previous_response=initial_response, initiator=reg.creator
         )
-        revision.state = ApprovalStates.UNAPPROVED
+        revision.state = SanctionsStates.UNAPPROVED
         revision.submitted_timestamp = AUTO_APPROVE_TIMESTAMP
         revision.save()
         return revision
@@ -36,7 +36,7 @@ class TestApprovePendingSchemaResponses:
     def test_response(self):
         reg = RegistrationFactory()
         initial_response = reg.schema_responses.last()
-        initial_response.state = ApprovalStates.APPROVED
+        initial_response.state = SanctionsStates.APPROVED
         initial_response.save()
 
         return SchemaResponse.create_from_previous_response(
@@ -45,7 +45,7 @@ class TestApprovePendingSchemaResponses:
 
     @pytest.mark.parametrize(
         'is_moderated, expected_state',
-        [(False, ApprovalStates.APPROVED), (True, ApprovalStates.PENDING_MODERATION)]
+        [(False, SanctionsStates.APPROVED), (True, SanctionsStates.PENDING_MODERATION)]
     )
     def test_auto_approval(self, control_response, is_moderated, expected_state):
         with mock.patch(
@@ -62,7 +62,7 @@ class TestApprovePendingSchemaResponses:
 
     def test_auto_approval_with_multiple_pending_schema_responses(
             self, control_response, test_response):
-        test_response.state = ApprovalStates.UNAPPROVED
+        test_response.state = SanctionsStates.UNAPPROVED
         test_response.submitted_timestamp = AUTO_APPROVE_TIMESTAMP
         test_response.save()
 
@@ -71,8 +71,8 @@ class TestApprovePendingSchemaResponses:
 
         control_response.refresh_from_db()
         test_response.refresh_from_db()
-        assert control_response.state is ApprovalStates.APPROVED
-        assert test_response.state is ApprovalStates.APPROVED
+        assert control_response.state is SanctionsStates.APPROVED
+        assert test_response.state is SanctionsStates.APPROVED
 
     @pytest.mark.parametrize('revision_state', EXCLUDED_STATES)
     def test_auto_approval_only_approves_unapproved_schema_responses(
@@ -86,12 +86,12 @@ class TestApprovePendingSchemaResponses:
 
         control_response.refresh_from_db()
         test_response.refresh_from_db()
-        assert control_response.state is ApprovalStates.APPROVED
+        assert control_response.state is SanctionsStates.APPROVED
         assert test_response.state is revision_state
 
     def test_auto_approval_only_approves_schema_responses_older_than_threshold(
             self, control_response, test_response):
-        test_response.state = ApprovalStates.UNAPPROVED
+        test_response.state = SanctionsStates.UNAPPROVED
         test_response.submitted_timestamp = timezone.now()
         test_response.save()
 
@@ -100,13 +100,13 @@ class TestApprovePendingSchemaResponses:
 
         control_response.refresh_from_db()
         test_response.refresh_from_db()
-        assert control_response.state is ApprovalStates.APPROVED
-        assert test_response.state is ApprovalStates.UNAPPROVED
+        assert control_response.state is SanctionsStates.APPROVED
+        assert test_response.state is SanctionsStates.UNAPPROVED
 
     def test_auto_approval_does_not_pick_up_initial_responses(
             self, control_response, test_response):
         test_response = test_response.previous_response
-        test_response.state = ApprovalStates.UNAPPROVED
+        test_response.state = SanctionsStates.UNAPPROVED
         test_response.submitted_timestamp = timezone.now()
         test_response.save()
 
@@ -115,8 +115,8 @@ class TestApprovePendingSchemaResponses:
 
         control_response.refresh_from_db()
         test_response.refresh_from_db()
-        assert control_response.state is ApprovalStates.APPROVED
-        assert test_response.state is ApprovalStates.UNAPPROVED
+        assert control_response.state is SanctionsStates.APPROVED
+        assert test_response.state is SanctionsStates.UNAPPROVED
 
     def test_dry_run(self, control_response):
 
@@ -124,4 +124,4 @@ class TestApprovePendingSchemaResponses:
             approve_pending_schema_responses(dry_run=True)
 
         control_response.refresh_from_db()
-        assert control_response.state is ApprovalStates.UNAPPROVED
+        assert control_response.state is SanctionsStates.UNAPPROVED

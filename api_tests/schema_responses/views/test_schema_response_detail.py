@@ -5,7 +5,7 @@ from django.utils import timezone
 from api.providers.workflows import Workflows as ModerationWorkflows
 
 from osf.models import SchemaResponse
-from osf.utils.workflows import ApprovalStates
+from osf.utils.workflows import SanctionsStates
 
 from osf_tests.factories import (
     AuthUserFactory,
@@ -25,7 +25,7 @@ INITIAL_SCHEMA_RESPONSES = {
     'q6': []
 }
 
-IMMUTABLE_STATES = [state for state in ApprovalStates if state is not ApprovalStates.IN_PROGRESS]
+IMMUTABLE_STATES = [state for state in SanctionsStates if state is not SanctionsStates.IN_PROGRESS]
 
 DEFAULT_REVIEWS_WORKFLOW = ModerationWorkflows.PRE_MODERATION.value
 
@@ -51,7 +51,7 @@ def schema_response(registration):
     for block in response.response_blocks.all():
         block.response = INITIAL_SCHEMA_RESPONSES[block.schema_key]
         block.save()
-    response.approvals_state_machine.set_state(ApprovalStates.APPROVED)
+    response.approvals_state_machine.set_state(SanctionsStates.APPROVED)
     response.save()
     return response
 
@@ -62,7 +62,7 @@ def make_api_url(schema_response):
 
 def configure_permissions_test_preconditions(
         registration_status='public',
-        schema_response_state=ApprovalStates.APPROVED,
+        schema_response_state=SanctionsStates.APPROVED,
         reviews_workflow=DEFAULT_REVIEWS_WORKFLOW,
         role='admin'):
     '''Create and configure a RegistrationProvider, Registration, SchemaResponse and User.'''
@@ -126,7 +126,7 @@ class TestSchemaResponseDetailGETPermissions:
             return 403
 
         # All users can GET APPROVED responses on public registrations
-        if registration_status == 'public' and schema_response_state is ApprovalStates.APPROVED:
+        if registration_status == 'public' and schema_response_state is SanctionsStates.APPROVED:
             return 200
 
         # unauthenticated users and non-contributors cannot see any other responses
@@ -138,7 +138,7 @@ class TestSchemaResponseDetailGETPermissions:
         # Moderators can GET PENDING_MODERATION and APPROVED SchemaResponses on
         # public or private registrations that are part of a moderated registry
         if role == 'moderator':
-            moderator_visible_states = [ApprovalStates.PENDING_MODERATION, ApprovalStates.APPROVED]
+            moderator_visible_states = [SanctionsStates.PENDING_MODERATION, SanctionsStates.APPROVED]
             if schema_response_state in moderator_visible_states and reviews_workflow is not None:
                 return 200
             else:
@@ -152,7 +152,7 @@ class TestSchemaResponseDetailGETPermissions:
         raise ValueError(f'Unrecognized role {role}')
 
     @pytest.mark.parametrize('registration_status', ['public', 'private'])
-    @pytest.mark.parametrize('schema_response_state', ApprovalStates)
+    @pytest.mark.parametrize('schema_response_state', SanctionsStates)
     @pytest.mark.parametrize('role', ['read', 'write', 'admin', 'non-contributor', 'unauthenticated'])
     def test_status_code__as_user(self, app, registration_status, schema_response_state, role):
         auth, schema_response, _, _ = configure_permissions_test_preconditions(
@@ -171,7 +171,7 @@ class TestSchemaResponseDetailGETPermissions:
         assert resp.status_code == expected_code
 
     @pytest.mark.parametrize('registration_status', ['public', 'private'])
-    @pytest.mark.parametrize('schema_response_state', ApprovalStates)
+    @pytest.mark.parametrize('schema_response_state', SanctionsStates)
     @pytest.mark.parametrize('reviews_workflow', [ModerationWorkflows.PRE_MODERATION.value, None])
     def test_status_code__as_moderator(
             self, app, registration_status, schema_response_state, reviews_workflow):
@@ -339,7 +339,7 @@ class TestSchemaResponseDetailPATCHPermissions:
     def test_status_code__as_user(self, app, registration_status, role):
         auth, schema_response, _, _ = configure_permissions_test_preconditions(
             registration_status=registration_status,
-            schema_response_state=ApprovalStates.IN_PROGRESS,
+            schema_response_state=SanctionsStates.IN_PROGRESS,
             role=role
         )
         expected_code = self.get_status_code_for_preconditions(
@@ -358,7 +358,7 @@ class TestSchemaResponseDetailPATCHPermissions:
     def test_status_code__as_moderator(self, app, registration_status, reviews_workflow):
         auth, schema_response, _, _ = configure_permissions_test_preconditions(
             registration_status=registration_status,
-            schema_response_state=ApprovalStates.IN_PROGRESS,
+            schema_response_state=SanctionsStates.IN_PROGRESS,
             reviews_workflow=reviews_workflow,
             role='moderator'
         )
@@ -377,7 +377,7 @@ class TestSchemaResponseDetailPATCHPermissions:
     def test_status_code__deleted_parent(self, app, role):
         auth, schema_response, _, _ = configure_permissions_test_preconditions(
             registration_status='deleted',
-            schema_response_state=ApprovalStates.IN_PROGRESS,
+            schema_response_state=SanctionsStates.IN_PROGRESS,
             role=role
         )
         expected_code = self.get_status_code_for_preconditions(
@@ -395,7 +395,7 @@ class TestSchemaResponseDetailPATCHPermissions:
     def test_status_code__withdrawn_parent(self, app, role):
         auth, schema_response, _, _ = configure_permissions_test_preconditions(
             registration_status='withdrawn',
-            schema_response_state=ApprovalStates.IN_PROGRESS,
+            schema_response_state=SanctionsStates.IN_PROGRESS,
             role=role
         )
         expected_code = self.get_status_code_for_preconditions(
@@ -568,7 +568,7 @@ class TestSchemaResponseDetailDELETEPermissions:
     def test_status_code__as_user(self, app, registration_status, role):
         auth, schema_response, _, _ = configure_permissions_test_preconditions(
             registration_status=registration_status,
-            schema_response_state=ApprovalStates.IN_PROGRESS,
+            schema_response_state=SanctionsStates.IN_PROGRESS,
             role=role
         )
         expected_code = self.get_status_code_for_preconditions(
@@ -585,7 +585,7 @@ class TestSchemaResponseDetailDELETEPermissions:
     def test_status_code__as_moderator(self, app, registration_status, reviews_workflow):
         auth, schema_response, _, _ = configure_permissions_test_preconditions(
             registration_status=registration_status,
-            schema_response_state=ApprovalStates.IN_PROGRESS,
+            schema_response_state=SanctionsStates.IN_PROGRESS,
             reviews_workflow=reviews_workflow,
             role='moderator'
         )
@@ -602,7 +602,7 @@ class TestSchemaResponseDetailDELETEPermissions:
     def test_status_code__deleted_parent(self, app, role):
         auth, schema_response, _, _ = configure_permissions_test_preconditions(
             registration_status='deleted',
-            schema_response_state=ApprovalStates.IN_PROGRESS,
+            schema_response_state=SanctionsStates.IN_PROGRESS,
             role=role
         )
         expected_code = self.get_status_code_for_preconditions(
@@ -618,7 +618,7 @@ class TestSchemaResponseDetailDELETEPermissions:
     def test_status_code__withdrawn_parent(self, app, role):
         auth, schema_response, _, _ = configure_permissions_test_preconditions(
             registration_status='withdrawn',
-            schema_response_state=ApprovalStates.IN_PROGRESS,
+            schema_response_state=SanctionsStates.IN_PROGRESS,
             role=role
         )
         expected_code = self.get_status_code_for_preconditions(
@@ -641,7 +641,7 @@ class TestSchemaResponseDetailDELETEBehavior:
 
     @pytest.fixture()
     def schema_response(self, schema_response):
-        schema_response.approvals_state_machine.set_state(ApprovalStates.IN_PROGRESS)
+        schema_response.approvals_state_machine.set_state(SanctionsStates.IN_PROGRESS)
         schema_response.save()
         return schema_response
 

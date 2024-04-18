@@ -6,7 +6,7 @@ import logging
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from osf.models.mixins import ReviewProviderMixin
+from osf.models.mixins import ModerationProviderMixin
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class Command(BaseCommand):
 
         # Start a transaction that will be rolled back if any exceptions are raised
         with transaction.atomic():
-            for cls in ReviewProviderMixin.__subclasses__():
+            for cls in ModerationProviderMixin.__subclasses__():
                 for provider in cls.objects.all():
                     logger.info('Updating auth groups for review provider %s', provider)
                     provider.update_group_permissions()

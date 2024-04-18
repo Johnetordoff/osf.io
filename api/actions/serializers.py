@@ -31,8 +31,8 @@ from osf.models import (
 from osf.utils.workflows import (
     DefaultStates,
     DefaultTriggers,
-    ReviewStates,
-    ReviewTriggers,
+    PreprintStates,
+    PreprintTriggers,
     RegistrationModerationTriggers,
     SchemaResponseTriggers,
 )
@@ -183,9 +183,9 @@ class ReviewActionSerializer(BaseActionSerializer):
     ])
 
     comment = HideIfProviderCommentsPrivate(ser.CharField(max_length=65535, required=False))
-    trigger = ser.ChoiceField(choices=ReviewTriggers.choices())
-    from_state = ser.ChoiceField(choices=ReviewStates.choices(), read_only=True)
-    to_state = ser.ChoiceField(choices=ReviewStates.choices(), read_only=True)
+    trigger = ser.ChoiceField(choices=PreprintTriggers.choices())
+    from_state = ser.ChoiceField(choices=PreprintStates.choices(), read_only=True)
+    to_state = ser.ChoiceField(choices=PreprintStates.choices(), read_only=True)
 
     provider = RelationshipField(
         read_only=True,

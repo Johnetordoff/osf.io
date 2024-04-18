@@ -43,7 +43,7 @@ class SanctionTypes(ModerationEnum):
     DRAFT_REGISTRATION_APPROVAL = 5
 
 
-class ApprovalStates(ModerationEnum):
+class SanctionsStates(ModerationEnum):
     '''The moderated state of a Sanction object.'''
 
     UNDEFINED = 0
@@ -86,34 +86,34 @@ class RegistrationModerationStates(ModerationEnum):
         # Define every time because it gets interpreted as an enum member in the class body :(
         SANCTION_STATE_MAP = {
             SanctionTypes.REGISTRATION_APPROVAL: {
-                ApprovalStates.UNAPPROVED: cls.INITIAL,
-                ApprovalStates.PENDING_MODERATION: cls.PENDING,
-                ApprovalStates.APPROVED: cls.ACCEPTED,
-                ApprovalStates.REJECTED: cls.REVERTED,
-                ApprovalStates.MODERATOR_REJECTED: cls.REJECTED,
+                SanctionsStates.UNAPPROVED: cls.INITIAL,
+                SanctionsStates.PENDING_MODERATION: cls.PENDING,
+                SanctionsStates.APPROVED: cls.ACCEPTED,
+                SanctionsStates.REJECTED: cls.REVERTED,
+                SanctionsStates.MODERATOR_REJECTED: cls.REJECTED,
             },
             SanctionTypes.EMBARGO: {
-                ApprovalStates.UNAPPROVED: cls.INITIAL,
-                ApprovalStates.PENDING_MODERATION: cls.PENDING,
-                ApprovalStates.APPROVED: cls.EMBARGO,
-                ApprovalStates.COMPLETED: cls.ACCEPTED,
-                ApprovalStates.REJECTED: cls.REVERTED,
-                ApprovalStates.MODERATOR_REJECTED: cls.REJECTED,
+                SanctionsStates.UNAPPROVED: cls.INITIAL,
+                SanctionsStates.PENDING_MODERATION: cls.PENDING,
+                SanctionsStates.APPROVED: cls.EMBARGO,
+                SanctionsStates.COMPLETED: cls.ACCEPTED,
+                SanctionsStates.REJECTED: cls.REVERTED,
+                SanctionsStates.MODERATOR_REJECTED: cls.REJECTED,
             },
             SanctionTypes.RETRACTION: {
-                ApprovalStates.UNAPPROVED: cls.PENDING_WITHDRAW_REQUEST,
-                ApprovalStates.PENDING_MODERATION: cls.PENDING_WITHDRAW,
-                ApprovalStates.APPROVED: cls.WITHDRAWN,
+                SanctionsStates.UNAPPROVED: cls.PENDING_WITHDRAW_REQUEST,
+                SanctionsStates.PENDING_MODERATION: cls.PENDING_WITHDRAW,
+                SanctionsStates.APPROVED: cls.WITHDRAWN,
                 # Rejected retractions are in either ACCEPTED or EMBARGO
-                ApprovalStates.REJECTED: cls.UNDEFINED,
-                ApprovalStates.MODERATOR_REJECTED: cls.UNDEFINED,
+                SanctionsStates.REJECTED: cls.UNDEFINED,
+                SanctionsStates.MODERATOR_REJECTED: cls.UNDEFINED,
             },
             SanctionTypes.EMBARGO_TERMINATION_APPROVAL: {
-                ApprovalStates.UNAPPROVED: cls.PENDING_EMBARGO_TERMINATION,
-                ApprovalStates.PENDING_MODERATION: cls.ACCEPTED,  # Not currently reachable
-                ApprovalStates.APPROVED: cls.ACCEPTED,
-                ApprovalStates.REJECTED: cls.EMBARGO,
-                ApprovalStates.MODERATOR_REJECTED: cls.EMBARGO,  # Not currently reachable
+                SanctionsStates.UNAPPROVED: cls.PENDING_EMBARGO_TERMINATION,
+                SanctionsStates.PENDING_MODERATION: cls.ACCEPTED,  # Not currently reachable
+                SanctionsStates.APPROVED: cls.ACCEPTED,
+                SanctionsStates.REJECTED: cls.EMBARGO,
+                SanctionsStates.MODERATOR_REJECTED: cls.EMBARGO,  # Not currently reachable
             },
         }
 
@@ -168,13 +168,13 @@ class SchemaResponseTriggers(ModerationEnum):
     @classmethod
     def from_transition(cls, from_state, to_state):
         transition_to_trigger_mappings = {
-            (ApprovalStates.IN_PROGRESS, ApprovalStates.UNAPPROVED): cls.SUBMIT,
-            (ApprovalStates.UNAPPROVED, ApprovalStates.UNAPPROVED): cls.APPROVE,
-            (ApprovalStates.UNAPPROVED, ApprovalStates.APPROVED): cls.APPROVE,
-            (ApprovalStates.UNAPPROVED, ApprovalStates.PENDING_MODERATION): cls.APPROVE,
-            (ApprovalStates.PENDING_MODERATION, ApprovalStates.APPROVED): cls.ACCEPT,
-            (ApprovalStates.UNAPPROVED, ApprovalStates.IN_PROGRESS): cls.ADMIN_REJECT,
-            (ApprovalStates.PENDING_MODERATION, ApprovalStates.IN_PROGRESS): cls.MODERATOR_REJECT,
+            (SanctionsStates.IN_PROGRESS, SanctionsStates.UNAPPROVED): cls.SUBMIT,
+            (SanctionsStates.UNAPPROVED, SanctionsStates.UNAPPROVED): cls.APPROVE,
+            (SanctionsStates.UNAPPROVED, SanctionsStates.APPROVED): cls.APPROVE,
+            (SanctionsStates.UNAPPROVED, SanctionsStates.PENDING_MODERATION): cls.APPROVE,
+            (SanctionsStates.PENDING_MODERATION, SanctionsStates.APPROVED): cls.ACCEPT,
+            (SanctionsStates.UNAPPROVED, SanctionsStates.IN_PROGRESS): cls.ADMIN_REJECT,
+            (SanctionsStates.PENDING_MODERATION, SanctionsStates.IN_PROGRESS): cls.MODERATOR_REJECT,
         }
         return transition_to_trigger_mappings.get((from_state, to_state))
 
@@ -214,31 +214,53 @@ DEFAULT_STATES = [
     ('ACCEPTED', 'accepted'),
     ('REJECTED', 'rejected'),
 ]
+
+PREPRINT_STATES = [
+    ('INITIAL', 'initial'),
+    ('PENDING', 'pending'),
+    ('ACCEPTED', 'accepted'),
+    ('REJECTED', 'rejected'),
+    ('WITHDRAWN', 'withdrawn'),
+]
+
+ABSTRACT_PROVIDER_STATES = [
+    ('INITIAL', 'initial'),
+    ('PENDING', 'pending'),
+    ('ACCEPTED', 'accepted'),
+    ('REJECTED', 'rejected'),
+    ('WITHDRAWN', 'withdrawn'),
+]
+
+REGISTRATION_STATES = [
+    ('EMBARGO', 'embargo'),
+    ('PENDING_EMBARGO_TERMINATION', 'pending_embargo_termination'),
+    ('PENDING_WITHDRAW_REQUEST', 'pending_withdraw_request'),
+    ('PENDING_WITHDRAW', 'pending_withdraw'),
+    ('WITHDRAW', 'withdraw')
+]
+
 DEFAULT_TRIGGERS = [
     ('SUBMIT', 'submit'),
     ('ACCEPT', 'accept'),
     ('REJECT', 'reject'),
     ('EDIT_COMMENT', 'edit_comment'),
 ]
-REVIEW_STATES = DEFAULT_STATES + [
-    ('WITHDRAWN', 'withdrawn'),
-]
-REVIEW_TRIGGERS = DEFAULT_TRIGGERS + [
+
+PREPRINT_TRIGGERS = [
+    ('SUBMIT', 'submit'),
+    ('ACCEPT', 'accept'),
+    ('REJECT', 'reject'),
+    ('EDIT_COMMENT', 'edit_comment'),
     ('WITHDRAW', 'withdraw')
 ]
 
-REGISTRATION_STATES = REVIEW_STATES + [
-    ('EMBARGO', 'embargo'),
-    ('PENDING_EMBARGO_TERMINATION', 'pending_embargo_termination'),
-    ('PENDING_WITHDRAW_REQUEST', 'pending_withdraw_request'),
-    ('PENDING_WITHDRAW', 'pending_withdraw'),
-]
 
 DefaultStates = ChoiceEnum('DefaultStates', DEFAULT_STATES)
-ReviewStates = ChoiceEnum('ReviewStates', REVIEW_STATES)
+PreprintStates = ChoiceEnum('PreprintStates', PREPRINT_STATES)
 RegistrationStates = ChoiceEnum('RegistrationStates', REGISTRATION_STATES)
+AbstractProviderStates = ChoiceEnum('AbstractProviderStates', ABSTRACT_PROVIDER_STATES)
 DefaultTriggers = ChoiceEnum('DefaultTriggers', DEFAULT_TRIGGERS)
-ReviewTriggers = ChoiceEnum('ReviewTriggers', REVIEW_TRIGGERS)
+PreprintTriggers = ChoiceEnum('PreprintTriggers', PREPRINT_TRIGGERS)
 
 CHRONOS_STATUS_STATES = [
     ('DRAFT', 1),
@@ -256,6 +278,7 @@ DEFAULT_TRANSITIONS = [
         'trigger': DefaultTriggers.SUBMIT.value,
         'source': [DefaultStates.INITIAL.value],
         'dest': DefaultStates.PENDING.value,
+        'before': ['validate_changes'],
         'after': ['save_action', 'update_last_transitioned', 'save_changes', 'notify_submit'],
     },
     {
@@ -285,28 +308,60 @@ DEFAULT_TRANSITIONS = [
     },
 ]
 
-REVIEWABLE_TRANSITIONS = DEFAULT_TRANSITIONS + [
+PREPRINT_TRANSITIONS = [
     {
-        'trigger': ReviewTriggers.WITHDRAW.value,
-        'source': [ReviewStates.PENDING.value, ReviewStates.ACCEPTED.value],
-        'dest': ReviewStates.WITHDRAWN.value,
+        'trigger': PreprintTriggers.SUBMIT.value,
+        'source': [PreprintStates.INITIAL.value],
+        'dest': PreprintStates.PENDING.value,
+        'before': ['validate_changes'],
+        'after': ['save_action', 'update_last_transitioned', 'save_changes', 'notify_submit'],
+    },
+    {
+        'trigger': PreprintTriggers.SUBMIT.value,
+        'source': [PreprintStates.PENDING.value, PreprintStates.REJECTED.value],
+        'conditions': 'resubmission_allowed',
+        'dest': PreprintStates.PENDING.value,
+        'after': ['save_action', 'update_last_transitioned', 'save_changes', 'notify_resubmit'],
+    },
+    {
+        'trigger': PreprintTriggers.ACCEPT.value,
+        'source': [PreprintStates.PENDING.value, PreprintStates.REJECTED.value],
+        'dest': PreprintStates.ACCEPTED.value,
+        'after': ['save_action', 'update_last_transitioned', 'save_changes', 'notify_accept_reject'],
+    },
+    {
+        'trigger': PreprintTriggers.REJECT.value,
+        'source': [PreprintStates.PENDING.value, PreprintStates.ACCEPTED.value],
+        'dest': PreprintStates.REJECTED.value,
+        'after': ['save_action', 'update_last_transitioned', 'save_changes', 'notify_accept_reject'],
+    },
+    {
+        'trigger': PreprintTriggers.EDIT_COMMENT.value,
+        'source': [PreprintStates.PENDING.value, PreprintStates.REJECTED.value, PreprintStates.ACCEPTED.value],
+        'dest': '=',
+        'after': ['save_action', 'save_changes', 'notify_edit_comment'],
+    },
+    {
+        'trigger': PreprintTriggers.WITHDRAW.value,
+        'source': [PreprintStates.PENDING.value, PreprintStates.ACCEPTED.value],
+        'dest': PreprintStates.WITHDRAWN.value,
         'after': ['save_action', 'update_last_transitioned', 'perform_withdraw', 'save_changes', 'notify_withdraw']
     }
 ]
 
-APPROVAL_TRANSITIONS = [
+SANCTION_TRANSITIONS = [
     {
         # Submit an approvable resource
         'trigger': 'submit',
-        'source': [ApprovalStates.IN_PROGRESS],
-        'dest': ApprovalStates.UNAPPROVED,
+        'source': [SanctionsStates.IN_PROGRESS],
+        'dest': SanctionsStates.UNAPPROVED,
         'before': ['_validate_trigger'],
         'after': ['_on_submit'],
     },
     {
         # A single admin approves an approvable resource
         'trigger': 'approve',  # Approval from an individual admin
-        'source': [ApprovalStates.UNAPPROVED],
+        'source': [SanctionsStates.UNAPPROVED],
         'dest': None,
         'before': ['_validate_trigger'],
         'after': ['_on_approve'],
@@ -315,9 +370,9 @@ APPROVAL_TRANSITIONS = [
         # Allow delayed admin approvals as a noop in non-rejected states
         'trigger': 'approve',
         'source': [
-            ApprovalStates.PENDING_MODERATION,
-            ApprovalStates.APPROVED,
-            ApprovalStates.COMPLETED
+            SanctionsStates.PENDING_MODERATION,
+            SanctionsStates.APPROVED,
+            SanctionsStates.COMPLETED
         ],
         'dest': None,
     },
@@ -325,8 +380,8 @@ APPROVAL_TRANSITIONS = [
         # A moderated approvable resource has satisfied its Admin approval
         # requirements and is submitted for moderation.
         'trigger': 'accept',
-        'source': [ApprovalStates.UNAPPROVED],
-        'dest': ApprovalStates.PENDING_MODERATION,
+        'source': [SanctionsStates.UNAPPROVED],
+        'dest': SanctionsStates.PENDING_MODERATION,
         'conditions': ['is_moderated'],
         'before': ['_validate_trigger'],
         'after': [],  # send moderator emails here?
@@ -335,22 +390,22 @@ APPROVAL_TRANSITIONS = [
         # An un moderated approvable resource has satisfied its Admin approval requirements
         # or a moderated sanction receives moderator approval and takes effect
         'trigger': 'accept',
-        'source': [ApprovalStates.UNAPPROVED, ApprovalStates.PENDING_MODERATION],
-        'dest': ApprovalStates.APPROVED,
+        'source': [SanctionsStates.UNAPPROVED, SanctionsStates.PENDING_MODERATION],
+        'dest': SanctionsStates.APPROVED,
         'before': ['_validate_trigger'],
         'after': ['_on_complete'],
     },
     {
         # Allow delayed accept triggers as a noop in completed states
         'trigger': 'accept',
-        'source': [ApprovalStates.APPROVED, ApprovalStates.COMPLETED],
+        'source': [SanctionsStates.APPROVED, SanctionsStates.COMPLETED],
         'dest': None,
     },
     {
         # A revisable, approvable resource is rejected by an admin or moderator
         'trigger': 'reject',
-        'source': [ApprovalStates.UNAPPROVED, ApprovalStates.PENDING_MODERATION],
-        'dest': ApprovalStates.IN_PROGRESS,
+        'source': [SanctionsStates.UNAPPROVED, SanctionsStates.PENDING_MODERATION],
+        'dest': SanctionsStates.IN_PROGRESS,
         'conditions': ['revisable'],
         'before': ['_validate_trigger'],
         'after': ['_on_reject'],
@@ -358,23 +413,23 @@ APPROVAL_TRANSITIONS = [
     {
         # An unrevisable, approvable resource is rejected by an admin
         'trigger': 'reject',
-        'source': [ApprovalStates.UNAPPROVED],
-        'dest': ApprovalStates.REJECTED,
+        'source': [SanctionsStates.UNAPPROVED],
+        'dest': SanctionsStates.REJECTED,
         'before': ['_validate_trigger'],
         'after': ['_on_reject'],
     },
     {
         # An unrevisable, approvable entity is rejected by a moderator
         'trigger': 'reject',
-        'source': [ApprovalStates.PENDING_MODERATION],
-        'dest': ApprovalStates.MODERATOR_REJECTED,
+        'source': [SanctionsStates.PENDING_MODERATION],
+        'dest': SanctionsStates.MODERATOR_REJECTED,
         'before': ['_validate_trigger'],
         'after': ['_on_reject'],
     },
     {
         # Allow delayed reject triggers as a noop in rejected states
         'trigger': 'reject',
-        'source': [ApprovalStates.REJECTED, ApprovalStates.MODERATOR_REJECTED],
+        'source': [SanctionsStates.REJECTED, SanctionsStates.MODERATOR_REJECTED],
         'dest': None,
     },
 ]

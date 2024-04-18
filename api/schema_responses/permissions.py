@@ -8,10 +8,10 @@ from api.base.utils import get_user_auth, assert_resource_type, get_object_or_er
 from api.base.parsers import JSONSchemaParser
 
 from osf.models import Registration, SchemaResponse, SchemaResponseAction
-from osf.utils.workflows import ApprovalStates
+from osf.utils.workflows import SanctionsStates
 
 
-MODERATOR_VISIBLE_STATES = [ApprovalStates.PENDING_MODERATION, ApprovalStates.APPROVED]
+MODERATOR_VISIBLE_STATES = [SanctionsStates.PENDING_MODERATION, SanctionsStates.APPROVED]
 
 
 class SchemaResponseParentPermission:
@@ -58,7 +58,7 @@ class SchemaResponseParentPermission:
         auth = get_user_auth(request)
         if request.method in permissions.SAFE_METHODS:
             return (
-                (parent.is_public and schema_response.state is ApprovalStates.APPROVED)
+                (parent.is_public and schema_response.state is SanctionsStates.APPROVED)
                 or (
                     auth.user is not None
                     and parent.is_moderated

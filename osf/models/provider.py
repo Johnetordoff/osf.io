@@ -16,7 +16,7 @@ from guardian.models import GroupObjectPermissionBase, UserObjectPermissionBase
 
 from framework import sentry
 from .base import BaseModel, TypedObjectIDMixin
-from .mixins import ReviewProviderMixin
+from .mixins import ModerationProviderMixin
 from .brand import Brand
 from .citation import CitationStyle
 from .licenses import NodeLicense
@@ -32,7 +32,7 @@ from website.util import api_v2_url
 from functools import reduce
 
 
-class AbstractProvider(TypedModel, TypedObjectIDMixin, ReviewProviderMixin, DirtyFieldsMixin, BaseModel):
+class AbstractProvider(TypedModel, TypedObjectIDMixin, ModerationProviderMixin, DirtyFieldsMixin, BaseModel):
     class Meta:
         unique_together = ('_id', 'type')
         permissions = REVIEW_PERMISSIONS
@@ -252,7 +252,7 @@ class AbstractProvider(TypedModel, TypedObjectIDMixin, ReviewProviderMixin, Dirt
 
 
 class CollectionProvider(AbstractProvider):
-    DEFAULT_SUBSCRIPTIONS = ['new_pending_submissions']
+    DEFAULT_EMAIL_SUBSCRIPTIONS = ['new_pending_submissions']
 
     class Meta:
         permissions = (
@@ -292,7 +292,7 @@ class RegistrationProvider(AbstractProvider):
     REVIEW_STATES = RegistrationModerationStates
     STATE_FIELD_NAME = 'moderation_state'
 
-    DEFAULT_SUBSCRIPTIONS = ['new_pending_submissions', 'new_pending_withdraw_requests']
+    DEFAULT_EMAIL_SUBSCRIPTIONS = ['new_pending_submissions', 'new_pending_withdraw_requests']
 
     # A list of dictionaries describing new fields that providers want to surface on their registrations
     # Each entry must provide a 'field_name' key. In the future, other keys may be supported to enable
@@ -463,7 +463,7 @@ def create_provider_auth_groups(sender, instance, created, **kwargs):
 @receiver(post_save, sender=RegistrationProvider)
 def create_provider_notification_subscriptions(sender, instance, created, **kwargs):
     if created:
-        for subscription in instance.DEFAULT_SUBSCRIPTIONS:
+        for subscription in instance.DEFAULT_EMAIL_SUBSCRIPTIONS:
             NotificationSubscription.objects.get_or_create(
                 _id=f'{instance._id}_{subscription}',
                 event_name=subscription,

@@ -3,7 +3,7 @@ import mock
 from django.utils import timezone
 from osf.management.commands.correct_registration_moderation_states import correct_registration_moderation_states
 from osf.models import Registration
-from osf.utils.workflows import RegistrationModerationStates, ApprovalStates
+from osf.utils.workflows import RegistrationModerationStates, SanctionsStates
 from osf_tests.factories import (
     EmbargoFactory,
     EmbargoTerminationApprovalFactory,
@@ -35,13 +35,13 @@ class TestCorrectRegistrationModerationState(OsfTestCase):
         self.embargo_termination.target_registration.save()
 
     def test_correct_registration_moderation_states(self):
-        self.embargo.approval_stage = ApprovalStates.MODERATOR_REJECTED
+        self.embargo.approval_stage = SanctionsStates.MODERATOR_REJECTED
         self.embargo.save()
-        self.registration_approval.approval_stage = ApprovalStates.APPROVED
+        self.registration_approval.approval_stage = SanctionsStates.APPROVED
         self.registration_approval.save()
-        self.retraction.approval_stage = ApprovalStates.PENDING_MODERATION
+        self.retraction.approval_stage = SanctionsStates.PENDING_MODERATION
         self.retraction.save()
-        self.embargo_termination.approval_stage = ApprovalStates.REJECTED
+        self.embargo_termination.approval_stage = SanctionsStates.REJECTED
         self.embargo_termination.save()
 
         empty_state_counts = {state.db_name: 0 for state in RegistrationModerationStates}

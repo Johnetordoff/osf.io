@@ -14,8 +14,8 @@ from .metaschema import RegistrationSchemaBlock
 from .schema_response_block import SchemaResponseBlock
 from osf.utils import notifications
 from osf.utils.fields import NonNaiveDateTimeField
-from osf.utils.machines import ApprovalsMachine
-from osf.utils.workflows import ApprovalStates, SchemaResponseTriggers
+from osf.utils.machines import SanctionMachine
+from osf.utils.workflows import SanctionsStates, SchemaResponseTriggers
 
 from website.mails import mails
 from website.reviews.signals import reviews_email_submit_moderators_notifications
@@ -60,8 +60,8 @@ class SchemaResponse(ObjectIDMixin, BaseModel):
 
     pending_approvers = models.ManyToManyField('osf.osfuser', related_name='pending_submissions')
     reviews_state = models.CharField(
-        choices=ApprovalStates.char_field_choices(),
-        default=ApprovalStates.IN_PROGRESS.db_name,
+        choices=SanctionsStates.char_field_choices(),
+        default=SanctionsStates.IN_PROGRESS.db_name,
         max_length=255
     )
 
@@ -84,7 +84,7 @@ class SchemaResponse(ObjectIDMixin, BaseModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.approvals_state_machine = ApprovalsMachine(
+        self.approvals_state_machine = SanctionMachine(
             model=self,
             active_state=self.state,
             state_property_name='state'
@@ -92,7 +92,7 @@ class SchemaResponse(ObjectIDMixin, BaseModel):
 
     @property
     def absolute_url(self):
-        if self.state is ApprovalStates.APPROVED:
+        if self.state is SanctionsStates.APPROVED:
             relative_url_path = f'/{self.parent._id}?revisionId={self._id}'
         else:
             relative_url_path = f'/registries/revisions/{self._id}'
@@ -116,7 +116,7 @@ class SchemaResponse(ObjectIDMixin, BaseModel):
     @property
     def state(self):
         '''Property to translate between ApprovalState Enum and DB string.'''
-        return ApprovalStates.from_db_name(self.reviews_state)
+        return SanctionsStates.from_db_name(self.reviews_state)
 
     @state.setter
     def state(self, new_state):
@@ -192,7 +192,7 @@ class SchemaResponse(ObjectIDMixin, BaseModel):
         '''
         # Cannot create new response if parent has another response in-progress or pending approval
         parent = previous_response.parent
-        if parent.schema_responses.exclude(reviews_state=ApprovalStates.APPROVED.db_name).exists():
+        if parent.schema_responses.exclude(reviews_state=SanctionsStates.APPROVED.db_name).exists():
             raise PreviousSchemaResponseError(
                 f'Cannot create new SchemaResponse for {parent} because {parent} already '
                 'has non-terminal SchemaResponse'
@@ -231,7 +231,7 @@ class SchemaResponse(ObjectIDMixin, BaseModel):
         If you do not want any writes to persist if called with unsupported keys,
         make sure to call in an atomic context.
         '''
-        if self.state is not ApprovalStates.IN_PROGRESS:
+        if self.state is not SanctionsStates.IN_PROGRESS:
             raise SchemaResponseStateError(
                 f'SchemaResponse with id [{self._id}]  has state {self.reviews_state}. '
                 'Must have state "in_progress" to update responses'
@@ -294,14 +294,14 @@ class SchemaResponse(ObjectIDMixin, BaseModel):
             self.response_blocks.add(revised_block)
 
     def delete(self, *args, **kwargs):
-        if self.state is not ApprovalStates.IN_PROGRESS:
+        if self.state is not SanctionsStates.IN_PROGRESS:
             raise SchemaResponseStateError(
                 f'Cannot delete SchemaResponse with id [{self._id}]. In order to delete, '
                 f'state must be "in_progress", but is "{self.reviews_state}" instead.'
             )
         super().delete(*args, **kwargs)
 
-# *** Callbcks in support of ApprovalsMachine ***
+# *** Callbcks in support of SanctionMachine ***
 
     def _validate_trigger(self, event_data):
         '''Any additional validation to confirm that a trigger is being used correctly.
@@ -314,7 +314,7 @@ class SchemaResponse(ObjectIDMixin, BaseModel):
 
         # The only valid case for not providing a user is the internal accept shortcut
         # See _validate_accept_trigger docstring for more information
-        if user is None and not (trigger == 'accept' and self.state is ApprovalStates.UNAPPROVED):
+        if user is None and not (trigger == 'accept' and self.state is SanctionsStates.UNAPPROVED):
             raise PermissionsError(
                 f'Trigger {trigger} from state [{self.reviews_state}] for '
                 f'SchemaResponse with id [{self._id}] must be called with a user.'
@@ -324,7 +324,7 @@ class SchemaResponse(ObjectIDMixin, BaseModel):
         trigger_specific_validator(user)
 
     def _validate_submit_trigger(self, user):
-        """Validate usage of the "submit" trigger on the underlying ApprovalsMachine.
+        """Validate usage of the "submit" trigger on the underlying SanctionMachine.
 
         Only admins on the parent resource can submit the SchemaResponse for review.
 
@@ -348,7 +348,7 @@ class SchemaResponse(ObjectIDMixin, BaseModel):
             )
 
     def _validate_approve_trigger(self, user):
-        """Validate usage of the "approve" trigger on the underlying ApprovalsMachine
+        """Validate usage of the "approve" trigger on the underlying SanctionMachine
 
         Only users listed in self.pending_approvers can approve.
 
@@ -361,7 +361,7 @@ class SchemaResponse(ObjectIDMixin, BaseModel):
             )
 
     def _validate_accept_trigger(self, user):
-        """Validate usage of the "accept" trigger on the underlying ApprovalsMachine
+        """Validate usage of the "accept" trigger on the underlying SanctionMachine
 
         "accept" has three valid usages:
         First, "accept" is called from within the "approve" trigger once all required approvals
@@ -377,7 +377,7 @@ class SchemaResponse(ObjectIDMixin, BaseModel):
         "accept" can only be invoked from UNAPPROVED and PENDING_MODERATION, calling from any
         other state will result in a MachineError prior to this validation.
         """
-        if self.state is ApprovalStates.UNAPPROVED:
+        if self.state is SanctionsStates.UNAPPROVED:
             # user = None -> internal accept shortcut
             # not self.pending_approvers.exists() -> called from within "approve"
             if user is None or not self.pending_approvers.exists():
@@ -394,14 +394,14 @@ class SchemaResponse(ObjectIDMixin, BaseModel):
             )
 
     def _validate_reject_trigger(self, user):
-        """Validate usage of the "reject" trigger on the underlying ApprovalsMachine
+        """Validate usage of the "reject" trigger on the underlying SanctionMachine
 
         "reject" must be called by a pending approver or a moderator, depending on the state.
 
         "reject" can only be invoked from UNAPPROVED and PENDING_MODERATION, calling from any
         other state will result in a MachineError prior to this validation.
         """
-        if self.state is ApprovalStates.UNAPPROVED:
+        if self.state is SanctionsStates.UNAPPROVED:
             if user not in self.pending_approvers.all():
                 raise PermissionsError(
                     f'User {user} is not a pending approver for SchemaResponse with id [{self._id}]'
@@ -449,10 +449,10 @@ class SchemaResponse(ObjectIDMixin, BaseModel):
         '''Save changes here and write the action.'''
         self.save()
         # Skip writing the final UNAPPROVED -> UNAPPROVED transition and wait for the accept trigger
-        if self.state is ApprovalStates.UNAPPROVED and not self.pending_approvers.exists():
+        if self.state is SanctionsStates.UNAPPROVED and not self.pending_approvers.exists():
             return
 
-        from_state = ApprovalStates[event_data.transition.source]
+        from_state = SanctionsStates[event_data.transition.source]
         to_state = self.state
         trigger = SchemaResponseTriggers.from_transition(from_state, to_state)
         if trigger is None:
@@ -477,7 +477,7 @@ class SchemaResponse(ObjectIDMixin, BaseModel):
             return
 
         # Generate the "reviews" email context and notify moderators
-        if self.state is ApprovalStates.PENDING_MODERATION:
+        if self.state is SanctionsStates.PENDING_MODERATION:
             email_context = notifications.get_email_template_context(resource=self.parent)
             email_context['revision_id'] = self._id
             email_context['referrer'] = self.initiator
@@ -495,7 +495,7 @@ class SchemaResponse(ObjectIDMixin, BaseModel):
             'parent_url': self.parent.absolute_url,
             'update_url': self.absolute_url,
             'initiator': event_initiator.fullname if event_initiator else None,
-            'pending_moderation': self.state is ApprovalStates.PENDING_MODERATION,
+            'pending_moderation': self.state is SanctionsStates.PENDING_MODERATION,
             'provider': self.parent.provider.name if self.parent.provider else '',
         }
 

@@ -4,7 +4,7 @@ from framework.auth.oauth_scopes import CoreScopes
 
 from osf.models import Registration, OSFUser, RegistrationProvider, OutcomeArtifact, CedarMetadataRecord
 from osf.utils.permissions import WRITE_NODE
-from osf.utils.workflows import ApprovalStates
+from osf.utils.workflows import SanctionsStates
 
 from api.base import permissions as base_permissions
 from api.base import generic_bulk_views as bulk_views
@@ -933,7 +933,7 @@ class RegistrationSchemaResponseList(JSONAPIBaseView, generics.ListAPIView, List
             return all_responses.filter(
                 reviews_state__in=[state.db_name for state in MODERATOR_VISIBLE_STATES],
             )
-        return all_responses.filter(reviews_state=ApprovalStates.APPROVED.db_name)
+        return all_responses.filter(reviews_state=SanctionsStates.APPROVED.db_name)
 
     def get_queryset(self):
         return self.get_queryset_from_request()

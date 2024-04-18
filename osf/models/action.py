@@ -5,11 +5,11 @@ from django.db import models
 
 from .base import BaseModel, ObjectIDMixin
 from osf.utils.workflows import (
-    ApprovalStates,
+    SanctionsStates,
     DefaultStates,
     DefaultTriggers,
-    ReviewStates,
-    ReviewTriggers,
+    PreprintStates,
+    PreprintTriggers,
     RegistrationModerationTriggers,
     RegistrationModerationStates,
     SchemaResponseTriggers,
@@ -40,12 +40,12 @@ class BaseAction(ObjectIDMixin, BaseModel):
         raise NotImplementedError()
 
 
-class ReviewAction(BaseAction):
+class PreprintStateAction(BaseAction):
     target = models.ForeignKey('Preprint', related_name='actions', on_delete=models.CASCADE)
 
-    trigger = models.CharField(max_length=31, choices=ReviewTriggers.choices())
-    from_state = models.CharField(max_length=31, choices=ReviewStates.choices())
-    to_state = models.CharField(max_length=31, choices=ReviewStates.choices())
+    trigger = models.CharField(max_length=31, choices=PreprintTriggers.choices())
+    from_state = models.CharField(max_length=31, choices=PreprintStates.choices())
+    to_state = models.CharField(max_length=31, choices=PreprintStates.choices())
 
 
 class NodeRequestAction(BaseAction):
@@ -76,8 +76,8 @@ class RegistrationAction(BaseAction):
 class SchemaResponseAction(BaseAction):
     target = models.ForeignKey('SchemaResponse', related_name='actions', on_delete=models.CASCADE)
     trigger = models.CharField(max_length=31, choices=SchemaResponseTriggers.char_field_choices())
-    from_state = models.CharField(max_length=31, choices=ApprovalStates.char_field_choices())
-    to_state = models.CharField(max_length=31, choices=ApprovalStates.char_field_choices())
+    from_state = models.CharField(max_length=31, choices=SanctionsStates.char_field_choices())
+    to_state = models.CharField(max_length=31, choices=SanctionsStates.char_field_choices())
 
 
 class CollectionSubmissionAction(ObjectIDMixin, BaseModel):
