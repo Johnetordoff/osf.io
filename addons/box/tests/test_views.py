@@ -26,6 +26,7 @@ from addons.box.tests.utils import (
 mock_client = MockBox()
 pytestmark = pytest.mark.django_db
 
+
 class TestAuthViews(BoxAddonTestCase, views_testing.OAuthAddonAuthViewsTestCaseMixin, OsfTestCase):
 
     def setUp(self):

@@ -19,6 +19,7 @@ from addons.base import exceptions
 from addons.box import settings
 from addons.box.serializer import BoxSerializer
 from website.util import api_v2_url
+from website.settings import GV_RESOURCE_DOMAIN, GV_USER_DOMAIN
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +97,32 @@ class UserSettings(BaseOAuthUserSettings):
             )
         except requests.HTTPError:
             pass
+
+    @staticmethod
+    def sync_with_gravyvalet(owner, auth, is_deleted):
+        resp = requests.get(
+            GV_USER_DOMAIN.format(owner_uri=owner.absolute_url),
+            auth=auth
+        )
+        settings_obj, created = UserSettings.objects.get_or_create(owner=owner)
+        if resp.status_code == 404 and created:
+            # addon not enabled
+            return None
+
+        data = resp.json()
+
+        # addon disabled on GV, but not here
+        if resp.status_code == 404 or resp.status_code == 410:
+            super(BaseOAuthUserSettings, settings_obj).delete()
+            return settings_obj
+        # addon disabled on GV, but not here
+
+        settings_obj.oauth_scopes = data.get('oauth_scopes', settings_obj.oauth_scopes)
+        settings_obj.is_deleted = data.get('is_deleted', settings_obj.is_deleted)
+
+        settings_obj.save = lambda: NotImplementedError('Can\'t update legacy model')  # freeze model
+
+        return settings_obj
 
 
 class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
@@ -267,3 +294,29 @@ class NodeSettings(BaseOAuthNodeSettings, BaseStorageAddon):
     def on_delete(self):
         self.deauthorize(add_log=False)
         self.save()
+
+    @staticmethod
+    def sync_with_gravyvalet(owner, auth, is_deleted):
+        resp = requests.get(
+            GV_RESOURCE_DOMAIN.format(owner_uri=owner.absolute_url),
+            auth=(auth.user.username, auth.user.password)
+        )
+        settings_obj, created = NodeSettings.objects.get_or_create(owner=owner)
+
+        if resp.status_code == 404 and created:
+            return None
+
+        if resp.status_code == 404 or resp.status_code == 410:
+            settings_obj.delete()
+            return settings_obj
+
+        data = resp.json()
+
+        configured_storage_addon = data[0]['relationships']['configured_storage_addons']['links']['self']
+        folder_id = requests.get(configured_storage_addon).json()['data']['attributes']['root_folder']
+
+        settings_obj.set_folder(folder_id)
+
+        settings_obj.save = lambda: NotImplemented('Can\'t update legacy model')  # freeze model
+
+        return settings_obj
