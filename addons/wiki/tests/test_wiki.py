@@ -818,6 +818,7 @@ class TestWikiUuid(OsfTestCase):
         uuid1 = get_sharejs_uuid(self.project, wname1)
         uuid2 = get_sharejs_uuid(self.project, wname2)
 
+
         assert_not_equal(uuid1, uuid2)
         assert_in(uuid1, res1)
         assert_in(uuid2, res2)
