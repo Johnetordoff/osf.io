@@ -866,9 +866,10 @@ class RegistrationApproval(SanctionCallbackMixin, EmailApprovableSanction):
         # Pass auth=None because the registration initiator may not be
         # an admin on components (component admins had the opportunity
         # to disapprove the registration by this point)
-        registration.set_privacy('public', auth=None, log=False)
-        for child in registration.get_descendants_recursive(primary_only=True):
-            child.set_privacy('public', auth=None, log=False)
+        if not registration.is_embargoed:
+            registration.set_privacy('public', auth=None, log=False)
+            for child in registration.get_descendants_recursive(primary_only=True):
+                child.set_privacy('public', auth=None, log=False)
         # Accounts for system actions where no `User` performs the final approval
         auth = Auth(user) if user else None
         registered_from.add_log(
@@ -882,7 +883,8 @@ class RegistrationApproval(SanctionCallbackMixin, EmailApprovableSanction):
         )
         for node in registration.root.node_and_primary_descendants():
             self._add_success_logs(node, user)
-            node.update_search()  # update search if public
+            if not registration.is_embargoed:
+                node.update_search()  # update search if public
 
         self.save()
 

@@ -12,9 +12,20 @@ from tests.utils import mock_auth
 from framework.exceptions import HTTPError
 
 from website import settings
-from osf.models import AbstractNode, Embargo, RegistrationApproval, Retraction, Sanction
+from osf.models import (
+    AbstractNode,
+    Embargo,
+    RegistrationApproval,
+    Retraction,
+    Sanction,
+    Registration,
+    NodeLog
+)
 from osf.utils.tokens import decode, encode, TokenHandler
 from osf.exceptions import TokenHandlerNotFound
+from scripts.embargo_registrations import main as embargo_registrations
+from scripts.approve_registrations import main as approve_registrations
+from django.utils import timezone
 
 NO_SANCTION_MSG = 'There is no {0} associated with this token.'
 APPROVED_MSG = 'This registration is not pending {0}.'
@@ -153,3 +164,48 @@ class TestRetractionTokenHandler(SanctionTokenHandlerBase):
     kind = 'retraction'
     Model = Retraction
     Factory = factories.RetractionFactory
+
+
+class TestEmbargoModerationWorkflow(OsfTestCase):
+
+    def test_embargo_workflow(self):
+        embargo = factories.EmbargoFactory(end_date=timezone.now())
+        registration = Registration.objects.get(Q(**{'embargo': embargo}))
+        assert not registration.is_public
+        registration_approval = factories.RegistrationApprovalFactory(
+            target_item=registration,
+            initiated_by=registration.creator
+        )
+        assert not registration.is_embargoed
+        assert registration.registration_approval.state == RegistrationApproval.UNAPPROVED
+        assert registration.embargo.state == Embargo.UNAPPROVED
+
+        approval_token = embargo.approval_state[registration.creator._id]['approval_token']
+        handler = TokenHandler.from_string(approval_token)
+
+        with mock_auth(registration.creator):
+            with mock.patch(f'osf.utils.tokens.handlers.embargo_handler') as mock_handler:
+                handler.to_response()
+                mock_handler.assert_called_with('approve', registration, registration.registered_from)
+
+        registration.reload()
+        assert registration.is_embargoed
+        assert registration.registration_approval.state == RegistrationApproval.UNAPPROVED
+        registration_approval.initiation_date = timezone.now() - settings.REGISTRATION_APPROVAL_TIME
+        registration_approval.save()
+        registration.save()
+        approve_registrations(dry_run=False)
+
+        registration.reload()
+        assert registration.registration_approval.state == RegistrationApproval.APPROVED
+        assert not registration.is_public
+
+        embargo_registrations(dry_run=False)
+
+        registration.reload()
+        assert registration.embargo.state == Embargo.COMPLETED
+        assert registration.is_public
+        # Assert False here to see the other errors in state transition
+        assert registration.registration_approval.state == RegistrationApproval.APPROVED
+
+        assert registration.registered_from.logs.filter(action=NodeLog.REGISTRATION_APPROVAL_APPROVED)
