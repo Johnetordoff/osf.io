@@ -9,7 +9,7 @@ from tests.base import OsfTestCase
 from osf.models import NodeLog
 from osf_tests.factories import RegistrationFactory, UserFactory
 
-from scripts.embargo_registrations import main
+from osf.management.commands.check_embargoed_registrations import check_embargoed_registrations
 
 
 class TestRetractRegistrations(OsfTestCase):
@@ -28,7 +28,7 @@ class TestRetractRegistrations(OsfTestCase):
         assert_true(self.registration.is_pending_embargo)
         assert_false(self.registration.embargo_end_date)
 
-        main(dry_run=False)
+        check_embargoed_registrations(dry_run=False)
         assert_true(self.registration.is_pending_embargo)
         assert_false(self.registration.embargo_end_date)
 
@@ -37,7 +37,7 @@ class TestRetractRegistrations(OsfTestCase):
         self.registration.embargo.save()
         assert_false(self.registration.embargo_end_date)
 
-        main(dry_run=False)
+        check_embargoed_registrations(dry_run=False)
         self.registration.embargo.refresh_from_db()
         self.registration.refresh_from_db()
         assert_true(self.registration.is_pending_embargo)
@@ -49,7 +49,7 @@ class TestRetractRegistrations(OsfTestCase):
         assert_true(self.registration.is_pending_embargo)
         assert_false(self.registration.embargo_end_date)
 
-        main(dry_run=False)
+        check_embargoed_registrations(dry_run=False)
         self.registration.embargo.refresh_from_db()
         self.registration.refresh_from_db()
         assert_true(self.registration.is_embargoed)
@@ -61,7 +61,7 @@ class TestRetractRegistrations(OsfTestCase):
         assert_true(self.registration.is_pending_embargo)
         assert_false(self.registration.embargo_end_date)
 
-        main(dry_run=False)
+        check_embargoed_registrations(dry_run=False)
         self.registration.embargo.refresh_from_db()
         self.registration.refresh_from_db()
         assert_true(self.registration.is_embargoed)
@@ -77,7 +77,7 @@ class TestRetractRegistrations(OsfTestCase):
         self.registration.embargo.save()
 
         assert_false(self.registration.is_public)
-        main(dry_run=False)
+        check_embargoed_registrations(dry_run=False)
         self.registration.embargo.refresh_from_db()
         self.registration.refresh_from_db()
         assert_true(self.registration.is_public)
@@ -94,7 +94,7 @@ class TestRetractRegistrations(OsfTestCase):
         self.registration.embargo.save()
 
         assert_false(self.registration.is_public)
-        main(dry_run=False)
+        check_embargoed_registrations(dry_run=False)
         self.registration.embargo.refresh_from_db()
         assert_false(self.registration.is_public)
         assert_true(self.registration.embargo_end_date)
@@ -109,7 +109,7 @@ class TestRetractRegistrations(OsfTestCase):
 
         self.registration.embargo.initiation_date = timezone.now() - timedelta(days=365)
         self.registration.embargo.save()
-        main(dry_run=False)
+        check_embargoed_registrations(dry_run=False)
 
         assert_true(
             self.registration.registered_from.logs.filter(
@@ -128,7 +128,7 @@ class TestRetractRegistrations(OsfTestCase):
         self.registration.embargo.end_date = timezone.now() - timedelta(days=1)
         self.registration.embargo.save()
 
-        main(dry_run=False)
+        check_embargoed_registrations(dry_run=False)
         assert_true(
             self.registration.registered_from.logs.filter(
                 action=NodeLog.EMBARGO_COMPLETED

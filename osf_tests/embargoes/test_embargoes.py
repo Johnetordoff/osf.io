@@ -9,7 +9,7 @@ from osf_tests.factories import (
     EmbargoFactory
 )
 
-from scripts.embargo_registrations import main as approve_embargos
+from osf.management.commands.check_embargoed_registrations import check_embargoed_registrations
 from django.utils import timezone
 from osf.utils.workflows import RegistrationModerationStates
 
@@ -38,7 +38,7 @@ class TestDraftRegistrations:
         registration.request_embargo_termination(user)
         mock_now = timezone.now() + datetime.timedelta(days=6)
         with mock.patch.object(timezone, 'now', return_value=mock_now):
-            approve_embargos(dry_run=False)
+            check_embargoed_registrations(dry_run=False)
 
         registration.refresh_from_db()
         registration.embargo.refresh_from_db()
