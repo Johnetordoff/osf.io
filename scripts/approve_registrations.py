@@ -73,7 +73,12 @@ def main(dry_run=True):
                 transaction.savepoint_rollback(sid)
 
 
-@celery_app.task(name='scripts.approve_registrations')
+@celery_app.task(
+    name='scripts.approve_registrations',
+    ignore_results=False,
+    max_retries=5,
+    default_retry_delay=60
+)
 def run_main(dry_run=True):
     if not dry_run:
         scripts_utils.add_file_logger(logger, __file__)
