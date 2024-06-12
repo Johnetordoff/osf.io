@@ -9,7 +9,7 @@ from framework.forms import (
     Form,
     NoHtmlCharacters,
     PasswordField,
-    TextField,
+    StringField,
     HiddenField,
     validators,
     BootstrapTextInput,
@@ -54,17 +54,17 @@ class EmailExists(object):
 
 
 # The order fields are defined determines their order on the page.
-name_field = TextField(
+name_field = StringField(
     'Full Name',
     [
-        validators.Required(message=u'Full name is required'),
+        validators.DataRequired(message=u'Full name is required'),
         NoHtmlCharacters(),
     ],
     filters=[stripped],
     widget=BootstrapTextInput(),
 )
 
-name_field_not_required = TextField(
+name_field_not_required = StringField(
     'Full Name',
     [
         NoHtmlCharacters(),
@@ -73,9 +73,9 @@ name_field_not_required = TextField(
     widget=BootstrapTextInput(),
 )
 
-email_field = TextField('Email Address',
+email_field = StringField('Email Address',
     [
-        validators.Required(message=u'Email address is required'),
+        validators.DataRequired(message=u'Email address is required'),
         validators.Length(min=6, message=u'Email address is too short'),
         validators.Length(max=120, message=u'Email address is too long'),
         validators.Email(message=u'Email address is invalid'),
@@ -85,9 +85,9 @@ email_field = TextField('Email Address',
     widget=BootstrapTextInput())
 
 
-unique_email_field = TextField('Email Address',
+unique_email_field = StringField('Email Address',
     [
-        validators.Required(message=u'Email address is required'),
+        validators.DataRequired(message=u'Email address is required'),
         validators.Length(min=6, message=u'Email address is too short'),
         validators.Length(max=120, message=u'Email address is too long'),
         validators.Email(message=u'Email address is invalid'),
@@ -97,7 +97,7 @@ unique_email_field = TextField('Email Address',
     filters=[lowerstripped],
     widget=BootstrapTextInput())
 
-confirm_email_field = TextField(
+confirm_email_field = StringField(
     'Verify Email Address',
     [
         validators.EqualTo(
@@ -110,7 +110,7 @@ confirm_email_field = TextField(
 
 password_field = PasswordField('Password',
     [
-        validators.Required(message=u'Password is required'),
+        validators.DataRequired(message=u'Password is required'),
         validators.Length(min=8, message=u'Password is too short. '
             'Password should be at least 8 characters.'),
         validators.Length(max=255, message=u'Password is too long. '
@@ -133,7 +133,7 @@ confirm_password_field = PasswordField(
 class ResetPasswordForm(Form):
     password = PasswordField('New Password',
         [
-            validators.Required(message=u'Password is required'),
+            validators.DataRequired(message=u'Password is required'),
             validators.Length(min=8, message=u'Password is too short. '
                 'Password should be at least 8 characters.'),
             validators.Length(max=255, message=u'Password is too long. '
@@ -157,7 +157,7 @@ class SetEmailAndPasswordForm(ResetPasswordForm):
     token = HiddenField()
     accepted_terms_of_service = BooleanField(
         [
-            validators.Required(message=u'This field is required'),
+            validators.DataRequired(message=u'This field is required'),
         ]
     )
 
@@ -172,7 +172,7 @@ class ResendConfirmationForm(Form):
     email = email_field
     accepted_terms_of_service = BooleanField(
         [
-            validators.Required(message=u'This field is required'),
+            validators.DataRequired(message=u'This field is required'),
         ],
         widget=CheckboxInput()
     )

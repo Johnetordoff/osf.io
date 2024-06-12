@@ -2,15 +2,12 @@ import framework.status as status
 
 from wtforms import fields, Form, PasswordField, BooleanField, IntegerField, \
     DateField, DateTimeField, FileField, HiddenField, RadioField, SelectField, \
-    SelectMultipleField, SubmitField, TextAreaField, TextField, FieldList, \
+    SelectMultipleField, SubmitField, TextAreaField, FieldList, StringField, \
     validators
 from wtforms.widgets import TextInput, PasswordInput, html_params, TextArea, Select, CheckboxInput
 from wtforms.validators import ValidationError
 
 from osf.utils.sanitize import strip_html
-
-
-validators = validators
 
 
 class BootstrapTextInput(TextInput):
