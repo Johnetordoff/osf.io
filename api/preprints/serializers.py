@@ -156,7 +156,15 @@ class PreprintSerializer(TaxonomizableSerializerMixin, MetricsSerializerMixin, J
         self_view='preprints:preprint-node-relationship',
         self_view_kwargs={'preprint_id': '<_id>'},
     ))
-
+    affiliated_institutions = RelationshipField(
+        related_view='preprints:preprints-institutions',
+        related_view_kwargs={'preprint_id': '<_id>'},
+        self_view='preprints:preprints-institutions',
+        self_view_kwargs={'preprint_id': '<_id>'},
+        read_only=False,
+        required=False,
+        allow_null=True,
+    )
     license = NodeLicenseRelationshipField(
         related_view='licenses:license-detail',
         related_view_kwargs={'license_id': '<license.node_license._id>'},
