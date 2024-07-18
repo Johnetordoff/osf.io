@@ -10,8 +10,6 @@ from api.base.settings.defaults import API_BASE
 from django.utils import timezone
 from nose.tools import (
     assert_equal,
-    assert_in,
-    assert_not_in,
 )
 
 
@@ -19,24 +17,26 @@ from nose.tools import (
 class TestPreprintList(ApiTestCase):
 
     def setUp(self):
-        super(TestPreprintList, self).setUp()
+        super().setUp()
         self.user = AuthUserFactory()
         self.preprint = PreprintFactory(creator=self.user)
-        self.url = '/{}preprints/'.format(API_BASE)
+        self.url = f'/{API_BASE}preprints/'
+
         self.project = ProjectFactory(creator=self.user)
         self.institution = InstitutionFactory()
 
     def test_return_preprints_logged_out(self):
         res = self.app.get(self.url)
-        assert_equal(len(res.json['data']), 1)
-        assert_equal(res.status_code, 200)
-        assert_equal(res.content_type, 'application/vnd.api+json')
+        assert len(res.json['data']) == 1
+        assert res.status_code == 200
+        assert res.status_code == 200
+        assert res.content_type == 'application/vnd.api+json'
 
     def test_exclude_nodes_from_preprints_endpoint(self):
         res = self.app.get(self.url, auth=self.user.auth)
         ids = [each['id'] for each in res.json['data']]
-        assert_in(self.preprint._id, ids)
-        assert_not_in(self.project._id, ids)
+        assert self.preprint._id in ids
+        assert self.project._id not in ids
 
     def test_withdrawn_preprints_list(self):
         pp = PreprintFactory(reviews_workflow='pre-moderation', is_published=False, creator=self.user)

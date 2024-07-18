@@ -25,13 +25,14 @@ def build_preprint_update_payload(node_id, attributes=None, relationships=None, 
     }
     return payload
 
-@pytest.fixture()
-def user():
-    return AuthUserFactory()
 
 @pytest.mark.django_db
 @pytest.mark.enable_enqueue_task
 class TestPreprintUpdate:
+
+    @pytest.fixture()
+    def user(self):
+        return AuthUserFactory()
 
     @pytest.fixture()
     def preprint(self, user):
@@ -39,7 +40,7 @@ class TestPreprintUpdate:
 
     @pytest.fixture()
     def url(self, preprint):
-        return '/{}preprints/{}/'.format(API_BASE, preprint._id)
+        return f'/{API_BASE}preprints/{preprint._id}/'
 
     @pytest.fixture()
     def subject(self):
@@ -294,7 +295,7 @@ class TestPreprintUpdate:
         preprint.reload()
         assert preprint.article_doi == '10.1234/test'
         preprint_detail = app.get(url, auth=user.auth).json['data']
-        assert preprint_detail['links']['doi'] == f'https://doi.org/10.1234/test'
+        assert preprint_detail['links']['doi'] == 'https://doi.org/10.1234/test'
 
     def test_title_has_a_512_char_limit(self, app, user, preprint, url):
         new_title = 'a' * 513

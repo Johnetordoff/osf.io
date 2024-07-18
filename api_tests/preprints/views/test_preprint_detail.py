@@ -31,11 +31,11 @@ class TestPreprintDetail:
 
     @pytest.fixture()
     def url(self, preprint):
-        return '/{}preprints/{}/'.format(API_BASE, preprint._id)
+        return f'/{API_BASE}preprints/{preprint._id}/'
 
     @pytest.fixture()
     def unpublished_url(self, unpublished_preprint):
-        return '/{}preprints/{}/'.format(API_BASE, unpublished_preprint._id)
+        return f'/{API_BASE}preprints/{unpublished_preprint._id}/'
 
     @pytest.fixture()
     def res(self, app, url):
@@ -70,7 +70,7 @@ class TestPreprintDetail:
         assert node_data.get('type', None) == 'nodes'
 
     def test_withdrawn_preprint(self, app, user, moderator, preprint_pre_mod):
-        url = '/{}preprints/{}/'.format(API_BASE, preprint_pre_mod._id)
+        url = f'/{API_BASE}preprints/{preprint_pre_mod._id}/'
         res = app.get(url, auth=user.auth)
         data = res.json['data']
         assert not data['attributes']['date_withdrawn']
@@ -103,7 +103,7 @@ class TestPreprintDetail:
         res = app.get(url, auth=user.auth)
         embeds = res.json['data']['embeds']
         ids = preprint.contributors.all().values_list('guids___id', flat=True)
-        ids = ['{}-{}'.format(preprint._id, id_) for id_ in ids]
+        ids = [f'{preprint._id}-{id_}' for id_ in ids]
         for contrib in embeds['contributors']['data']:
             assert contrib['id'] in ids
 
@@ -138,4 +138,4 @@ class TestPreprintDetail:
         res = app.get(embed_url)
         assert res.status_code == 200
         link = res.json['data']['relationships']['identifiers']['links']['related']['href']
-        assert '{}identifiers/'.format(url) in link
+        assert f'{url}identifiers/' in link

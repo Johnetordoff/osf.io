@@ -1,6 +1,6 @@
 import pytest
 from osf.utils.workflows import DefaultStates
-from osf.utils.permissions import READ, WRITE
+from osf.utils.permissions import WRITE
 from osf_tests.factories import PreprintFactory, AuthUserFactory, ProjectFactory, SubjectFactory, PreprintProviderFactory
 from api.base.settings.defaults import API_BASE
 
