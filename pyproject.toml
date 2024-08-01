@@ -26,7 +26,7 @@ bcrypt = "4.1.2"
 python-dateutil = "2.9.0"
 pytz = "2024.1"
 bleach = {version= "6.1.0", extras = ["css"] }
-pillow = "10.2.0"
+pillow = "10.3.0"
 Markupsafe = "2.1.5"
 blinker = "1.7.0"
 furl = "2.1.3"
