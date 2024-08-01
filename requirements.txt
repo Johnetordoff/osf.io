@@ -53,7 +53,7 @@ raven==6.4.0
 django-redis==5.2.0
 
 # API requirements
-Django==3.2.17
+Django==3.2.25
 djangorestframework==3.13.1
 django-cors-headers==3.10.1
 djangorestframework-bulk==0.2.1
