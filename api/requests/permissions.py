@@ -58,6 +58,7 @@ class NodeRequestPermission(drf_permissions.BasePermission):
 class PreprintRequestPermission(drf_permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         auth = get_user_auth(request)
+
         if auth.user is None:
             return False
 
@@ -69,30 +70,30 @@ class PreprintRequestPermission(drf_permissions.BasePermission):
         elif isinstance(obj, PreprintRequestableMixin):
             target = obj
             preprint = obj.target
-            # Creating a Request is "submitting"
-            trigger = request.data.get('trigger', DefaultTriggers.SUBMIT.value if request.method not in drf_permissions.SAFE_METHODS else None)
+            trigger = request.data.get(
+                'trigger',
+                DefaultTriggers.SUBMIT.value if request.method not in drf_permissions.SAFE_METHODS else None
+            )
         elif isinstance(obj, Preprint):
             preprint = obj
             trigger = DefaultTriggers.SUBMIT.value if request.method not in drf_permissions.SAFE_METHODS else None
         else:
             raise ValueError(f'Not a request-related model: {obj}')
 
-        is_requester = target is not None and target.creator == auth.user or trigger == DefaultTriggers.SUBMIT.value
+        is_requester = (target is not None and target.creator == auth.user) or trigger == DefaultTriggers.SUBMIT.value
         is_preprint_admin = preprint.has_permission(auth.user, osf_permissions.ADMIN)
         is_moderator = auth.user.has_perm('withdraw_submissions', preprint.provider)
         has_view_permission = is_requester or is_preprint_admin or is_moderator
 
         if request.method in drf_permissions.SAFE_METHODS:
-            # Requesters, moderators, and preprint admins can view actions
             return has_view_permission
-        else:
-            if not has_view_permission:
-                return False
 
-            if trigger in [DefaultTriggers.ACCEPT.value, DefaultTriggers.REJECT.value]:
-                # Only moderators can approve or reject requests
-                return is_moderator
-            if trigger in [DefaultTriggers.EDIT_COMMENT.value, DefaultTriggers.SUBMIT.value]:
-                # Requesters may edit their comment or submit their request
-                return is_requester
+        if not has_view_permission:
             return False
+
+        if trigger in [DefaultTriggers.ACCEPT.value, DefaultTriggers.REJECT.value]:
+            return is_moderator
+        if trigger in [DefaultTriggers.EDIT_COMMENT.value, DefaultTriggers.SUBMIT.value]:
+            return is_requester
+
+        return False

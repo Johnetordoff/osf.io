@@ -51,6 +51,7 @@ from api.preprints.permissions import (
     AdminOrPublic,
     ContributorDetailPermissions,
     PreprintFilesPermissions,
+    PreprintCitationPermissions
 )
 from api.nodes.permissions import (
     ContributorOrPublic,
@@ -61,6 +62,7 @@ from api.requests.views import PreprintRequestMixin
 from api.subjects.views import BaseResourceSubjectsList, SubjectRelationshipBaseView
 from api.base.metrics import PreprintMetricsViewMixin
 from osf.metrics import PreprintDownload, PreprintView
+
 
 class PreprintMixin(NodeMixin):
     serializer_class = PreprintSerializer
@@ -83,6 +85,7 @@ class PreprintMixin(NodeMixin):
             self.check_object_permissions(self.request, preprint)
 
         return preprint
+
 
 class PreprintList(PreprintMetricsViewMixin, JSONAPIBaseView, generics.ListCreateAPIView, PreprintFilterMixin):
     """The documentation for this endpoint can be found [here](https://developer.osf.io/#operation/preprints_list).
@@ -219,11 +222,13 @@ class PreprintNodeRelationship(JSONAPIBaseView, generics.RetrieveUpdateAPIView, 
         preprint = self.get_preprint()
         auth = get_user_auth(self.request)
         type_ = 'linked_preprint_nodes' if Version(self.request.version) < Version('2.13') else 'nodes'
-        obj = {
-            'data': {'id': preprint.node._id, 'type': type_} if preprint.node and preprint.node.can_view(auth) else None,
+        return {
+            'data': {
+                'id': preprint.node._id,
+                'type': type_
+            } if preprint.node and preprint.node.can_view(auth) else None,
             'self': preprint,
         }
-        return obj
 
 
 class PreprintCitationDetail(JSONAPIBaseView, generics.RetrieveAPIView, PreprintMixin):
@@ -232,6 +237,7 @@ class PreprintCitationDetail(JSONAPIBaseView, generics.RetrieveAPIView, Preprint
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
+        PreprintCitationPermissions
     )
 
     required_read_scopes = [CoreScopes.PREPRINT_CITATIONS_READ]
@@ -242,13 +248,7 @@ class PreprintCitationDetail(JSONAPIBaseView, generics.RetrieveAPIView, Preprint
     view_name = 'preprint-citation'
 
     def get_object(self):
-        preprint = self.get_preprint()
-        auth = get_user_auth(self.request)
-
-        if preprint.can_view(auth):
-            return preprint.csl
-
-        raise PermissionDenied if auth.user else NotAuthenticated
+        return self.get_preprint().csl
 
 
 class PreprintCitationStyleDetail(JSONAPIBaseView, generics.RetrieveAPIView, PreprintMixin):
@@ -257,6 +257,7 @@ class PreprintCitationStyleDetail(JSONAPIBaseView, generics.RetrieveAPIView, Pre
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
+        PreprintCitationPermissions
     )
 
     required_read_scopes = [CoreScopes.PREPRINT_CITATIONS_READ]
@@ -268,19 +269,18 @@ class PreprintCitationStyleDetail(JSONAPIBaseView, generics.RetrieveAPIView, Pre
 
     def get_object(self):
         preprint = self.get_preprint()
-        auth = get_user_auth(self.request)
         style = self.kwargs.get('style_id')
 
-        if preprint.can_view(auth):
-            try:
-                citation = render_citation(node=preprint, style=style)
-            except ValueError as err:  # style requested could not be found
-                csl_name = re.findall(r'[a-zA-Z]+\.csl', str(err))[0]
-                raise NotFound(f'{csl_name} is not a known style.')
+        try:
+            citation = render_citation(node=preprint, style=style)
+        except ValueError as err:  # style requested could not be found
+            csl_name = re.findall(r'[a-zA-Z]+\.csl', str(err))[0]
+            raise NotFound(f'{csl_name} is not a known style.')
 
-            return {'citation': citation, 'id': style}
-
-        raise PermissionDenied if auth.user else NotAuthenticated
+        return {
+            'citation': citation,
+            'id': style
+        }
 
 
 class PreprintIdentifierList(IdentifierList, PreprintMixin):
@@ -332,8 +332,8 @@ class PreprintIdentifierList(IdentifierList, PreprintMixin):
     view_name = 'identifier-list'
 
     # overrides IdentifierList
-    def get_object(self, check_object_permissions=True):
-        return self.get_preprint(check_object_permissions=check_object_permissions)
+    def get_object(self):
+        return self.get_preprint()
 
 
 class PreprintContributorsList(NodeContributorsList, PreprintMixin):
@@ -354,8 +354,7 @@ class PreprintContributorsList(NodeContributorsList, PreprintMixin):
     serializer_class = PreprintContributorsSerializer
 
     def get_default_queryset(self):
-        preprint = self.get_preprint()
-        return preprint.preprintcontributor_set.all().prefetch_related('user__guids')
+        return self.get_preprint().preprintcontributor_set.all().prefetch_related('user__guids')
 
     # overrides NodeContributorsList
     def get_serializer_class(self):
@@ -370,7 +369,7 @@ class PreprintContributorsList(NodeContributorsList, PreprintMixin):
             return PreprintContributorsSerializer
 
     def get_resource(self):
-        return self.get_preprint(ignore_404=True)
+        return self.get_preprint()
 
     # Overrides NodeContributorsList
     def get_serializer_context(self):
@@ -402,8 +401,6 @@ class PreprintContributorDetail(NodeContributorDetail, PreprintMixin):
     def get_object(self):
         preprint = self.get_preprint()
         user = self.get_user()
-        # May raise a permission denied
-        self.check_object_permissions(self.request, user)
         try:
             return preprint.preprintcontributor_set.get(user=user)
         except PreprintContributor.DoesNotExist:
@@ -474,17 +471,15 @@ class PreprintSubjectsRelationship(SubjectRelationshipBaseView, PreprintMixin):
     view_category = 'preprints'
     view_name = 'preprint-relationships-subjects'
 
-    def get_resource(self, check_object_permissions=True):
-        return self.get_preprint(check_object_permissions=check_object_permissions)
+    def get_resource(self):
+        return self.get_preprint()
 
     def get_object(self):
-        resource = self.get_resource(check_object_permissions=False)
-        obj = {
+        resource = self.get_resource()
+        return {
             'data': resource.subjects.all(),
             'self': resource,
         }
-        self.check_object_permissions(self.request, resource)
-        return obj
 
 
 class PreprintActionList(JSONAPIBaseView, generics.ListCreateAPIView, ListFilterMixin, PreprintMixin):

@@ -9,6 +9,7 @@ from osf.models import Preprint, OSFUser, PreprintContributor, Identifier
 from addons.osfstorage.models import OsfStorageFolder
 from osf.utils.workflows import DefaultStates
 from osf.utils import permissions as osf_permissions
+from osf.utils.permissions import ADMIN
 
 
 class PreprintPublishedOrAdmin(permissions.BasePermission):
@@ -51,6 +52,46 @@ class PreprintPublishedOrWrite(PreprintPublishedOrAdmin):
             if not obj.has_permission(auth.user, osf_permissions.WRITE):
                 raise exceptions.PermissionDenied(detail='User must have admin or write permissions to the preprint.')
             return True
+
+
+class PreprintCitationPermissions(permissions.BasePermission):
+
+    acceptable_models = (Preprint,)
+
+    def has_object_permission(self, request, view, obj):
+        assert_resource_type(obj, self.acceptable_models)
+        auth = get_user_auth(request)
+        if not auth.user:
+            return obj.verified_publishable
+
+        if obj.is_published:
+            return True
+
+        if obj.is_public and obj.has_submitted_preprint:
+            return True
+
+        if obj.deleted:
+            return False
+
+        if obj.is_preprint_orphan:
+            return False
+
+        if obj.is_retracted and not obj.ever_public:
+            return False
+
+        if obj.verified_publishable:
+            return True
+
+        if obj.is_public and auth.user.has_perm('view_submissions', obj.provider):
+            return True
+
+        if obj.has_permission(auth.user, ADMIN):
+            return True
+
+        if obj.is_contributor(auth.user) and obj.has_submitted_preprint:
+            return True
+
+        return False
 
 
 class ContributorDetailPermissions(PreprintPublishedOrAdmin):
