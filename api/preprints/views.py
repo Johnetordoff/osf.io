@@ -56,7 +56,7 @@ from api.nodes.permissions import (
     ContributorOrPublic,
 )
 from api.requests.permissions import PreprintRequestPermission
-from api.requests.serializers import PreprintRequestSerializer, PreprintRequestCreateSerializer
+from api.requests.serializers import PreprintRequestSerializer
 from api.requests.views import PreprintRequestMixin
 from api.subjects.views import BaseResourceSubjectsList, SubjectRelationshipBaseView
 from api.base.metrics import PreprintMetricsViewMixin
@@ -619,7 +619,7 @@ class PreprintFilesList(NodeFilesList, PreprintMixin):
         return get_object_or_error(Preprint, self.kwargs['preprint_id'], self.request)
 
 
-class PreprintRequestListCreate(JSONAPIBaseView, generics.ListCreateAPIView, ListFilterMixin, PreprintRequestMixin):
+class PreprintRequestList(JSONAPIBaseView, generics.ListCreateAPIView, ListFilterMixin, PreprintRequestMixin):
     permission_classes = (
         drf_permissions.IsAuthenticatedOrReadOnly,
         base_permissions.TokenHasScope,
@@ -635,12 +635,6 @@ class PreprintRequestListCreate(JSONAPIBaseView, generics.ListCreateAPIView, Lis
 
     view_category = 'preprint-requests'
     view_name = 'preprint-request-list'
-
-    def get_serializer_class(self):
-        if self.request.method == 'POST':
-            return PreprintRequestCreateSerializer
-        else:
-            return PreprintRequestSerializer
 
     def get_default_queryset(self):
         return self.get_target().requests.all()

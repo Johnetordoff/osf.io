@@ -125,9 +125,10 @@ class NodeRequestCreateSerializer(NodeRequestSerializer):
         node_request.run_submit(auth.user)
         return node_request
 
+
 class PreprintRequestSerializer(RequestSerializer):
-    class Meta:
-        type_ = 'preprint-requests'
+
+    request_type = ser.ChoiceField(required=True, choices=RequestTypes.choices())
 
     target = RelationshipField(
         read_only=True,
@@ -143,10 +144,16 @@ class PreprintRequestSerializer(RequestSerializer):
     )
 
     def get_target_url(self, obj):
-        return absolute_reverse('preprints:preprint-detail', kwargs={'preprint_id': obj.target._id, 'version': self.context['request'].parser_context['kwargs']['version']})
+        return absolute_reverse(
+            'preprints:preprint-detail',
+            kwargs={
+                'preprint_id': obj.target._id,
+                'version': self.context['request'].parser_context['kwargs']['version']
+            }
+        )
 
-class PreprintRequestCreateSerializer(PreprintRequestSerializer):
-    request_type = ser.ChoiceField(required=True, choices=RequestTypes.choices())
+    class Meta:
+        type_ = 'preprint-requests'
 
     def create(self, validated_data):
         auth = get_user_auth(self.context['request'])
