@@ -68,7 +68,7 @@ django-celery-results = "2.5.1"
 django-timezone-field = "6.1.0" # pin to delay untested major version bump
 pyjwe = "1.0.0"
 # Required by pyjwe and ndg-httpsclient
-cryptography = "42.0.5"
+cryptography = "43.0.1"
 #rpds-py==0.18.0
 jsonschema = "4.21.1"
 django-guardian = "2.4.0"
