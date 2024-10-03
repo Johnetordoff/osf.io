@@ -55,15 +55,28 @@ class _InstiUserReportHelper:
             account_creation_date=YearMonth.from_date(self.user.created),
             orcid_id=self.user.get_verified_external_id('ORCID', verified_only=True),
             public_project_count=self._public_project_queryset().count(),
+            affiliated_public_project_count=self._affiliated_public_project_queryset().count(),
             private_project_count=self._private_project_queryset().count(),
             public_registration_count=self._public_registration_queryset().count(),
+            affiliated_public_registration_count=self._affiliated_public_registration_count_queryset().count(),
             embargoed_registration_count=self._embargoed_registration_queryset().count(),
             public_file_count=self._public_osfstorage_file_queryset().count(),
             published_preprint_count=self._published_preprint_queryset().count(),
+            affiliated_published_preprint_count=self._affiliated_published_preprint_queryset().count(),
             storage_byte_count=self._storage_byte_count(),
         )
 
     def _node_queryset(self):
+        # Nodes accessible to the user (not limited to the institution)
+        return osfdb.Node.objects.filter(
+            created__lt=self.before_datetime,
+            is_deleted=False,
+        ).exclude(spam_status=SpamStatus.SPAM).get_nodes_for_user(
+            user=self.user,
+        )
+
+    def _affiliated_node_queryset(self):
+        # Nodes affiliated with the institution and accessible to the user
         _institution_node_qs = self.institution.nodes.filter(
             created__lt=self.before_datetime,
             is_deleted=False,
@@ -80,6 +93,13 @@ class _InstiUserReportHelper:
             root_id=F('pk'),  # only root nodes
         )
 
+    def _affiliated_public_project_queryset(self):
+        return self._affiliated_node_queryset().filter(
+            type='osf.node',
+            is_public=True,
+            root_id=F('pk'),
+        )
+
     def _private_project_queryset(self):
         return self._node_queryset().filter(
             type='osf.node',  # `type` field from TypedModel
@@ -94,6 +114,13 @@ class _InstiUserReportHelper:
             root_id=F('pk'),  # only root nodes
         )
 
+    def _affiliated_public_registration_count_queryset(self):
+        return self._affiliated_node_queryset().filter(
+            type='osf.registration',
+            is_public=True,
+            root_id=F('pk'),
+        )
+
     def _embargoed_registration_queryset(self):
         return self._node_queryset().filter(
             type='osf.registration',  # `type` field from TypedModel
@@ -103,6 +130,16 @@ class _InstiUserReportHelper:
         )
 
     def _published_preprint_queryset(self):
+        return (
+            osfdb.Preprint.objects.can_view()  # published/publicly-viewable
+            .filter(
+                _contributors=self.user,
+                date_published__lt=self.before_datetime,
+            )
+            .exclude(spam_status=SpamStatus.SPAM)
+        )
+
+    def _affiliated_published_preprint_queryset(self):
         return (
             osfdb.Preprint.objects.can_view()  # published/publicly-viewable
             .filter(

@@ -373,10 +373,13 @@ class NewInstitutionSummaryMetricsSerializer(JSONAPISerializer):
 
     user_count = ser.IntegerField(read_only=True)
     public_project_count = ser.IntegerField(read_only=True)
+    affiliated_public_project_count = ser.IntegerField(read_only=True)
     private_project_count = ser.IntegerField(read_only=True)
     public_registration_count = ser.IntegerField(read_only=True)
+    affiliated_public_registration_count = ser.IntegerField(read_only=True)
     embargoed_registration_count = ser.IntegerField(read_only=True)
     published_preprint_count = ser.IntegerField(read_only=True)
+    affiliated_published_preprint_count = ser.IntegerField(read_only=True)
     public_file_count = ser.IntegerField(read_only=True)
     storage_byte_count = ser.IntegerField(read_only=True)
     monthly_logged_in_user_count = ser.IntegerField(read_only=True)
