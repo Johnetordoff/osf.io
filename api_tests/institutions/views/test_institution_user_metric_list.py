@@ -404,6 +404,110 @@ class TestNewInstitutionUserMetricList:
             assert _resp.status_code == 200
             assert list(_user_ids(_resp)) == _expected_user_id_list
 
+    @pytest.mark.parametrize('format_type, delimiter, content_type', [
+        ('csv', ',', 'text/csv; charset=utf-8'),
+        ('tsv', '\t', 'text/tab-separated-values; charset=utf-8')
+    ])
+    def test_get_report_formats(self, app, url, institutional_admin, institution, format_type, delimiter, content_type):
+        # Setting up the reports
+        _report_factory(
+            '2024-08',
+            institution,
+            user_id='u_orcomma',
+            account_creation_date='2018-02',
+            user_name='Jason Kelce',
+            orcid_id='4444-3333-2222-1111',
+            department_name='Center \t Greatest Ever',
+            storage_byte_count=736662999298,
+            embargoed_registration_count=1,
+            published_preprint_count=1,
+            public_registration_count=2,
+            public_project_count=3,
+            public_file_count=4,
+            private_project_count=5,
+            month_last_active='2018-02',
+            month_last_login='2018-02',
+        ),
+        _report_factory(
+            '2024-08',
+            institution,
+            user_id='u_orcomma2',
+            account_creation_date='2018-02',
+            user_name='Brian Dawkins, Weapon X, The Wolverine',
+            orcid_id='4444-3333-2222-1111',
+            department_name='Safety',
+            storage_byte_count=736662999298,
+            embargoed_registration_count=1,
+            published_preprint_count=1,
+            public_registration_count=2,
+            public_project_count=3,
+            public_file_count=4,
+            private_project_count=5,
+            month_last_active='2018-02',
+            month_last_login='2018-02',
+        )
+
+        resp = app.get(f'{url}?format={format_type}', auth=institutional_admin.auth)
+        assert resp.status_code == 200
+        assert resp.headers['Content-Type'] == content_type
+
+        response_body = resp.text
+        expected_response = [
+            [  # Column Headers
+                'account_creation_date',
+                'department',
+                'embargoed_registration_count',
+                'month_last_active',
+                'month_last_login',
+                'orcid_id',
+                'private_projects',
+                'public_file_count',
+                'public_projects',
+                'public_registration_count',
+                'published_preprint_count',
+                'storage_byte_count',
+                'user_name'
+            ],
+            [
+                '2018-02',
+                'Center \t Greatest Ever',
+                '1',
+                '2018-02',
+                '2018-02',
+                '4444-3333-2222-1111',
+                '5',
+                '4',
+                '3',
+                '2',
+                '1',
+                '736662999298',
+                'Jason Kelce'
+            ],
+            [
+                '2018-02',
+                'Safety',
+                '1',
+                '2018-02',
+                '2018-02',
+                '4444-3333-2222-1111',
+                '5',
+                '4',
+                '3',
+                '2',
+                '1',
+                '736662999298',
+                'Brian Dawkins, Weapon X, The Wolverine'
+            ]
+        ]
+
+        with StringIO(response_body) as file:
+            reader = csv.reader(file, delimiter=delimiter)
+            response_rows = list(reader)
+
+        assert response_rows[0] == expected_response[0]
+        assert sorted(response_rows[1:]) == sorted(expected_response[1:])
+
+
 def _user_ids(api_response):
     for _datum in api_response.json['data']:
         yield _datum['relationships']['user']['data']['id']
