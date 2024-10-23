@@ -67,7 +67,7 @@ class MetricsReportsBaseRenderer(renderers.BaseRenderer):
             return USER_INSTITUTION_REPORT_FILENAME.format(
                 date_created=current_date,
                 institution_id=renderer_context['view'].kwargs['institution_id'],
-                format_type=format_type
+                format_type=format_type,
             )
         else:
             raise NotImplementedError('Missing format filename')
