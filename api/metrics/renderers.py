@@ -1,5 +1,7 @@
 import csv
 import io
+from api.base.settings.defaults import USER_INSTITUTION_REPORT_FILENAME
+import datetime
 
 from django.http import Http404
 
@@ -42,16 +44,28 @@ def get_csv_row(keys_list, report_attrs):
     ]
 
 
-class MetricsReportsCsvRenderer(renderers.BaseRenderer):
-    media_type = 'text/csv'
-    format = 'csv'
-    CSV_DIALECT = csv.excel
+class MetricsReportsBaseRenderer(renderers.BaseRenderer):
+    media_type: str
+    format: str
+    CSV_DIALECT: csv.Dialect
+    extension: str
 
-    def render(self, json_response, accepted_media_type=None, renderer_context=None):
-        serialized_reports = (
-            jsonapi_resource['attributes']
-            for jsonapi_resource in json_response['data']
-        )
+    def get_filename(self, renderer_context: dict, format_type: str) -> str:
+        """Generate the filename for the CSV/TSV file based on institution and current date."""
+        if renderer_context and 'view' in renderer_context:
+            current_date = datetime.datetime.now().strftime('%Y-%m')  # Format as 'YYYY-MM'
+            return USER_INSTITUTION_REPORT_FILENAME.format(
+                date_created=current_date,
+                institution_id=renderer_context['view'].kwargs['institution_id'],
+                format_type=format_type
+            )
+        else:
+            raise NotImplementedError('Missing format filename')
+
+    def render(self, json_response: dict, accepted_media_type: str = None, renderer_context: dict = None) -> str:
+        """Render the response as CSV or TSV format."""
+        serialized_reports = (jsonapi_resource['attributes'] for jsonapi_resource in json_response['data'])
+
         try:
             first_row = next(serialized_reports)
         except StopIteration:
@@ -61,13 +75,24 @@ class MetricsReportsCsvRenderer(renderers.BaseRenderer):
         csv_writer = csv.writer(csv_filecontent, dialect=self.CSV_DIALECT)
         csv_writer.writerow(csv_fieldnames)
         for serialized_report in (first_row, *serialized_reports):
-            csv_writer.writerow(
-                get_csv_row(csv_fieldnames, serialized_report),
-            )
+            csv_writer.writerow(get_csv_row(csv_fieldnames, serialized_report))
+
+        response = renderer_context['response']
+        filename = self.get_filename(renderer_context, self.extension)
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
         return csv_filecontent.getvalue()
 
 
-class MetricsReportsTsvRenderer(MetricsReportsCsvRenderer):
-    format = 'tsv'
+class MetricsReportsCsvRenderer(MetricsReportsBaseRenderer):
+    media_type = 'text/csv'
+    format = 'csv'
+    CSV_DIALECT = csv.excel
+    extension = 'csv'
+
+
+class MetricsReportsTsvRenderer(MetricsReportsBaseRenderer):
     media_type = 'text/tab-separated-values'
+    format = 'tsv'
     CSV_DIALECT = csv.excel_tab
+    extension = 'tsv'

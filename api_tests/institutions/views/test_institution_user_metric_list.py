@@ -7,7 +7,7 @@ from urllib.parse import urlencode
 import pytest
 from waffle.testutils import override_flag
 
-from api.base.settings.defaults import API_BASE, DEFAULT_ES_NULL_VALUE
+from api.base.settings.defaults import API_BASE, DEFAULT_ES_NULL_VALUE, USER_INSTITUTION_REPORT_FILENAME
 import osf.features
 from osf_tests.factories import (
     InstitutionFactory,
@@ -450,6 +450,14 @@ class TestNewInstitutionUserMetricList:
         resp = app.get(f'{url}?format={format_type}', auth=institutional_admin.auth)
         assert resp.status_code == 200
         assert resp.headers['Content-Type'] == content_type
+
+        current_date = datetime.datetime.now().strftime('%Y-%m')
+        expected_filename = USER_INSTITUTION_REPORT_FILENAME.format(
+            date_created=current_date,
+            institution_id=institution._id,
+            format_type=format_type
+        )
+        assert resp.headers['Content-Disposition'] == f'attachment; filename="{expected_filename}"'
 
         response_body = resp.text
         expected_response = [
