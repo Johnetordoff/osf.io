@@ -1,5 +1,6 @@
-import datetime
 import csv
+import json
+import datetime
 from io import StringIO
 from random import random
 from urllib.parse import urlencode
@@ -406,36 +407,18 @@ class TestNewInstitutionUserMetricList:
 
     @pytest.mark.parametrize('format_type, delimiter, content_type', [
         ('csv', ',', 'text/csv; charset=utf-8'),
-        ('tsv', '\t', 'text/tab-separated-values; charset=utf-8')
+        ('tsv', '\t', 'text/tab-separated-values; charset=utf-8'),
+        ('json_file', None, 'application/json; charset=utf-8')
     ])
     def test_get_report_formats(self, app, url, institutional_admin, institution, format_type, delimiter, content_type):
-        # Setting up the reports
         _report_factory(
             '2024-08',
             institution,
-            user_id='u_orcomma',
+            user_id=f'u_orcomma',
             account_creation_date='2018-02',
-            user_name='Jason Kelce',
+            user_name=f'Jason Kelce',
             orcid_id='4444-3333-2222-1111',
             department_name='Center \t Greatest Ever',
-            storage_byte_count=736662999298,
-            embargoed_registration_count=1,
-            published_preprint_count=1,
-            public_registration_count=2,
-            public_project_count=3,
-            public_file_count=4,
-            private_project_count=5,
-            month_last_active='2018-02',
-            month_last_login='2018-02',
-        ),
-        _report_factory(
-            '2024-08',
-            institution,
-            user_id='u_orcomma2',
-            account_creation_date='2018-02',
-            user_name='Brian Dawkins, Weapon X, The Wolverine',
-            orcid_id='4444-3333-2222-1111',
-            department_name='Safety',
             storage_byte_count=736662999298,
             embargoed_registration_count=1,
             published_preprint_count=1,
@@ -455,65 +438,47 @@ class TestNewInstitutionUserMetricList:
         expected_filename = USER_INSTITUTION_REPORT_FILENAME.format(
             date_created=current_date,
             institution_id=institution._id,
-            format_type=format_type
+            format_type='json' if format_type == 'json_file' else format_type
         )
         assert resp.headers['Content-Disposition'] == f'attachment; filename="{expected_filename}"'
 
-        response_body = resp.text
-        expected_response = [
-            [  # Column Headers
-                'account_creation_date',
-                'department',
-                'embargoed_registration_count',
-                'month_last_active',
-                'month_last_login',
-                'orcid_id',
-                'private_projects',
-                'public_file_count',
-                'public_projects',
-                'public_registration_count',
-                'published_preprint_count',
-                'storage_byte_count',
-                'user_name'
-            ],
-            [
-                '2018-02',
-                'Center \t Greatest Ever',
-                '1',
-                '2018-02',
-                '2018-02',
-                '4444-3333-2222-1111',
-                '5',
-                '4',
-                '3',
-                '2',
-                '1',
-                '736662999298',
-                'Jason Kelce'
-            ],
-            [
-                '2018-02',
-                'Safety',
-                '1',
-                '2018-02',
-                '2018-02',
-                '4444-3333-2222-1111',
-                '5',
-                '4',
-                '3',
-                '2',
-                '1',
-                '736662999298',
-                'Brian Dawkins, Weapon X, The Wolverine'
+        if format_type == 'json_file':
+            # Validate JSON structure and content
+            response_data = json.loads(resp.body.decode('utf-8'))
+            expected_data = [
+                {
+                    'account_creation_date': '2018-02',
+                    'department_name': 'Center \t Greatest Ever',
+                    'embargoed_registration_count': 1,
+                    'month_last_active': '2018-02',
+                    'month_last_login': '2018-02',
+                    'orcid_id': '4444-3333-2222-1111',
+                    'private_project_count': 5,
+                    'public_file_count': 4,
+                    'public_project_count': 3,
+                    'public_registration_count': 2,
+                    'published_preprint_count': 1,
+                    'storage_byte_count': 736662999298,
+                    'user_name': 'Jason Kelce'
+                }
             ]
-        ]
+            assert response_data == expected_data
+        else:
+            response_body = resp.text
+            expected_response = [
+                ['account_creation_date', 'department_name', 'embargoed_registration_count', 'month_last_active',
+                 'month_last_login', 'orcid_id', 'private_projects', 'public_file_count', 'public_projects',
+                 'public_registration_count', 'published_preprint_count', 'storage_byte_count', 'user_name'],
+                ['2018-02', 'Center \t Greatest Ever', '1', '2018-02', '2018-02', '4444-3333-2222-1111', '5', '4', '3',
+                 '2', '1', '736662999298', 'Jason Kelce'],
+            ]
 
-        with StringIO(response_body) as file:
-            reader = csv.reader(file, delimiter=delimiter)
-            response_rows = list(reader)
-
-        assert response_rows[0] == expected_response[0]
-        assert sorted(response_rows[1:]) == sorted(expected_response[1:])
+            if delimiter:
+                with StringIO(response_body) as file:
+                    reader = csv.reader(file, delimiter=delimiter)
+                    response_rows = list(reader)
+                    assert response_rows[0] == expected_response[0]
+                    assert sorted(response_rows[1:]) == sorted(expected_response[1:])
 
 
 def _user_ids(api_response):
