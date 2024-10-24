@@ -8,7 +8,7 @@ from urllib.parse import urlencode
 import pytest
 from waffle.testutils import override_flag
 
-from api.base.settings.defaults import API_BASE, DEFAULT_ES_NULL_VALUE, USER_INSTITUTION_REPORT_FILENAME
+from api.base.settings.defaults import API_BASE, DEFAULT_ES_NULL_VALUE, REPORT_FILENAME_FORMAT
 import osf.features
 from osf_tests.factories import (
     InstitutionFactory,
@@ -435,9 +435,8 @@ class TestNewInstitutionUserMetricList:
         assert resp.headers['Content-Type'] == content_type
 
         current_date = datetime.datetime.now().strftime('%Y-%m')
-        expected_filename = USER_INSTITUTION_REPORT_FILENAME.format(
+        expected_filename = REPORT_FILENAME_FORMAT.format(
             date_created=current_date,
-            institution_id=institution._id,
             format_type=format_type
         )
         assert resp.headers['Content-Disposition'] == f'attachment; filename="{expected_filename}"'
@@ -462,7 +461,7 @@ class TestNewInstitutionUserMetricList:
                 'month_last_active',
                 'month_last_login',
                 'timestamp'
-             ],
+            ],
             [
                 '2024-08',
                 institution._id,
@@ -516,9 +515,8 @@ class TestNewInstitutionUserMetricList:
         assert resp.headers['Content-Type'] == 'application/json; charset=utf-8'
 
         current_date = datetime.datetime.now().strftime('%Y-%m')
-        expected_filename = USER_INSTITUTION_REPORT_FILENAME.format(
+        expected_filename = REPORT_FILENAME_FORMAT.format(
             date_created=current_date,
-            institution_id=institution._id,
             format_type='json'
         )
         assert resp.headers['Content-Disposition'] == f'attachment; filename="{expected_filename}"'
@@ -602,9 +600,8 @@ class TestNewInstitutionUserMetricList:
         assert resp.headers['Content-Type'] == content_type
 
         current_date = datetime.datetime.now().strftime('%Y-%m')
-        expected_filename = USER_INSTITUTION_REPORT_FILENAME.format(
+        expected_filename = REPORT_FILENAME_FORMAT.format(
             date_created=current_date,
-            institution_id=institution._id,
             format_type=format_type
         )
         assert resp.headers['Content-Disposition'] == f'attachment; filename="{expected_filename}"'

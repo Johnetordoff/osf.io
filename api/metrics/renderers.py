@@ -1,7 +1,7 @@
 import csv
 import io
 import json
-from api.base.settings.defaults import USER_INSTITUTION_REPORT_FILENAME, MAX_SIZE_OF_ES_QUERY
+from api.base.settings.defaults import REPORT_FILENAME_FORMAT, MAX_SIZE_OF_ES_QUERY
 import datetime
 
 from django.http import Http404
@@ -19,10 +19,6 @@ def csv_fieldname_sortkey(fieldname):
 
 
 def get_nested_keys(report_attrs):
-    """
-    Recursively retrieves all nested keys from the report attributes.
-    Handles both dictionaries and lists of attributes.
-    """
     if isinstance(report_attrs, dict):
         for attr_key in sorted(report_attrs.keys(), key=csv_fieldname_sortkey):
             attr_value = report_attrs[attr_key]
@@ -55,47 +51,44 @@ def get_csv_row(keys_list, report_attrs):
 
 
 class MetricsReportsBaseRenderer(renderers.BaseRenderer):
+    """
+    This renderer should override the format parameter to send a Content-Disposition attachment of the file data via
+    the browser.
+    """
     media_type: str
     format: str
     CSV_DIALECT: csv.Dialect
     extension: str
 
     def get_filename(self, renderer_context: dict, format_type: str) -> str:
-        """Generate the filename for the CSV/TSV file based on institution and current date."""
+        """Generate the filename for the file based on format_type REPORT_FILENAME_FORMAT and current date."""
         if renderer_context and 'view' in renderer_context:
-            current_date = datetime.datetime.now().strftime('%Y-%m')  # Format as 'YYYY-MM'
-            return USER_INSTITUTION_REPORT_FILENAME.format(
+            current_date = datetime.datetime.now().strftime('%Y-%m')
+            return REPORT_FILENAME_FORMAT.format(
                 date_created=current_date,
-                institution_id=renderer_context['view'].kwargs['institution_id'],
                 format_type=format_type,
             )
         else:
             raise NotImplementedError('Missing format filename')
 
-    def get_all_data(self, view, request):
-        """Bypass pagination by fetching all the data."""
-        view.pagination_class = None  # Disable pagination
-        return view.get_default_search().extra(size=MAX_SIZE_OF_ES_QUERY).execute()
-
     def render(self, data: dict, accepted_media_type: str = None, renderer_context: dict = None) -> str:
         """Render the full dataset as CSV or TSV format."""
-        data = self.get_all_data(renderer_context['view'], renderer_context['request'])
+        view = renderer_context['view']
+        view.pagination_class = None  # Disable pagination
+        data = view.get_default_search().extra(size=MAX_SIZE_OF_ES_QUERY).execute()
         hits = data.hits
         if not hits:
             raise Http404('<h1>none found</h1>')
 
-        # Assuming each hit contains '_source' with the relevant data
         first_row = hits[0].to_dict()
         csv_fieldnames = list(first_row)
         csv_filecontent = io.StringIO(newline='')
         csv_writer = csv.writer(csv_filecontent, dialect=self.CSV_DIALECT)
         csv_writer.writerow(csv_fieldnames)
 
-        # Write each hit's '_source' as a row in the CSV
         for hit in hits:
             csv_writer.writerow(get_csv_row(csv_fieldnames, hit.to_dict()))
 
-        # Set response headers for file download
         response = renderer_context['response']
         filename = self.get_filename(renderer_context, self.extension)
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
@@ -130,7 +123,10 @@ class MetricsReportsJsonRenderer(MetricsReportsBaseRenderer):
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
         """Render the response as JSON format and trigger browser download as a binary file."""
-        data = self.get_all_data(renderer_context['view'], renderer_context['request'])
+        view = renderer_context['view']
+        view.pagination_class = None  # Disable pagination
+        data = view.get_default_search().extra(size=MAX_SIZE_OF_ES_QUERY).execute()
+
         hits = data.hits
         if not hits:
             raise Http404('<h1>none found</h1>')

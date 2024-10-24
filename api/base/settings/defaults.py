@@ -359,7 +359,7 @@ EGAP_PROVIDER_NAME = 'EGAP'
 
 MAX_SIZE_OF_ES_QUERY = 10000
 DEFAULT_ES_NULL_VALUE = 'N/A'
-USER_INSTITUTION_REPORT_FILENAME = 'institution_user_report_{institution_id}_{date_created}.{format_type}'
+REPORT_FILENAME_FORMAT = 'osf_report_{date_created}.{format_type}'
 
 CI_ENV = False
 
