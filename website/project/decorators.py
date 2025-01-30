@@ -202,52 +202,61 @@ def check_can_download_preprint_file(user, node):
     return user.has_perm('view_submissions', node.provider)
 
 
-def check_can_access(node, user, key=None, api_node=None, include_groups=True):
-    """View helper that returns whether a given user can access a node.
-    If ``user`` is None, returns False.
-
-    :rtype: boolean
-    :raises: HTTPError (403) if user cannot access the node
+def check_can_access(node, user, key=None):
     """
-    if user is None:
-        return False
-    if request.args.get('action', '') == 'download':
-        if check_can_download_preprint_file(user, node):
-            return True
+    View helper that determines whether a given user can access a node.
+    Returns False if `user` is None.
 
-    if (not node.can_view(Auth(user=user)) and api_node != node) or (not include_groups and not node.is_contributor(user)):
+    :param node: The node to check access for.
+    :param user: The user attempting to access the node.
+    :param key: Optional key for private links.
+    :param api_node: Optional API node for comparison.
+    :param include_groups: Whether to include group permissions.
+    :return: True if access is allowed, otherwise raises an HTTPError.
+    """
+    if not user:
+        return False
+
+    # Check for preprint file download permission
+    if request.args.get('action') == 'download' and check_can_download_preprint_file(user, node):
+        return True
+
+    user_auth = Auth(user=user)
+    user_can_view = node.can_view(user_auth)
+
+    if user_can_view:
         if node.is_deleted:
-            raise HTTPError(http_status.HTTP_410_GONE, data={'message_long': 'The node for this file has been deleted.'})
+            raise HTTPError(
+                http_status.HTTP_410_GONE,
+                data={'message_long': 'The node for this file has been deleted.'}
+            )
 
         if getattr(node, 'private_link_keys_deleted', False) and key in node.private_link_keys_deleted:
             status.push_status_message('The view-only links you used are expired.', trust=False)
 
         if getattr(node, 'access_requests_enabled', False):
-            access_request = node.requests.filter(creator=user).exclude(machine_state='accepted')
+            access_request = node.requests.filter(creator=user).exclude(machine_state='accepted').first()
             data = {
-                'node': {
-                    'id': node._id,
-                    'url': node.url
-                },
-                'user': {
-                    'access_request_state': access_request.get().machine_state if access_request else None
-                }
+                'node': {'id': node._id, 'url': node.url},
+                'user': {'access_request_state': access_request.machine_state if access_request else None}
             }
-            raise TemplateHTTPError(
-                http_status.HTTP_403_FORBIDDEN,
-                template='request_access.mako',
-                data=data
-            )
+            raise TemplateHTTPError(http_status.HTTP_403_FORBIDDEN, data=data)
 
         if isinstance(node, Registration):
-            return node.provider.get_group('moderator').user_set.filter(id=user.id).exists()
+            is_moderator = node.provider.get_group('moderator').user_set.filter(id=user.id).exists()
+            if is_moderator:
+                return True
 
         raise HTTPError(
             http_status.HTTP_403_FORBIDDEN,
-            data={'message_long': ('User has restricted access to this page. If this should not '
-                                   'have occurred and the issue persists, ' + language.SUPPORT_LINK)}
+            data={'message_long': (
+                'User has restricted access to this page. If this should not '
+                'have occurred and the issue persists, ' + language.SUPPORT_LINK
+            )}
         )
+
     return True
+
 
 
 def check_key_expired(key, node, url):
@@ -457,10 +466,10 @@ def check_contributor_auth(node, auth, include_public, include_view_only_anon, i
 
     if not node.is_public or not include_public:
         if not include_view_only_anon and link_anon:
-            if not check_can_access(node=node, user=user, include_groups=include_groups):
+            if not check_can_access(node=node, user=user):
                 raise HTTPError(http_status.HTTP_401_UNAUTHORIZED)
         elif not getattr(node, 'private_link_keys_active', False) or auth.private_key not in node.private_link_keys_active:
-            if not check_can_access(node=node, user=user, key=auth.private_key, include_groups=include_groups):
+            if not check_can_access(node=node, user=user, key=auth.private_key):
                 redirect_url = check_key_expired(key=auth.private_key, node=node, url=request.url)
                 if request.headers.get('Content-Type') == 'application/json':
                     raise HTTPError(http_status.HTTP_401_UNAUTHORIZED)
