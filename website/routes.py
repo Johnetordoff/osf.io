@@ -801,23 +801,6 @@ def make_url_map(app):
             auth_views.auth_logout,
             notemplate
         ),
-
-        # forgot password get
-        Rule(
-            '/forgotpassword/',
-            'get',
-            auth_views.forgot_password_get,
-            OsfWebRenderer('public/forgot_password.mako', trust=False)
-        ),
-
-        # forgot password post
-        Rule(
-            '/forgotpassword/',
-            'post',
-            auth_views.forgot_password_post,
-            OsfWebRenderer('public/forgot_password.mako', trust=False)
-        ),
-
         # forgot password get - institutional
         Rule(
             '/forgotpassword-institution/',

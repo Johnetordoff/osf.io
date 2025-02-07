@@ -30,6 +30,7 @@ urlpatterns = [
             ],
         ),
     ),
+    re_path('^front/(?P<version>(v1))/', include('front.urls', namespace='front')),
     re_path(
         '^(?P<version>(v2))/',
         include(
@@ -86,7 +87,6 @@ urlpatterns = [
             ],
         ),
     ),
-    re_path(r'^$', RedirectView.as_view(pattern_name=views.root), name='redirect-to-root', kwargs={'version': default_version}),
 ]
 
 # Add django-silk URLs if it's in INSTALLED_APPS
