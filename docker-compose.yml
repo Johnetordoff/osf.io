@@ -358,7 +358,7 @@ services:
       - /bin/bash
       - -c
       - python -m venv /tmp/venv
-        && /tmp/venv/bin/pip install poetry==1.8.3 &&
+        && /tmp/venv/bin/pip install poetry==2.1.1 &&
         /tmp/venv/bin/poetry install --no-root --without release --compile --sync &&
         rm -rf /python3.12/* &&
         cp -Rf -p /usr/local/lib/python3.12 /
