@@ -29,7 +29,6 @@ _TPL_LOOKUP = TemplateLookup(
     ],
     directories=[
         TEMPLATE_DIR,
-        settings.ADDON_PATH,
     ],
     module_directory='/tmp/mako_modules'
 )

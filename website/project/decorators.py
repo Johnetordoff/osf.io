@@ -222,23 +222,6 @@ def check_can_access(node, user, key=None, api_node=None, include_groups=True):
         if getattr(node, 'private_link_keys_deleted', False) and key in node.private_link_keys_deleted:
             status.push_status_message('The view-only links you used are expired.', trust=False)
 
-        if getattr(node, 'access_requests_enabled', False):
-            access_request = node.requests.filter(creator=user).exclude(machine_state='accepted')
-            data = {
-                'node': {
-                    'id': node._id,
-                    'url': node.url
-                },
-                'user': {
-                    'access_request_state': access_request.get().machine_state if access_request else None
-                }
-            }
-            raise TemplateHTTPError(
-                http_status.HTTP_403_FORBIDDEN,
-                template='request_access.mako',
-                data=data
-            )
-
         if isinstance(node, Registration):
             return node.provider.get_group('moderator').user_set.filter(id=user.id).exists()
 

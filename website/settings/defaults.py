@@ -22,7 +22,6 @@ def parent_dir(path):
 HERE = os.path.dirname(os.path.abspath(__file__))
 BASE_PATH = parent_dir(HERE)  # website/ directory
 APP_PATH = parent_dir(BASE_PATH)
-ADDON_PATH = os.path.join(APP_PATH, 'addons')
 STATIC_FOLDER = os.path.join(BASE_PATH, 'static')
 STATIC_URL_PATH = '/static'
 ASSET_HASH_PATH = os.path.join(APP_PATH, 'webpack-assets.json')
@@ -257,17 +256,6 @@ NODE_CATEGORY_MAP = OrderedDict([
     ('other', 'Other'),
     ('', 'Uncategorized')
 ])
-
-# Add-ons
-# Load addons from addons.json
-with open(os.path.join(ROOT, 'addons.json')) as fp:
-    addon_settings = json.load(fp)
-    ADDONS_REQUESTED = addon_settings['addons']
-    ADDONS_ARCHIVABLE = addon_settings['addons_archivable']
-    ADDONS_COMMENTABLE = addon_settings['addons_commentable']
-    ADDONS_BASED_ON_IDS = addon_settings['addons_based_on_ids']
-    ADDONS_DEFAULT = addon_settings['addons_default']
-    ADDONS_OAUTH_NO_REDIRECT = addon_settings['addons_oauth_no_redirect']
 
 SYSTEM_ADDED_ADDONS = {
     'user': [],

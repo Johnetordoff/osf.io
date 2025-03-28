@@ -89,11 +89,6 @@ INSTALLED_APPS = (
     # OSF
     'osf',
 
-    # Addons
-    'addons.osfstorage',
-    'addons.wiki',
-    'addons.twofactor',
-
     # Internal apps
     'admin.common_auth',
     'admin.base',

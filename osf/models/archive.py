@@ -7,7 +7,6 @@ from website import settings
 from .base import BaseModel, ObjectIDMixin
 from osf.utils.datetime_aware_jsonfield import DateTimeAwareJSONField
 
-from addons.base.models import BaseStorageAddon
 from website.archiver import (
     ARCHIVER_INITIATED,
     ARCHIVER_SUCCESS,
@@ -149,7 +148,7 @@ class ArchiveJob(ObjectIDMixin, BaseModel):
         for addon in [self.src_node.get_addon(name)
                       for name in settings.ADDONS_ARCHIVABLE
                       if settings.ADDONS_ARCHIVABLE[name] != 'none']:
-            if not addon or not isinstance(addon, BaseStorageAddon) or not addon.complete:
+            if not addon or not addon.complete:
                 continue
             archive_errors = getattr(addon, 'archive_errors', None)
             if not archive_errors or (archive_errors and not archive_errors()):
