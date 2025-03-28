@@ -63,19 +63,3 @@ lookup = TemplateLookup(
         'from website.util.sanitize import temp_ampersand_fixer',  # FIXME: Temporary workaround for data stored in wrong format in DB. Unescape it before it gets re-escaped by Markupsafe. See [#OSF-4432]
     ]
 )
-template = lookup.get_template('capabilities.mako')
-
-CAPABILITIES = read_capabilities(os.path.join(here, 'data', 'addons.json'))
-
-def render_addon_capabilities(addons_available):
-
-    rendered = {}
-
-    for addon_config in addons_available:
-        if addon_config.full_name in CAPABILITIES:
-            rendered[addon_config.short_name] = template.render(
-                full_name=addon_config.full_name,
-                **{'caps': CAPABILITIES[addon_config.full_name]}
-            )
-
-    return rendered

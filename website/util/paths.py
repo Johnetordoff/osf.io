@@ -37,28 +37,3 @@ def webpack_asset(path, asset_paths=asset_paths, debug=settings.DEBUG_MODE):
         return os.path.join(base_static_path, hash_path)
     else:  # We don't cachebust in debug mode, so just return unmodified path
         return path
-
-
-def resolve_addon_path(addon_config, file_name):
-    """Check for addon asset in source directory (e.g. website/addons/dropbox/static');
-    if file is found, return path to webpack-built asset.
-
-    :param AddonConfig config: Addon config object
-    :param str file_name: Asset file name (e.g. "files.js")
-    """
-    source_path = os.path.join(
-        settings.ADDON_PATH,
-        addon_config.short_name,
-        'static',
-        file_name,
-    )
-    if os.path.exists(source_path):
-        return os.path.join(
-            '/',
-            'static',
-            'public',
-            'js',
-            addon_config.short_name,
-            file_name,
-        )
-    return None

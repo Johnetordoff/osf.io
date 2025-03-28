@@ -30,7 +30,6 @@ from osf import features
 
 from website import language
 
-from website.util import rubeus
 from website.ember_osf_web.views import use_ember_app
 from osf.exceptions import NodeStateError
 from website.project import new_node, new_private_link
@@ -342,9 +341,6 @@ def node_addons(auth, node, **kwargs):
     # Addons can have multiple categories, but we only want a set of unique ones being used.
     ret['addon_categories'] = sorted({item for addon in addon_settings for item in addon['categories']})
 
-    # The page only needs to load enabled addons and it refreshes when a new addon is being enabled.
-    ret['addon_js'] = collect_node_config_js([addon for addon in addon_settings if addon['enabled']])
-
     return ret
 
 
@@ -375,34 +371,6 @@ def serialize_addons(node, auth):
     addon_settings = sorted(addon_settings, key=lambda addon: addon['full_name'].lower())
 
     return addon_settings
-
-
-def collect_node_config_js(addons):
-    """Collect webpack bundles for each of the addons' node-cfg.js modules. Return
-    the URLs for each of the JS modules to be included on the node addons config page.
-
-    :param list addons: List of node's addon config records.
-    """
-    js_modules = []
-    for addon in addons:
-        source_path = os.path.join(
-            settings.ADDON_PATH,
-            addon['short_name'],
-            'static',
-            'node-cfg.js',
-        )
-        if os.path.exists(source_path):
-            asset_path = os.path.join(
-                '/',
-                'static',
-                'public',
-                'js',
-                addon['short_name'],
-                'node-cfg.js',
-            )
-            js_modules.append(asset_path)
-
-    return js_modules
 
 
 @must_have_permission(WRITE)
@@ -478,7 +446,6 @@ def view_project(auth, node, **kwargs):
         filename='widget-cfg.js',
         config_entry='widget'
     ))
-    ret.update(rubeus.collect_addon_assets(node))
 
     access_request = node.requests.filter(creator=auth.user).exclude(machine_state='accepted')
     ret['user']['access_request_state'] = access_request.get().machine_state if access_request else None

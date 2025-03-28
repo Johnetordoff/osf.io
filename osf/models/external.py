@@ -19,7 +19,7 @@ from .base import BaseModel, ObjectIDMixin
 from osf.utils.fields import EncryptedTextField, NonNaiveDateTimeField
 from website.oauth.utils import PROVIDER_LOOKUP
 from website.security import random_string
-from website.settings import ADDONS_OAUTH_NO_REDIRECT
+from api.base.settings import ADDONS_OAUTH_NO_REDIRECT
 from website.util import web_url_for
 
 logger = logging.getLogger(__name__)

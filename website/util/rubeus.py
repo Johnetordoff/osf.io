@@ -284,19 +284,6 @@ class NodeFileCollector:
         return return_value, active_addons
 
 
-# TODO: these might belong in addons module
-def collect_addon_assets(node):
-    """Return a dictionary containing lists of JS and CSS assets for a node's
-    addons.
-
-    :rtype: {'tree_js': <list of JS scripts>, 'tree_css': <list of CSS files>}
-    """
-    return {
-        'tree_js': list(collect_addon_js(node)),
-        'tree_css': list(collect_addon_css(node)),
-    }
-
-
 # TODO: Abstract static collectors
 def collect_addon_js(node, visited=None, filename='files.js', config_entry='files'):
     """Collect JavaScript includes for all add-ons implementing HGrid views.

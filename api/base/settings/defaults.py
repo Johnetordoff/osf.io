@@ -98,26 +98,6 @@ INSTALLED_APPS = (
 
     # OSF
     'osf',
-
-    # Addons
-    'addons.osfstorage',
-    'addons.bitbucket',
-    'addons.boa',
-    'addons.box',
-    'addons.dataverse',
-    'addons.dropbox',
-    'addons.figshare',
-    'addons.forward',
-    'addons.github',
-    'addons.gitlab',
-    'addons.googledrive',
-    'addons.mendeley',
-    'addons.onedrive',
-    'addons.owncloud',
-    'addons.s3',
-    'addons.twofactor',
-    'addons.wiki',
-    'addons.zotero',
 )
 
 # local development using https
@@ -367,3 +347,7 @@ CITATION_STYLES_REPO_URL = 'https://github.com/CenterForOpenScience/styles/archi
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 WAFFLE_ENABLE_ADMIN_PAGES = False  # instead, customized waffle admins in osf/admin.py
+
+DEFAULT_REGION_ID = 'us-1'
+DEFAULT_REGION_NAME = 'North America'
+ADDONS_OAUTH_NO_REDIRECT = ['bitbucket']

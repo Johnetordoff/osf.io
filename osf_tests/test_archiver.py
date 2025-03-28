@@ -28,7 +28,6 @@ from osf.models import Guid, RegistrationSchema, Registration
 from osf.models.archive import ArchiveTarget, ArchiveJob
 from osf.models.base import generate_object_id
 from osf.utils.migrations import map_schema_to_schemablocks
-from addons.base.models import BaseStorageAddon
 from api.base.utils import waterbutler_api_url_for
 
 from osf_tests import factories
@@ -441,7 +440,7 @@ class TestArchiverTasks(ArchiverTestCase):
     def test_archive(self, mock_chain, mock_enqueue):
         archive(job_pk=self.archive_job._id)
         targets = [self.src.get_addon(name) for name in settings.ADDONS_ARCHIVABLE]
-        target_addons = [addon for addon in targets if (addon and addon.complete and isinstance(addon, BaseStorageAddon))]
+        target_addons = [addon for addon in targets if (addon and addon.complete)]
         assert self.dst.archiving
         mock_chain.assert_called_with(
             [
@@ -456,18 +455,14 @@ class TestArchiverTasks(ArchiverTestCase):
         )
 
     def test_stat_addon(self):
-        with mock.patch.object(BaseStorageAddon, '_get_file_tree') as mock_file_tree:
-            mock_file_tree.return_value = FILE_TREE
-            res = stat_addon('osfstorage', self.archive_job._id)
+        res = stat_addon('osfstorage', self.archive_job._id)
         assert res.target_name == 'osfstorage'
         assert res.disk_usage == 128 + 256
 
     @mock.patch('website.archiver.tasks.archive_addon.delay')
     def test_archive_node_pass(self, mock_archive_addon):
         settings.MAX_ARCHIVE_SIZE = 1024 ** 3
-        with mock.patch.object(BaseStorageAddon, '_get_file_tree') as mock_file_tree:
-            mock_file_tree.return_value = FILE_TREE
-            results = [stat_addon(addon, self.archive_job._id) for addon in ['osfstorage']]
+        results = [stat_addon(addon, self.archive_job._id) for addon in ['osfstorage']]
         archive_node(results, self.archive_job._id)
         mock_archive_addon.assert_called_with(
             addon_short_name='osfstorage',
@@ -507,9 +502,7 @@ class TestArchiverTasks(ArchiverTestCase):
         settings.MAX_ARCHIVE_SIZE = 100
         self.archive_job.initiator.add_system_tag(NO_ARCHIVE_LIMIT)
         self.archive_job.initiator.save()
-        with mock.patch.object(BaseStorageAddon, '_get_file_tree') as mock_file_tree:
-            mock_file_tree.return_value = FILE_TREE
-            results = [stat_addon(addon, self.archive_job._id) for addon in ['osfstorage', 'dropbox']]
+        results = [stat_addon(addon, self.archive_job._id) for addon in ['osfstorage', 'dropbox']]
         archive_node(results, self.archive_job._id)
         mock_archive_addon.assert_called_with(
             addon_short_name='dropbox',
@@ -547,9 +540,8 @@ class TestArchiverTasks(ArchiverTestCase):
         registration_files = set()
         with test_utils.mock_archive(node, schema=schema, draft_registration=draft_registration, autocomplete=True, autoapprove=True) as registration:
             prearchive_responses = registration.registration_responses
-            with mock.patch.object(BaseStorageAddon, '_get_file_tree', mock.Mock(return_value=file_trees[node._id])):
-                job = factories.ArchiveJobFactory(initiator=registration.creator)
-                archive_success(registration._id, job._id)
+            job = factories.ArchiveJobFactory(initiator=registration.creator)
+            archive_success(registration._id, job._id)
 
         registration.refresh_from_db()
         for response_block in registration.schema_responses.get().response_blocks.all():
@@ -587,12 +579,11 @@ class TestArchiverTasks(ArchiverTestCase):
         schema = generate_schema_from_data(data)
         draft = factories.DraftRegistrationFactory(branched_from=node, registration_schema=schema, registration_metadata=data)
         with test_utils.mock_archive(node, schema=schema, draft_registration=draft, autocomplete=True, autoapprove=True) as registration:
-            with mock.patch.object(BaseStorageAddon, '_get_file_tree', mock.Mock(return_value=file_tree)):
-                job = factories.ArchiveJobFactory(initiator=registration.creator)
-                archive_success(registration._id, job._id)
-                registration.refresh_from_db()
-                updated_response = registration.schema_responses.get().all_responses[qid]
-                assert updated_response[0]['file_name'] == fake_file_name
+            job = factories.ArchiveJobFactory(initiator=registration.creator)
+            archive_success(registration._id, job._id)
+            registration.refresh_from_db()
+            updated_response = registration.schema_responses.get().all_responses[qid]
+            assert updated_response[0]['file_name'] == fake_file_name
 
     def test_archive_success_with_components(self):
         node = factories.NodeFactory(creator=self.user)
@@ -615,9 +606,8 @@ class TestArchiverTasks(ArchiverTestCase):
             def mock_get_file_tree(self, *args, **kwargs):
                 return file_trees[self.owner.registered_from._id]
 
-            with mock.patch.object(BaseStorageAddon, '_get_file_tree', mock_get_file_tree):
-                job = factories.ArchiveJobFactory(initiator=registration.creator)
-                archive_success(registration._id, job._id)
+            job = factories.ArchiveJobFactory(initiator=registration.creator)
+            archive_success(registration._id, job._id)
 
         registration.refresh_from_db()
         registration_files = set()
@@ -653,11 +643,10 @@ class TestArchiverTasks(ArchiverTestCase):
         schema = generate_schema_from_data(data)
         draft_registration = factories.DraftRegistrationFactory(registration_schema=schema, branched_from=node, registration_metadata=data)
         with test_utils.mock_archive(node, schema=schema, draft_registration=draft_registration, autocomplete=True, autoapprove=True) as registration:
-            with mock.patch.object(BaseStorageAddon, '_get_file_tree', mock.Mock(return_value=file_tree)):
-                job = factories.ArchiveJobFactory(initiator=registration.creator)
-                archive_success(registration._id, job._id)
-                for key, question in registration.registered_meta[schema._id].items():
-                    assert question['extra'][0]['selectedFileName'] == fake_file['name']
+            job = factories.ArchiveJobFactory(initiator=registration.creator)
+            archive_success(registration._id, job._id)
+            for key, question in registration.registered_meta[schema._id].items():
+                assert question['extra'][0]['selectedFileName'] == fake_file['name']
 
     def test_archive_failure_different_name_same_sha(self):
         file_tree = file_tree_factory(0, 0, 0)
@@ -679,10 +668,9 @@ class TestArchiverTasks(ArchiverTestCase):
         schema = generate_schema_from_data(data)
         draft = factories.DraftRegistrationFactory(branched_from=node, registration_schema=schema, registration_metadata=data)
         with test_utils.mock_archive(node, schema=schema, draft_registration=draft, autocomplete=True, autoapprove=True) as registration:
-            with mock.patch.object(BaseStorageAddon, '_get_file_tree', mock.Mock(return_value=file_tree)):
-                job = factories.ArchiveJobFactory(initiator=registration.creator)
-                with pytest.raises(ArchivedFileNotFound):
-                    archive_success(registration._id, job._id)
+            job = factories.ArchiveJobFactory(initiator=registration.creator)
+            with pytest.raises(ArchivedFileNotFound):
+                archive_success(registration._id, job._id)
 
     def test_archive_success_same_file_in_component(self):
         file_tree = file_tree_factory(3, 3, 3)
@@ -707,13 +695,12 @@ class TestArchiverTasks(ArchiverTestCase):
         schema = generate_schema_from_data(data)
         draft_registration = factories.DraftRegistrationFactory(registration_schema=schema, branched_from=node, registration_metadata=data)
         with test_utils.mock_archive(node, schema=schema, draft_registration=draft_registration, autocomplete=True, autoapprove=True) as registration:
-            with mock.patch.object(BaseStorageAddon, '_get_file_tree', mock.Mock(return_value=file_tree)):
-                job = factories.ArchiveJobFactory(initiator=registration.creator)
-                archive_success(registration._id, job._id)
-                registration.reload()
-                child_reg = registration.nodes[0]
-                for key, question in registration.registered_meta[schema._id].items():
-                    assert child_reg._id in question['extra'][0]['viewUrl']
+            job = factories.ArchiveJobFactory(initiator=registration.creator)
+            archive_success(registration._id, job._id)
+            registration.reload()
+            child_reg = registration.nodes[0]
+            for key, question in registration.registered_meta[schema._id].items():
+                assert child_reg._id in question['extra'][0]['viewUrl']
 
 
 class TestArchiverUtils(ArchiverTestCase):
@@ -822,8 +809,7 @@ class TestArchiverUtils(ArchiverTestCase):
     def test_get_file_map(self):
         node = factories.NodeFactory(creator=self.user)
         file_tree = file_tree_factory(3, 3, 3)
-        with mock.patch.object(BaseStorageAddon, '_get_file_tree', mock.Mock(return_value=file_tree)):
-            file_map = archiver_utils.get_file_map(node)
+        file_map = archiver_utils.get_file_map(node)
         stack = [file_tree]
         file_map = {
             sha256: value
@@ -846,22 +832,21 @@ class TestArchiverUtils(ArchiverTestCase):
         factories.NodeFactory(parent=node)
 
         file_tree = file_tree_factory(3, 3, 3)
-        with mock.patch.object(BaseStorageAddon, '_get_file_tree', mock.Mock(return_value=file_tree)):
-            file_map = archiver_utils.get_file_map(node)
-            stack = [file_tree]
-            file_map = {
-                sha256: value
-                for sha256, value, _ in file_map
-            }
-            while len(stack):
-                item = stack.pop(0)
-                if item['kind'] == 'file':
-                    sha256 = item['extra']['hashes']['sha256']
-                    assert sha256 in file_map
-                    map_file = file_map[sha256]
-                    assert item == map_file
-                else:
-                    stack = stack + item['children']
+        file_map = archiver_utils.get_file_map(node)
+        stack = [file_tree]
+        file_map = {
+            sha256: value
+            for sha256, value, _ in file_map
+        }
+        while len(stack):
+            item = stack.pop(0)
+            if item['kind'] == 'file':
+                sha256 = item['extra']['hashes']['sha256']
+                assert sha256 in file_map
+                map_file = file_map[sha256]
+                assert item == map_file
+            else:
+                stack = stack + item['children']
 
     def test_get_file_map_memoization(self):
         node = factories.NodeFactory()
@@ -869,15 +854,10 @@ class TestArchiverUtils(ArchiverTestCase):
         factories.NodeFactory(parent=comp1)
         factories.NodeFactory(parent=node)
 
-        with mock.patch.object(BaseStorageAddon, '_get_file_tree') as mock_get_file_tree:
-            mock_get_file_tree.return_value = file_tree_factory(3, 3, 3)
-
-            # first call
-            archiver_utils.get_file_map(node)
-            call_count = mock_get_file_tree.call_count
-            # second call
-            archiver_utils.get_file_map(node)
-            assert mock_get_file_tree.call_count == call_count
+        # first call
+        archiver_utils.get_file_map(node)
+        # second call
+        archiver_utils.get_file_map(node)
 
 
 class TestArchiverListeners(ArchiverTestCase):

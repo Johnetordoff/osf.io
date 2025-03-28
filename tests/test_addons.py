@@ -37,7 +37,7 @@ from osf.models.files import BaseFileNode, TrashedFileNode
 from osf.utils.permissions import WRITE, READ
 from website.project import new_private_link
 from website.project.views.node import _view_project as serialize_node
-from website.project.views.node import serialize_addons, collect_node_config_js
+from website.project.views.node import serialize_addons
 from website.util import api_url_for, rubeus
 from api.caching import settings as cache_settings
 from addons.osfstorage import settings as osfstorage_settings
@@ -1300,7 +1300,6 @@ class TestAddonFileViews(OsfTestCase):
             'materialized_path': '',
             'file_id': '',
         })
-        ret.update(rubeus.collect_addon_assets(self.project))
         return ret
 
     def test_redirects_to_guid(self):
@@ -1838,14 +1837,3 @@ class TestViewUtils(OsfTestCase):
         assert 'node_has_auth' in enabled_addons[0]
         assert 'valid_credentials' in enabled_addons[0]
 
-    @mock.patch('addons.github.models.NodeSettings.get_folders', return_value=[])
-    def test_collect_node_config_js(self, mock_folders):
-
-        addon_dicts = serialize_addons(self.node, self.auth_obj)
-
-        asset_paths = collect_node_config_js(addon_dicts)
-
-        # Default addons should be in addon dicts, but they have no js assets because you can't
-        # connect/disconnect from them, think osfstorage, there's no node-cfg for that.
-        default_addons = [addon['short_name'] for addon in addon_dicts if addon['default']]
-        assert not any(f'/{addon}/' in asset_paths for addon in default_addons)

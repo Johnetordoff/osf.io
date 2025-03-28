@@ -41,7 +41,6 @@ runs:
     shell: bash
     run: |
       # bumped psycopg to match requirements.txt, as otherwise build would fail
-      poetry run python3 -m invoke ci-addon-settings
       pip uninstall uritemplate.py --yes
       # use yarn add --exact to match versions in yarn.lock w/o installing all deps
       yarn add --exact bower@^1.8.8

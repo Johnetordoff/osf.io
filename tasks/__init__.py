@@ -130,25 +130,6 @@ def shell(ctx, transaction=True, print_sql=False, notebook=False):
     return ctx.run(cmd, pty=True, echo=True)
 
 
-@task
-def sharejs(ctx, host=None, port=None, db_url=None, cors_allow_origin=None):
-    """Start a local ShareJS server."""
-    if host:
-        os.environ['SHAREJS_SERVER_HOST'] = host
-    if port:
-        os.environ['SHAREJS_SERVER_PORT'] = port
-    if db_url:
-        os.environ['SHAREJS_DB_URL'] = db_url
-    if cors_allow_origin:
-        os.environ['SHAREJS_CORS_ALLOW_ORIGIN'] = cors_allow_origin
-
-    if settings.SENTRY_DSN:
-        os.environ['SHAREJS_SENTRY_DSN'] = settings.SENTRY_DSN
-
-    share_server = os.path.join(settings.ADDON_PATH, 'wiki', 'shareServer.js')
-    ctx.run(f'node {share_server}')
-
-
 @task(aliases=['celery'])
 def celery_worker(ctx, level='debug', hostname=None, beat=False, queues=None, concurrency=None, max_tasks_per_child=None):
     """Run the Celery process."""
@@ -233,7 +214,7 @@ def syntax(ctx):
 
 
 @task(aliases=['req'])
-def requirements(ctx, base=False, addons=False, release=False, dev=True, all=True):
+def requirements(ctx, base=False, release=False, dev=True, all=True):
     """Install python dependencies.
 
     Examples:
@@ -250,12 +231,9 @@ def requirements(ctx, base=False, addons=False, release=False, dev=True, all=Tru
     all = True
     if all:
         base = True
-        addons = True
         dev = True
-    if not (addons or dev):
+    if not dev:
         base = True
-    if release or addons:
-        addon_requirements(ctx)
     # "release" takes precedence
     if release:
         req_file = os.path.join(HERE, 'requirements', 'release.txt')
@@ -301,7 +279,6 @@ def test_module(ctx, module=None, numprocesses=None, nocapture=False, params=Non
         args.extend([
             '--cov-report', 'term-missing',
             '--cov', 'admin',
-            '--cov', 'addons',
             '--cov', 'api',
             '--cov', 'framework',
             '--cov', 'osf',
@@ -365,7 +342,6 @@ API_TESTS2 = [
 ]
 API_TESTS3 = [
     'api_tests/actions',
-    'api_tests/addons_tests',
     'api_tests/alerts',
     'api_tests/applications',
     'api_tests/banners',
@@ -389,9 +365,6 @@ API_TESTS3 = [
     'api_tests/view_only_links',
     'api_tests/share',
     'api_tests/wikis',
-]
-ADDON_TESTS = [
-    'addons',
 ]
 ADMIN_TESTS = [
     'admin_tests',
@@ -440,14 +413,6 @@ def test_admin(ctx, numprocesses=None, coverage=False, testmon=False, junit=Fals
 
 
 @task
-def test_addons(ctx, numprocesses=None, coverage=False, testmon=False, junit=False):
-    """Run all the tests in the addons directory.
-    """
-    print(f'Testing modules "{ADDON_TESTS}"')
-    test_module(ctx, module=ADDON_TESTS, numprocesses=numprocesses, coverage=coverage, testmon=testmon, junit=junit)
-
-
-@task
 def test(ctx, all=False, lint=False):
     """
     Run unit tests: OSF (always), plus addons and syntax checks (optional)
@@ -461,8 +426,6 @@ def test(ctx, all=False, lint=False):
     test_api3(ctx)  # also /osf_tests
 
     if all:
-        test_addons(ctx)
-        # TODO: Enable admin tests
         test_admin(ctx)
 
 @task
@@ -477,15 +440,6 @@ def ci_setup(ctx):
     with open('package.json') as fobj:
         package_json = json.load(fobj)
         ctx.run('npm install @centerforopenscience/list-of-licenses@{}'.format(package_json['dependencies']['@centerforopenscience/list-of-licenses']), echo=True)
-
-@task
-def test_ci_addons(ctx, numprocesses=None, coverage=False, testmon=False, junit=False):
-    """
-    Run half of the tests to help ci go faster.
-    """
-    #ci_setup(ctx)
-    syntax(ctx)
-    test_addons(ctx, numprocesses=numprocesses, coverage=coverage, testmon=testmon, junit=junit)
 
 @task
 def test_ci_website(ctx, numprocesses=None, coverage=False, testmon=False, junit=False):
@@ -514,23 +468,14 @@ def test_ci_api3_and_osf(ctx, numprocesses=None, coverage=False, testmon=False, 
     test_api3(ctx, numprocesses=numprocesses, coverage=coverage, testmon=testmon, junit=junit)
 
 @task
-def wheelhouse(ctx, addons=False, release=False, dev=False, pty=True):
+def wheelhouse(ctx, release=False, dev=False, pty=True):
     """Build wheels for python dependencies.
 
     Examples:
 
         inv wheelhouse --dev
-        inv wheelhouse --addons
         inv wheelhouse --release
     """
-    if release or addons:
-        for directory in os.listdir(settings.ADDON_PATH):
-            path = os.path.join(settings.ADDON_PATH, directory)
-            if os.path.isdir(path):
-                req_file = os.path.join(path, 'requirements.txt')
-                if os.path.exists(req_file):
-                    cmd = ('pip3 wheel --find-links={} -r {} --wheel-dir={} ').format(WHEELHOUSE_PATH, req_file, WHEELHOUSE_PATH)
-                    ctx.run(cmd, pty=pty)
     if release:
         req_file = os.path.join(HERE, 'requirements', 'release.txt')
     elif dev:
@@ -542,56 +487,11 @@ def wheelhouse(ctx, addons=False, release=False, dev=False, pty=True):
 
 
 @task
-def addon_requirements(ctx):
-    """Install all addon requirements."""
-    for directory in os.listdir(settings.ADDON_PATH):
-        path = os.path.join(settings.ADDON_PATH, directory)
-
-        requirements_file = os.path.join(path, 'requirements.txt')
-        if os.path.isdir(path) and os.path.isfile(requirements_file):
-            print(f'Installing requirements for {directory}')
-            ctx.run(
-                pip_install(requirements_file),
-                echo=True
-            )
-
-    print('Finished installing addon requirements')
-
-
-@task
-def ci_addon_settings(ctx):
-    for directory in os.listdir(settings.ADDON_PATH):
-        path = os.path.join(settings.ADDON_PATH, directory, 'settings')
-        if os.path.isdir(path):
-            try:
-                open(os.path.join(path, 'local-ci.py'))
-                ctx.run('cp {path}/local-ci.py {path}/local.py'.format(path=path))
-            except OSError:
-                pass
-
-
-@task
-def copy_addon_settings(ctx):
-    for directory in os.listdir(settings.ADDON_PATH):
-        path = os.path.join(settings.ADDON_PATH, directory, 'settings')
-        if os.path.isdir(path) and not os.path.isfile(os.path.join(path, 'local.py')):
-            try:
-                open(os.path.join(path, 'local-dist.py'))
-                ctx.run('cp {path}/local-dist.py {path}/local.py'.format(path=path))
-            except OSError:
-                pass
-
-
-@task
-def copy_settings(ctx, addons=False):
+def copy_settings(ctx):
     # Website settings
     if not os.path.isfile('website/settings/local.py'):
         print('Creating local.py file')
         ctx.run('cp website/settings/local-dist.py website/settings/local.py')
-
-    # Addon settings
-    if addons:
-        copy_addon_settings(ctx)
 
 
 @task(aliases=['bower'])

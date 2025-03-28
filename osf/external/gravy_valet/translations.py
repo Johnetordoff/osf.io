@@ -286,11 +286,10 @@ def _get_storage_settings_class():
 
 
 def _initialize_ephemeral_storage_node_settings():
-    from addons.base.models import BaseStorageAddon
 
     global _StorageEphemeralNodeSettings
 
-    class StorageEphemeralNodeSettings(EphemeralNodeSettings, BaseStorageAddon):
+    class StorageEphemeralNodeSettings(EphemeralNodeSettings):
         pass
 
     _StorageEphemeralNodeSettings = StorageEphemeralNodeSettings

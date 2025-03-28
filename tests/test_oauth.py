@@ -415,9 +415,6 @@ class TestExternalProviderOAuth2(OsfTestCase):
     def test_callback_oauth_standard(self, mock_fetch_token, mock_oauth2session):
         # During token exchange, OAuth2Session is initialized w/ redirect_uri for standard addons.
 
-        # Make sure that the mock oauth2 provider is a standard one.
-        assert self.provider.short_name not in ADDONS_OAUTH_NO_REDIRECT
-
         # Mock OAuth2Session and its property `fetch_token`.
         mock_oauth2session.return_value = OAuth2Session(self.provider.client_id, None)
         mock_fetch_token.return_value = {'access_token': 'mock_access_token'}
