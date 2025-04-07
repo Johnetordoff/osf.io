@@ -43,7 +43,6 @@ def serialize_draft_registration(draft, auth=None):
             'before_register': node.api_url_for('project_before_register'),
             'register': absolute_reverse('nodes:node-registrations', kwargs={'node_id': node._id, 'version': 'v2'}),
             'register_page': node.web_url_for('draft_before_register_page', draft_id=draft._id, _guid=True),
-            'registrations': node.web_url_for('node_registrations', _guid=True)
         },
     }
 

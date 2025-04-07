@@ -474,12 +474,6 @@ def collect_user_config_js(addon_configs):
 
 
 @must_be_logged_in
-def user_choose_addons(**kwargs):
-    auth = kwargs['auth']
-    json_data = escape_html(request.get_json())
-    auth.user.config_addons(json_data, auth)
-
-@must_be_logged_in
 def user_choose_mailing_lists(auth, **kwargs):
     """ Update mailing list subscription on user model and in mailchimp
 

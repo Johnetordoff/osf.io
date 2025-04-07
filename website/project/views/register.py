@@ -37,25 +37,6 @@ from .node import _view_project
 from api.waffle.utils import flag_is_active
 
 @must_be_valid_project
-@must_not_be_retracted_registration
-@must_be_contributor_or_public
-def node_register_page(auth, node, **kwargs):
-    """Display the registration metadata for a registration.
-
-    :return: serialized Node
-    """
-
-    if node.is_registration:
-        return serialize_node(node, auth)
-    else:
-        status.push_status_message(
-            'You have been redirected to the project\'s registrations page. From here you can initiate a new Draft Registration to complete the registration process',
-            trust=False,
-            id='redirected_to_registrations',
-        )
-        return redirect(node.web_url_for('node_registrations', view='draft', _guid=True))
-
-@must_be_valid_project
 @must_have_permission(ADMIN)
 @must_be_contributor_and_not_group_member
 def node_registration_retraction_redirect(auth, node, **kwargs):
@@ -121,42 +102,6 @@ def node_registration_retraction_post(auth, node, **kwargs):
 
     return {'redirectUrl': node.web_url_for('view_project')}
 
-@must_be_valid_project
-@must_not_be_retracted_registration
-@must_be_contributor_or_public
-@ember_flag_is_active(features.EMBER_REGISTRATION_FORM_DETAIL)
-def node_register_template_page(auth, node, metaschema_id, **kwargs):
-    if flag_is_active(request, features.EMBER_REGISTRIES_DETAIL_PAGE):
-        # Registration meta page obviated during redesign
-        return redirect(node.url)
-    if node.is_registration and bool(node.registered_schema):
-        try:
-            meta_schema = RegistrationSchema.objects.get(_id=metaschema_id)
-        except RegistrationSchema.DoesNotExist:
-            # backwards compatability for old urls, lookup by name
-            meta_schema = RegistrationSchema.objects.filter(name=_id_to_name(metaschema_id)).order_by('-schema_version').first()
-            if not meta_schema:
-                raise HTTPError(http_status.HTTP_404_NOT_FOUND, data={
-                    'message_short': 'Invalid schema name',
-                    'message_long': 'No registration schema with that name could be found.'
-                })
-
-        ret = _view_project(node, auth, primary=True)
-        my_meta = serialize_meta_schema(meta_schema)
-        if has_anonymous_link(node, auth):
-            for indx, schema_page in enumerate(my_meta['schema']['pages']):
-                for idx, schema_question in enumerate(schema_page['questions']):
-                    if schema_question['title'] in settings.ANONYMIZED_TITLES:
-                        del my_meta['schema']['pages'][indx]['questions'][idx]
-        ret['node']['registered_schema'] = serialize_meta_schema(meta_schema)
-        return ret
-    else:
-        status.push_status_message(
-            'You have been redirected to the project\'s registrations page. From here you can initiate a new Draft Registration to complete the registration process',
-            trust=False,
-            id='redirected_to_registrations',
-        )
-        return redirect(node.web_url_for('node_registrations', view=kwargs.get('template'), _guid=True))
 
 @must_be_valid_project  # returns project
 @must_have_permission(ADMIN)
