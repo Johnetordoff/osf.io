@@ -606,20 +606,6 @@ class AddonModelMixin(models.Model):
         ret.save(clean=False)  # TODO This doesn't feel right
         return ret
 
-    def config_addons(self, config, auth=None, save=True):
-        """Enable or disable a set of add-ons.
-
-        :param dict config: Mapping between add-on names and enabled / disabled
-            statuses
-        """
-        for addon_name, enabled in config.items():
-            if enabled:
-                self.add_addon(addon_name, auth)
-            else:
-                self.delete_addon(addon_name, auth)
-        if save:
-            self.save()
-
     def delete_addon(self, addon_name, auth=None, _force=False):
         """Delete an add-on from the node.
 

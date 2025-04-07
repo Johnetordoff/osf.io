@@ -405,12 +405,6 @@ def collect_node_config_js(addons):
     return js_modules
 
 
-@must_have_permission(WRITE)
-@must_not_be_registration
-def node_choose_addons(auth, node, **kwargs):
-    node.config_addons(request.json, auth)
-
-
 @must_be_valid_project
 @must_not_be_retracted_registration
 @must_have_permission(READ)
@@ -848,7 +842,6 @@ def _view_project(node, auth, primary=False,
             'url': parent.url if parent else '',
             'api_url': parent.api_url if parent else '',
             'absolute_url': parent.absolute_url if parent else '',
-            'registrations_url': parent.web_url_for('node_registrations', _guid=True) if parent else '',
             'is_public': parent.is_public if parent else '',
             'is_contributor_or_group_member': parent.is_contributor_or_group_member(user) if parent else '',
             'is_contributor': parent.is_contributor(user) if parent else '',

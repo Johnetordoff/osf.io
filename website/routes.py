@@ -1242,96 +1242,6 @@ def make_url_map(app):
             notemplate,
         ),
 
-        # Registrations
-        Rule(
-            [
-                '/project/<pid>/register/',
-                '/project/<pid>/node/<nid>/register/',
-            ],
-            'get',
-            project_views.register.node_register_page,
-            OsfWebRenderer('project/register.mako', trust=False)
-        ),
-
-        Rule(
-            [
-                '/project/<pid>/register/<metaschema_id>/',
-                '/project/<pid>/node/<nid>/register/<metaschema_id>/',
-            ],
-            'get',
-            project_views.register.node_register_template_page,
-            OsfWebRenderer('project/register.mako', trust=False)
-        ),
-        Rule(
-            [
-                '/project/<pid>/registrations/',
-                '/project/<pid>/node/<nid>/registrations/',
-            ],
-            'get',
-            project_views.node.node_registrations,
-            notemplate,
-        ),
-        Rule(
-            [
-                '/project/<pid>/registrations/',
-                '/project/<pid>/node/<nid>/registrations/',
-            ],
-            'post',
-            project_views.drafts.new_draft_registration,
-            OsfWebRenderer('project/edit_draft_registration.mako', trust=False)),
-        Rule(
-            [
-                '/project/<pid>/drafts/<draft_id>/',
-                '/project/<pid>/node/<nid>/drafts/<draft_id>/',
-            ],
-            'get',
-            project_views.drafts.edit_draft_registration_page,
-            OsfWebRenderer('project/edit_draft_registration.mako', trust=False)),
-        Rule(
-            [
-                '/project/<pid>/drafts/<draft_id>/register/',
-                '/project/<pid>/node/<nid>/drafts/<draft_id>/register/',
-            ],
-            'get',
-            project_views.drafts.draft_before_register_page,
-            OsfWebRenderer('project/register_draft.mako', trust=False)),
-
-        Rule(
-            [
-                '/project/<pid>/retraction/',
-                '/project/<pid>/node/<nid>/retraction/',
-            ],
-            'get',
-            project_views.register.node_registration_retraction_redirect,
-            notemplate,
-        ),
-
-        Rule(
-            [
-                '/project/<pid>/withdraw/',
-                '/project/<pid>/node/<nid>/withdraw/',
-            ],
-            'get',
-            project_views.register.node_registration_retraction_get,
-            OsfWebRenderer('project/retract_registration.mako', trust=False)
-        ),
-
-        Rule(
-            '/ids/<category>/<path:value>/',
-            'get',
-            project_views.register.get_referent_by_identifier,
-            notemplate,
-        ),
-
-        Rule(
-            [
-                '/project/<pid>/analytics/',
-                '/project/<pid>/node/<nid>/analytics/',
-            ],
-            'get',
-            project_views.node.project_statistics,
-            notemplate,
-        ),
 
 
         ### Files ###
@@ -1520,33 +1430,6 @@ def make_url_map(app):
             json_renderer,
         ),
 
-        # Draft Registrations
-        Rule([
-            '/project/<pid>/drafts/',
-        ], 'get', project_views.drafts.get_draft_registrations, json_renderer),
-        Rule([
-            '/project/<pid>/drafts/<draft_id>/',
-        ], 'get', project_views.drafts.get_draft_registration, json_renderer),
-        Rule([
-            '/project/<pid>/drafts/<draft_id>/',
-        ], 'put', project_views.drafts.update_draft_registration, json_renderer),
-        Rule([
-            '/project/<pid>/drafts/<draft_id>/',
-        ], 'delete', project_views.drafts.delete_draft_registration, json_renderer),
-        # Meta Schemas
-        Rule([
-            '/project/drafts/schemas/',
-        ], 'get', project_views.drafts.get_metaschemas, json_renderer),
-
-        Rule([
-            '/project/<pid>/get_contributors/',
-            '/project/<pid>/node/<nid>/get_contributors/',
-        ], 'get', project_views.contributor.get_contributors, json_renderer),
-
-        Rule([
-            '/project/<pid>/get_contributors_from_parent/',
-            '/project/<pid>/node/<nid>/get_contributors_from_parent/',
-        ], 'get', project_views.contributor.get_contributors_from_parent, json_renderer),
 
         # Reorder contributors
         Rule(
@@ -1724,13 +1607,6 @@ def make_url_map(app):
             json_renderer,
         ),
         Rule(
-            '/settings/addons/',
-            'post',
-            profile_views.user_choose_addons,
-            json_renderer,
-        ),
-
-        Rule(
             '/settings/notifications/',
             'get',
             profile_views.user_notifications,
@@ -1775,16 +1651,6 @@ def make_url_map(app):
             '/subscriptions/',
             'post',
             notification_views.configure_subscription,
-            json_renderer,
-        ),
-
-        Rule(
-            [
-                '/project/<pid>/settings/addons/',
-                '/project/<pid>/node/<nid>/settings/addons/',
-            ],
-            'post',
-            project_views.node.node_choose_addons,
             json_renderer,
         ),
 
