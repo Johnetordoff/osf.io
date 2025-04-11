@@ -1269,27 +1269,21 @@ class DraftRegistration(ObjectIDMixin, RegistrationResponseMixin, DirtyFieldsMix
             provider.validate_schema(schema)
 
         excluded_attributes = []
-        if node:
-            branched_from = node
-        else:
-            branched_from = DraftNode.objects.create(creator=user, title=settings.DEFAULT_DRAFT_NODE_TITLE)
-            excluded_attributes.append('title')
-
-        if not isinstance(branched_from, (Node, DraftNode)):
-            raise DraftRegistrationStateError()
 
         draft = cls(
             initiator=user,
-            branched_from=branched_from,
+            branched_from=node,
             registration_schema=schema,
             registration_metadata=data or {},
             provider=provider,
         )
         draft.save()
-        draft.copy_editable_fields(
-            branched_from,
-            excluded_attributes=excluded_attributes
-        )
+        if node:
+            draft.copy_editable_fields(
+                node,
+                excluded_attributes=excluded_attributes
+            )
+
         draft.update(data, auth=Auth(user))
 
         if not node:
@@ -1501,7 +1495,7 @@ def create_django_groups_for_draft_registration(sender, instance, created, **kwa
 
         initiator = instance.initiator
 
-        if instance.branched_from.contributor_set.filter(user=initiator).exists():
+        if instance.branched_from and instance.branched_from.contributor_set.filter(user=initiator).exists():
             initiator_node_contributor = instance.branched_from.contributor_set.get(user=initiator)
             initiator_visibility = initiator_node_contributor.visible
             initiator_order = initiator_node_contributor._order
