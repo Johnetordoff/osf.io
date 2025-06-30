@@ -5,6 +5,8 @@ import pytest
 
 from urllib.parse import urljoin, urlparse
 
+from waffle import testutils
+
 from api.base.settings.defaults import API_BASE
 from api.base.versioning import CREATE_REGISTRATION_FIELD_CHANGE_VERSION
 from api_tests.nodes.views.test_node_draft_registration_list import AbstractDraftRegistrationTestCase
@@ -12,6 +14,7 @@ from api_tests.subjects.mixins import SubjectsFilterMixin
 from api_tests.registrations.filters.test_filters import RegistrationListFilteringMixin
 from api_tests.utils import create_test_file
 from framework.auth.core import Auth
+from osf import features
 from osf.models import RegistrationSchema, Registration
 from osf_tests.factories import (
     EmbargoFactory,
@@ -20,7 +23,6 @@ from osf_tests.factories import (
     AuthUserFactory,
     CollectionFactory,
     DraftRegistrationFactory,
-    OSFGroupFactory,
     NodeLicenseRecordFactory,
     TagFactory,
     SubjectFactory,
@@ -838,13 +840,6 @@ class TestNodeRegistrationCreate(AbstractDraftRegistrationTestCase):
         res = app.post_json_api(url_registrations, payload, expect_errors=True)
         assert res.status_code == 401
 
-        # admin via a group cannot create registration
-        group_mem = AuthUserFactory()
-        group = OSFGroupFactory(creator=group_mem)
-        project_public.add_osf_group(group, permissions.ADMIN)
-        res = app.post_json_api(url_registrations, payload, auth=group_mem.auth, expect_errors=True)
-        assert res.status_code == 403
-
     @mock.patch('framework.celery_tasks.handlers.enqueue_task')
     def test_registration_draft_must_be_specified(
             self, mock_enqueue, app, user, payload, url_registrations):
@@ -1559,12 +1554,46 @@ class TestRegistrationCreate(TestNodeRegistrationCreate):
             self, mock_enqueue, app, user, schema, url_registrations_ver):
         # Overrides TestNodeRegistrationCreate - node is not in URL in this workflow
         return
+    @pytest.fixture
+    def manual_guid(self):
+        return 'abcde'
+
+    @pytest.fixture
+    def manual_doi(self):
+        return '10.70102/FK2osf.io/abcde'
+
+    @pytest.fixture
+    def enable_flag(self):
+        with testutils.override_flag(features.MANUAL_DOI_AND_GUID, True):
+            yield
+
+    @pytest.fixture
+    def manual_guid_payload(self, payload, manual_guid, manual_doi):
+        payload['data']['attributes'] |= {
+            'manual_doi': manual_doi,
+            'manual_guid': manual_guid,
+        }
+
+        return payload
+
+    def test_fail_create_registration_with_manual_guid(self, app, user, schema, url_registrations, manual_guid_payload, manual_guid, manual_doi):
+        res = app.post_json_api(url_registrations, manual_guid_payload, auth=user.auth, expect_errors=True)
+        assert res.status_code == 400
+        print(res.status_code)
+
+    def test_create_registration_with_manual_guid(self, app, user, schema, url_registrations, manual_guid_payload, manual_guid, manual_doi, enable_flag):
+        res = app.post_json_api(url_registrations, manual_guid_payload, auth=user.auth)
+        data = res.json['data']
+        assert res.status_code == 201
+        assert data['id'] == manual_guid, 'manual guid was not assigned'
+        identifiers_response = app.get(data['relationships']['identifiers']['links']['related']['href'], auth=user.auth)
+        assert identifiers_response.status_code == 200
+        assert identifiers_response.json['data'][0]['attributes']['value'] == manual_doi
 
     @mock.patch('framework.celery_tasks.handlers.enqueue_task')
     def test_need_admin_perms_on_draft(
             self, mock_enqueue, app, user, schema, payload_ver, url_registrations_ver):
         user_two = AuthUserFactory()
-        group = OSFGroupFactory(creator=user)
 
         # User is an admin contributor on draft registration but not on node
         draft_registration = DraftRegistrationFactory(creator=user_two, registration_schema=schema)
@@ -1589,17 +1618,6 @@ class TestRegistrationCreate(TestNodeRegistrationCreate):
         draft_registration.save()
         res = app.post_json_api(url_registrations_ver, payload_ver, auth=user.auth)
         assert res.status_code == 201
-
-        # User is an admin group contributor on the node but not on draft registration
-        draft_registration = DraftRegistrationFactory(creator=user_two, registration_schema=schema)
-        draft_registration.branched_from.add_osf_group(group, permissions.ADMIN)
-        payload_ver['data']['attributes']['draft_registration_id'] = draft_registration._id
-        assert draft_registration.branched_from.is_admin_contributor(user) is False
-        assert draft_registration.branched_from.has_permission(user, permissions.ADMIN) is True
-        assert draft_registration.has_permission(user, permissions.ADMIN) is False
-        res = app.post_json_api(url_registrations_ver, payload_ver, auth=user.auth, expect_errors=True)
-        assert res.status_code == 403
-        assert res.json['errors'][0]['detail'] == 'You must be an admin contributor on the draft registration to create a registration.'
 
         # User is an admin contributor on node but not on draft registration
         draft_registration = DraftRegistrationFactory(creator=user_two, registration_schema=schema)

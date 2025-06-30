@@ -2,6 +2,7 @@ import pytz
 from urllib.parse import urlencode
 
 from django.apps import apps
+from django.db import IntegrityError
 from django.db.models import F
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
@@ -11,8 +12,7 @@ from rest_framework.throttling import UserRateThrottle
 from api.addons.views import AddonSettingsMixin
 from api.base import permissions as base_permissions
 from api.users.permissions import UserMessagePermissions
-from api.base.waffle_decorators import require_flag
-from api.base.exceptions import Conflict, UserGone, Gone
+from api.base.exceptions import Conflict, UserGone
 from api.base.filters import ListFilterMixin, PreprintFilterMixin
 from api.base.parsers import (
     JSONAPIRelationshipParser,
@@ -40,7 +40,6 @@ from api.institutions.serializers import InstitutionSerializer
 from api.nodes.filters import NodesFilterMixin, UserNodesFilterMixin
 from api.nodes.serializers import DraftRegistrationLegacySerializer
 from api.nodes.utils import NodeOptimizationMixin
-from api.osf_groups.serializers import GroupSerializer
 from api.preprints.serializers import PreprintSerializer, PreprintDraftSerializer
 from api.registrations import annotations as registration_annotations
 from api.registrations.serializers import RegistrationSerializer
@@ -84,7 +83,6 @@ from framework.celery_tasks.handlers import enqueue_task
 from framework.utils import throttle_period_expired
 from framework.sessions.utils import remove_sessions_for_user
 from framework.exceptions import PermissionsError, HTTPError
-from osf.features import OSF_GROUPS
 from rest_framework import permissions as drf_permissions
 from rest_framework import generics
 from rest_framework import status
@@ -98,7 +96,6 @@ from osf.models import (
     Preprint,
     Node,
     Registration,
-    OSFGroup,
     OSFUser,
     Email,
     Tag,
@@ -357,49 +354,6 @@ class UserNodes(JSONAPIBaseView, generics.ListAPIView, UserMixin, UserNodesFilte
             .select_related('node_license')
             .prefetch_related('contributor_set__user__guids', 'root__guids')
         )
-
-
-class UserGroups(JSONAPIBaseView, generics.ListAPIView, UserMixin, ListFilterMixin):
-    permission_classes = (
-        drf_permissions.IsAuthenticatedOrReadOnly,
-        base_permissions.TokenHasScope,
-    )
-    required_read_scopes = [CoreScopes.OSF_GROUPS_READ]
-    required_write_scopes = [CoreScopes.NULL]
-
-    model_class = apps.get_model('osf.OSFGroup')
-    serializer_class = GroupSerializer
-    view_category = 'users'
-    view_name = 'user-groups'
-    ordering = ('-modified',)
-
-    @require_flag(OSF_GROUPS)
-    def get_default_queryset(self):
-        requested_user = self.get_user()
-        current_user = self.request.user
-        if current_user.is_anonymous:
-            return OSFGroup.objects.none()
-        return requested_user.osf_groups.filter(id__in=current_user.osf_groups.values_list('id', flat=True))
-
-    # overrides ListAPIView
-    def get_queryset(self):
-        return self.get_queryset_from_request()
-
-
-class UserQuickFiles(JSONAPIBaseView, generics.ListAPIView):
-    view_category = 'users'
-    view_name = 'user-quickfiles'
-
-    permission_classes = (
-        drf_permissions.IsAuthenticatedOrReadOnly,
-        base_permissions.TokenHasScope,
-    )
-
-    required_read_scopes = [CoreScopes.NULL]
-    required_write_scopes = [CoreScopes.NULL]
-
-    def get(self, *args, **kwargs):
-        raise Gone()
 
 
 class UserPreprints(JSONAPIBaseView, generics.ListAPIView, UserMixin, PreprintFilterMixin):
@@ -1090,6 +1044,33 @@ class ConfirmEmailView(generics.CreateAPIView):
 
     serializer_class = ConfirmEmailTokenSerializer
 
+    def _process_external_identity(self, user, external_identity, service_url):
+        """Handle all external_identity logic, including task enqueueing and url updates."""
+
+        provider = next(iter(external_identity))
+        if provider not in user.external_identity:
+            raise ValidationError('External-ID provider mismatch.')
+
+        provider_id = next(iter(external_identity[provider]))
+        ensure_external_identity_uniqueness(provider, provider_id, user)
+        external_status = user.external_identity[provider][provider_id]
+        user.external_identity[provider][provider_id] = 'VERIFIED'
+
+        if external_status == 'CREATE':
+            service_url += '&' + urlencode({'new': 'true'})
+        elif external_status == 'LINK':
+            mails.send_mail(
+                user=user,
+                to_addr=user.username,
+                mail=mails.EXTERNAL_LOGIN_LINK_SUCCESS,
+                external_id_provider=provider,
+                can_change_preferences=False,
+            )
+
+        enqueue_task(update_affiliation_for_orcid_sso_users.s(user._id, provider_id))
+
+        return service_url
+
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -1105,40 +1086,32 @@ class ConfirmEmailView(generics.CreateAPIView):
         if not verification:
             raise ValidationError('Invalid or expired token.')
 
-        provider = next(iter(verification['external_identity']))
-        provider_id = next(iter(verification['external_identity'][provider]))
+        external_identity = verification.get('external_identity')
+        service_url = self.request.build_absolute_uri()
 
-        if provider not in user.external_identity:
-            raise ValidationError('External-ID provider mismatch.')
-
-        external_status = user.external_identity[provider][provider_id]
-        ensure_external_identity_uniqueness(provider, provider_id, user)
+        if external_identity:
+            service_url = self._process_external_identity(
+                user,
+                external_identity,
+                service_url,
+            )
 
         email = verification['email']
         if not user.is_registered:
             user.register(email)
 
-        user.emails.get_or_create(address=email.lower())
-        user.external_identity[provider][provider_id] = 'VERIFIED'
+        if not user.emails.filter(address=email.lower()).exists():
+            try:
+                user.emails.create(address=email.lower())
+            except IntegrityError:
+                raise ValidationError('Email address already exists.')
+
         user.date_last_logged_in = timezone.now()
 
         del user.email_verifications[token]
         user.verification_key = generate_verification_key()
         user.save()
 
-        service_url = self.request.build_absolute_uri()
-        if external_status == 'CREATE':
-            service_url += '&' + urlencode({'new': 'true'})
-        elif external_status == 'LINK':
-            mails.send_mail(
-                user=user,
-                to_addr=user.username,
-                mail=mails.EXTERNAL_LOGIN_LINK_SUCCESS,
-                external_id_provider=provider,
-                can_change_preferences=False,
-            )
-
-        enqueue_task(update_affiliation_for_orcid_sso_users.s(user._id, provider_id))
         serializer.validated_data['redirect_url'] = service_url
         return Response(
             data=serializer.data,
