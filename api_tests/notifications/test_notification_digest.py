@@ -113,16 +113,14 @@ class TestNotificationDigestTasks:
         user = AuthUserFactory(fullname='Admin User')
         reg_provider = RegistrationProviderFactory(_id='abc123')
         reg = RegistrationFactory(provider=reg_provider)
-        admin_group = reg_provider.get_group('admin')
-        admin_group.user_set.add(user)
-        notification_type = NotificationType.objects.get(name=NotificationType.Type.PROVIDER_NEW_PENDING_SUBMISSIONS)
-        notification = Notification.objects.create(
-            subscription=add_notification_subscription(
-                user,
-                notification_type,
-                'daily',
-                subscribed_object=reg
-            ),
+        reg_provider.add_to_group(user, 'admin')
+        reg_provider.add_to_group(user, 'moderator')
+        add_notification_subscription(
+            user,
+            NotificationType.Type.PROVIDER_NEW_PENDING_SUBMISSIONS.instance,
+            'daily',
+            subscribed_object=reg
+        ).emit(
             event_context={
                 'profile_image_url': 'http://example.com/profile.png',
                 'is_request_email': False,
@@ -132,8 +130,8 @@ class TestNotificationDigestTasks:
                 'requester_fullname': '<NAME>',
                 'localized_timestamp': 'test timestamp',
             },
-            sent=None,
         )
+        notification = Notification.objects.get()
         notification_ids = [notification.id]
         with capture_notifications() as notifications:
             send_moderator_email_task.apply(args=(user._id, notification_ids)).get()
@@ -248,10 +246,15 @@ class TestNotificationDigestTasks:
         user = AuthUserFactory()
         provider = RegistrationProviderFactory()
         reg = RegistrationFactory(provider=provider)
-        notification_type = NotificationType.objects.get(name=NotificationType.Type.PROVIDER_NEW_PENDING_SUBMISSIONS)
-        Notification.objects.create(
-            subscription=add_notification_subscription(user, notification_type, 'daily', subscribed_object=reg),
-            sent=None,
+        provider.add_to_group(user, 'admin')
+        provider.add_to_group(user, 'moderator')
+
+        add_notification_subscription(
+            user,
+            NotificationType.Type.PROVIDER_NEW_PENDING_SUBMISSIONS.instance,
+            'daily',
+            subscribed_object=reg
+        ).emit(
             event_context={
                 'submitter_fullname': 'submitter_fullname',
                 'requester_fullname': 'requester_fullname',

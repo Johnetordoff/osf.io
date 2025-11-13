@@ -71,6 +71,7 @@ def send_user_email_task(self, user_id, notification_ids, **kwargs):
         NotificationType.Type.USER_DIGEST.instance.emit(
             user=user,
             event_context=event_context,
+            message_frequency='instantly'
         )
 
         notifications_qs.update(sent=timezone.now())
@@ -179,6 +180,7 @@ def send_moderator_email_task(self, user_id, notification_ids, **kwargs):
             user=user,
             subscribed_object=subscribed_object,
             event_context=event_context,
+            message_frequency='instantly'
         )
 
         notifications_qs.update(sent=timezone.now())

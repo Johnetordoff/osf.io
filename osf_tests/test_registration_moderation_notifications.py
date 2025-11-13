@@ -146,16 +146,14 @@ class TestNotificationDigestTasks:
         reg_provider.add_to_group(user, 'moderator')
         reg_provider.add_to_group(user, 'admin')
 
-        notification_type = NotificationType.objects.get(
-            name=NotificationType.Type.PROVIDER_NEW_PENDING_SUBMISSIONS
-        )
-        notification = Notification.objects.create(
-            subscription=add_notification_subscription(
-                user,
-                notification_type,
-                'daily',
-                subscribed_object=reg,
-            ),
+        add_notification_subscription(
+            user,
+            NotificationType.Type.PROVIDER_NEW_PENDING_SUBMISSIONS.instance,
+            'daily',
+            subscribed_object=reg,
+        ).emit(
+            user,
+            subscribed_object=reg,
             event_context={
                 'profile_image_url': 'http://example.com/profile.png',
                 'is_request_email': False,
@@ -165,8 +163,8 @@ class TestNotificationDigestTasks:
                 'requester_fullname': '<NAME>',
                 'localized_timestamp': 'test timestamp',
             },
-            sent=None,
         )
+        notification = Notification.objects.get()
         notification_ids = [notification.id]
         with capture_notifications() as notifications:
             send_moderator_email_task.apply(
@@ -311,19 +309,14 @@ class TestNotificationDigestTasks:
         user = AuthUserFactory()
         provider = RegistrationProviderFactory()
         provider.add_to_group(user, 'moderator')
-
         reg = RegistrationFactory(provider=provider)
-        notification_type = NotificationType.objects.get(
-            name=NotificationType.Type.PROVIDER_NEW_PENDING_SUBMISSIONS
-        )
-        Notification.objects.create(
-            subscription=add_notification_subscription(
-                user,
-                notification_type,
-                'daily',
-                subscribed_object=reg,
-            ),
-            sent=None,
+
+        add_notification_subscription(
+            user,
+            NotificationType.Type.PROVIDER_NEW_PENDING_SUBMISSIONS.instance,
+            'daily',
+            subscribed_object=reg,
+        ).emit(
             event_context={
                 'submitter_fullname': 'submitter_fullname',
                 'requester_fullname': 'requester_fullname',
