@@ -153,7 +153,6 @@ class TestNotificationDigestTasks:
             subscribed_object=reg,
         ).emit(
             user,
-            subscribed_object=reg,
             event_context={
                 'profile_image_url': 'http://example.com/profile.png',
                 'is_request_email': False,
