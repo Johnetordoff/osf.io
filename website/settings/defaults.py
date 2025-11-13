@@ -619,7 +619,7 @@ class CeleryConfig:
         'triggered_mails': {
             'task': 'scripts.triggered_mails',
             'schedule': crontab(minute=0, hour=5),  # Daily 12 a.m
-            'kwargs': {'dry_run': False},
+            'kwargs': {'dry_run': True},  # For no_login messages
         },
         '5-minute-user-emails': {
             'task': 'notifications.tasks.send_users_instant_digest_email',
@@ -633,12 +633,12 @@ class CeleryConfig:
         },
         'send_moderators_digest_email': {
             'task': 'notifications.tasks.send_moderators_digest_email',
-            'schedule': crontab(minute=0, hour=5),  # Daily 12 a.m
+            'schedule': crontab(minute='*/10'),  # Daily 12 a.m (ten minutes for testing purposes)
             'kwargs': {'dry_run': False},
         },
         'send_users_digest_email': {
             'task': 'notifications.tasks.send_users_digest_email',
-            'schedule': crontab(minute=0, hour=5),  # Daily 12 a.m
+            'schedule': crontab(minute='*/10'),  # Daily 12 a.m (ten minutes for testing purposes)
             'kwargs': {'dry_run': False},
         },
         'clear_expired_sessions': {
