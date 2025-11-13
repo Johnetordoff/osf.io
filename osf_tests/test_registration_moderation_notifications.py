@@ -73,7 +73,7 @@ class TestNotificationDigestTasks:
             subscribed_object=user
         )
 
-        subscription_type.emits(
+        subscription_type.emit(
             event_context={
                 'source_path': '/',
                 'source_node_title': 'test title',
