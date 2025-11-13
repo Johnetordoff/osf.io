@@ -73,8 +73,7 @@ class TestNotificationDigestTasks:
             subscribed_object=user
         )
 
-        notification = Notification.objects.create(
-            subscription=subscription_type,
+        subscription_type.emits(
             event_context={
                 'source_path': '/',
                 'source_node_title': 'test title',
@@ -89,6 +88,7 @@ class TestNotificationDigestTasks:
             },
         )
         user.save()
+        notification = Notification.objects.get()
         notification_ids = [notification.id]
         with capture_notifications() as notifications:
             send_user_email_task.apply(args=(user._id, notification_ids)).get()
@@ -152,7 +152,6 @@ class TestNotificationDigestTasks:
             'daily',
             subscribed_object=reg,
         ).emit(
-            user,
             event_context={
                 'profile_image_url': 'http://example.com/profile.png',
                 'is_request_email': False,
