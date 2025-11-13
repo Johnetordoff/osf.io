@@ -124,7 +124,7 @@ def send_moderator_email_task(self, user_id, notification_ids, **kwargs):
 
         provider = getattr(subscribed_object, 'provider', None)
         if provider is None:
-            log_message(f"subscribed_object fpr {subscribed_object} does not exist")
+            log_message(f"provider for subscribed_object {subscribed_object} does not exist")
             email_task.status = 'PROVIDER NOT FOUND'
             email_task.save()
             return
@@ -132,7 +132,9 @@ def send_moderator_email_task(self, user_id, notification_ids, **kwargs):
         current_moderators = provider.get_group('moderator')
         if current_moderators is None or not current_moderators.user_set.filter(id=user.id).exists():
             log_message(f"User is not a moderator for provider {provider._id} - skipping email")
-            email_task.status = 'NOT MODERATOR'
+            email_task.status = 'NOT_MODERATOR'
+            email_task.save()
+            return
 
         additional_context = {}
         if isinstance(provider, RegistrationProvider):
@@ -254,7 +256,7 @@ def get_moderators_emails(message_freq: str):
             )
         GROUP BY osf_guid._id, (n.event_context ->> 'provider_id')
         ORDER BY osf_guid._id ASC
-        """
+    """
 
     with connection.cursor() as cursor:
         cursor.execute(sql,

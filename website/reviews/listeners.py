@@ -38,7 +38,7 @@ def reviews_withdraw_requests_notification_moderators(self, timestamp, context, 
 
         NotificationType.Type.PROVIDER_NEW_PENDING_WITHDRAW_REQUESTS.instance.emit(
             user=recipient,
-            subscribed_object=provider,
+            subscribed_object=resource,
             event_context=context,
             is_digest=True,
         )
@@ -63,7 +63,7 @@ def reviews_withdrawal_requests_notification(self, timestamp, context):
         NotificationType.Type.PROVIDER_NEW_PENDING_WITHDRAW_REQUESTS.instance.emit(
             user=recipient,
             event_context=context,
-            subscribed_object=preprint.provider,
+            subscribed_object=preprint,
             is_digest=True,
         )
 
@@ -112,7 +112,7 @@ def reviews_submit_notification_moderators(self, timestamp, resource, context):
 
         NotificationType.Type.PROVIDER_NEW_PENDING_SUBMISSIONS.instance.emit(
             user=recipient,
-            subscribed_object=provider,
+            subscribed_object=resource,
             event_context=context,
             is_digest=True,
         )
@@ -147,6 +147,6 @@ def reviews_submit_notification(self, recipients, context, resource, notificatio
         context['user_fullname'] = recipient.username
         notification_type.instance.emit(
             user=recipient,
-            subscribed_object=provider,
+            subscribed_object=resource,
             event_context=context,
         )
