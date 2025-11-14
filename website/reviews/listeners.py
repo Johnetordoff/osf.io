@@ -1,5 +1,6 @@
 from django.utils import timezone
 
+from osf.models import NotificationSubscription
 from website.settings import DOMAIN, OSF_PREPRINTS_LOGO, OSF_REGISTRIES_LOGO
 from osf.utils.permissions import ADMIN
 from website.reviews import signals as reviews_signals
@@ -38,7 +39,7 @@ def reviews_withdraw_requests_notification_moderators(self, timestamp, context, 
 
         NotificationType.Type.PROVIDER_NEW_PENDING_WITHDRAW_REQUESTS.instance.emit(
             user=recipient,
-            subscribed_object=provider,
+            subscribed_object=resource,
             event_context=context,
             is_digest=True,
         )
@@ -63,7 +64,7 @@ def reviews_withdrawal_requests_notification(self, timestamp, context):
         NotificationType.Type.PROVIDER_NEW_PENDING_WITHDRAW_REQUESTS.instance.emit(
             user=recipient,
             event_context=context,
-            subscribed_object=preprint.provider,
+            subscribed_object=preprint,
             is_digest=True,
         )
 
@@ -110,11 +111,17 @@ def reviews_submit_notification_moderators(self, timestamp, resource, context):
         context['requester_fullname'] = recipient.fullname
         context['is_request_email'] = False
 
+        freq_setting, created = NotificationSubscription.instance.get_or_create(
+            user=recipient,
+            notification_type=NotificationType.Type.REVIEWS_SUBMISSION_STATUS.instance,
+        )
+
         NotificationType.Type.PROVIDER_NEW_PENDING_SUBMISSIONS.instance.emit(
             user=recipient,
-            subscribed_object=provider,
+            subscribed_object=resource,
             event_context=context,
             is_digest=True,
+            message_frequency=freq_setting.frequency,
         )
 
 
@@ -147,6 +154,6 @@ def reviews_submit_notification(self, recipients, context, resource, notificatio
         context['user_fullname'] = recipient.username
         notification_type.instance.emit(
             user=recipient,
-            subscribed_object=provider,
+            subscribed_object=resource,
             event_context=context,
         )

@@ -71,6 +71,7 @@ def send_user_email_task(self, user_id, notification_ids, **kwargs):
         NotificationType.Type.USER_DIGEST.instance.emit(
             user=user,
             event_context=event_context,
+            message_frequency='instantly'
         )
 
         notifications_qs.update(sent=timezone.now())
@@ -118,21 +119,26 @@ def send_moderator_email_task(self, user_id, notification_ids, **kwargs):
 
         if subscribed_object is None:
             log_message(f"subscribed_object fpr {subscribed_object} does not exist")
-            email_task.status = 'OBJECT NOT FOUND'
+            email_task.error_message = 'subscribed object not found'
+            email_task.status = 'FAILURE'
             email_task.save()
             return
 
         provider = getattr(subscribed_object, 'provider', None)
         if provider is None:
-            log_message(f"subscribed_object fpr {subscribed_object} does not exist")
-            email_task.status = 'PROVIDER NOT FOUND'
+            log_message(f"provider for subscribed_object {subscribed_object} does not exist")
+            email_task.error_message = 'provider not found'
+            email_task.status = 'FAILURE'
             email_task.save()
             return
 
         current_moderators = provider.get_group('moderator')
         if current_moderators is None or not current_moderators.user_set.filter(id=user.id).exists():
             log_message(f"User is not a moderator for provider {provider._id} - skipping email")
-            email_task.status = 'NOT MODERATOR'
+            email_task.error_message = 'NOT MODERATOR'
+            email_task.status = 'FAILURE'
+            email_task.save()
+            return
 
         additional_context = {}
         if isinstance(provider, RegistrationProvider):
@@ -177,6 +183,7 @@ def send_moderator_email_task(self, user_id, notification_ids, **kwargs):
             user=user,
             subscribed_object=subscribed_object,
             event_context=event_context,
+            message_frequency='instantly'
         )
 
         notifications_qs.update(sent=timezone.now())
@@ -254,7 +261,7 @@ def get_moderators_emails(message_freq: str):
             )
         GROUP BY osf_guid._id, (n.event_context ->> 'provider_id')
         ORDER BY osf_guid._id ASC
-        """
+    """
 
     with connection.cursor() as cursor:
         cursor.execute(sql,
@@ -287,7 +294,7 @@ def get_users_emails(message_freq):
         LEFT JOIN osf_guid ON ns.user_id = osf_guid.object_id
         WHERE n.sent IS NULL
             AND ns.message_frequency = %s
-            AND nt.name NOT IN (%s, %s)
+            AND nt.name IN (%s, %s, %s, %s, %s, %s, %s)
             AND osf_guid.content_type_id = (
                 SELECT id FROM django_content_type WHERE model = 'osfuser'
             )
@@ -299,8 +306,13 @@ def get_users_emails(message_freq):
         cursor.execute(sql,
             [
                 message_freq,
-                NotificationType.Type.PROVIDER_NEW_PENDING_SUBMISSIONS.value,
-                NotificationType.Type.PROVIDER_NEW_PENDING_WITHDRAW_REQUESTS.value
+                NotificationType.Type.ADDON_FILE_RENAMED,
+                NotificationType.Type.ADDON_FILE_COPIED,
+                NotificationType.Type.FILE_ADDED,
+                NotificationType.Type.ADDON_FILE_MOVED,
+                NotificationType.Type.FILE_REMOVED,
+                NotificationType.Type.FILE_UPDATED,
+                NotificationType.Type.FOLDER_CREATED,
             ]
         )
         return itertools.chain.from_iterable(cursor.fetchall())
