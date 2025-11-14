@@ -129,7 +129,6 @@ def send_moderator_email_task(self, user_id, notification_ids, **kwargs):
             log_message(f"provider for subscribed_object {subscribed_object} does not exist")
             email_task.error_message = 'provider not found'
             email_task.status = 'FAILURE'
-
             email_task.save()
             return
 
@@ -295,7 +294,7 @@ def get_users_emails(message_freq):
         LEFT JOIN osf_guid ON ns.user_id = osf_guid.object_id
         WHERE n.sent IS NULL
             AND ns.message_frequency = %s
-            AND nt.name NOT IN (%s, %s)
+            AND nt.name IN (%s, %s, %s, %s, %s, %s, %s)
             AND osf_guid.content_type_id = (
                 SELECT id FROM django_content_type WHERE model = 'osfuser'
             )
@@ -307,8 +306,13 @@ def get_users_emails(message_freq):
         cursor.execute(sql,
             [
                 message_freq,
-                NotificationType.Type.PROVIDER_NEW_PENDING_SUBMISSIONS.value,
-                NotificationType.Type.PROVIDER_NEW_PENDING_WITHDRAW_REQUESTS.value
+                NotificationType.Type.ADDON_FILE_RENAMED,
+                NotificationType.Type.ADDON_FILE_COPIED,
+                NotificationType.Type.FILE_ADDED,
+                NotificationType.Type.ADDON_FILE_MOVED,
+                NotificationType.Type.FILE_REMOVED,
+                NotificationType.Type.FILE_UPDATED,
+                NotificationType.Type.FOLDER_CREATED,
             ]
         )
         return itertools.chain.from_iterable(cursor.fetchall())

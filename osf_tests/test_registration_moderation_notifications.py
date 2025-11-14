@@ -12,8 +12,8 @@ from notifications.tasks import (
 )
 from osf_tests.factories import (
     AuthUserFactory,
-    RegistrationProviderFactory,
-    RegistrationFactory,
+    PreprintProviderFactory,
+    PreprintFactory,
 )
 from tests.utils import capture_notifications
 
@@ -58,21 +58,11 @@ class TestNotificationDigestTasks:
 
     def test_send_user_email_task_success(self):
         user = AuthUserFactory()
-        notification_type = NotificationType.objects.get(
-            name=NotificationType.Type.USER_FILE_UPDATED
-        )
-        add_notification_subscription(
-            user,
-            NotificationType.objects.get(name=NotificationType.Type.FILE_UPDATED),
-            'daily',
-        )
         subscription_type = add_notification_subscription(
             user,
-            notification_type,
+            NotificationType.Type.USER_FILE_UPDATED.instance,
             'daily',
-            subscribed_object=user
         )
-
         subscription_type.emit(
             event_context={
                 'source_path': '/',
@@ -141,8 +131,8 @@ class TestNotificationDigestTasks:
 
     def test_send_moderator_email_task_registration_provider_admin(self):
         user = AuthUserFactory(fullname='Admin User')
-        reg_provider = RegistrationProviderFactory(_id='abc123')
-        reg = RegistrationFactory(provider=reg_provider)
+        reg_provider = PreprintProviderFactory(_id='abc123')
+        preprint = PreprintFactory(provider=reg_provider)
         reg_provider.add_to_group(user, 'moderator')
         reg_provider.add_to_group(user, 'admin')
 
@@ -150,7 +140,7 @@ class TestNotificationDigestTasks:
             user,
             NotificationType.Type.PROVIDER_NEW_PENDING_SUBMISSIONS.instance,
             'daily',
-            subscribed_object=reg,
+            subscribed_object=preprint,
         ).emit(
             event_context={
                 'profile_image_url': 'http://example.com/profile.png',
@@ -182,18 +172,15 @@ class TestNotificationDigestTasks:
 
     def test_send_moderator_email_task_no_notifications(self):
         user = AuthUserFactory(fullname='Admin User')
-        provider = RegistrationProviderFactory()
-        reg = RegistrationFactory(provider=provider)
+        provider = PreprintProviderFactory()
+        preprint = PreprintFactory(provider=provider)
 
         notification_ids = []
-        notification_type = NotificationType.objects.get(
-            name=NotificationType.Type.PROVIDER_NEW_PENDING_SUBMISSIONS
-        )
         add_notification_subscription(
             user,
-            notification_type,
+            NotificationType.Type.PROVIDER_NEW_PENDING_SUBMISSIONS.instance,
             'daily',
-            subscribed_object=reg,
+            subscribed_object=preprint,
         )
 
         send_moderator_email_task.apply(args=(user._id, notification_ids)).get()
@@ -208,29 +195,26 @@ class TestNotificationDigestTasks:
 
     def test_get_users_emails(self):
         user = AuthUserFactory()
-        notification_type = NotificationType.objects.get(
-            name=NotificationType.Type.USER_DIGEST
-        )
-        notification1 = Notification.objects.create(
-            subscription=add_notification_subscription(
-                user,
-                notification_type,
-                'daily',
-                subscribed_object=user,
-            ),
-            sent=None,
-            event_context={},
+        add_notification_subscription(
+            user,
+            NotificationType.Type.FILE_REMOVED.instance,
+            'daily',
+            subscribed_object=user,
+        ).emit(
+            event_context={}
         )
         res = list(get_users_emails('daily'))
         assert len(res) == 1
         user_info = res[0]
         assert user_info['user_id'] == user._id
-        assert any(msg['notification_id'] == notification1.id for msg in user_info['info'])
+        notification = Notification.objects.get()
+        assert any(msg['notification_id'] == notification.id for msg in user_info['info'])
 
     def test_get_moderators_emails(self):
         user = AuthUserFactory()
-        provider = RegistrationProviderFactory()
-        reg = RegistrationFactory(provider=provider)
+        provider = PreprintProviderFactory()
+        preprint = PreprintFactory(provider=provider)
+        provider.add_to_group(user, 'moderator')
         notification_type = NotificationType.objects.get(
             name=NotificationType.Type.PROVIDER_NEW_PENDING_SUBMISSIONS
         )
@@ -238,14 +222,12 @@ class TestNotificationDigestTasks:
             user,
             notification_type,
             'daily',
-            subscribed_object=reg,
+            subscribed_object=preprint,
         )
-        Notification.objects.create(
-            subscription=subscription,
-            event_context={},
-            sent=None,
+
+        subscription.emit(
+            event_context={}
         )
-        provider.add_to_group(user, 'moderator')
 
         res = list(get_moderators_emails('daily'))
         assert len(res) >= 1
@@ -253,29 +235,17 @@ class TestNotificationDigestTasks:
             x
             for x in res
             if x['user_id'] == user._id
-            and subscription.subscribed_object.id == reg.id
+            and subscription.subscribed_object.id == preprint.id
         ]
         assert entry, 'Expected moderator digest group'
 
     def test_send_users_digest_email_end_to_end(self):
         user = AuthUserFactory()
-        notification_type = NotificationType.objects.get(
-            name=NotificationType.Type.USER_FILE_UPDATED
-        )
         add_notification_subscription(
             user,
-            NotificationType.objects.get(name=NotificationType.Type.FILE_UPDATED),
+            NotificationType.Type.FILE_ADDED.instance,
             'daily',
-        )
-        subscription_type = add_notification_subscription(
-            user,
-            notification_type,
-            'daily',
-            subscribed_object=user,
-        )
-
-        Notification.objects.create(
-            subscription=subscription_type,
+        ).emit(
             event_context={
                 'source_path': '/',
                 'requester_fullname': '<NAME>',
@@ -290,8 +260,10 @@ class TestNotificationDigestTasks:
                 'profile_image_url': 'http://example.com/profile.png',
                 'destination_node_parent_node_title': 'test parent node title',
                 'destination_node_title': 'test node title',
-                'nessage': 'test message',
+                'message': 'test message',
+                'user_fullname': 'user fullname',
                 'localized_timestamp': 'test timestamp',
+                'url': 'test url',
             },
         )
         user.save()
@@ -305,15 +277,14 @@ class TestNotificationDigestTasks:
 
     def test_send_moderators_digest_email_end_to_end(self):
         user = AuthUserFactory()
-        provider = RegistrationProviderFactory()
+        provider = PreprintProviderFactory()
         provider.add_to_group(user, 'moderator')
-        reg = RegistrationFactory(provider=provider)
-
+        preprint = PreprintFactory(provider=provider)
         add_notification_subscription(
             user,
             NotificationType.Type.PROVIDER_NEW_PENDING_SUBMISSIONS.instance,
             'daily',
-            subscribed_object=reg,
+            subscribed_object=preprint,
         ).emit(
             event_context={
                 'submitter_fullname': 'submitter_fullname',
@@ -385,18 +356,15 @@ class TestNotificationDigestTasks:
         MUST result in exactly one DIGEST_REVIEWS_MODERATORS emit.
         """
         user = AuthUserFactory()
-        provider = RegistrationProviderFactory()
-        reg = RegistrationFactory(provider=provider)
-        notification_type = NotificationType.objects.get(
-            name=NotificationType.Type.PROVIDER_NEW_PENDING_SUBMISSIONS
-        )
+        provider = PreprintProviderFactory()
+        preprint = PreprintFactory(provider=provider)
         provider.add_to_group(user, 'moderator')
 
         subscription = add_notification_subscription(
             user,
-            notification_type,
+            NotificationType.Type.PROVIDER_NEW_PENDING_SUBMISSIONS.instance,
             'daily',
-            subscribed_object=reg,
+            subscribed_object=preprint,
         )
 
         for i in range(4):
