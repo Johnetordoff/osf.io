@@ -119,21 +119,25 @@ def send_moderator_email_task(self, user_id, notification_ids, **kwargs):
 
         if subscribed_object is None:
             log_message(f"subscribed_object fpr {subscribed_object} does not exist")
-            email_task.status = 'OBJECT NOT FOUND'
+            email_task.error_message = 'subscribed object not found'
+            email_task.status = 'FAILURE'
             email_task.save()
             return
 
         provider = getattr(subscribed_object, 'provider', None)
         if provider is None:
             log_message(f"provider for subscribed_object {subscribed_object} does not exist")
-            email_task.status = 'PROVIDER NOT FOUND'
+            email_task.error_message = 'provider not found'
+            email_task.status = 'FAILURE'
+
             email_task.save()
             return
 
         current_moderators = provider.get_group('moderator')
         if current_moderators is None or not current_moderators.user_set.filter(id=user.id).exists():
             log_message(f"User is not a moderator for provider {provider._id} - skipping email")
-            email_task.status = 'NOT_MODERATOR'
+            email_task.error_message = 'NOT MODERATOR'
+            email_task.status = 'FAILURE'
             email_task.save()
             return
 
