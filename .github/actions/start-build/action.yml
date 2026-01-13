@@ -35,14 +35,13 @@ runs:
     shell: bash
     run: |
       # pinned pip to 21.0a and setuptools<58.0.0 as current dependencies do not build on newer versions of pip and setuptools
-      pip install poetry==1.8.0
+      pip install poetry==2.1.1
       poetry install --no-root --without release
   - name: Other installs
     shell: bash
     run: |
       # bumped psycopg to match requirements.txt, as otherwise build would fail
       poetry run python3 -m invoke ci-addon-settings
-      pip uninstall uritemplate.py --yes
       # use yarn add --exact to match versions in yarn.lock w/o installing all deps
       yarn add --exact bower@^1.8.8
       yarn add --exact @centerforopenscience/list-of-licenses@^1.1.0

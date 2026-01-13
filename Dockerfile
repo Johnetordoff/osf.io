@@ -38,7 +38,7 @@ ENV POETRY_VIRTUALENVS_IN_PROJECT=1 \
     POETRY_HOME=/tmp/poetry
 
 RUN python3 -m venv $POETRY_HOME
-RUN $POETRY_HOME/bin/pip install poetry==1.8.3
+RUN $POETRY_HOME/bin/pip install poetry==2.1.1
 
 
 RUN set -ex \
