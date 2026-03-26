@@ -15,8 +15,6 @@ from flask import g
 from django.conf import settings as api_settings
 from django.utils.encoding import smart_str
 from werkzeug.http import dump_cookie
-from geoip2.database import Reader
-from geoip2.errors import AddressNotFoundError
 
 from framework import status
 from framework import sentry
@@ -89,11 +87,6 @@ def get_globals():
     user = _get_current_user()
     set_status_message(user)
     user_institutions = [{'id': inst._id, 'name': inst.name, 'logo_path': inst.logo_path_rounded_corners} for inst in user.get_affiliated_institutions()] if user else []
-    try:
-        location = Reader('GeoLite2-City.mmdb').city(request.remote_addr)
-        # TODO: replace with adequate error handling during keen removal
-    except (FileNotFoundError, AddressNotFoundError):
-        location = None
 
     if request.host_url != settings.DOMAIN:
         try:
@@ -118,10 +111,6 @@ def get_globals():
         'user_entry_point': metrics.get_entry_point(user) if user else '',
         'user_institutions': user_institutions if user else None,
         'display_name': user.fullname if user else '',
-        'anon': {
-            'continent': (location or {}).get('continent', {}).get('code', None),
-            'country': (location or {}).get('country', {}).get('iso_code', None),
-        },
         'use_cdn': settings.USE_CDN_FOR_CLIENT_LIBS,
         'sentry_dsn_js': settings.SENTRY_DSN_JS if sentry.enabled else None,
         'dev_mode': settings.DEV_MODE,
@@ -150,16 +139,6 @@ def get_globals():
         'profile_url': cas.get_profile_url(),
         'enable_institutions': settings.ENABLE_INSTITUTIONS,
         'page_route_name': request.url_rule.endpoint.replace('__', '.'),
-        'keen': {
-            'public': {
-                'project_id': settings.KEEN['public']['project_id'],
-                'write_key': settings.KEEN['public']['write_key'],
-            },
-            'private': {
-                'project_id': settings.KEEN['private']['project_id'],
-                'write_key': settings.KEEN['private']['write_key'],
-            },
-        },
         'institutional_landing_flag': flag_is_active(request, features.INSTITUTIONAL_LANDING_FLAG),
         'maintenance': maintenance.get_maintenance(),
         'recaptcha_site_key': settings.RECAPTCHA_SITE_KEY,
@@ -1273,22 +1252,6 @@ def make_url_map(app):
         ),
         Rule(
             [
-                '/project/<pid>/registrations/',
-                '/project/<pid>/node/<nid>/registrations/',
-            ],
-            'post',
-            project_views.drafts.new_draft_registration,
-            OsfWebRenderer('project/edit_draft_registration.mako', trust=False)),
-        Rule(
-            [
-                '/project/<pid>/drafts/<draft_id>/',
-                '/project/<pid>/node/<nid>/drafts/<draft_id>/',
-            ],
-            'get',
-            project_views.drafts.edit_draft_registration_page,
-            OsfWebRenderer('project/edit_draft_registration.mako', trust=False)),
-        Rule(
-            [
                 '/project/<pid>/drafts/<draft_id>/register/',
                 '/project/<pid>/node/<nid>/drafts/<draft_id>/register/',
             ],
@@ -1527,9 +1490,6 @@ def make_url_map(app):
         Rule([
             '/project/<pid>/drafts/<draft_id>/',
         ], 'get', project_views.drafts.get_draft_registration, json_renderer),
-        Rule([
-            '/project/<pid>/drafts/<draft_id>/',
-        ], 'put', project_views.drafts.update_draft_registration, json_renderer),
         Rule([
             '/project/<pid>/drafts/<draft_id>/',
         ], 'delete', project_views.drafts.delete_draft_registration, json_renderer),

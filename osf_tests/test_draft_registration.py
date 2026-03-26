@@ -92,40 +92,6 @@ class TestDraftRegistrations:
 
         assert str(e.value) == 'Draft Registration must have title to be registered'
 
-    def test_update_metadata_updates_registration_responses(self, project):
-        schema = RegistrationSchema.objects.get(
-            name='OSF-Standard Pre-Data Collection Registration',
-            schema_version=2
-        )
-        draft = factories.DraftRegistrationFactory(registration_schema=schema, branched_from=project)
-        new_metadata = {
-            'looked': {
-                'comments': [],
-                'value': 'Yes',
-                'extra': []
-            },
-            'datacompletion': {
-                'comments': [],
-                'value': 'No, data collection has not begun',
-                'extra': []
-            },
-            'comments': {
-                'comments': [],
-                'value': '',
-                'extra': []
-            }
-        }
-        draft.update_metadata(new_metadata)
-        draft.save()
-        # To preserve both workflows, if update_metadata is called,
-        # a flattened version of that metadata is stored in
-        # registration_responses
-        assert draft.registration_responses == {
-            'looked': 'Yes',
-            'datacompletion': 'No, data collection has not begun',
-            'comments': ''
-        }
-
     def test_update_registration_responses(self, project):
         schema = RegistrationSchema.objects.get(
             name='OSF-Standard Pre-Data Collection Registration',
@@ -570,6 +536,33 @@ class TestDraftRegistrationContributorMethods():
         )
         assert draft_registration.get_permissions(new_contrib) == [READ]
         assert draft_registration.get_visible(new_contrib) is False
+
+    def test_remove_admin_permission(self, draft_registration, auth):
+        admin_user = auth.user
+        assert len(draft_registration.contributors) == 1
+        assert draft_registration.has_permission(admin_user, ADMIN) is True
+
+        with pytest.raises(DraftRegistrationStateError) as exc_info:
+            draft_registration.update_contributor(
+                admin_user,
+                WRITE,
+                draft_registration.get_visible(admin_user),
+                auth=auth
+            )
+        assert str(exc_info.value) == f"{admin_user.fullname} is the only admin."
+
+        # user should be able to remove their own admin permission if there're 2+ admin contributors
+        new_contrib = factories.AuthUserFactory()
+        draft_registration.add_contributor(new_contrib, permissions=ADMIN, auth=auth)
+        assert draft_registration.has_permission(new_contrib, ADMIN) is True
+
+        draft_registration.update_contributor(
+            admin_user,
+            WRITE,
+            draft_registration.get_visible(admin_user),
+            auth=auth,
+        )
+        assert draft_registration.has_permission(admin_user, ADMIN) is False
 
     def test_update_contributor_non_admin_raises_error(self, draft_registration, auth):
         non_admin = factories.AuthUserFactory()
