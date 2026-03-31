@@ -224,6 +224,13 @@ class Preprint(DirtyFieldsMixin, VersionedGuidMixin, IdentifierMixin, Reviewable
         related_name='preprint',
         on_delete=models.CASCADE
     )
+    pending_primary_file = models.ForeignKey(
+        'osf.OsfStorageFile',
+        null=True,
+        blank=True,
+        related_name='preprint_pending',
+        on_delete=models.CASCADE
+    )
     # (for legacy preprints), pull off of node
     is_public = models.BooleanField(default=True, db_index=True)
     # Datetime when old node was deleted (for legacy preprints)
@@ -764,13 +771,10 @@ class Preprint(DirtyFieldsMixin, VersionedGuidMixin, IdentifierMixin, Reviewable
             raise ValueError('This file is not a valid primary file for this preprint.')
 
         existing_file = self.primary_file
-        self.primary_file = preprint_file
-
-        self.primary_file.move_under(self.root_folder)
-        self.primary_file.save()
 
         # only log if updating the preprint file, not adding for the first time
         if existing_file:
+            self.pending_primary_file = preprint_file
             self.add_log(
                 action=PreprintLog.FILE_UPDATED,
                 params={
@@ -780,6 +784,11 @@ class Preprint(DirtyFieldsMixin, VersionedGuidMixin, IdentifierMixin, Reviewable
                 auth=auth,
                 save=False
             )
+        else:
+            self.primary_file = preprint_file
+
+            self.primary_file.move_under(self.root_folder)
+            self.primary_file.save()
 
         if save:
             self.save()
